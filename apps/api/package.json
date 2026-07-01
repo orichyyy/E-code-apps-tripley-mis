@@ -1,0 +1,20 @@
+{
+  "name": "@web-admin-base/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.14.4",
+    "@web-admin-base/contracts": "workspace:*",
+    "@web-admin-base/shared": "workspace:*",
+    "hono": "^4.8.4",
+    "zod": "^3.25.67"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "@web-admin-base/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@web-admin-base/adapters": "workspace:*",
+    "@web-admin-base/shared": "workspace:*",
+    "zod": "^3.25.67"
+  }
+}
