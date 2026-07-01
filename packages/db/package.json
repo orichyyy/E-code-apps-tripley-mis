@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --passWithNoTests",
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
+    "db:migrate": "tsx src/migrations/run-migrations.ts all",
     "db:migrate:sqlite": "tsx src/migrations/run-migrations.ts sqlite",
     "db:migrate:postgresql": "tsx src/migrations/run-migrations.ts postgresql"
   },

@@ -42,9 +42,23 @@ This foundation does not implement full authentication, RBAC, organization manag
 
 The SQLite concrete driver is intentionally not selected in this foundation because the design spec marks that package choice as unspecified. The DB package exposes a factory boundary where the concrete driver can be added after that decision is confirmed.
 
+## Backend Core Progress
+
+The backend core goal has partial implementation progress:
+
+- Added Drizzle schema definitions for SQLite and PostgreSQL covering users, organizations, roles, user-organization-role bindings, permissions, role permissions, menus, route metadata, API permission metadata, menu/API bindings, auth sessions, refresh tokens, and system initialization state.
+- Added dialect-specific SQL migration files for SQLite and PostgreSQL for the backend core foundation. No SQL Server schema or migrations were added.
+- Added organization materialized path helpers for the confirmed int64 design: `encodeOrgPath`, `decodeOrgPath`, `getOrgPathRange`, `isDescendantPath`, and sibling segment allocation.
+- Added backend security utilities for API ID string serialization, UTC time helpers, configurable password complexity, scrypt password hashing, refresh-token generation/hash support, and HS256 JWT access tokens.
+- Added an in-memory `CacheAdapter` implementation and a permission-cache boundary with invalidation tests.
+- Added base permission, route, and menu manifests for the current backend-core surface, plus API endpoints for `/api/permissions/manifest`, `/api/routes/manifest`, and `/api/menus/tree`.
+
+This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, initialization setup, auth/session persistence, CRUD routes, and role/permission mutation flows still depend on the unresolved implementation questions.
+
 ## Recommended Next Goals
 
-1. Implement the API core foundation: structured response envelope, request ID propagation, error handling, config layering, and observability placeholders.
-2. Implement the database foundation: confirmed SQLite driver, PostgreSQL connection, Drizzle schema baseline, migrations, seed framework, and organization path helper tests.
-3. Implement adapter drivers and contract tests, starting with in-memory adapters and database-backed extension points.
-4. Implement authentication/session foundation only after API, DB, and adapter boundaries are validated.
+1. Confirm the concrete SQLite driver and PostgreSQL test provisioning approach.
+2. Wire real SQLite and PostgreSQL Drizzle connections plus executable migrations.
+3. Implement DB-backed repositories for initialization, auth/session, users, organizations, roles, permissions, menus, and route/API permission metadata.
+4. Implement initialization setup and seed CLI using the DB-backed repositories.
+5. Implement auth/session endpoints and core CRUD routes with PostgreSQL integration tests.

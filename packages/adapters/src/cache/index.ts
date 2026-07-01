@@ -5,3 +5,5 @@ export type CacheAdapter = HealthCheckableAdapter & {
   set: <T>(key: string, value: T, options?: { ttlSeconds?: number }) => Promise<void>;
   delete: (key: string) => Promise<void>;
 };
+
+export * from "./in-memory-cache";

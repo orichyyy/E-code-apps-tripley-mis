@@ -1,9 +1,11 @@
 import { databaseDialects, type DatabaseDialect } from "../dialects/types";
 
-const dialect = process.argv[2] as DatabaseDialect | undefined;
+const target = process.argv[2] as DatabaseDialect | "all" | undefined;
 
-if (!dialect || !databaseDialects.includes(dialect)) {
-  throw new Error("Usage: tsx src/migrations/run-migrations.ts <sqlite|postgresql>");
+if (!target || (target !== "all" && !databaseDialects.includes(target))) {
+  throw new Error("Usage: tsx src/migrations/run-migrations.ts <all|sqlite|postgresql>");
 }
 
-console.log(`Migration runner placeholder for ${dialect}. Driver wiring is an extension point.`);
+throw new Error(
+  `Database migration execution for ${target} is blocked until the SQLite driver and PostgreSQL test/provisioning strategy are confirmed in docs/implementation_questions.md.`
+);

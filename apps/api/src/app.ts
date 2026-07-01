@@ -2,6 +2,7 @@ import { healthResponseSchema } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
 import { requestIdMiddleware, type RequestIdVariables } from "./middleware/request-id";
+import { createManifestRoutes } from "./modules/manifests/manifest.routes";
 
 type AppBindings = {
   Variables: RequestIdVariables;
@@ -22,6 +23,8 @@ export function createApp() {
       })
     );
   });
+
+  app.route("/", createManifestRoutes());
 
   app.notFound((context) => {
     return context.json(
