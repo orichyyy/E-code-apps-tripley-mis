@@ -47,7 +47,7 @@ export function createAuthRoutes(services: BackendCoreServices) {
   routes.post("/auth/logout", async (context) => {
     const body = (await context.req.json()) as { sessionId?: string };
     if (!body.sessionId) throw createKnownError("VALIDATION_REQUIRED_FIELD");
-    return context.json({ data: services.logout(body.sessionId) });
+    return context.json({ data: await services.logout(body.sessionId) });
   });
 
   routes.post("/auth/change-password", async (context) => {
@@ -64,10 +64,10 @@ export function createAuthRoutes(services: BackendCoreServices) {
     return context.json({ data: await services.switchCurrentOrganization(authContext, input) });
   });
 
-  routes.post("/auth/refresh", (context) => {
+  routes.post("/auth/refresh", async (context) => {
     const refreshToken = readCookie(context.req.header("cookie") ?? "", "refresh_token");
     if (!refreshToken) throw createKnownError("AUTH_TOKEN_EXPIRED");
-    return context.json({ data: services.refreshAccessToken(refreshToken) });
+    return context.json({ data: await services.refreshAccessToken(refreshToken) });
   });
 
   routes.get("/online-users", (context) => {

@@ -1,4 +1,7 @@
-import { createInMemoryCacheAdapter } from "@web-admin-base/adapters";
+import {
+  createInMemoryCacheAdapter,
+  createInMemoryTokenStoreAdapter
+} from "@web-admin-base/adapters";
 import {
   baseMenuManifest,
   basePermissionManifest,
@@ -224,6 +227,7 @@ export function createInMemoryBackendCoreServices(config?: Partial<BackendCoreCo
   return new BackendCoreServices({
     store: new InMemoryBackendStore(),
     permissionCache: new PermissionCache(createInMemoryCacheAdapter()),
+    tokenStore: createInMemoryTokenStoreAdapter(),
     config: {
       ...defaultBackendCoreConfig,
       ...config

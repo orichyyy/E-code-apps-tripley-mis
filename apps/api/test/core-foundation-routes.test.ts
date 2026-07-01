@@ -102,6 +102,31 @@ describe("backend core foundation routes", () => {
     expect(refresh.data.session.id).toBe("1");
   });
 
+  it("revokes refresh-token usage when logging out", async () => {
+    const { app } = await setupInitializedApp();
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const login = await loginResponse.json();
+    const cookie = loginResponse.headers.get("set-cookie") ?? "";
+
+    const logoutResponse = await app.request("/api/auth/logout", {
+      method: "POST",
+      headers: { authorization: `Bearer ${login.data.accessToken}` },
+      body: JSON.stringify({ sessionId: login.data.session.id })
+    });
+    const refreshResponse = await app.request("/api/auth/refresh", {
+      method: "POST",
+      headers: { cookie: cookie.split(";")[0] }
+    });
+    const refresh = await refreshResponse.json();
+
+    expect(logoutResponse.status).toBe(200);
+    expect(refreshResponse.status).toBe(401);
+    expect(refresh.error.code).toBe("AUTH_TOKEN_EXPIRED");
+  });
+
   it("creates child organizations and disables descendants when a parent is disabled", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

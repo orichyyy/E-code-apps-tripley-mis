@@ -55,7 +55,7 @@ export class AuthService {
     const refreshTokenHash = hashToken(refreshToken, this.context.config.jwtSecret);
     const session = this.createSession(user.id, organizationId, refreshTokenHash, request);
     const refreshTokenId = this.context.store.nextId("refreshToken");
-    this.context.store.refreshTokens.set(refreshTokenId, {
+    const refreshTokenRecord = {
       id: refreshTokenId,
       tenantId: null,
       sessionId: session.id,
@@ -65,6 +65,16 @@ export class AuthService {
       expiresAt: session.expiresAt,
       revokedAt: null,
       createdAt: session.createdAt
+    };
+    this.context.store.refreshTokens.set(refreshTokenId, refreshTokenRecord);
+    await this.context.tokenStore.store({
+      tokenHash: refreshTokenHash,
+      subjectId: user.id,
+      sessionId: session.id,
+      tokenVersion: user.tokenVersion,
+      expiresAt: session.expiresAt,
+      createdAt: session.createdAt,
+      revokedAt: null
     });
 
     return {
@@ -76,16 +86,14 @@ export class AuthService {
     };
   }
 
-  refreshAccessToken(refreshToken: string) {
+  async refreshAccessToken(refreshToken: string) {
     const tokenHash = hashToken(refreshToken, this.context.config.jwtSecret);
-    const storedToken = [...this.context.store.refreshTokens.values()].find(
-      (candidate) => candidate.tokenHash === tokenHash
-    );
+    const storedToken = await this.context.tokenStore.findByHash(tokenHash);
     if (!storedToken || storedToken.revokedAt || new Date(storedToken.expiresAt) <= nowUtc()) {
       throw createKnownError("AUTH_TOKEN_EXPIRED");
     }
 
-    const user = requireUser(this.context.store, storedToken.userId);
+    const user = requireUser(this.context.store, storedToken.subjectId);
     if (storedToken.tokenVersion !== user.tokenVersion) throw createKnownError("AUTH_TOKEN_INVALIDATED");
 
     const session = this.context.store.authSessions.get(storedToken.sessionId);
@@ -212,7 +220,7 @@ export class AuthService {
     }
   }
 
-  logout(sessionId: string) {
+  async logout(sessionId: string) {
     const session = this.context.store.authSessions.get(sessionId);
     if (!session) throw createKnownError("AUTH_SESSION_NOT_FOUND");
 
@@ -221,6 +229,7 @@ export class AuthService {
     for (const refreshToken of this.context.store.refreshTokens.values()) {
       if (refreshToken.sessionId === sessionId) refreshToken.revokedAt = revokedAt;
     }
+    await this.context.tokenStore.revokeBySession(sessionId);
     return session;
   }
 

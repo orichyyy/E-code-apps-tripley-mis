@@ -63,6 +63,7 @@ The backend core goal has partial implementation progress:
 - Moved password policy into backend core configuration while preserving the confirmed default minimum 8 characters, letters plus numbers, and 365-day periodic password change cycle.
 - Added session-bound access token claims and `/api/context/current-organization` switching. Switching verifies the user-organization binding, rejects disabled organizations, updates the active session's current organization, returns a replacement access token, and returns refreshed permission/menu context for the selected organization. Revoked sessions and stale organization tokens are now rejected during access-token authentication.
 - Added `/api/auth/me` for current user context. It returns the public user profile, active session, current organization, enabled selectable organizations, current permission codes, filtered menus, and password-change requirement status, and remains available while a forced password change is pending.
+- Added a concrete in-memory `TokenStoreAdapter` and wired refresh-token store, lookup, and session revocation through the token-store boundary. The existing in-memory refresh-token records remain the current backing-table representation until DB-backed repositories are unblocked.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, and finalized CSRF protection still depend on the unresolved implementation questions.
 

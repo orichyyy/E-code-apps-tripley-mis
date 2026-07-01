@@ -1,3 +1,5 @@
+import type { TokenStoreAdapter } from "@web-admin-base/adapters";
+
 import {
   defaultPasswordPolicy,
   type PasswordPolicy
@@ -29,4 +31,5 @@ export type BackendCoreContext = {
   store: InMemoryBackendStore;
   config: BackendCoreConfig;
   permissionCache: PermissionCache;
+  tokenStore: TokenStoreAdapter;
 };
