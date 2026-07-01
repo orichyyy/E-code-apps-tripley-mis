@@ -192,8 +192,10 @@ export class BackendCoreServices {
     return this.roles.create(input);
   }
 
-  updateRole(id: string, input: UpdateRoleRequest) {
-    return this.roles.update(id, input);
+  async updateRole(id: string, input: UpdateRoleRequest) {
+    const role = this.roles.update(id, input);
+    await this.permissions.invalidateRole(id);
+    return role;
   }
 
   copyRole(id: string) {
@@ -206,8 +208,10 @@ export class BackendCoreServices {
     return role;
   }
 
-  deleteRole(id: string) {
-    return this.roles.delete(id);
+  async deleteRole(id: string) {
+    const role = this.roles.delete(id);
+    await this.permissions.invalidateRole(id);
+    return role;
   }
 
   listPermissions() {

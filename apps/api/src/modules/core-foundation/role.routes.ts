@@ -25,11 +25,11 @@ export function createRoleRoutes(services: BackendCoreServices) {
 
   routes.patch("/roles/:id", async (context) => {
     const input = updateRoleRequestSchema.parse(await context.req.json());
-    return context.json({ data: services.updateRole(context.req.param("id"), input) });
+    return context.json({ data: await services.updateRole(context.req.param("id"), input) });
   });
 
-  routes.delete("/roles/:id", (context) => {
-    return context.json({ data: services.deleteRole(context.req.param("id")) });
+  routes.delete("/roles/:id", async (context) => {
+    return context.json({ data: await services.deleteRole(context.req.param("id")) });
   });
 
   routes.post("/roles/:id/copy", (context) => {

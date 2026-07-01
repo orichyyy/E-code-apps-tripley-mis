@@ -51,7 +51,8 @@ export class PermissionService {
     const binding = [...this.context.store.userOrganizationRoles.values()].find(
       (candidate) => candidate.userId === userId && candidate.organizationId === organizationId
     );
-    const permissionCodes = binding
+    const role = binding ? this.context.store.roles.get(binding.roleId) : null;
+    const permissionCodes = binding && role?.status === "enabled" && !role.isDeleted
       ? this.context.store.rolePermissions
           .filter((permission) => permission.roleId === binding.roleId)
           .map((permission) => permission.permissionCode)
