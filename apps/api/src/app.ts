@@ -2,13 +2,22 @@ import { healthResponseSchema } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
 import { requestIdMiddleware, type RequestIdVariables } from "./middleware/request-id";
+import { createCoreFoundationRoutes } from "./modules/core-foundation/core-foundation.routes";
+import {
+  createInMemoryBackendCoreServices,
+  type BackendCoreServices
+} from "./modules/core-foundation/services";
 import { createManifestRoutes } from "./modules/manifests/manifest.routes";
 
 type AppBindings = {
   Variables: RequestIdVariables;
 };
 
-export function createApp() {
+export type AppDependencies = {
+  backendCoreServices: BackendCoreServices;
+};
+
+export function createApp(dependencies: AppDependencies = createDefaultAppDependencies()) {
   const app = new Hono<AppBindings>().basePath("/api");
 
   app.use("*", requestIdMiddleware);
@@ -24,6 +33,7 @@ export function createApp() {
     );
   });
 
+  app.route("/", createCoreFoundationRoutes(dependencies.backendCoreServices));
   app.route("/", createManifestRoutes());
 
   app.notFound((context) => {
@@ -56,3 +66,9 @@ export function createApp() {
 }
 
 export type ApiApp = ReturnType<typeof createApp>;
+
+export function createDefaultAppDependencies(): AppDependencies {
+  return {
+    backendCoreServices: createInMemoryBackendCoreServices()
+  };
+}

@@ -83,6 +83,9 @@ importers:
       '@web-admin-base/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@web-admin-base/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@web-admin-base/shared':
         specifier: workspace:*
         version: link:../../packages/shared

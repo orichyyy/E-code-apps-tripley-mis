@@ -1,0 +1,103 @@
+import {
+  basePermissionManifest,
+  type CreateRoleRequest,
+  type UpdateRolePermissionsRequest,
+  type UpdateRoleRequest
+} from "@web-admin-base/contracts";
+
+import { nowUtc, toUtcIso } from "../../core/time/utc";
+import type { RoleRecord } from "./domain";
+import type { BackendCoreContext } from "./service-context";
+import { requireRole } from "./store-guards";
+
+export class RoleService {
+  constructor(private readonly context: BackendCoreContext) {}
+
+  list(): RoleRecord[] {
+    return [...this.context.store.roles.values()].filter((role) => !role.isDeleted);
+  }
+
+  create(input: CreateRoleRequest): RoleRecord {
+    return this.createRecord(input);
+  }
+
+  createRecord(input: CreateRoleRequest): RoleRecord {
+    const store = this.context.store;
+    if ([...store.roles.values()].some((role) => role.code === input.code)) {
+      throw new Error("VALIDATION_DUPLICATE_ROLE_CODE");
+    }
+    const now = toUtcIso(nowUtc());
+    const role: RoleRecord = {
+      id: store.nextId("role"),
+      tenantId: null,
+      name: input.name,
+      code: input.code,
+      status: "enabled",
+      remark: input.remark ?? null,
+      isDeleted: false,
+      deletedAt: null,
+      deletedBy: null,
+      createdAt: now,
+      updatedAt: now
+    };
+    store.roles.set(role.id, role);
+    return role;
+  }
+
+  update(id: string, input: UpdateRoleRequest): RoleRecord {
+    const role = requireRole(this.context.store, id);
+    if (input.name !== undefined) role.name = input.name;
+    if (input.code !== undefined) role.code = input.code;
+    if (input.remark !== undefined) role.remark = input.remark;
+    if (input.status !== undefined) role.status = input.status;
+    role.updatedAt = toUtcIso(nowUtc());
+    return role;
+  }
+
+  copy(id: string): RoleRecord {
+    const source = requireRole(this.context.store, id);
+    const copy = this.createRecord({
+      name: `${source.name} Copy`,
+      code: `${source.code}_copy_${Date.now()}`,
+      remark: source.remark ?? undefined
+    });
+    const now = toUtcIso(nowUtc());
+    this.context.store.rolePermissions
+      .filter((permission) => permission.roleId === source.id)
+      .forEach((permission) => {
+        this.context.store.rolePermissions.push({
+          roleId: copy.id,
+          permissionCode: permission.permissionCode,
+          createdAt: now
+        });
+      });
+    return copy;
+  }
+
+  updatePermissions(id: string, input: UpdateRolePermissionsRequest): RoleRecord {
+    const role = requireRole(this.context.store, id);
+    const knownPermissions = new Set(basePermissionManifest.map((permission) => permission.code));
+    input.permissionCodes.forEach((permissionCode) => {
+      if (!knownPermissions.has(permissionCode)) throw new Error("PERMISSION_UNKNOWN_CODE");
+    });
+
+    const retained = this.context.store.rolePermissions.filter((permission) => permission.roleId !== id);
+    this.context.store.rolePermissions.splice(0, this.context.store.rolePermissions.length, ...retained);
+    const now = toUtcIso(nowUtc());
+    input.permissionCodes.forEach((permissionCode) => {
+      this.context.store.rolePermissions.push({ roleId: id, permissionCode, createdAt: now });
+    });
+    role.updatedAt = now;
+    return role;
+  }
+
+  delete(id: string, deletedBy: string | null = null): RoleRecord {
+    const role = requireRole(this.context.store, id);
+    const now = toUtcIso(nowUtc());
+    role.isDeleted = true;
+    role.deletedAt = now;
+    role.deletedBy = deletedBy;
+    role.updatedAt = now;
+    return role;
+  }
+}

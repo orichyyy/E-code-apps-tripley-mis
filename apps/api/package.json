@@ -14,6 +14,7 @@
     "@hono/node-server": "^1.14.4",
     "@web-admin-base/adapters": "workspace:*",
     "@web-admin-base/contracts": "workspace:*",
+    "@web-admin-base/db": "workspace:*",
     "@web-admin-base/shared": "workspace:*",
     "hono": "^4.8.4",
     "zod": "^3.25.67"

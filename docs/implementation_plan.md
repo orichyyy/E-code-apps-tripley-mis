@@ -52,8 +52,11 @@ The backend core goal has partial implementation progress:
 - Added backend security utilities for API ID string serialization, UTC time helpers, configurable password complexity, scrypt password hashing, refresh-token generation/hash support, and HS256 JWT access tokens.
 - Added an in-memory `CacheAdapter` implementation and a permission-cache boundary with invalidation tests.
 - Added base permission, route, and menu manifests for the current backend-core surface, plus API endpoints for `/api/permissions/manifest`, `/api/routes/manifest`, and `/api/menus/tree`.
+- Added typed API request schemas for initialization, auth, organization, user, user-organization-role, role, and permission mutation requests.
+- Added a replaceable in-memory backend-core service layer for the foundation API surface. It supports first-start initialization, default organization/admin/roles/menu seed data, username/password login, refresh-token-cookie access-token refresh, logout/session revocation, online user listing, organization CRUD and disable cascade, user CRUD/status/password reset, one-role-per-user-organization assignment/removal, role CRUD/copy, and role permission updates.
+- Split the in-memory backend foundation into focused auth, initialization, organization, user, and role services/routes so DB-backed repositories can replace the storage boundary later without growing a large mixed-responsibility module.
 
-This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, initialization setup, auth/session persistence, CRUD routes, and role/permission mutation flows still depend on the unresolved implementation questions.
+This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, and finalized CSRF protection still depend on the unresolved implementation questions.
 
 ## Recommended Next Goals
 

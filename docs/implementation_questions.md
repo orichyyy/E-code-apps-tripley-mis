@@ -13,3 +13,7 @@
 3. **SQLite int64 materialized-path JavaScript mapping**
 
    The SQLite SQL migration stores organization `path` as `INTEGER`, which is SQLite's signed 64-bit integer storage class. The current Drizzle SQLite TypeScript schema maps it as an integer column without choosing a runtime driver-specific bigint mode. Please confirm whether the selected SQLite driver must preserve this value as `bigint`, or whether repositories should serialize/deserialize the organization path through a driver-specific conversion boundary.
+
+4. **CSRF strategy for refresh/logout cookie endpoints**
+
+   The design spec requires CSRF protection for refresh/logout cookie auth endpoints, but does not confirm the concrete CSRF token strategy, header name, cookie pairing, or same-origin policy. Please confirm the intended CSRF mechanism before the cookie-backed refresh/logout endpoints are considered complete.
