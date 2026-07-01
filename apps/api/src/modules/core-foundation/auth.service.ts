@@ -18,7 +18,7 @@ import { hashPassword, verifyPassword } from "../../infra/security/password-hash
 import {
   validatePasswordComplexity
 } from "../../infra/security/password-policy";
-import type { AuthSessionRecord, PublicSession, UserRecord } from "./domain";
+import type { AuthSessionRecord, OrganizationRecord, PublicSession, UserRecord } from "./domain";
 import type { BackendCoreContext } from "./service-context";
 import { requireEnabledOrganization, requireUser } from "./store-guards";
 import { toPublicOrganization, toPublicUser } from "./serializers";
@@ -148,9 +148,31 @@ export class AuthService {
       session,
       currentOrganization: toPublicOrganization(organization),
       permissionCodes,
-      menus: baseMenuManifest.filter(
-        (menu) => !menu.requiredPermission || permissionCodes.includes(menu.requiredPermission)
-      )
+      menus: this.filterMenus(permissionCodes)
+    };
+  }
+
+  getCurrentUserContext(authContext: AuthContext, permissionCodes: string[]) {
+    const user = requireUser(this.context.store, authContext.userId);
+    const session = this.requireActiveSession(authContext.sessionId, user.id);
+    const currentOrganization = requireEnabledOrganization(
+      this.context.store,
+      authContext.currentOrganizationId
+    );
+    const organizations = [...this.context.store.userOrganizationRoles.values()]
+      .filter((binding) => binding.userId === user.id)
+      .map((binding) => this.context.store.organizations.get(binding.organizationId))
+      .filter(isEnabledOrganization)
+      .map((organization) => toPublicOrganization(organization));
+
+    return {
+      user: toPublicUser(user),
+      session,
+      currentOrganization: toPublicOrganization(currentOrganization),
+      organizations,
+      permissionCodes,
+      menus: this.filterMenus(permissionCodes),
+      passwordChangeRequired: this.isPasswordChangeRequired(user)
     };
   }
 
@@ -258,6 +280,12 @@ export class AuthService {
     return session;
   }
 
+  private filterMenus(permissionCodes: string[]) {
+    return baseMenuManifest.filter(
+      (menu) => !menu.requiredPermission || permissionCodes.includes(menu.requiredPermission)
+    );
+  }
+
   private recordFailedLogin(user: UserRecord) {
     user.failedLoginAttempts += 1;
     if (user.failedLoginAttempts >= this.context.config.failedLoginMaxAttempts) {
@@ -285,4 +313,10 @@ export class AuthService {
     if (user.firstLoginPasswordChangeRequired) return true;
     return user.passwordExpiresAt !== null && new Date(user.passwordExpiresAt) <= nowUtc();
   }
+}
+
+function isEnabledOrganization(
+  organization: OrganizationRecord | undefined
+): organization is OrganizationRecord {
+  return organization?.status === "enabled" && !organization.isDeleted;
 }

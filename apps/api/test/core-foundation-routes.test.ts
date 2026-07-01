@@ -63,6 +63,26 @@ describe("backend core foundation routes", () => {
     expect(onlineUsers.data).toHaveLength(1);
   });
 
+  it("returns current user context with organizations, permissions, and menus", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const response = await app.request("/api/auth/me", { headers: authHeaders });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.user.username).toBe("admin");
+    expect(body.data.session.currentOrganizationId).toBe("1");
+    expect(body.data.currentOrganization.id).toBe("1");
+    expect(body.data.organizations).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: "1" })])
+    );
+    expect(body.data.permissionCodes).toEqual(expect.arrayContaining(["user:view", "role:view"]));
+    expect(body.data.menus).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "system.users" })])
+    );
+    expect(body.data.passwordChangeRequired).toBe(false);
+  });
+
   it("refreshes an access token from the HttpOnly refresh-token cookie design", async () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {
@@ -398,6 +418,38 @@ describe("backend core foundation routes", () => {
     expect(oldTokenResponse.status).toBe(401);
     expect(oldToken.error.code).toBe("AUTH_TOKEN_INVALIDATED");
     expect(oldPasswordLoginResponse.status).toBe(401);
+  });
+
+  it("allows current user context while first-login password change is required", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "context-user",
+        displayName: "Context User",
+        email: "context-user@example.com",
+        phone: "10000000004",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "context-user", password: "password1" })
+    });
+    const login = await loginResponse.json();
+    const response = await app.request("/api/auth/me", {
+      headers: { authorization: `Bearer ${login.data.accessToken}` }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.user.username).toBe("context-user");
+    expect(body.data.passwordChangeRequired).toBe(true);
   });
 
   it("requires password change when the configurable periodic password cycle has expired", async () => {

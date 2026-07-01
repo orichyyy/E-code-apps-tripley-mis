@@ -16,6 +16,11 @@ describe("baseApiPermissionManifest", () => {
       expect.arrayContaining([
         expect.objectContaining({ method: "POST", path: "/api/auth/login", public: true }),
         expect.objectContaining({
+          method: "GET",
+          path: "/api/auth/me",
+          public: false
+        }),
+        expect.objectContaining({
           method: "POST",
           path: "/api/auth/change-password",
           public: false

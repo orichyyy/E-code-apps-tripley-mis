@@ -38,6 +38,12 @@ export function createAuthRoutes(services: BackendCoreServices) {
     });
   });
 
+  routes.get("/auth/me", async (context) => {
+    const authContext = context.get("authContext");
+    if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
+    return context.json({ data: await services.getCurrentUserContext(authContext) });
+  });
+
   routes.post("/auth/logout", async (context) => {
     const body = (await context.req.json()) as { sessionId?: string };
     if (!body.sessionId) throw createKnownError("VALIDATION_REQUIRED_FIELD");

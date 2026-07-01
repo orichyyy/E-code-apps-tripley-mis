@@ -63,5 +63,9 @@ export class PermissionService {
 }
 
 function isPasswordLifecycleRoute(apiPermissionCode: string): boolean {
-  return apiPermissionCode === "api.auth.change-password" || apiPermissionCode === "api.auth.logout";
+  return (
+    apiPermissionCode === "api.auth.me" ||
+    apiPermissionCode === "api.auth.change-password" ||
+    apiPermissionCode === "api.auth.logout"
+  );
 }

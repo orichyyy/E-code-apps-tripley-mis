@@ -58,6 +58,15 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     public: true
   },
   {
+    method: "GET",
+    path: "/api/auth/me",
+    code: "api.auth.me",
+    description: "Get current user profile, organization context, and permissions summary",
+    module: "auth",
+    logLevel: "basic",
+    public: false
+  },
+  {
     method: "POST",
     path: "/api/auth/logout",
     code: "api.auth.logout",

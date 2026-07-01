@@ -94,6 +94,14 @@ export class BackendCoreServices {
     );
   }
 
+  async getCurrentUserContext(authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>) {
+    const permissionContext = await this.permissions.getPermissionContext(
+      authContext.userId,
+      authContext.currentOrganizationId
+    );
+    return this.auth.getCurrentUserContext(authContext, permissionContext.permissionCodes);
+  }
+
   findAuthContext(authorizationHeader?: string | null) {
     return this.auth.findAuthContext(authorizationHeader);
   }
