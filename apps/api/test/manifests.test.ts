@@ -10,7 +10,10 @@ describe("manifest routes", () => {
     const menus = await app.request("/api/menus/tree");
 
     await expect(permissions.json()).resolves.toMatchObject({
-      data: expect.arrayContaining([expect.objectContaining({ code: "user:view" })])
+      data: expect.arrayContaining([expect.objectContaining({ code: "user:view" })]),
+      apiPermissions: expect.arrayContaining([
+        expect.objectContaining({ code: "api.auth.login", path: "/api/auth/login" })
+      ])
     });
     await expect(routes.json()).resolves.toMatchObject({
       data: expect.arrayContaining([expect.objectContaining({ routeCode: "system.users" })])

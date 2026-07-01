@@ -1,3 +1,4 @@
+export * from "./base-api-permissions";
 export * from "./base-menus";
 export * from "./base-routes";
 export * from "../permissions/permission-manifest";
