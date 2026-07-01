@@ -7,6 +7,7 @@ import {
 } from "@web-admin-base/contracts";
 import type {
   AssignUserOrganizationRoleRequest,
+  ChangePasswordRequest,
   CreateOrganizationRequest,
   CreateRoleRequest,
   CreateUserRequest,
@@ -71,6 +72,10 @@ export class BackendCoreServices {
 
   refreshAccessToken(refreshToken: string) {
     return this.auth.refreshAccessToken(refreshToken);
+  }
+
+  changePassword(authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>, input: ChangePasswordRequest) {
+    return this.auth.changePassword(authContext, input);
   }
 
   findAuthContext(authorizationHeader?: string | null) {

@@ -39,7 +39,10 @@ export class InitializationService {
       throw createKnownError("BUSINESS_SYSTEM_ALREADY_INITIALIZED");
     }
 
-    const passwordResult = validatePasswordComplexity(input.adminPassword);
+    const passwordResult = validatePasswordComplexity(
+      input.adminPassword,
+      this.context.config.passwordPolicy
+    );
     if (!passwordResult.valid) {
       throw createKnownError((passwordResult.reasons[0] ?? "VALIDATION_PASSWORD_POLICY") as never);
     }
@@ -82,6 +85,8 @@ export class InitializationService {
       primaryOrganizationId: organization.id,
       roleId: superAdminRole.id
     });
+    admin.firstLoginPasswordChangeRequired = false;
+    admin.updatedAt = toUtcIso(nowUtc());
 
     const now = toUtcIso(nowUtc());
     this.context.store.initializationState = {

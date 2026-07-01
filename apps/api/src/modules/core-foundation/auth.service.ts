@@ -1,4 +1,4 @@
-import type { LoginRequest } from "@web-admin-base/contracts";
+import type { ChangePasswordRequest, LoginRequest } from "@web-admin-base/contracts";
 
 import type { AuthContext } from "../../core/auth-context/auth-context";
 import { createKnownError } from "../../core/errors/error-codes";
@@ -9,11 +9,15 @@ import {
   signAccessToken,
   verifyAccessToken
 } from "../../infra/security/jwt";
-import { verifyPassword } from "../../infra/security/password-hash";
+import { hashPassword, verifyPassword } from "../../infra/security/password-hash";
+import {
+  validatePasswordComplexity
+} from "../../infra/security/password-policy";
 import type { AuthSessionRecord, PublicSession, UserRecord } from "./domain";
 import type { BackendCoreContext } from "./service-context";
 import { requireUser } from "./store-guards";
 import { toPublicUser } from "./serializers";
+import type { KnownErrorCode } from "../../core/errors/error-codes";
 
 export class AuthService {
   constructor(private readonly context: BackendCoreContext) {}
@@ -91,6 +95,29 @@ export class AuthService {
     return this.authenticateAccessToken(authorizationHeader.slice("Bearer ".length));
   }
 
+  async changePassword(authContext: AuthContext, input: ChangePasswordRequest) {
+    const user = requireUser(this.context.store, authContext.userId);
+    if (!(await verifyPassword(input.oldPassword, user.passwordHash))) {
+      throw createKnownError("AUTH_INVALID_CREDENTIALS");
+    }
+
+    const result = validatePasswordComplexity(input.newPassword, this.context.config.passwordPolicy);
+    if (!result.valid) {
+      throw createKnownError((result.reasons[0] ?? "VALIDATION_PASSWORD_POLICY") as KnownErrorCode);
+    }
+
+    const now = nowUtc();
+    user.passwordHash = await hashPassword(input.newPassword);
+    user.passwordChangedAt = toUtcIso(now);
+    user.passwordExpiresAt = toUtcIso(
+      addDaysUtc(now, this.context.config.passwordPolicy.periodicChangeDays)
+    );
+    user.firstLoginPasswordChangeRequired = false;
+    user.tokenVersion += 1;
+    user.updatedAt = toUtcIso(now);
+    return toPublicUser(user);
+  }
+
   authenticateAccessToken(accessToken: string): AuthContext {
     try {
       const claims = verifyAccessToken(accessToken, {
@@ -112,7 +139,8 @@ export class AuthService {
         userId: user.id,
         username: user.username,
         currentOrganizationId: claims.currentOrganizationId,
-        tokenVersion: claims.tokenVersion
+        tokenVersion: claims.tokenVersion,
+        passwordChangeRequired: this.isPasswordChangeRequired(user)
       };
     } catch (error) {
       if (error instanceof Error && error.name === "AppError") throw error;
@@ -199,5 +227,10 @@ export class AuthService {
     });
     if (!enabledBinding) throw createKnownError("BUSINESS_NO_ENABLED_ORGANIZATION");
     return enabledBinding.organizationId;
+  }
+
+  private isPasswordChangeRequired(user: UserRecord): boolean {
+    if (user.firstLoginPasswordChangeRequired) return true;
+    return user.passwordExpiresAt !== null && new Date(user.passwordExpiresAt) <= nowUtc();
   }
 }

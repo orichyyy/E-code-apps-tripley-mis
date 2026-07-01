@@ -17,6 +17,11 @@ export const loginRequestSchema = z.object({
   password: z.string().min(1)
 });
 
+export const changePasswordRequestSchema = z.object({
+  oldPassword: z.string().min(1),
+  newPassword: z.string().min(1)
+});
+
 export const createOrganizationRequestSchema = z.object({
   parentOrganizationId: integerIdStringSchema.optional(),
   name: z.string().min(1),
@@ -79,6 +84,7 @@ export const updateRolePermissionsRequestSchema = z.object({
 
 export type InitializationSetupRequest = z.infer<typeof initializationSetupRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
+export type ChangePasswordRequest = z.infer<typeof changePasswordRequestSchema>;
 export type CreateOrganizationRequest = z.infer<typeof createOrganizationRequestSchema>;
 export type UpdateOrganizationRequest = z.infer<typeof updateOrganizationRequestSchema>;
 export type CreateUserRequest = z.infer<typeof createUserRequestSchema>;

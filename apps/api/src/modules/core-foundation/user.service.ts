@@ -9,7 +9,6 @@ import { createKnownError, type KnownErrorCode } from "../../core/errors/error-c
 import { addDaysUtc, nowUtc, toUtcIso } from "../../core/time/utc";
 import { hashPassword } from "../../infra/security/password-hash";
 import {
-  defaultPasswordPolicy,
   validatePasswordComplexity
 } from "../../infra/security/password-policy";
 import type { PublicUser, UserOrganizationRoleRecord, UserRecord } from "./domain";
@@ -36,7 +35,7 @@ export class UserService {
     requireEnabledOrganization(this.context.store, input.primaryOrganizationId);
     requireEnabledRole(this.context.store, input.roleId);
     this.ensureUniqueUser(input.username, input.email, input.phone);
-    const passwordResult = validatePasswordComplexity(input.password);
+    const passwordResult = validatePasswordComplexity(input.password, this.context.config.passwordPolicy);
     if (!passwordResult.valid) {
       throw createKnownError((passwordResult.reasons[0] ?? "VALIDATION_PASSWORD_POLICY") as KnownErrorCode);
     }
@@ -54,7 +53,7 @@ export class UserService {
       status: "enabled",
       firstLoginPasswordChangeRequired: true,
       passwordChangedAt: toUtcIso(now),
-      passwordExpiresAt: toUtcIso(addDaysUtc(now, defaultPasswordPolicy.periodicChangeDays)),
+      passwordExpiresAt: toUtcIso(addDaysUtc(now, this.context.config.passwordPolicy.periodicChangeDays)),
       failedLoginAttempts: 0,
       lockedUntil: null,
       tokenVersion: 0,
@@ -91,7 +90,7 @@ export class UserService {
   }
 
   async resetPassword(id: string, input: ResetPasswordRequest): Promise<PublicUser> {
-    const result = validatePasswordComplexity(input.password);
+    const result = validatePasswordComplexity(input.password, this.context.config.passwordPolicy);
     if (!result.valid) {
       throw createKnownError((result.reasons[0] ?? "VALIDATION_PASSWORD_POLICY") as KnownErrorCode);
     }
@@ -100,7 +99,7 @@ export class UserService {
     const now = nowUtc();
     user.passwordHash = await hashPassword(input.password);
     user.passwordChangedAt = toUtcIso(now);
-    user.passwordExpiresAt = toUtcIso(addDaysUtc(now, defaultPasswordPolicy.periodicChangeDays));
+    user.passwordExpiresAt = toUtcIso(addDaysUtc(now, this.context.config.passwordPolicy.periodicChangeDays));
     user.firstLoginPasswordChangeRequired = true;
     user.tokenVersion += 1;
     user.updatedAt = toUtcIso(now);

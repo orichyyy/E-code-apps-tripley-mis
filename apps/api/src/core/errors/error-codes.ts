@@ -4,6 +4,7 @@ const errorDefinitions = {
   AUTH_ACCOUNT_DISABLED: ["Account is disabled", 403, "authentication"],
   AUTH_ACCOUNT_LOCKED: ["Account is locked", 423, "authentication"],
   AUTH_INVALID_CREDENTIALS: ["Username or password is invalid", 401, "authentication"],
+  AUTH_PASSWORD_CHANGE_REQUIRED: ["Password change is required", 403, "authentication"],
   AUTH_SESSION_NOT_FOUND: ["Session was not found", 401, "authentication"],
   AUTH_TOKEN_EXPIRED: ["Authentication token is expired", 401, "authentication"],
   AUTH_TOKEN_INVALIDATED: ["Authentication token has been invalidated", 401, "authentication"],

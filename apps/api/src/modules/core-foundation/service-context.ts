@@ -1,3 +1,7 @@
+import {
+  defaultPasswordPolicy,
+  type PasswordPolicy
+} from "../../infra/security/password-policy";
 import type { InMemoryBackendStore } from "./in-memory-store";
 import type { PermissionCache } from "../permissions/permission-cache";
 
@@ -8,6 +12,7 @@ export type BackendCoreConfig = {
   refreshTokenTtlDays: number;
   failedLoginMaxAttempts: number;
   failedLoginLockMinutes: number;
+  passwordPolicy: PasswordPolicy;
 };
 
 export const defaultBackendCoreConfig: BackendCoreConfig = {
@@ -16,7 +21,8 @@ export const defaultBackendCoreConfig: BackendCoreConfig = {
   accessTokenTtlSeconds: 900,
   refreshTokenTtlDays: 30,
   failedLoginMaxAttempts: 5,
-  failedLoginLockMinutes: 30
+  failedLoginLockMinutes: 30,
+  passwordPolicy: defaultPasswordPolicy
 };
 
 export type BackendCoreContext = {

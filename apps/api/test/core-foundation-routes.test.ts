@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { createApp } from "../src/app";
+import { createInMemoryBackendCoreServices } from "../src/modules/core-foundation/services";
+import { defaultPasswordPolicy } from "../src/infra/security/password-policy";
 
-async function setupInitializedApp() {
-  const app = createApp();
+async function setupInitializedApp(app = createApp()) {
   const setupResponse = await app.request("/api/initialization/setup", {
     method: "POST",
     body: JSON.stringify({
@@ -239,15 +240,95 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({ username: "normal", password: "password1" })
     });
     const normalLogin = await normalLoginResponse.json();
-    const response = await app.request("/api/users", {
+    await app.request("/api/auth/change-password", {
+      method: "POST",
       headers: {
         authorization: `Bearer ${normalLogin.data.accessToken}`
+      },
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+    });
+    const updatedNormalLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "normal", password: "password2" })
+    });
+    const updatedNormalLogin = await updatedNormalLoginResponse.json();
+    const response = await app.request("/api/users", {
+      headers: {
+        authorization: `Bearer ${updatedNormalLogin.data.accessToken}`
       }
     });
     const body = await response.json();
 
     expect(response.status).toBe(403);
     expect(body.error.code).toBe("PERMISSION_API_DENIED");
+  });
+
+  it("forces first-login password change and invalidates old credentials after change", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "new-user",
+        displayName: "New User",
+        email: "new-user@example.com",
+        phone: "10000000003",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+
+    const firstLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "new-user", password: "password1" })
+    });
+    const firstLogin = await firstLoginResponse.json();
+    const blockedResponse = await app.request("/api/users", {
+      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` }
+    });
+    const blocked = await blockedResponse.json();
+    const changePasswordResponse = await app.request("/api/auth/change-password", {
+      method: "POST",
+      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+    });
+    const changedUser = await changePasswordResponse.json();
+    const oldTokenResponse = await app.request("/api/users", {
+      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` }
+    });
+    const oldToken = await oldTokenResponse.json();
+    const oldPasswordLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "new-user", password: "password1" })
+    });
+
+    expect(blockedResponse.status).toBe(403);
+    expect(blocked.error.code).toBe("AUTH_PASSWORD_CHANGE_REQUIRED");
+    expect(changePasswordResponse.status).toBe(200);
+    expect(changedUser.data.firstLoginPasswordChangeRequired).toBe(false);
+    expect(changedUser.data.tokenVersion).toBe(1);
+    expect(oldTokenResponse.status).toBe(401);
+    expect(oldToken.error.code).toBe("AUTH_TOKEN_INVALIDATED");
+    expect(oldPasswordLoginResponse.status).toBe(401);
+  });
+
+  it("requires password change when the configurable periodic password cycle has expired", async () => {
+    const services = createInMemoryBackendCoreServices({
+      passwordPolicy: {
+        ...defaultPasswordPolicy,
+        periodicChangeDays: 0
+      }
+    });
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const { authHeaders } = await loginAsAdmin(app);
+    const response = await app.request("/api/users", { headers: authHeaders });
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe("AUTH_PASSWORD_CHANGE_REQUIRED");
   });
 });
 

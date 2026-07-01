@@ -3,6 +3,7 @@ export type AuthContext = {
   username: string;
   currentOrganizationId: string;
   tokenVersion: number;
+  passwordChangeRequired: boolean;
 };
 
 export type AuthContextVariables = {

@@ -67,6 +67,15 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     public: false
   },
   {
+    method: "POST",
+    path: "/api/auth/change-password",
+    code: "api.auth.change-password",
+    description: "Change current user's password",
+    module: "auth",
+    logLevel: "request",
+    public: false
+  },
+  {
     method: "GET",
     path: "/api/online-users",
     code: "api.online-users.view",

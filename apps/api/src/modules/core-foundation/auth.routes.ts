@@ -1,11 +1,19 @@
-import { loginRequestSchema } from "@web-admin-base/contracts";
+import {
+  changePasswordRequestSchema,
+  loginRequestSchema
+} from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
+import type { AuthContextVariables } from "../../core/auth-context/auth-context";
 import { createKnownError } from "../../core/errors/error-codes";
 import type { BackendCoreServices } from "./services";
 
+type AuthRouteBindings = {
+  Variables: AuthContextVariables;
+};
+
 export function createAuthRoutes(services: BackendCoreServices) {
-  const routes = new Hono();
+  const routes = new Hono<AuthRouteBindings>();
 
   routes.post("/auth/login", async (context) => {
     const input = loginRequestSchema.parse(await context.req.json());
@@ -33,6 +41,13 @@ export function createAuthRoutes(services: BackendCoreServices) {
     const body = (await context.req.json()) as { sessionId?: string };
     if (!body.sessionId) throw createKnownError("VALIDATION_REQUIRED_FIELD");
     return context.json({ data: services.logout(body.sessionId) });
+  });
+
+  routes.post("/auth/change-password", async (context) => {
+    const authContext = context.get("authContext");
+    if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
+    const input = changePasswordRequestSchema.parse(await context.req.json());
+    return context.json({ data: await services.changePassword(authContext, input) });
   });
 
   routes.post("/auth/refresh", (context) => {

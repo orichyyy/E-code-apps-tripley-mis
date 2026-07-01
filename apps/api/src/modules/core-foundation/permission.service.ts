@@ -17,6 +17,9 @@ export class PermissionService {
   ) {
     if (apiPermission.public) return;
     if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
+    if (authContext.passwordChangeRequired && !isPasswordLifecycleRoute(apiPermission.code)) {
+      throw createKnownError("AUTH_PASSWORD_CHANGE_REQUIRED");
+    }
     if (!apiPermission.requiredPermission) return;
 
     const permissionContext = await this.getPermissionContext(
@@ -57,4 +60,8 @@ export class PermissionService {
     await this.cache.set(context);
     return context;
   }
+}
+
+function isPasswordLifecycleRoute(apiPermissionCode: string): boolean {
+  return apiPermissionCode === "api.auth.change-password" || apiPermissionCode === "api.auth.logout";
 }
