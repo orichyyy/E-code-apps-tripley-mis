@@ -138,6 +138,13 @@ export class UserService {
     return this.bindToOrganization(userId, input.organizationId, input.roleId);
   }
 
+  listOrganizationRoles(userId: string): UserOrganizationRoleRecord[] {
+    requireUser(this.context.store, userId);
+    return [...this.context.store.userOrganizationRoles.values()].filter(
+      (binding) => binding.userId === userId
+    );
+  }
+
   removeOrganizationRole(userId: string, organizationId: string): { removed: boolean } {
     const binding = [...this.context.store.userOrganizationRoles.entries()].find(
       ([, candidate]) => candidate.userId === userId && candidate.organizationId === organizationId

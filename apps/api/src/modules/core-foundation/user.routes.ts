@@ -54,6 +54,10 @@ export function createUserRoutes(services: BackendCoreServices) {
     return context.json({ data: services.deleteUser(context.req.param("id")) });
   });
 
+  routes.get("/users/:id/organizations", (context) => {
+    return context.json({ data: services.listUserOrganizationRoles(context.req.param("id")) });
+  });
+
   routes.post("/users/:id/organizations", async (context) => {
     const input = assignUserOrganizationRoleRequestSchema.parse(await context.req.json());
     return context.json({ data: await services.assignUserOrganizationRole(context.req.param("id"), input) });

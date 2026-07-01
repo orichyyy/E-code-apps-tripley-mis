@@ -178,6 +178,10 @@ export class BackendCoreServices {
     return binding;
   }
 
+  listUserOrganizationRoles(userId: string) {
+    return this.users.listOrganizationRoles(userId);
+  }
+
   async removeUserOrganizationRole(userId: string, organizationId: string) {
     const result = this.users.removeOrganizationRole(userId, organizationId);
     await this.permissions.invalidateUserOrganization(userId, organizationId);

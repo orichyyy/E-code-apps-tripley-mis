@@ -42,6 +42,11 @@ describe("baseApiPermissionManifest", () => {
         }),
         expect.objectContaining({
           method: "GET",
+          path: "/api/users/:id/organizations",
+          requiredPermission: "user:view"
+        }),
+        expect.objectContaining({
+          method: "GET",
           path: "/api/roles/:id/permissions",
           requiredPermission: "role:view"
         })

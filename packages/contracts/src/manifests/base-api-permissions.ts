@@ -274,6 +274,16 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     public: false
   },
   {
+    method: "GET",
+    path: "/api/users/:id/organizations",
+    code: "api.users.organizations.list",
+    description: "View user organization role bindings",
+    module: "users",
+    requiredPermission: "user:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
     method: "POST",
     path: "/api/users/:id/organizations",
     code: "api.users.organizations.assign",
