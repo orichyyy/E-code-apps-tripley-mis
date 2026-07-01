@@ -24,9 +24,7 @@ export class RoleService {
 
   createRecord(input: CreateRoleRequest): RoleRecord {
     const store = this.context.store;
-    if ([...store.roles.values()].some((role) => role.code === input.code)) {
-      throw createKnownError("VALIDATION_DUPLICATE_ROLE_CODE");
-    }
+    this.ensureUniqueRoleCode(input.code);
     const now = toUtcIso(nowUtc());
     const role: RoleRecord = {
       id: store.nextId("role"),
@@ -47,6 +45,7 @@ export class RoleService {
 
   update(id: string, input: UpdateRoleRequest): RoleRecord {
     const role = requireRole(this.context.store, id);
+    if (input.code !== undefined) this.ensureUniqueRoleCode(input.code, role.id);
     if (input.name !== undefined) role.name = input.name;
     if (input.code !== undefined) role.code = input.code;
     if (input.remark !== undefined) role.remark = input.remark;
@@ -100,5 +99,12 @@ export class RoleService {
     role.deletedBy = deletedBy;
     role.updatedAt = now;
     return role;
+  }
+
+  private ensureUniqueRoleCode(code: string, currentRoleId?: string): void {
+    const duplicate = [...this.context.store.roles.values()].some(
+      (role) => !role.isDeleted && role.id !== currentRoleId && role.code === code
+    );
+    if (duplicate) throw createKnownError("VALIDATION_DUPLICATE_ROLE_CODE");
   }
 }

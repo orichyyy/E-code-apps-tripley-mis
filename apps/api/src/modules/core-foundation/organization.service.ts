@@ -32,9 +32,7 @@ export class OrganizationService {
 
   createRecord(input: CreateOrganizationRequest): OrganizationRecord {
     const store = this.context.store;
-    if ([...store.organizations.values()].some((organization) => organization.code === input.code)) {
-      throw createKnownError("VALIDATION_DUPLICATE_ORGANIZATION_CODE");
-    }
+    this.ensureUniqueOrganizationCode(input.code);
 
     const parent = input.parentOrganizationId
       ? requireOrganization(store, input.parentOrganizationId)
@@ -70,6 +68,7 @@ export class OrganizationService {
 
   update(id: string, input: UpdateOrganizationRequest): PublicOrganization {
     const organization = requireOrganization(this.context.store, id);
+    if (input.code !== undefined) this.ensureUniqueOrganizationCode(input.code, organization.id);
     if (input.name !== undefined) organization.name = input.name;
     if (input.code !== undefined) organization.code = input.code;
     if (input.sortOrder !== undefined) organization.sortOrder = input.sortOrder;
@@ -120,5 +119,15 @@ export class OrganizationService {
         );
       })
       .map((organization) => organization.segment);
+  }
+
+  private ensureUniqueOrganizationCode(code: string, currentOrganizationId?: string): void {
+    const duplicate = [...this.context.store.organizations.values()].some(
+      (organization) =>
+        !organization.isDeleted &&
+        organization.id !== currentOrganizationId &&
+        organization.code === code
+    );
+    if (duplicate) throw createKnownError("VALIDATION_DUPLICATE_ORGANIZATION_CODE");
   }
 }

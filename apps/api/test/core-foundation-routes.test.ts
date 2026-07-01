@@ -156,6 +156,27 @@ describe("backend core foundation routes", () => {
     );
   });
 
+  it("rejects organization updates that would duplicate organization code", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
+    });
+    const child = await childResponse.json();
+
+    const response = await app.request(`/api/organizations/${child.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ code: "default" })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body.error.code).toBe("VALIDATION_DUPLICATE_ORGANIZATION_CODE");
+  });
+
   it("resets a user password and increments user token version", async () => {
     const { app, setup } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
@@ -333,6 +354,21 @@ describe("backend core foundation routes", () => {
     const role = await response.json();
 
     expect(role.data.id).toBe("1");
+  });
+
+  it("rejects role updates that would duplicate role code", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const response = await app.request("/api/roles/2", {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ code: "super_admin" })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body.error.code).toBe("VALIDATION_DUPLICATE_ROLE_CODE");
   });
 
   it("assigns one role per user organization and supports removing the binding", async () => {

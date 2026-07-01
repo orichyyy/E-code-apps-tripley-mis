@@ -66,6 +66,7 @@ The backend core goal has partial implementation progress:
 - Added a concrete in-memory `TokenStoreAdapter` and wired refresh-token store, lookup, and session revocation through the token-store boundary. The existing in-memory refresh-token records remain the current backing-table representation until DB-backed repositories are unblocked.
 - Tightened account lock behavior so administrator locks without an expiration deny login until administrator unlock, while configured failed-login locks still use `lockedUntil` for timed release. Unlocking clears failed-login counters and lock expiration.
 - Tightened user update validation so administrator edits preserve unique username, email, and phone values and cannot set a disabled organization as the user's primary organization.
+- Tightened organization and role update validation so administrator edits cannot duplicate existing organization codes or role codes.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, and finalized CSRF protection still depend on the unresolved implementation questions.
 
