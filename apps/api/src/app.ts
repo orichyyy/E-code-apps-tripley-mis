@@ -1,6 +1,8 @@
 import { healthResponseSchema } from "@web-admin-base/contracts";
 import { Hono } from "hono";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 
+import { createErrorResponse, normalizeError } from "./core/errors/error-response";
 import { requestIdMiddleware, type RequestIdVariables } from "./middleware/request-id";
 import { createCoreFoundationRoutes } from "./modules/core-foundation/core-foundation.routes";
 import {
@@ -50,15 +52,10 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
   });
 
   app.onError((error, context) => {
+    const appError = normalizeError(error);
     return context.json(
-      {
-        error: {
-          code: "SYSTEM_INTERNAL_ERROR",
-          message: error.message
-        },
-        requestId: context.get("requestId")
-      },
-      500
+      createErrorResponse(appError, context.get("requestId")),
+      appError.status as ContentfulStatusCode
     );
   });
 

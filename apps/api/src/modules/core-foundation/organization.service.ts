@@ -9,6 +9,7 @@ import {
   isDescendantPath
 } from "@web-admin-base/db";
 
+import { createKnownError } from "../../core/errors/error-codes";
 import { nowUtc, toUtcIso } from "../../core/time/utc";
 import type { OrganizationRecord, PublicOrganization } from "./domain";
 import type { BackendCoreContext } from "./service-context";
@@ -32,16 +33,16 @@ export class OrganizationService {
   createRecord(input: CreateOrganizationRequest): OrganizationRecord {
     const store = this.context.store;
     if ([...store.organizations.values()].some((organization) => organization.code === input.code)) {
-      throw new Error("VALIDATION_DUPLICATE_ORGANIZATION_CODE");
+      throw createKnownError("VALIDATION_DUPLICATE_ORGANIZATION_CODE");
     }
 
     const parent = input.parentOrganizationId
       ? requireOrganization(store, input.parentOrganizationId)
       : undefined;
-    if (parent?.status === "disabled") throw new Error("BUSINESS_ORG_DISABLED");
+    if (parent?.status === "disabled") throw createKnownError("BUSINESS_ORG_DISABLED");
 
     const level = parent ? parent.level + 1 : 1;
-    if (level > 8) throw new Error("BUSINESS_MAX_ORG_DEPTH_EXCEEDED");
+    if (level > 8) throw createKnownError("BUSINESS_MAX_ORG_DEPTH_EXCEEDED");
 
     const segment = allocateNextOrgSegment(this.findUsedSiblingSegments(parent), level);
     const path = encodeOrgPath([...(parent ? decodeOrgPath(parent.path) : []), segment]);

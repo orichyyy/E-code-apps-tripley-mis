@@ -55,6 +55,7 @@ The backend core goal has partial implementation progress:
 - Added typed API request schemas for initialization, auth, organization, user, user-organization-role, role, and permission mutation requests.
 - Added a replaceable in-memory backend-core service layer for the foundation API surface. It supports first-start initialization, default organization/admin/roles/menu seed data, username/password login, refresh-token-cookie access-token refresh, logout/session revocation, online user listing, organization CRUD and disable cascade, user CRUD/status/password reset, one-role-per-user-organization assignment/removal, role CRUD/copy, and role permission updates.
 - Split the in-memory backend foundation into focused auth, initialization, organization, user, and role services/routes so DB-backed repositories can replace the storage boundary later without growing a large mixed-responsibility module.
+- Added stable backend API error handling for known authentication, validation, business, and system errors. Zod request failures now return `VALIDATION_INVALID_REQUEST`, and business/auth failures return their stable error codes instead of leaking raw internal errors.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, and finalized CSRF protection still depend on the unresolved implementation questions.
 

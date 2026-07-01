@@ -141,6 +141,46 @@ describe("backend core foundation routes", () => {
     });
     expect(remove.data.removed).toBe(true);
   });
+
+  it("returns stable validation error codes for invalid requests", async () => {
+    const app = createApp();
+    const response = await app.request("/api/initialization/setup", {
+      method: "POST",
+      body: JSON.stringify({
+        organizationName: "",
+        organizationCode: "default",
+        adminUsername: "admin",
+        adminDisplayName: "Super Admin",
+        adminEmail: "not-an-email",
+        adminPhone: "10000000000",
+        adminPassword: "password1"
+      })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("VALIDATION_INVALID_REQUEST");
+  });
+
+  it("returns stable business error codes", async () => {
+    const { app } = await setupInitializedApp();
+    const response = await app.request("/api/initialization/setup", {
+      method: "POST",
+      body: JSON.stringify({
+        organizationName: "Default Organization",
+        organizationCode: "default-2",
+        adminUsername: "admin2",
+        adminDisplayName: "Super Admin",
+        adminEmail: "admin2@example.com",
+        adminPhone: "10000000001",
+        adminPassword: "password1"
+      })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body.error.code).toBe("BUSINESS_SYSTEM_ALREADY_INITIALIZED");
+  });
 });
 
 function setupResponseStatus(setup: { data: { state: { status: string } } }) {

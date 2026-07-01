@@ -1,5 +1,6 @@
 import type { LoginRequest } from "@web-admin-base/contracts";
 
+import { createKnownError } from "../../core/errors/error-codes";
 import { addDaysUtc, addSecondsUtc, nowUtc, toUtcIso } from "../../core/time/utc";
 import { createRefreshToken, hashToken, signAccessToken } from "../../infra/security/jwt";
 import { verifyPassword } from "../../infra/security/password-hash";
@@ -15,17 +16,17 @@ export class AuthService {
     const user = [...this.context.store.users.values()].find(
       (candidate) => candidate.username === input.username && !candidate.isDeleted
     );
-    if (!user) throw new Error("AUTH_INVALID_CREDENTIALS");
+    if (!user) throw createKnownError("AUTH_INVALID_CREDENTIALS");
 
     const now = nowUtc();
-    if (user.status === "disabled" || user.isDeleted) throw new Error("AUTH_ACCOUNT_DISABLED");
+    if (user.status === "disabled" || user.isDeleted) throw createKnownError("AUTH_ACCOUNT_DISABLED");
     if (user.status === "locked" && user.lockedUntil && new Date(user.lockedUntil) > now) {
-      throw new Error("AUTH_ACCOUNT_LOCKED");
+      throw createKnownError("AUTH_ACCOUNT_LOCKED");
     }
 
     if (!(await verifyPassword(input.password, user.passwordHash))) {
       this.recordFailedLogin(user);
-      throw new Error("AUTH_INVALID_CREDENTIALS");
+      throw createKnownError("AUTH_INVALID_CREDENTIALS");
     }
 
     const organizationId = this.resolveEnabledLoginOrganization(user);
@@ -66,14 +67,14 @@ export class AuthService {
       (candidate) => candidate.tokenHash === tokenHash
     );
     if (!storedToken || storedToken.revokedAt || new Date(storedToken.expiresAt) <= nowUtc()) {
-      throw new Error("AUTH_TOKEN_EXPIRED");
+      throw createKnownError("AUTH_TOKEN_EXPIRED");
     }
 
     const user = requireUser(this.context.store, storedToken.userId);
-    if (storedToken.tokenVersion !== user.tokenVersion) throw new Error("AUTH_TOKEN_INVALIDATED");
+    if (storedToken.tokenVersion !== user.tokenVersion) throw createKnownError("AUTH_TOKEN_INVALIDATED");
 
     const session = this.context.store.authSessions.get(storedToken.sessionId);
-    if (!session || session.revokedAt) throw new Error("AUTH_SESSION_NOT_FOUND");
+    if (!session || session.revokedAt) throw createKnownError("AUTH_SESSION_NOT_FOUND");
 
     session.lastSeenAt = toUtcIso(nowUtc());
     return { accessToken: this.signAccessToken(user, session.currentOrganizationId), session };
@@ -81,7 +82,7 @@ export class AuthService {
 
   logout(sessionId: string) {
     const session = this.context.store.authSessions.get(sessionId);
-    if (!session) throw new Error("AUTH_SESSION_NOT_FOUND");
+    if (!session) throw createKnownError("AUTH_SESSION_NOT_FOUND");
 
     const revokedAt = toUtcIso(nowUtc());
     session.revokedAt = revokedAt;
@@ -156,7 +157,7 @@ export class AuthService {
       const organization = this.context.store.organizations.get(binding.organizationId);
       return organization?.status === "enabled" && !organization.isDeleted;
     });
-    if (!enabledBinding) throw new Error("BUSINESS_NO_ENABLED_ORGANIZATION");
+    if (!enabledBinding) throw createKnownError("BUSINESS_NO_ENABLED_ORGANIZATION");
     return enabledBinding.organizationId;
   }
 }

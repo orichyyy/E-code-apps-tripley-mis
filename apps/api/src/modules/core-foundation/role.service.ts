@@ -5,6 +5,7 @@ import {
   type UpdateRoleRequest
 } from "@web-admin-base/contracts";
 
+import { createKnownError } from "../../core/errors/error-codes";
 import { nowUtc, toUtcIso } from "../../core/time/utc";
 import type { RoleRecord } from "./domain";
 import type { BackendCoreContext } from "./service-context";
@@ -24,7 +25,7 @@ export class RoleService {
   createRecord(input: CreateRoleRequest): RoleRecord {
     const store = this.context.store;
     if ([...store.roles.values()].some((role) => role.code === input.code)) {
-      throw new Error("VALIDATION_DUPLICATE_ROLE_CODE");
+      throw createKnownError("VALIDATION_DUPLICATE_ROLE_CODE");
     }
     const now = toUtcIso(nowUtc());
     const role: RoleRecord = {
@@ -78,7 +79,7 @@ export class RoleService {
     const role = requireRole(this.context.store, id);
     const knownPermissions = new Set(basePermissionManifest.map((permission) => permission.code));
     input.permissionCodes.forEach((permissionCode) => {
-      if (!knownPermissions.has(permissionCode)) throw new Error("PERMISSION_UNKNOWN_CODE");
+      if (!knownPermissions.has(permissionCode)) throw createKnownError("PERMISSION_UNKNOWN_CODE");
     });
 
     const retained = this.context.store.rolePermissions.filter((permission) => permission.roleId !== id);

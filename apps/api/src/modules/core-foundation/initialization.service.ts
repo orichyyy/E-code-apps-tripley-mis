@@ -1,5 +1,6 @@
 import { baseMenuManifest, type InitializationSetupRequest } from "@web-admin-base/contracts";
 
+import { createKnownError } from "../../core/errors/error-codes";
 import { nowUtc, toUtcIso } from "../../core/time/utc";
 import {
   validatePasswordComplexity
@@ -31,11 +32,13 @@ export class InitializationService {
 
   async setup(input: InitializationSetupRequest) {
     if (this.context.store.initializationState?.status === "initialized") {
-      throw new Error("BUSINESS_SYSTEM_ALREADY_INITIALIZED");
+      throw createKnownError("BUSINESS_SYSTEM_ALREADY_INITIALIZED");
     }
 
     const passwordResult = validatePasswordComplexity(input.adminPassword);
-    if (!passwordResult.valid) throw new Error(passwordResult.reasons[0] ?? "VALIDATION_PASSWORD_POLICY");
+    if (!passwordResult.valid) {
+      throw createKnownError((passwordResult.reasons[0] ?? "VALIDATION_PASSWORD_POLICY") as never);
+    }
 
     const organization = this.organizations.createRecord({
       name: input.organizationName,

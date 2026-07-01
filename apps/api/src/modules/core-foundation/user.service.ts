@@ -5,6 +5,7 @@ import type {
   UpdateUserRequest
 } from "@web-admin-base/contracts";
 
+import { createKnownError, type KnownErrorCode } from "../../core/errors/error-codes";
 import { addDaysUtc, nowUtc, toUtcIso } from "../../core/time/utc";
 import { hashPassword } from "../../infra/security/password-hash";
 import {
@@ -36,7 +37,9 @@ export class UserService {
     requireEnabledRole(this.context.store, input.roleId);
     this.ensureUniqueUser(input.username, input.email, input.phone);
     const passwordResult = validatePasswordComplexity(input.password);
-    if (!passwordResult.valid) throw new Error(passwordResult.reasons[0] ?? "VALIDATION_PASSWORD_POLICY");
+    if (!passwordResult.valid) {
+      throw createKnownError((passwordResult.reasons[0] ?? "VALIDATION_PASSWORD_POLICY") as KnownErrorCode);
+    }
 
     const now = nowUtc();
     const user: UserRecord = {
@@ -89,7 +92,9 @@ export class UserService {
 
   async resetPassword(id: string, input: ResetPasswordRequest): Promise<PublicUser> {
     const result = validatePasswordComplexity(input.password);
-    if (!result.valid) throw new Error(result.reasons[0] ?? "VALIDATION_PASSWORD_POLICY");
+    if (!result.valid) {
+      throw createKnownError((result.reasons[0] ?? "VALIDATION_PASSWORD_POLICY") as KnownErrorCode);
+    }
 
     const user = requireUser(this.context.store, id);
     const now = nowUtc();
@@ -162,9 +167,9 @@ export class UserService {
   private ensureUniqueUser(username: string, email: string, phone: string): void {
     for (const user of this.context.store.users.values()) {
       if (user.isDeleted) continue;
-      if (user.username === username) throw new Error("VALIDATION_DUPLICATE_USERNAME");
-      if (user.email === email) throw new Error("VALIDATION_DUPLICATE_EMAIL");
-      if (user.phone === phone) throw new Error("VALIDATION_DUPLICATE_PHONE");
+      if (user.username === username) throw createKnownError("VALIDATION_DUPLICATE_USERNAME");
+      if (user.email === email) throw createKnownError("VALIDATION_DUPLICATE_EMAIL");
+      if (user.phone === phone) throw createKnownError("VALIDATION_DUPLICATE_PHONE");
     }
   }
 }
