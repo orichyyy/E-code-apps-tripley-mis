@@ -72,6 +72,11 @@ export class UserService {
 
   update(id: string, input: UpdateUserRequest): PublicUser {
     const user = requireUser(this.context.store, id);
+    this.ensureUniqueUserUpdate(user, input);
+    if (input.primaryOrganizationId !== undefined) {
+      requireEnabledOrganization(this.context.store, input.primaryOrganizationId);
+    }
+
     if (input.username !== undefined) user.username = input.username;
     if (input.displayName !== undefined) user.displayName = input.displayName;
     if (input.email !== undefined) user.email = input.email;
@@ -176,6 +181,21 @@ export class UserService {
       if (user.username === username) throw createKnownError("VALIDATION_DUPLICATE_USERNAME");
       if (user.email === email) throw createKnownError("VALIDATION_DUPLICATE_EMAIL");
       if (user.phone === phone) throw createKnownError("VALIDATION_DUPLICATE_PHONE");
+    }
+  }
+
+  private ensureUniqueUserUpdate(user: UserRecord, input: UpdateUserRequest): void {
+    for (const candidate of this.context.store.users.values()) {
+      if (candidate.isDeleted || candidate.id === user.id) continue;
+      if (input.username !== undefined && candidate.username === input.username) {
+        throw createKnownError("VALIDATION_DUPLICATE_USERNAME");
+      }
+      if (input.email !== undefined && candidate.email === input.email) {
+        throw createKnownError("VALIDATION_DUPLICATE_EMAIL");
+      }
+      if (input.phone !== undefined && candidate.phone === input.phone) {
+        throw createKnownError("VALIDATION_DUPLICATE_PHONE");
+      }
     }
   }
 }

@@ -213,6 +213,90 @@ describe("backend core foundation routes", () => {
     expect(unlockedLoginResponse.status).toBe(200);
   });
 
+  it("rejects user updates that would duplicate username, email, or phone", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "first-user",
+        displayName: "First User",
+        email: "first-user@example.com",
+        phone: "10000000006",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const secondResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "second-user",
+        displayName: "Second User",
+        email: "second-user@example.com",
+        phone: "10000000007",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const second = await secondResponse.json();
+
+    const duplicateUsernameResponse = await app.request(`/api/users/${second.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ username: "first-user" })
+    });
+    const duplicateUsername = await duplicateUsernameResponse.json();
+    const duplicateEmailResponse = await app.request(`/api/users/${second.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ email: "first-user@example.com" })
+    });
+    const duplicateEmail = await duplicateEmailResponse.json();
+    const duplicatePhoneResponse = await app.request(`/api/users/${second.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ phone: "10000000006" })
+    });
+    const duplicatePhone = await duplicatePhoneResponse.json();
+
+    expect(duplicateUsernameResponse.status).toBe(409);
+    expect(duplicateUsername.error.code).toBe("VALIDATION_DUPLICATE_USERNAME");
+    expect(duplicateEmailResponse.status).toBe(409);
+    expect(duplicateEmail.error.code).toBe("VALIDATION_DUPLICATE_EMAIL");
+    expect(duplicatePhoneResponse.status).toBe(409);
+    expect(duplicatePhone.error.code).toBe("VALIDATION_DUPLICATE_PHONE");
+  });
+
+  it("rejects updating a user's primary organization to a disabled organization", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
+    });
+    const child = await childResponse.json();
+    await app.request(`/api/organizations/${child.data.id}/disable`, {
+      method: "POST",
+      headers: authHeaders
+    });
+
+    const response = await app.request("/api/users/1", {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ primaryOrganizationId: child.data.id })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body.error.code).toBe("BUSINESS_ORG_DISABLED");
+  });
+
   it("locks accounts according to the configured failed-login policy", async () => {
     const services = createInMemoryBackendCoreServices({
       failedLoginMaxAttempts: 2,
