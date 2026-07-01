@@ -36,6 +36,10 @@ export function createRoleRoutes(services: BackendCoreServices) {
     return context.json({ data: services.copyRole(context.req.param("id")) }, 201);
   });
 
+  routes.get("/roles/:id/permissions", (context) => {
+    return context.json({ data: services.listRolePermissionCodes(context.req.param("id")) });
+  });
+
   routes.put("/roles/:id/permissions", async (context) => {
     const input = updateRolePermissionsRequestSchema.parse(await context.req.json());
     return context.json({ data: await services.updateRolePermissions(context.req.param("id"), input) });

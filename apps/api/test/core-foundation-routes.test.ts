@@ -356,6 +356,24 @@ describe("backend core foundation routes", () => {
     expect(role.data.id).toBe("1");
   });
 
+  it("reads role permission codes", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    await app.request("/api/roles/2/permissions", {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({ permissionCodes: ["user:view", "role:view"] })
+    });
+
+    const response = await app.request("/api/roles/2/permissions", {
+      headers: authHeaders
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toEqual(["user:view", "role:view"]);
+  });
+
   it("rejects role updates that would duplicate role code", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

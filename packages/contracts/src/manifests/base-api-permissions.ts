@@ -354,6 +354,16 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     public: false
   },
   {
+    method: "GET",
+    path: "/api/roles/:id/permissions",
+    code: "api.roles.permissions.view",
+    description: "View role permission configuration",
+    module: "roles",
+    requiredPermission: "role:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
     method: "PUT",
     path: "/api/roles/:id/permissions",
     code: "api.roles.permissions.update",

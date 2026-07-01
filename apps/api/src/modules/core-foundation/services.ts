@@ -208,6 +208,10 @@ export class BackendCoreServices {
     return role;
   }
 
+  listRolePermissionCodes(id: string) {
+    return this.roles.listPermissionCodes(id);
+  }
+
   async deleteRole(id: string) {
     const role = this.roles.delete(id);
     await this.permissions.invalidateRole(id);

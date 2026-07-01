@@ -91,6 +91,13 @@ export class RoleService {
     return role;
   }
 
+  listPermissionCodes(id: string): string[] {
+    requireRole(this.context.store, id);
+    return this.context.store.rolePermissions
+      .filter((permission) => permission.roleId === id)
+      .map((permission) => permission.permissionCode);
+  }
+
   delete(id: string, deletedBy: string | null = null): RoleRecord {
     const role = requireRole(this.context.store, id);
     const now = toUtcIso(nowUtc());

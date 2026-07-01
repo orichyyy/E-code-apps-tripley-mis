@@ -68,6 +68,7 @@ The backend core goal has partial implementation progress:
 - Tightened user update validation so administrator edits preserve unique username, email, and phone values and cannot set a disabled organization as the user's primary organization.
 - Tightened organization and role update validation so administrator edits cannot duplicate existing organization codes or role codes.
 - Tightened role-change permission behavior so disabled/deleted assigned roles no longer grant permissions, and role update/delete operations invalidate affected user permission-cache entries.
+- Added `GET /api/roles/:id/permissions` to read a role's configured permission codes, with API permission metadata and route coverage.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, and finalized CSRF protection still depend on the unresolved implementation questions.
 
