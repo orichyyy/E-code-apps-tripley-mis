@@ -22,6 +22,11 @@ describe("baseApiPermissionManifest", () => {
         }),
         expect.objectContaining({
           method: "POST",
+          path: "/api/context/current-organization",
+          public: false
+        }),
+        expect.objectContaining({
+          method: "POST",
           path: "/api/users/:id/reset-password",
           requiredPermission: "user:password:reset"
         }),

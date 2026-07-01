@@ -1,6 +1,7 @@
 import {
   changePasswordRequestSchema,
-  loginRequestSchema
+  loginRequestSchema,
+  switchCurrentOrganizationRequestSchema
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
@@ -48,6 +49,13 @@ export function createAuthRoutes(services: BackendCoreServices) {
     if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
     const input = changePasswordRequestSchema.parse(await context.req.json());
     return context.json({ data: await services.changePassword(authContext, input) });
+  });
+
+  routes.post("/context/current-organization", async (context) => {
+    const authContext = context.get("authContext");
+    if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
+    const input = switchCurrentOrganizationRequestSchema.parse(await context.req.json());
+    return context.json({ data: await services.switchCurrentOrganization(authContext, input) });
   });
 
   routes.post("/auth/refresh", (context) => {

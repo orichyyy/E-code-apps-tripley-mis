@@ -1,4 +1,9 @@
-import type { ChangePasswordRequest, LoginRequest } from "@web-admin-base/contracts";
+import {
+  baseMenuManifest,
+  type ChangePasswordRequest,
+  type LoginRequest,
+  type SwitchCurrentOrganizationRequest
+} from "@web-admin-base/contracts";
 
 import type { AuthContext } from "../../core/auth-context/auth-context";
 import { createKnownError } from "../../core/errors/error-codes";
@@ -15,8 +20,8 @@ import {
 } from "../../infra/security/password-policy";
 import type { AuthSessionRecord, PublicSession, UserRecord } from "./domain";
 import type { BackendCoreContext } from "./service-context";
-import { requireUser } from "./store-guards";
-import { toPublicUser } from "./serializers";
+import { requireEnabledOrganization, requireUser } from "./store-guards";
+import { toPublicOrganization, toPublicUser } from "./serializers";
 import type { KnownErrorCode } from "../../core/errors/error-codes";
 
 export class AuthService {
@@ -63,7 +68,7 @@ export class AuthService {
     });
 
     return {
-      accessToken: this.signAccessToken(user, organizationId),
+      accessToken: this.signAccessToken(user, organizationId, session.id),
       refreshToken,
       refreshTokenCookie: { name: "refresh_token", httpOnly: true, sameSite: "Strict" as const },
       session,
@@ -87,7 +92,10 @@ export class AuthService {
     if (!session || session.revokedAt) throw createKnownError("AUTH_SESSION_NOT_FOUND");
 
     session.lastSeenAt = toUtcIso(nowUtc());
-    return { accessToken: this.signAccessToken(user, session.currentOrganizationId), session };
+    return {
+      accessToken: this.signAccessToken(user, session.currentOrganizationId, session.id),
+      session
+    };
   }
 
   findAuthContext(authorizationHeader?: string | null): AuthContext | null {
@@ -118,6 +126,34 @@ export class AuthService {
     return toPublicUser(user);
   }
 
+  async switchCurrentOrganization(
+    authContext: AuthContext,
+    input: SwitchCurrentOrganizationRequest,
+    permissionCodes: string[]
+  ) {
+    const user = requireUser(this.context.store, authContext.userId);
+    const organization = requireEnabledOrganization(this.context.store, input.organizationId);
+    const session = this.requireActiveSession(authContext.sessionId, user.id);
+    const binding = [...this.context.store.userOrganizationRoles.values()].find(
+      (candidate) =>
+        candidate.userId === user.id && candidate.organizationId === input.organizationId
+    );
+    if (!binding) throw createKnownError("PERMISSION_DENIED");
+
+    session.currentOrganizationId = organization.id;
+    session.lastSeenAt = toUtcIso(nowUtc());
+
+    return {
+      accessToken: this.signAccessToken(user, organization.id, session.id),
+      session,
+      currentOrganization: toPublicOrganization(organization),
+      permissionCodes,
+      menus: baseMenuManifest.filter(
+        (menu) => !menu.requiredPermission || permissionCodes.includes(menu.requiredPermission)
+      )
+    };
+  }
+
   authenticateAccessToken(accessToken: string): AuthContext {
     try {
       const claims = verifyAccessToken(accessToken, {
@@ -125,9 +161,14 @@ export class AuthService {
         issuer: this.context.config.jwtIssuer
       });
       const user = requireUser(this.context.store, claims.sub);
+      const session = this.requireActiveSession(claims.sid, user.id);
       const organization = this.context.store.organizations.get(claims.currentOrganizationId);
 
       if (user.status !== "enabled" || user.tokenVersion !== claims.tokenVersion) {
+        throw createKnownError("AUTH_TOKEN_INVALIDATED");
+      }
+
+      if (session.currentOrganizationId !== claims.currentOrganizationId) {
         throw createKnownError("AUTH_TOKEN_INVALIDATED");
       }
 
@@ -137,6 +178,7 @@ export class AuthService {
 
       return {
         userId: user.id,
+        sessionId: claims.sid,
         username: user.username,
         currentOrganizationId: claims.currentOrganizationId,
         tokenVersion: claims.tokenVersion,
@@ -167,11 +209,12 @@ export class AuthService {
     );
   }
 
-  private signAccessToken(user: UserRecord, organizationId: string): string {
+  private signAccessToken(user: UserRecord, organizationId: string, sessionId: string): string {
     const issuedAt = Math.floor(Date.now() / 1000);
     return signAccessToken(
       {
         sub: user.id,
+        sid: sessionId,
         username: user.username,
         currentOrganizationId: organizationId,
         tokenVersion: user.tokenVersion,
@@ -203,6 +246,15 @@ export class AuthService {
       lastSeenAt: toUtcIso(now)
     };
     this.context.store.authSessions.set(session.id, session);
+    return session;
+  }
+
+  private requireActiveSession(sessionId: string, userId: string): AuthSessionRecord {
+    const session = this.context.store.authSessions.get(sessionId);
+    if (!session || session.userId !== userId || session.revokedAt) {
+      throw createKnownError("AUTH_SESSION_NOT_FOUND");
+    }
+    if (new Date(session.expiresAt) <= nowUtc()) throw createKnownError("AUTH_TOKEN_EXPIRED");
     return session;
   }
 

@@ -168,6 +168,91 @@ describe("backend core foundation routes", () => {
     expect(remove.data.removed).toBe(true);
   });
 
+  it("switches current organization and refreshes permission context", async () => {
+    const { app, setup } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
+    });
+    const child = await childResponse.json();
+
+    await app.request("/api/roles/2/permissions", {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({ permissionCodes: ["organization:view"] })
+    });
+    await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+    });
+
+    const switchResponse = await app.request("/api/context/current-organization", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: child.data.id })
+    });
+    const switched = await switchResponse.json();
+    const refreshedHeaders = {
+      authorization: `Bearer ${switched.data.accessToken}`
+    };
+    const oldTokenResponse = await app.request("/api/users", { headers: authHeaders });
+    const oldToken = await oldTokenResponse.json();
+    const organizationResponse = await app.request("/api/organizations/tree", {
+      headers: refreshedHeaders
+    });
+    const usersResponse = await app.request("/api/users", { headers: refreshedHeaders });
+    const users = await usersResponse.json();
+
+    expect(switchResponse.status).toBe(200);
+    expect(switched.data.session.currentOrganizationId).toBe(child.data.id);
+    expect(switched.data.currentOrganization.id).toBe(child.data.id);
+    expect(switched.data.permissionCodes).toEqual(["organization:view"]);
+    expect(switched.data.menus).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "system.organizations" })])
+    );
+    expect(switched.data.menus).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "system.users" })])
+    );
+    expect(oldTokenResponse.status).toBe(401);
+    expect(oldToken.error.code).toBe("AUTH_TOKEN_INVALIDATED");
+    expect(organizationResponse.status).toBe(200);
+    expect(usersResponse.status).toBe(403);
+    expect(users.error.code).toBe("PERMISSION_API_DENIED");
+  });
+
+  it("prevents switching to a disabled organization", async () => {
+    const { app, setup } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
+    });
+    const child = await childResponse.json();
+    await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+    });
+    await app.request(`/api/organizations/${child.data.id}/disable`, {
+      method: "POST",
+      headers: authHeaders
+    });
+
+    const switchResponse = await app.request("/api/context/current-organization", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: child.data.id })
+    });
+    const body = await switchResponse.json();
+
+    expect(switchResponse.status).toBe(409);
+    expect(body.error.code).toBe("BUSINESS_ORG_DISABLED");
+  });
+
   it("returns stable validation error codes for invalid requests", async () => {
     const app = createApp();
     const response = await app.request("/api/initialization/setup", {

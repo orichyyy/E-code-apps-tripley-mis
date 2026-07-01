@@ -14,6 +14,7 @@ import type {
   InitializationSetupRequest,
   LoginRequest,
   ResetPasswordRequest,
+  SwitchCurrentOrganizationRequest,
   UpdateOrganizationRequest,
   UpdateRolePermissionsRequest,
   UpdateRoleRequest,
@@ -76,6 +77,21 @@ export class BackendCoreServices {
 
   changePassword(authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>, input: ChangePasswordRequest) {
     return this.auth.changePassword(authContext, input);
+  }
+
+  async switchCurrentOrganization(
+    authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
+    input: SwitchCurrentOrganizationRequest
+  ) {
+    const permissionContext = await this.permissions.getPermissionContext(
+      authContext.userId,
+      input.organizationId
+    );
+    return this.auth.switchCurrentOrganization(
+      authContext,
+      input,
+      permissionContext.permissionCodes
+    );
   }
 
   findAuthContext(authorizationHeader?: string | null) {

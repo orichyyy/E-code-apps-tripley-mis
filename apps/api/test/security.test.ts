@@ -36,6 +36,7 @@ describe("backend security foundation", () => {
     const token = signAccessToken(
       {
         sub: "1",
+        sid: "1",
         username: "admin",
         currentOrganizationId: "1",
         tokenVersion: 0,
@@ -50,6 +51,7 @@ describe("backend security foundation", () => {
 
     expect(verifyAccessToken(token, { issuer: "web-admin-base", secret: "test-secret" })).toMatchObject({
       sub: "1",
+      sid: "1",
       username: "admin",
       currentOrganizationId: "1"
     });

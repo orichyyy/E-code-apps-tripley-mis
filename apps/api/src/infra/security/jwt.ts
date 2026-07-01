@@ -2,6 +2,7 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 export type AccessTokenClaims = {
   sub: string;
+  sid: string;
   username: string;
   currentOrganizationId: string;
   tokenVersion: number;
@@ -59,6 +60,7 @@ export function verifyAccessToken(token: string, config: JwtConfig): AccessToken
 
   return {
     sub: decodedPayload.sub,
+    sid: decodedPayload.sid,
     username: decodedPayload.username,
     currentOrganizationId: decodedPayload.currentOrganizationId,
     tokenVersion: decodedPayload.tokenVersion,

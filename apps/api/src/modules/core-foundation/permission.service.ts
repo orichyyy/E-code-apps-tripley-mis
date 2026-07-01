@@ -44,7 +44,7 @@ export class PermissionService {
     await this.cache.invalidate(userId, organizationId);
   }
 
-  private async getPermissionContext(userId: string, organizationId: string) {
+  async getPermissionContext(userId: string, organizationId: string) {
     const cached = await this.cache.get(userId, organizationId);
     if (cached) return cached;
 

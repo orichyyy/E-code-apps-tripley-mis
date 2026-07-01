@@ -76,6 +76,15 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     public: false
   },
   {
+    method: "POST",
+    path: "/api/context/current-organization",
+    code: "api.context.current-organization.switch",
+    description: "Switch current organization and refresh permission context",
+    module: "auth",
+    logLevel: "request",
+    public: false
+  },
+  {
     method: "GET",
     path: "/api/online-users",
     code: "api.online-users.view",
