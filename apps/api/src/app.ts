@@ -2,7 +2,9 @@ import { healthResponseSchema } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
+import type { AuthContextVariables } from "./core/auth-context/auth-context";
 import { createErrorResponse, normalizeError } from "./core/errors/error-response";
+import { createApiAuthorizationMiddleware } from "./middleware/api-authorization";
 import { requestIdMiddleware, type RequestIdVariables } from "./middleware/request-id";
 import { createCoreFoundationRoutes } from "./modules/core-foundation/core-foundation.routes";
 import {
@@ -12,7 +14,7 @@ import {
 import { createManifestRoutes } from "./modules/manifests/manifest.routes";
 
 type AppBindings = {
-  Variables: RequestIdVariables;
+  Variables: RequestIdVariables & AuthContextVariables;
 };
 
 export type AppDependencies = {
@@ -23,6 +25,7 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
   const app = new Hono<AppBindings>().basePath("/api");
 
   app.use("*", requestIdMiddleware);
+  app.use("*", createApiAuthorizationMiddleware(dependencies.backendCoreServices));
 
   app.get("/health", (context) => {
     return context.json(

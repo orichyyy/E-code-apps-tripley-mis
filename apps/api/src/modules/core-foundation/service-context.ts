@@ -1,4 +1,5 @@
 import type { InMemoryBackendStore } from "./in-memory-store";
+import type { PermissionCache } from "../permissions/permission-cache";
 
 export type BackendCoreConfig = {
   jwtSecret: string;
@@ -21,4 +22,5 @@ export const defaultBackendCoreConfig: BackendCoreConfig = {
 export type BackendCoreContext = {
   store: InMemoryBackendStore;
   config: BackendCoreConfig;
+  permissionCache: PermissionCache;
 };

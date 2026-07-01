@@ -1,8 +1,14 @@
 import type { LoginRequest } from "@web-admin-base/contracts";
 
+import type { AuthContext } from "../../core/auth-context/auth-context";
 import { createKnownError } from "../../core/errors/error-codes";
 import { addDaysUtc, addSecondsUtc, nowUtc, toUtcIso } from "../../core/time/utc";
-import { createRefreshToken, hashToken, signAccessToken } from "../../infra/security/jwt";
+import {
+  createRefreshToken,
+  hashToken,
+  signAccessToken,
+  verifyAccessToken
+} from "../../infra/security/jwt";
 import { verifyPassword } from "../../infra/security/password-hash";
 import type { AuthSessionRecord, PublicSession, UserRecord } from "./domain";
 import type { BackendCoreContext } from "./service-context";
@@ -78,6 +84,40 @@ export class AuthService {
 
     session.lastSeenAt = toUtcIso(nowUtc());
     return { accessToken: this.signAccessToken(user, session.currentOrganizationId), session };
+  }
+
+  findAuthContext(authorizationHeader?: string | null): AuthContext | null {
+    if (!authorizationHeader?.startsWith("Bearer ")) return null;
+    return this.authenticateAccessToken(authorizationHeader.slice("Bearer ".length));
+  }
+
+  authenticateAccessToken(accessToken: string): AuthContext {
+    try {
+      const claims = verifyAccessToken(accessToken, {
+        secret: this.context.config.jwtSecret,
+        issuer: this.context.config.jwtIssuer
+      });
+      const user = requireUser(this.context.store, claims.sub);
+      const organization = this.context.store.organizations.get(claims.currentOrganizationId);
+
+      if (user.status !== "enabled" || user.tokenVersion !== claims.tokenVersion) {
+        throw createKnownError("AUTH_TOKEN_INVALIDATED");
+      }
+
+      if (!organization || organization.status !== "enabled" || organization.isDeleted) {
+        throw createKnownError("BUSINESS_ORG_DISABLED");
+      }
+
+      return {
+        userId: user.id,
+        username: user.username,
+        currentOrganizationId: claims.currentOrganizationId,
+        tokenVersion: claims.tokenVersion
+      };
+    } catch (error) {
+      if (error instanceof Error && error.name === "AppError") throw error;
+      throw createKnownError("AUTH_TOKEN_EXPIRED");
+    }
   }
 
   logout(sessionId: string) {

@@ -56,12 +56,15 @@ export function createUserRoutes(services: BackendCoreServices) {
 
   routes.post("/users/:id/organizations", async (context) => {
     const input = assignUserOrganizationRoleRequestSchema.parse(await context.req.json());
-    return context.json({ data: services.assignUserOrganizationRole(context.req.param("id"), input) });
+    return context.json({ data: await services.assignUserOrganizationRole(context.req.param("id"), input) });
   });
 
-  routes.delete("/users/:id/organizations/:organizationId", (context) => {
+  routes.delete("/users/:id/organizations/:organizationId", async (context) => {
     return context.json({
-      data: services.removeUserOrganizationRole(context.req.param("id"), context.req.param("organizationId"))
+      data: await services.removeUserOrganizationRole(
+        context.req.param("id"),
+        context.req.param("organizationId")
+      )
     });
   });
 

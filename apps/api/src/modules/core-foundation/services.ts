@@ -1,4 +1,10 @@
-import { baseMenuManifest, basePermissionManifest, baseRouteManifest } from "@web-admin-base/contracts";
+import { createInMemoryCacheAdapter } from "@web-admin-base/adapters";
+import {
+  baseMenuManifest,
+  basePermissionManifest,
+  baseRouteManifest,
+  type BaseApiPermissionManifestEntry
+} from "@web-admin-base/contracts";
 import type {
   AssignUserOrganizationRoleRequest,
   CreateOrganizationRequest,
@@ -17,6 +23,7 @@ import { AuthService } from "./auth.service";
 import { InitializationService } from "./initialization.service";
 import { InMemoryBackendStore } from "./in-memory-store";
 import { OrganizationService } from "./organization.service";
+import { PermissionService } from "./permission.service";
 import { RoleService } from "./role.service";
 import {
   defaultBackendCoreConfig,
@@ -24,6 +31,7 @@ import {
   type BackendCoreContext
 } from "./service-context";
 import { UserService } from "./user.service";
+import { PermissionCache } from "../permissions/permission-cache";
 
 export type { BackendCoreConfig } from "./service-context";
 
@@ -31,6 +39,7 @@ export class BackendCoreServices {
   readonly auth: AuthService;
   readonly initialization: InitializationService;
   readonly organizations: OrganizationService;
+  readonly permissions: PermissionService;
   readonly roles: RoleService;
   readonly users: UserService;
 
@@ -39,6 +48,7 @@ export class BackendCoreServices {
     this.roles = new RoleService(context);
     this.users = new UserService(context);
     this.auth = new AuthService(context);
+    this.permissions = new PermissionService(context, context.permissionCache);
     this.initialization = new InitializationService(
       context,
       this.organizations,
@@ -61,6 +71,17 @@ export class BackendCoreServices {
 
   refreshAccessToken(refreshToken: string) {
     return this.auth.refreshAccessToken(refreshToken);
+  }
+
+  findAuthContext(authorizationHeader?: string | null) {
+    return this.auth.findAuthContext(authorizationHeader);
+  }
+
+  requireApiPermission(
+    authContext: ReturnType<AuthService["findAuthContext"]>,
+    apiPermission: BaseApiPermissionManifestEntry
+  ) {
+    return this.permissions.requireApiPermission(authContext, apiPermission);
   }
 
   logout(sessionId: string) {
@@ -119,12 +140,16 @@ export class BackendCoreServices {
     return this.users.delete(id);
   }
 
-  assignUserOrganizationRole(userId: string, input: AssignUserOrganizationRoleRequest) {
-    return this.users.assignOrganizationRole(userId, input);
+  async assignUserOrganizationRole(userId: string, input: AssignUserOrganizationRoleRequest) {
+    const binding = this.users.assignOrganizationRole(userId, input);
+    await this.permissions.invalidateUserOrganization(userId, input.organizationId);
+    return binding;
   }
 
-  removeUserOrganizationRole(userId: string, organizationId: string) {
-    return this.users.removeOrganizationRole(userId, organizationId);
+  async removeUserOrganizationRole(userId: string, organizationId: string) {
+    const result = this.users.removeOrganizationRole(userId, organizationId);
+    await this.permissions.invalidateUserOrganization(userId, organizationId);
+    return result;
   }
 
   listRoles() {
@@ -143,8 +168,10 @@ export class BackendCoreServices {
     return this.roles.copy(id);
   }
 
-  updateRolePermissions(id: string, input: UpdateRolePermissionsRequest) {
-    return this.roles.updatePermissions(id, input);
+  async updateRolePermissions(id: string, input: UpdateRolePermissionsRequest) {
+    const role = this.roles.updatePermissions(id, input);
+    await this.permissions.invalidateRole(id);
+    return role;
   }
 
   deleteRole(id: string) {
@@ -167,6 +194,7 @@ export class BackendCoreServices {
 export function createInMemoryBackendCoreServices(config?: Partial<BackendCoreConfig>) {
   return new BackendCoreServices({
     store: new InMemoryBackendStore(),
+    permissionCache: new PermissionCache(createInMemoryCacheAdapter()),
     config: {
       ...defaultBackendCoreConfig,
       ...config

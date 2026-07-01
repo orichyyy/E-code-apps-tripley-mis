@@ -1,4 +1,8 @@
-import { baseMenuManifest, type InitializationSetupRequest } from "@web-admin-base/contracts";
+import {
+  baseMenuManifest,
+  basePermissionManifest,
+  type InitializationSetupRequest
+} from "@web-admin-base/contracts";
 
 import { createKnownError } from "../../core/errors/error-codes";
 import { nowUtc, toUtcIso } from "../../core/time/utc";
@@ -51,6 +55,13 @@ export class InitializationService {
       code: superAdminRoleCode,
       remark: "Built-in role"
     });
+    this.context.store.rolePermissions.push(
+      ...basePermissionManifest.map((permission) => ({
+        roleId: superAdminRole.id,
+        permissionCode: permission.code,
+        createdAt: toUtcIso(nowUtc())
+      }))
+    );
     this.roles.createRecord({
       name: "Organization Administrator",
       code: orgAdminRoleCode,

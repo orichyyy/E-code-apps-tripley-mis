@@ -20,6 +20,22 @@ async function setupInitializedApp() {
   return { app, setup };
 }
 
+async function loginAsAdmin(app: ReturnType<typeof createApp>) {
+  const loginResponse = await app.request("/api/auth/login", {
+    method: "POST",
+    headers: { "user-agent": "vitest" },
+    body: JSON.stringify({ username: "admin", password: "password1" })
+  });
+  const login = await loginResponse.json();
+  return {
+    login,
+    loginResponse,
+    authHeaders: {
+      authorization: `Bearer ${login.data.accessToken}`
+    }
+  };
+}
+
 describe("backend core foundation routes", () => {
   it("supports first-start initialization and exposes initialized status", async () => {
     const { app, setup } = await setupInitializedApp();
@@ -34,13 +50,10 @@ describe("backend core foundation routes", () => {
 
   it("logs in with username/password, creates a session, and lists online users", async () => {
     const { app } = await setupInitializedApp();
-    const loginResponse = await app.request("/api/auth/login", {
-      method: "POST",
-      headers: { "user-agent": "vitest" },
-      body: JSON.stringify({ username: "admin", password: "password1" })
+    const { login, loginResponse, authHeaders } = await loginAsAdmin(app);
+    const onlineUsersResponse = await app.request("/api/online-users", {
+      headers: authHeaders
     });
-    const login = await loginResponse.json();
-    const onlineUsersResponse = await app.request("/api/online-users");
     const onlineUsers = await onlineUsersResponse.json();
 
     expect(loginResponse.headers.get("set-cookie")).toContain("HttpOnly");
@@ -70,8 +83,10 @@ describe("backend core foundation routes", () => {
 
   it("creates child organizations and disables descendants when a parent is disabled", async () => {
     const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
+      headers: authHeaders,
       body: JSON.stringify({
         parentOrganizationId: "1",
         name: "Child Organization",
@@ -79,7 +94,10 @@ describe("backend core foundation routes", () => {
       })
     });
     const child = await childResponse.json();
-    const disabledResponse = await app.request("/api/organizations/1/disable", { method: "POST" });
+    const disabledResponse = await app.request("/api/organizations/1/disable", {
+      method: "POST",
+      headers: authHeaders
+    });
     const disabled = await disabledResponse.json();
 
     expect(child.data.level).toBe(2);
@@ -94,8 +112,10 @@ describe("backend core foundation routes", () => {
 
   it("resets a user password and increments user token version", async () => {
     const { app, setup } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
     const resetResponse = await app.request(`/api/users/${setup.data.admin.id}/reset-password`, {
       method: "POST",
+      headers: authHeaders,
       body: JSON.stringify({ password: "password2" })
     });
     const reset = await resetResponse.json();
@@ -106,8 +126,10 @@ describe("backend core foundation routes", () => {
 
   it("updates role permissions from the base permission manifest", async () => {
     const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
     const response = await app.request("/api/roles/1/permissions", {
       method: "PUT",
+      headers: authHeaders,
       body: JSON.stringify({ permissionCodes: ["user:view", "role:view"] })
     });
     const role = await response.json();
@@ -117,20 +139,23 @@ describe("backend core foundation routes", () => {
 
   it("assigns one role per user organization and supports removing the binding", async () => {
     const { app, setup } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
+      headers: authHeaders,
       body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
     });
     const child = await childResponse.json();
 
     const assignResponse = await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
       method: "POST",
+      headers: authHeaders,
       body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
     });
     const assign = await assignResponse.json();
     const removeResponse = await app.request(
       `/api/users/${setup.data.admin.id}/organizations/${child.data.id}`,
-      { method: "DELETE" }
+      { method: "DELETE", headers: authHeaders }
     );
     const remove = await removeResponse.json();
 
@@ -180,6 +205,49 @@ describe("backend core foundation routes", () => {
 
     expect(response.status).toBe(409);
     expect(body.error.code).toBe("BUSINESS_SYSTEM_ALREADY_INITIALIZED");
+  });
+
+  it("requires a bearer access token for private API permissions", async () => {
+    const { app } = await setupInitializedApp();
+    const response = await app.request("/api/users");
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(body.error.code).toBe("AUTH_TOKEN_EXPIRED");
+  });
+
+  it("denies authenticated users without the required API permission", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "normal",
+        displayName: "Normal User",
+        email: "normal@example.com",
+        phone: "10000000002",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+
+    const normalLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "normal", password: "password1" })
+    });
+    const normalLogin = await normalLoginResponse.json();
+    const response = await app.request("/api/users", {
+      headers: {
+        authorization: `Bearer ${normalLogin.data.accessToken}`
+      }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe("PERMISSION_API_DENIED");
   });
 });
 

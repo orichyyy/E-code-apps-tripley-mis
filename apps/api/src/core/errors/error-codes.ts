@@ -13,6 +13,8 @@ const errorDefinitions = {
   BUSINESS_ROLE_DISABLED: ["Role is disabled", 409, "business"],
   BUSINESS_SYSTEM_ALREADY_INITIALIZED: ["System is already initialized", 409, "business"],
   ORGANIZATION_NOT_FOUND: ["Organization was not found", 404, "business"],
+  PERMISSION_API_DENIED: ["API permission denied", 403, "authorization"],
+  PERMISSION_DENIED: ["Permission denied", 403, "authorization"],
   PERMISSION_UNKNOWN_CODE: ["Permission code is unknown", 400, "validation"],
   ROLE_NOT_FOUND: ["Role was not found", 404, "business"],
   USER_NOT_FOUND: ["User was not found", 404, "business"],

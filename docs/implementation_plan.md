@@ -57,6 +57,8 @@ The backend core goal has partial implementation progress:
 - Split the in-memory backend foundation into focused auth, initialization, organization, user, and role services/routes so DB-backed repositories can replace the storage boundary later without growing a large mixed-responsibility module.
 - Added stable backend API error handling for known authentication, validation, business, and system errors. Zod request failures now return `VALIDATION_INVALID_REQUEST`, and business/auth failures return their stable error codes instead of leaking raw internal errors.
 - Added a base API permission metadata manifest for the implemented backend-core routes. It declares method, path, API permission code, module, log level, public/private status, and required permission where applicable. The existing `/api/permissions/manifest` endpoint now exposes this API metadata alongside the permission manifest so a later DB-backed permission sync can persist it to `api_permissions`.
+- Added manifest-driven API authorization middleware for the implemented backend-core Hono routes. Public routes remain callable without a token; private routes require a Bearer access token and, where declared by the API permission metadata, the user's current-organization role must grant the required permission.
+- Wired the permission cache into authorization checks and invalidates cached user/organization permission contexts when role permissions or user-organization-role bindings change.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, and finalized CSRF protection still depend on the unresolved implementation questions.
 

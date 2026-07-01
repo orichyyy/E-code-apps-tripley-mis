@@ -5,9 +5,27 @@ import { createApp } from "../src/app";
 describe("manifest routes", () => {
   it("exposes permission, route, and menu manifests", async () => {
     const app = createApp();
-    const permissions = await app.request("/api/permissions/manifest");
-    const routes = await app.request("/api/routes/manifest");
-    const menus = await app.request("/api/menus/tree");
+    await app.request("/api/initialization/setup", {
+      method: "POST",
+      body: JSON.stringify({
+        organizationName: "Default Organization",
+        organizationCode: "default",
+        adminUsername: "admin",
+        adminDisplayName: "Super Admin",
+        adminEmail: "admin@example.com",
+        adminPhone: "10000000000",
+        adminPassword: "password1"
+      })
+    });
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const login = await loginResponse.json();
+    const headers = { authorization: `Bearer ${login.data.accessToken}` };
+    const permissions = await app.request("/api/permissions/manifest", { headers });
+    const routes = await app.request("/api/routes/manifest", { headers });
+    const menus = await app.request("/api/menus/tree", { headers });
 
     await expect(permissions.json()).resolves.toMatchObject({
       data: expect.arrayContaining([expect.objectContaining({ code: "user:view" })]),
