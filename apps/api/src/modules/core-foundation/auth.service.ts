@@ -35,7 +35,7 @@ export class AuthService {
 
     const now = nowUtc();
     if (user.status === "disabled" || user.isDeleted) throw createKnownError("AUTH_ACCOUNT_DISABLED");
-    if (user.status === "locked" && user.lockedUntil && new Date(user.lockedUntil) > now) {
+    if (this.isUserLocked(user, now)) {
       throw createKnownError("AUTH_ACCOUNT_LOCKED");
     }
 
@@ -321,6 +321,11 @@ export class AuthService {
   private isPasswordChangeRequired(user: UserRecord): boolean {
     if (user.firstLoginPasswordChangeRequired) return true;
     return user.passwordExpiresAt !== null && new Date(user.passwordExpiresAt) <= nowUtc();
+  }
+
+  private isUserLocked(user: UserRecord, now: Date): boolean {
+    if (user.status !== "locked") return false;
+    return !user.lockedUntil || new Date(user.lockedUntil) > now;
   }
 }
 

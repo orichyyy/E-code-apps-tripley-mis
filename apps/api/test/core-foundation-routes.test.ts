@@ -170,6 +170,74 @@ describe("backend core foundation routes", () => {
     expect(reset.data.firstLoginPasswordChangeRequired).toBe(true);
   });
 
+  it("prevents login for administrator-locked users until unlocked", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const createResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "locked-user",
+        displayName: "Locked User",
+        email: "locked-user@example.com",
+        phone: "10000000005",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const created = await createResponse.json();
+
+    await app.request(`/api/users/${created.data.id}/lock`, {
+      method: "POST",
+      headers: authHeaders
+    });
+    const lockedLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "locked-user", password: "password1" })
+    });
+    const lockedLogin = await lockedLoginResponse.json();
+
+    await app.request(`/api/users/${created.data.id}/unlock`, {
+      method: "POST",
+      headers: authHeaders
+    });
+    const unlockedLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "locked-user", password: "password1" })
+    });
+
+    expect(lockedLoginResponse.status).toBe(423);
+    expect(lockedLogin.error.code).toBe("AUTH_ACCOUNT_LOCKED");
+    expect(unlockedLoginResponse.status).toBe(200);
+  });
+
+  it("locks accounts according to the configured failed-login policy", async () => {
+    const services = createInMemoryBackendCoreServices({
+      failedLoginMaxAttempts: 2,
+      failedLoginLockMinutes: 30
+    });
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+
+    await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "wrong-password" })
+    });
+    await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "wrong-password" })
+    });
+    const lockedLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const lockedLogin = await lockedLoginResponse.json();
+
+    expect(lockedLoginResponse.status).toBe(423);
+    expect(lockedLogin.error.code).toBe("AUTH_ACCOUNT_LOCKED");
+  });
+
   it("updates role permissions from the base permission manifest", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

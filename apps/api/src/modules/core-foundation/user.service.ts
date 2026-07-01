@@ -85,6 +85,13 @@ export class UserService {
   setStatus(id: string, status: "enabled" | "disabled" | "locked"): PublicUser {
     const user = requireUser(this.context.store, id);
     user.status = status;
+    if (status === "enabled") {
+      user.lockedUntil = null;
+      user.failedLoginAttempts = 0;
+    }
+    if (status === "locked") {
+      user.lockedUntil = null;
+    }
     user.updatedAt = toUtcIso(nowUtc());
     return toPublicUser(user);
   }
