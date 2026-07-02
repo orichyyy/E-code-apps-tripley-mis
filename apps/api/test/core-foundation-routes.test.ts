@@ -1804,6 +1804,68 @@ describe("backend core foundation routes", () => {
     );
   });
 
+  it("disables stale base manifest permission metadata on sync", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const { authHeaders } = await loginAsAdmin(app);
+    const store = services["context"].store;
+    const now = new Date().toISOString();
+    store.permissions.set("999", {
+      id: "999",
+      tenantId: null,
+      code: "obsolete:view",
+      name: "obsolete:view",
+      permissionType: "action",
+      resource: "obsolete",
+      action: "view",
+      description: "Obsolete permission",
+      module: "obsolete",
+      source: "base_manifest",
+      manifestHash: "obsolete",
+      status: "enabled",
+      createdAt: now,
+      updatedAt: now
+    });
+    store.apiPermissions.set("999", {
+      id: "999",
+      tenantId: null,
+      method: "GET",
+      path: "/api/obsolete",
+      code: "api.obsolete.view",
+      description: "Obsolete API permission",
+      module: "obsolete",
+      requiredPermission: "obsolete:view",
+      logLevel: "basic",
+      public: false,
+      status: "enabled",
+      createdAt: now,
+      updatedAt: now
+    });
+
+    const syncResponse = await app.request("/api/permissions/sync", {
+      method: "POST",
+      headers: authHeaders
+    });
+    const stalePermission = services
+      .listPermissions()
+      .find((permission) => permission.code === "obsolete:view");
+    const staleApiPermission = services
+      .listApiPermissions()
+      .find((permission) => permission.code === "api.obsolete.view");
+    const roleUpdateResponse = await app.request("/api/roles/1/permissions", {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({ permissionCodes: ["obsolete:view"] })
+    });
+    const roleUpdate = await roleUpdateResponse.json();
+
+    expect(syncResponse.status).toBe(200);
+    expect(stalePermission).toMatchObject({ status: "disabled" });
+    expect(staleApiPermission).toMatchObject({ status: "disabled" });
+    expect(roleUpdateResponse.status).toBe(400);
+    expect(roleUpdate.error.code).toBe("PERMISSION_UNKNOWN_CODE");
+  });
+
   it("lists initialized permission records with API JSON string ids", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

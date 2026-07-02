@@ -109,6 +109,13 @@ export class PermissionService {
 
   syncBasePermissions(): PermissionRecord[] {
     const now = toUtcIso(nowUtc());
+    const currentCodes = new Set(basePermissionManifest.map((entry) => entry.code));
+    for (const permission of this.context.store.permissions.values()) {
+      if (permission.source === "base_manifest" && !currentCodes.has(permission.code)) {
+        permission.status = "disabled";
+        permission.updatedAt = now;
+      }
+    }
     return basePermissionManifest.map((entry) => {
       const manifestHash = hashBasePermissionManifestEntry(entry);
       const { resource, action } = parsePermissionCode(entry.code);
@@ -151,6 +158,13 @@ export class PermissionService {
 
   syncBaseApiPermissions(): ApiPermissionRecord[] {
     const now = toUtcIso(nowUtc());
+    const currentCodes = new Set(baseApiPermissionManifest.map((entry) => entry.code));
+    for (const apiPermission of this.context.store.apiPermissions.values()) {
+      if (!currentCodes.has(apiPermission.code)) {
+        apiPermission.status = "disabled";
+        apiPermission.updatedAt = now;
+      }
+    }
     return baseApiPermissionManifest.map((entry) => {
       const existing = [...this.context.store.apiPermissions.values()].find(
         (permission) => permission.code === entry.code

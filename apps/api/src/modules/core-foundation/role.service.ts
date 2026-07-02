@@ -109,7 +109,9 @@ export class RoleService {
   ): RoleRecord {
     const role = requireRole(this.context.store, id);
     const knownPermissions = new Set(
-      [...this.context.store.permissions.values()].map((permission) => permission.code)
+      [...this.context.store.permissions.values()]
+        .filter((permission) => permission.status === "enabled")
+        .map((permission) => permission.code)
     );
     const permissionCodes = [...new Set(input.permissionCodes)];
     permissionCodes.forEach((permissionCode) => {
