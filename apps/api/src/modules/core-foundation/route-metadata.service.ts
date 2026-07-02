@@ -1,4 +1,5 @@
 import type { AdminRouteMetadata } from "@web-admin-base/contracts";
+import { createHash } from "node:crypto";
 
 import { nowUtc, toUtcIso } from "../../core/time/utc";
 import type { RouteMetadataRecord } from "./domain";
@@ -21,11 +22,15 @@ export class RouteMetadataService {
     const existing = [...this.context.store.routeMetadata.values()].find(
       (route) => route.routeCode === entry.routeCode
     );
+    const metadataJson = getRouteManifestMetadata(entry);
+    const manifestHash = hashRouteManifestEntry(entry);
     const now = toUtcIso(nowUtc());
     if (existing) {
       existing.path = entry.path;
       existing.titleI18nKey = entry.titleI18nKey;
       existing.requiredPermission = entry.requiredPermission ?? null;
+      existing.metadataJson = metadataJson;
+      existing.manifestHash = manifestHash;
       existing.menuVisible = entry.menuVisible;
       existing.icon = entry.icon ?? null;
       existing.sortOrder = entry.sortOrder ?? 0;
@@ -41,6 +46,8 @@ export class RouteMetadataService {
       path: entry.path,
       titleI18nKey: entry.titleI18nKey,
       requiredPermission: entry.requiredPermission ?? null,
+      metadataJson,
+      manifestHash,
       menuVisible: entry.menuVisible,
       icon: entry.icon ?? null,
       sortOrder: entry.sortOrder ?? 0,
@@ -51,4 +58,26 @@ export class RouteMetadataService {
     this.context.store.routeMetadata.set(route.id, route);
     return route;
   }
+}
+
+function getRouteManifestMetadata(entry: AdminRouteMetadata): Record<string, unknown> {
+  return {
+    menuVisible: entry.menuVisible,
+    icon: entry.icon ?? null,
+    sortOrder: entry.sortOrder ?? 0
+  };
+}
+
+function hashRouteManifestEntry(entry: AdminRouteMetadata): string {
+  return createHash("sha256")
+    .update(
+      JSON.stringify({
+        routeCode: entry.routeCode,
+        path: entry.path,
+        titleI18nKey: entry.titleI18nKey,
+        requiredPermission: entry.requiredPermission ?? null,
+        metadataJson: getRouteManifestMetadata(entry)
+      })
+    )
+    .digest("hex");
 }

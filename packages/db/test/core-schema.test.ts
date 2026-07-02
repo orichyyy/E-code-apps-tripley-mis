@@ -67,6 +67,13 @@ describe("backend core schema", () => {
     expect(postgresql.menus.visible.name).toBe("visible");
   });
 
+  it("keeps route manifest metadata columns aligned across SQLite and PostgreSQL", () => {
+    expect(sqlite.routeMetadata.metadataJson.name).toBe("metadata_json");
+    expect(sqlite.routeMetadata.manifestHash.name).toBe("manifest_hash");
+    expect(postgresql.routeMetadata.metadataJson.name).toBe("metadata_json");
+    expect(postgresql.routeMetadata.manifestHash.name).toBe("manifest_hash");
+  });
+
   it("keeps login session token-version snapshot columns aligned across dialects", () => {
     expect(sqlite.authSessions.tokenVersion.name).toBe("token_version");
     expect(sqlite.authSessions.status.name).toBe("status");

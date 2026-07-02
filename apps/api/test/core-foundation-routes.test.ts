@@ -1152,13 +1152,29 @@ describe("backend core foundation routes", () => {
         expect.objectContaining({
           id: expect.any(String),
           routeCode: "system.users",
-          requiredPermission: "user:view"
+          requiredPermission: "user:view",
+          metadataJson: {
+            menuVisible: true,
+            icon: null,
+            sortOrder: 110
+          },
+          manifestHash: expect.stringMatching(/^[a-f0-9]{64}$/)
         })
       ])
     );
     expect(syncResponse.status).toBe(200);
     expect(synced.data).toEqual(
-      expect.arrayContaining([expect.objectContaining({ routeCode: "system.users" })])
+      expect.arrayContaining([
+        expect.objectContaining({
+          routeCode: "system.users",
+          metadataJson: {
+            menuVisible: true,
+            icon: null,
+            sortOrder: 110
+          },
+          manifestHash: expect.stringMatching(/^[a-f0-9]{64}$/)
+        })
+      ])
     );
   });
 

@@ -181,6 +181,8 @@ CREATE TABLE IF NOT EXISTS route_metadata (
   path TEXT NOT NULL,
   title_i18n_key TEXT NOT NULL,
   required_permission TEXT,
+  metadata_json TEXT NOT NULL,
+  manifest_hash TEXT NOT NULL,
   menu_visible INTEGER NOT NULL DEFAULT 1,
   icon TEXT,
   sort_order INTEGER NOT NULL DEFAULT 0,

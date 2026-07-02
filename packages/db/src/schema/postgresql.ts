@@ -212,6 +212,8 @@ export const routeMetadata = pgTable(
     path: text("path").notNull(),
     titleI18nKey: text("title_i18n_key").notNull(),
     requiredPermission: text("required_permission"),
+    metadataJson: jsonb("metadata_json").notNull(),
+    manifestHash: text("manifest_hash").notNull(),
     menuVisible: boolean("menu_visible").notNull().default(true),
     icon: text("icon"),
     sortOrder: integer("sort_order").notNull().default(0),

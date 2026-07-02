@@ -206,6 +206,8 @@ export const routeMetadata = sqliteTable(
     path: text("path").notNull(),
     titleI18nKey: text("title_i18n_key").notNull(),
     requiredPermission: text("required_permission"),
+    metadataJson: text("metadata_json", { mode: "json" }).notNull(),
+    manifestHash: text("manifest_hash").notNull(),
     menuVisible: integer("menu_visible", { mode: "boolean" }).notNull().default(true),
     icon: text("icon"),
     sortOrder: integer("sort_order").notNull().default(0),

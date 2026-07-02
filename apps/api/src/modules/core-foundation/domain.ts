@@ -111,6 +111,8 @@ export type RouteMetadataRecord = AuditFields & {
   path: string;
   titleI18nKey: string;
   requiredPermission: string | null;
+  metadataJson: Record<string, unknown>;
+  manifestHash: string;
   menuVisible: boolean;
   icon: string | null;
   sortOrder: number;
