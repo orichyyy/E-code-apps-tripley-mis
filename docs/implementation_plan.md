@@ -201,6 +201,7 @@ The backend core goal has partial implementation progress:
 - Tightened user-organization-role assignment so reassignment repairs duplicate active bindings and preserves the one-role-per-user-organization invariant.
 - Tightened user-organization-role removal so deleting an organization assignment soft-deletes all duplicate non-primary bindings for that user and organization.
 - Added route coverage proving primary organization role reassignment preserves the primary binding marker while repairing duplicate active bindings.
+- Added pagination-query support for the implemented user and role list endpoints. Existing no-query responses remain arrays, while `page`/`pageSize` return a paged envelope for future DB-backed repository alignment.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

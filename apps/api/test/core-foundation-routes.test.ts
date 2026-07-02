@@ -1219,6 +1219,52 @@ describe("backend core foundation routes", () => {
     expect(role.error.code).toBe("ROLE_NOT_FOUND");
   });
 
+  it("returns paged user and role lists when pagination query parameters are provided", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "paged-user",
+        displayName: "Paged User",
+        email: "paged-user@example.com",
+        phone: "10000000100",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+
+    const usersResponse = await app.request("/api/users?page=1&pageSize=1", {
+      headers: authHeaders
+    });
+    const users = await usersResponse.json();
+    const rolesResponse = await app.request("/api/roles?page=2&pageSize=1", {
+      headers: authHeaders
+    });
+    const roles = await rolesResponse.json();
+
+    expect(usersResponse.status).toBe(200);
+    expect(users.data).toMatchObject({
+      page: 1,
+      pageSize: 1,
+      total: 2,
+      totalPages: 2
+    });
+    expect(users.data.items).toHaveLength(1);
+    expect(users.data.items[0].id).toBe("1");
+    expect(rolesResponse.status).toBe(200);
+    expect(roles.data).toMatchObject({
+      page: 2,
+      pageSize: 1,
+      total: 3,
+      totalPages: 3
+    });
+    expect(roles.data.items).toHaveLength(1);
+    expect(roles.data.items[0].id).toBe("2");
+  });
+
   it("resets a user password and increments user token version", async () => {
     const { app, setup } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

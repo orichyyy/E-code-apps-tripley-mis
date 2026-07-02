@@ -6,6 +6,7 @@ import {
 import { Hono } from "hono";
 
 import type { AuthContextVariables } from "../../core/auth-context/auth-context";
+import { pageItems } from "./pagination";
 import type { BackendCoreServices } from "./services";
 
 type RoleRouteBindings = {
@@ -16,7 +17,12 @@ export function createRoleRoutes(services: BackendCoreServices) {
   const routes = new Hono<RoleRouteBindings>();
 
   routes.get("/roles", (context) => {
-    return context.json({ data: services.listRoles() });
+    return context.json({
+      data: pageItems(services.listRoles(), {
+        page: context.req.query("page"),
+        pageSize: context.req.query("pageSize")
+      })
+    });
   });
 
   routes.post("/roles", async (context) => {
