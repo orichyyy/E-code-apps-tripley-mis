@@ -187,6 +187,11 @@ export class OrganizationService {
       affectedOrganization.updatedAt = now;
       affectedOrganization.updatedBy = deletedBy;
     }
+    this.softDeleteOrganizationRoleBindings(
+      new Set(affectedOrganizations.map((affectedOrganization) => affectedOrganization.id)),
+      now,
+      deletedBy
+    );
     return toPublicOrganization(organization);
   }
 
@@ -209,6 +214,23 @@ export class OrganizationService {
         candidate.id !== organization.id &&
         isDescendantPath(candidate.path, organization.path, organization.level)
     );
+  }
+
+  private softDeleteOrganizationRoleBindings(
+    organizationIds: Set<string>,
+    deletedAt: string,
+    deletedBy: string | null
+  ): void {
+    for (const binding of this.context.store.userOrganizationRoles.values()) {
+      if (binding.isDeleted || !organizationIds.has(binding.organizationId)) continue;
+      binding.isDeleted = true;
+      binding.isPrimary = false;
+      binding.status = "disabled";
+      binding.deletedAt = deletedAt;
+      binding.deletedBy = deletedBy;
+      binding.updatedAt = deletedAt;
+      binding.updatedBy = deletedBy;
+    }
   }
 
   private allocateSegment(parent: OrganizationRecord | undefined, level: number): number {

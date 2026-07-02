@@ -756,6 +756,11 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({ name: "Deleted Online Alternate", code: "deleted-online-alternate" })
     });
     const alternate = await alternateResponse.json();
+    await app.request(`/api/users/${firstLogin.data.user.id}/organizations`, {
+      method: "POST",
+      headers: firstHeaders,
+      body: JSON.stringify({ organizationId: alternate.data.id, roleId: "1" })
+    });
     const secondLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ username: "admin", password: "password1" })
@@ -2344,6 +2349,83 @@ describe("backend core foundation routes", () => {
     expect(JSON.stringify(tree.data)).not.toContain("delete-child-org");
     expect(childDetailResponse.status).toBe(404);
     expect(childDetail.error.code).toBe("ORGANIZATION_NOT_FOUND");
+  });
+
+  it("soft deletes user organization-role bindings under deleted organizations", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const { authHeaders } = await loginAsAdmin(app);
+    const parentResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Binding Delete Parent",
+        code: "binding-delete-parent"
+      })
+    });
+    const parent = await parentResponse.json();
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: parent.data.id,
+        name: "Binding Delete Child",
+        code: "binding-delete-child"
+      })
+    });
+    const child = await childResponse.json();
+    const userResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "org-delete-binding-user",
+        displayName: "Org Delete Binding User",
+        email: "org-delete-binding-user@example.com",
+        phone: "10000000043",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const user = await userResponse.json();
+    await app.request(`/api/users/${user.data.id}/organizations`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: parent.data.id, roleId: "2" })
+    });
+    await app.request(`/api/users/${user.data.id}/organizations`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+    });
+
+    const deleteResponse = await app.request(`/api/organizations/${parent.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const bindings = [...services["context"].store.userOrganizationRoles.values()].filter(
+      (binding) => binding.userId === user.data.id
+    );
+
+    expect(deleteResponse.status).toBe(200);
+    expect(bindings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ organizationId: "1", isDeleted: false, status: "enabled" }),
+        expect.objectContaining({
+          organizationId: parent.data.id,
+          isDeleted: true,
+          status: "disabled",
+          deletedBy: "1"
+        }),
+        expect.objectContaining({
+          organizationId: child.data.id,
+          isDeleted: true,
+          status: "disabled",
+          deletedBy: "1"
+        })
+      ])
+    );
   });
 
   it("does not include soft-deleted organizations in disable cascade responses", async () => {
