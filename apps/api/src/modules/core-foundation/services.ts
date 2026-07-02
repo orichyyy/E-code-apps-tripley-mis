@@ -18,6 +18,7 @@ import type {
   ResetPasswordRequest,
   SwitchCurrentOrganizationRequest,
   UpdateOrganizationDepthConfigRequest,
+  UpdateMenuApiBindingsRequest,
   UpdateMenuRequest,
   UpdateOrganizationRequest,
   UpdateRolePermissionsRequest,
@@ -406,6 +407,12 @@ export class BackendCoreServices {
     const menu = this.menus.delete(id, deletedBy);
     await this.permissions.invalidateAllPermissionContexts();
     return menu;
+  }
+
+  async updateMenuApiBindings(id: string, input: UpdateMenuApiBindingsRequest) {
+    const bindings = this.menus.updateApiBindings(id, input);
+    await this.permissions.invalidateAllPermissionContexts();
+    return bindings;
   }
 }
 

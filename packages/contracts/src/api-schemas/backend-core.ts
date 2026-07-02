@@ -135,6 +135,10 @@ export const updateMenuRequestSchema = z.object({
   status: z.enum(["enabled", "disabled"]).optional()
 });
 
+export const updateMenuApiBindingsRequestSchema = z.object({
+  apiPermissionIds: z.array(integerIdStringSchema)
+});
+
 export type InitializationSetupRequest = z.infer<typeof initializationSetupRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 export type LogoutRequest = z.infer<typeof logoutRequestSchema>;
@@ -158,3 +162,4 @@ export type UpdateRoleRequest = z.infer<typeof updateRoleRequestSchema>;
 export type UpdateRolePermissionsRequest = z.infer<typeof updateRolePermissionsRequestSchema>;
 export type CreateMenuRequest = z.infer<typeof createMenuRequestSchema>;
 export type UpdateMenuRequest = z.infer<typeof updateMenuRequestSchema>;
+export type UpdateMenuApiBindingsRequest = z.infer<typeof updateMenuApiBindingsRequestSchema>;

@@ -148,6 +148,14 @@ export type ApiPermissionRecord = AuditFields & {
   public: boolean;
 };
 
+export type MenuApiBindingRecord = {
+  id: string;
+  tenantId: string | null;
+  menuId: string;
+  apiPermissionId: string;
+  createdAt: string;
+};
+
 export type AuthSessionRecord = {
   id: string;
   tenantId: string | null;

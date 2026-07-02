@@ -1,5 +1,7 @@
 import {
   createMenuRequestSchema,
+  integerIdStringSchema,
+  updateMenuApiBindingsRequestSchema,
   updateMenuRequestSchema
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
@@ -33,6 +35,12 @@ export function createMenuRoutes(services: BackendCoreServices) {
     return context.json({
       data: await services.deleteMenu(context.req.param("id"), authContext?.userId ?? null)
     });
+  });
+
+  routes.put("/menus/:id/api-bindings", async (context) => {
+    const menuId = integerIdStringSchema.parse(context.req.param("id"));
+    const input = updateMenuApiBindingsRequestSchema.parse(await context.req.json());
+    return context.json({ data: await services.updateMenuApiBindings(menuId, input) });
   });
 
   return routes;

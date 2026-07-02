@@ -1,12 +1,13 @@
 import type {
   BaseMenuManifestEntry,
   CreateMenuRequest,
+  UpdateMenuApiBindingsRequest,
   UpdateMenuRequest
 } from "@web-admin-base/contracts";
 
 import { createKnownError } from "../../core/errors/error-codes";
 import { nowUtc, toUtcIso } from "../../core/time/utc";
-import type { MenuRecord, PublicMenuTreeNode } from "./domain";
+import type { MenuApiBindingRecord, MenuRecord, PublicMenuTreeNode } from "./domain";
 import type { BackendCoreContext } from "./service-context";
 import { requireMenu } from "./store-guards";
 
@@ -111,6 +112,40 @@ export class MenuService {
       affectedMenu.updatedAt = now;
     }
     return menu;
+  }
+
+  updateApiBindings(id: string, input: UpdateMenuApiBindingsRequest) {
+    const menu = requireMenu(this.context.store, id);
+    const apiPermissionIds = [...new Set(input.apiPermissionIds)];
+    const now = toUtcIso(nowUtc());
+
+    for (const apiPermissionId of apiPermissionIds) {
+      this.ensureEnabledApiPermission(apiPermissionId);
+    }
+
+    for (const [bindingId, binding] of this.context.store.menuApiBindings.entries()) {
+      if (binding.menuId === menu.id) {
+        this.context.store.menuApiBindings.delete(bindingId);
+      }
+    }
+
+    const bindings = apiPermissionIds.map((apiPermissionId) => {
+      const binding: MenuApiBindingRecord = {
+        id: this.context.store.nextId("menuApiBinding"),
+        tenantId: null,
+        menuId: menu.id,
+        apiPermissionId,
+        createdAt: now
+      };
+      this.context.store.menuApiBindings.set(binding.id, binding);
+      return binding;
+    });
+
+    return {
+      menuId: menu.id,
+      apiPermissionIds,
+      bindings
+    };
   }
 
   seedBaseMenus(manifest: BaseMenuManifestEntry[]): MenuRecord[] {
@@ -222,5 +257,12 @@ export class MenuService {
       (candidate) => candidate.routeCode === routeCode && candidate.status === "enabled"
     );
     if (!route) throw createKnownError("VALIDATION_INVALID_REQUEST");
+  }
+
+  private ensureEnabledApiPermission(apiPermissionId: string): void {
+    const apiPermission = this.context.store.apiPermissions.get(apiPermissionId);
+    if (!apiPermission || apiPermission.status !== "enabled") {
+      throw createKnownError("VALIDATION_INVALID_REQUEST");
+    }
   }
 }

@@ -106,6 +106,7 @@ The backend core goal has partial implementation progress:
 - Added `GET /api/users/:id/organizations` to read a user's organization-role bindings, with API permission metadata and route coverage.
 - Added PRD-compatible API permission identifier endpoints `GET /api/permissions/api` and `POST /api/permissions/api/sync` over the existing manifest-backed API permission metadata service, guarded by API permission metadata and route coverage.
 - Added managed menu records seeded during initialization, moved `/api/menus/tree` to the backend core service, and added `POST /api/menus`, `PATCH /api/menus/:id`, and `DELETE /api/menus/:id` with API permission metadata and route coverage.
+- Added `PUT /api/menus/:id/api-bindings` over the existing menu/API permission binding model, with enabled API-permission validation, duplicate ID normalization, permission-cache invalidation, and route coverage.
 - Aligned managed menus with the confirmed `visible` field in contracts, in-memory records, SQLite/PostgreSQL schemas/migrations, and permission-context filtering. Hidden menus remain manageable but are omitted from returned menu context.
 - Tightened organization, user, and role detail endpoints so missing records return stable `ORGANIZATION_NOT_FOUND`, `USER_NOT_FOUND`, and `ROLE_NOT_FOUND` errors instead of empty successful responses.
 - Added `GET /api/context/permissions` for the current RBAC/menu permission context and clears cached permission contexts when managed menus change.

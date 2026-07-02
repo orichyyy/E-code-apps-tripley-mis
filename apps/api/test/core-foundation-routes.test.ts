@@ -2095,6 +2095,82 @@ describe("backend core foundation routes", () => {
     });
   });
 
+  it("updates managed menu API permission bindings", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const { authHeaders } = await loginAsAdmin(app);
+    const apiPermissionsResponse = await app.request("/api/permissions/api", {
+      headers: authHeaders
+    });
+    const apiPermissions = await apiPermissionsResponse.json();
+    const listUsersApi = apiPermissions.data.find(
+      (apiPermission: { code: string }) => apiPermission.code === "api.users.list"
+    );
+    const createUsersApi = apiPermissions.data.find(
+      (apiPermission: { code: string }) => apiPermission.code === "api.users.create"
+    );
+    const menuResponse = await app.request("/api/menus", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentMenuId: "2",
+        code: "system.api-bound",
+        titleI18nKey: "routes.system.apiBound",
+        path: "/system/api-bound",
+        requiredPermission: "menu:view"
+      })
+    });
+    const menu = await menuResponse.json();
+
+    const bindResponse = await app.request(`/api/menus/${menu.data.id}/api-bindings`, {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({
+        apiPermissionIds: [listUsersApi.id, createUsersApi.id, listUsersApi.id]
+      })
+    });
+    const bound = await bindResponse.json();
+    services["context"].store.apiPermissions.get(createUsersApi.id)!.status = "disabled";
+    const disabledResponse = await app.request(`/api/menus/${menu.data.id}/api-bindings`, {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({ apiPermissionIds: [createUsersApi.id] })
+    });
+    const disabled = await disabledResponse.json();
+    const invalidResponse = await app.request(`/api/menus/${menu.data.id}/api-bindings`, {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({ apiPermissionIds: ["999999"] })
+    });
+    const invalid = await invalidResponse.json();
+
+    expect(apiPermissionsResponse.status).toBe(200);
+    expect(menuResponse.status).toBe(201);
+    expect(bindResponse.status).toBe(200);
+    expect(bound.data).toMatchObject({
+      menuId: menu.data.id,
+      apiPermissionIds: [listUsersApi.id, createUsersApi.id]
+    });
+    expect(bound.data.bindings).toEqual([
+      expect.objectContaining({
+        id: expect.any(String),
+        menuId: menu.data.id,
+        apiPermissionId: listUsersApi.id,
+        createdAt: expect.any(String)
+      }),
+      expect.objectContaining({
+        id: expect.any(String),
+        menuId: menu.data.id,
+        apiPermissionId: createUsersApi.id,
+        createdAt: expect.any(String)
+      })
+    ]);
+    expect(disabledResponse.status).toBe(400);
+    expect(disabled.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(invalidResponse.status).toBe(400);
+    expect(invalid.error.code).toBe("VALIDATION_INVALID_REQUEST");
+  });
+
   it("rejects managed menu parent updates that would create a cycle", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

@@ -2,6 +2,7 @@ import type {
   ApiPermissionRecord,
   AuthSessionRecord,
   InitializationStateRecord,
+  MenuApiBindingRecord,
   MenuRecord,
   OrganizationRecord,
   PermissionRecord,
@@ -18,6 +19,7 @@ type SequenceName =
   | "authSession"
   | "initializationState"
   | "menu"
+  | "menuApiBinding"
   | "organization"
   | "permission"
   | "refreshToken"
@@ -33,6 +35,7 @@ export class InMemoryBackendStore {
   readonly permissions = new Map<string, PermissionRecord>();
   readonly apiPermissions = new Map<string, ApiPermissionRecord>();
   readonly menus = new Map<string, MenuRecord>();
+  readonly menuApiBindings = new Map<string, MenuApiBindingRecord>();
   readonly routeMetadata = new Map<string, RouteMetadataRecord>();
   readonly userOrganizationRoles = new Map<string, UserOrganizationRoleRecord>();
   readonly authSessions = new Map<string, AuthSessionRecord>();

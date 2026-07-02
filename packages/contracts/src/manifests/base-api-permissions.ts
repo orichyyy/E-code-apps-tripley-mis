@@ -586,5 +586,15 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     requiredPermission: "menu:delete",
     logLevel: "request",
     public: false
+  },
+  {
+    method: "PUT",
+    path: "/api/menus/:id/api-bindings",
+    code: "api.menus.api-bindings.update",
+    description: "Bind API permission identifiers to a menu",
+    module: "menus",
+    requiredPermission: "menu:update",
+    logLevel: "request",
+    public: false
   }
 ];
