@@ -3598,6 +3598,75 @@ describe("backend core foundation routes", () => {
     );
   });
 
+  it("filters route metadata records by confirmed manifest fields", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const response = await app.request(
+      "/api/routes/manifest?keyword=users&routeCode=system.users&path=/system/users&requiredPermission=user:view&menuVisible=true&status=enabled",
+      { headers: authHeaders }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toEqual([
+      expect.objectContaining({
+        routeCode: "system.users",
+        path: "/system/users",
+        requiredPermission: "user:view",
+        menuVisible: true,
+        status: "enabled"
+      })
+    ]);
+  });
+
+  it("returns paged route metadata records when pagination query parameters are provided", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const response = await app.request("/api/routes/manifest?menuVisible=true&page=2&pageSize=2", {
+      headers: authHeaders
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toMatchObject({
+      page: 2,
+      pageSize: 2,
+      total: 6,
+      totalPages: 3
+    });
+    expect(body.data.items).toEqual([
+      expect.objectContaining({ routeCode: "system.users" }),
+      expect.objectContaining({ routeCode: "system.roles" })
+    ]);
+  });
+
+  it("rejects invalid route metadata filters", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const statusResponse = await app.request("/api/routes/manifest?status=archived", {
+      headers: authHeaders
+    });
+    const statusBody = await statusResponse.json();
+    const menuVisibleResponse = await app.request("/api/routes/manifest?menuVisible=maybe", {
+      headers: authHeaders
+    });
+    const menuVisibleBody = await menuVisibleResponse.json();
+    const pageResponse = await app.request("/api/routes/manifest?page=0", {
+      headers: authHeaders
+    });
+    const pageBody = await pageResponse.json();
+
+    expect(statusResponse.status).toBe(400);
+    expect(statusBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(menuVisibleResponse.status).toBe(400);
+    expect(menuVisibleBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(pageResponse.status).toBe(400);
+    expect(pageBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+  });
+
   it("disables stale base route metadata on sync", async () => {
     const services = createInMemoryBackendCoreServices();
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));

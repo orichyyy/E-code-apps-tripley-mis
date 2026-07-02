@@ -36,7 +36,7 @@ import {
   type ApiPermissionListFilters,
   type PermissionListFilters
 } from "./permission.service";
-import { RouteMetadataService } from "./route-metadata.service";
+import { RouteMetadataService, type RouteMetadataListFilters } from "./route-metadata.service";
 import { RoleService, type RoleListFilters } from "./role.service";
 import {
   defaultBackendCoreConfig,
@@ -377,8 +377,8 @@ export class BackendCoreServices {
     return this.permissions.syncPermissionManifests();
   }
 
-  listRoutes() {
-    return this.routeMetadata.list();
+  listRoutes(filters: RouteMetadataListFilters = {}) {
+    return this.routeMetadata.list(filters);
   }
 
   async syncRoutes() {
