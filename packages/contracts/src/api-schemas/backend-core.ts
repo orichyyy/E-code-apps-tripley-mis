@@ -100,12 +100,14 @@ export const createRoleRequestSchema = z.object({
   remark: z.string().optional()
 });
 
-export const updateRoleRequestSchema = z.object({
-  name: z.string().min(1).optional(),
-  code: z.string().min(1).optional(),
-  description: z.string().nullable().optional(),
-  remark: z.string().nullable().optional()
-});
+export const updateRoleRequestSchema = z
+  .object({
+    name: z.string().min(1).optional(),
+    code: z.string().min(1).optional(),
+    description: z.string().nullable().optional(),
+    remark: z.string().nullable().optional()
+  })
+  .strict();
 
 export const updateRolePermissionsRequestSchema = z.object({
   permissionCodes: z.array(z.string().min(1))

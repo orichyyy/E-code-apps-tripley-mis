@@ -3887,9 +3887,12 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({ status: "disabled" })
     });
     const body = await response.json();
+    const detailResponse = await app.request("/api/roles/2", { headers: authHeaders });
+    const detail = await detailResponse.json();
 
-    expect(response.status).toBe(200);
-    expect(body.data).toMatchObject({ id: "2", status: "enabled" });
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(detail.data).toMatchObject({ id: "2", status: "enabled" });
   });
 
   it("copies a role with its permission configuration", async () => {
