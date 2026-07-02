@@ -72,17 +72,19 @@ export const createUserRequestSchema = z.object({
   roleId: integerIdStringSchema
 });
 
-export const updateUserRequestSchema = z.object({
-  username: z.string().min(1).optional(),
-  displayName: z.string().min(1).optional(),
-  email: z.string().email().optional(),
-  phone: z.string().min(1).optional(),
-  avatarFileId: integerIdStringSchema.nullable().optional(),
-  gender: z.string().min(1).nullable().optional(),
-  employeeNumber: z.string().min(1).nullable().optional(),
-  primaryOrganizationId: integerIdStringSchema.optional(),
-  remark: z.string().nullable().optional()
-});
+export const updateUserRequestSchema = z
+  .object({
+    username: z.string().min(1).optional(),
+    displayName: z.string().min(1).optional(),
+    email: z.string().email().optional(),
+    phone: z.string().min(1).optional(),
+    avatarFileId: integerIdStringSchema.nullable().optional(),
+    gender: z.string().min(1).nullable().optional(),
+    employeeNumber: z.string().min(1).nullable().optional(),
+    primaryOrganizationId: integerIdStringSchema.optional(),
+    remark: z.string().nullable().optional()
+  })
+  .strict();
 
 export const resetPasswordRequestSchema = z.object({
   password: z.string().min(1)

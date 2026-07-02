@@ -1706,6 +1706,52 @@ describe("backend core foundation routes", () => {
     });
   });
 
+  it("rejects user status and password changes through generic profile updates", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const createResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "strict-update-user",
+        displayName: "Strict Update User",
+        email: "strict-update-user@example.com",
+        phone: "10000000025",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const created = await createResponse.json();
+
+    const statusResponse = await app.request(`/api/users/${created.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ status: "disabled" })
+    });
+    const status = await statusResponse.json();
+    const passwordResponse = await app.request(`/api/users/${created.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ password: "password2" })
+    });
+    const password = await passwordResponse.json();
+    const detailResponse = await app.request(`/api/users/${created.data.id}`, {
+      headers: authHeaders
+    });
+    const detail = await detailResponse.json();
+
+    expect(statusResponse.status).toBe(400);
+    expect(status.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(passwordResponse.status).toBe(400);
+    expect(password.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(detail.data).toMatchObject({
+      id: created.data.id,
+      status: "enabled",
+      tokenVersion: 0
+    });
+  });
+
   it("prevents login for administrator-locked users until unlocked", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
