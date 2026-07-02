@@ -282,4 +282,32 @@ describe("initialization seed", () => {
       effect: "allow"
     });
   });
+
+  it("deduplicates super administrator permission grants during repeated seed sync", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const input = readInitializationSeedInput(seedEnv);
+
+    await services.seedInitialization(input);
+    const now = "2026-01-01T00:00:00.000Z";
+    services["context"].store.rolePermissions.push({
+      roleId: "1",
+      permissionCode: "user:view",
+      effect: "deny",
+      createdAt: now,
+      updatedAt: now
+    });
+
+    await services.seedInitialization(input);
+    const userViewGrants = services["context"].store.rolePermissions.filter(
+      (permission) => permission.roleId === "1" && permission.permissionCode === "user:view"
+    );
+
+    expect(userViewGrants).toEqual([
+      expect.objectContaining({
+        roleId: "1",
+        permissionCode: "user:view",
+        effect: "allow"
+      })
+    ]);
+  });
 });

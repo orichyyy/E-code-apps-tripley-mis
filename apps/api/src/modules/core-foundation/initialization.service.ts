@@ -190,11 +190,28 @@ export class InitializationService {
 
   private grantAllPermissions(roleId: string, permissionCodes: string[]) {
     const now = toUtcIso(nowUtc());
-    const existing = new Map(
-      this.context.store.rolePermissions
-        .filter((permission) => permission.roleId === roleId)
-        .map((permission) => [permission.permissionCode, permission])
+    const currentRolePermissions = this.context.store.rolePermissions.filter(
+      (permission) => permission.roleId === roleId
     );
+    const existing = new Map<string, (typeof currentRolePermissions)[number]>();
+    const duplicatePermissions = new Set<(typeof currentRolePermissions)[number]>();
+    for (const permission of currentRolePermissions) {
+      if (existing.has(permission.permissionCode)) {
+        duplicatePermissions.add(permission);
+        continue;
+      }
+      existing.set(permission.permissionCode, permission);
+    }
+    if (duplicatePermissions.size > 0) {
+      const retained = this.context.store.rolePermissions.filter(
+        (permission) => !duplicatePermissions.has(permission)
+      );
+      this.context.store.rolePermissions.splice(
+        0,
+        this.context.store.rolePermissions.length,
+        ...retained
+      );
+    }
     permissionCodes.forEach((permissionCode) => {
       const existingGrant = existing.get(permissionCode);
       if (existingGrant) {

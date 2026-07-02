@@ -181,6 +181,7 @@ The backend core goal has partial implementation progress:
 - Tightened effective menu context filtering so menus linked to disabled or stale route metadata are hidden from user navigation after route manifest sync.
 - Tightened repeated seed synchronization so permission manifests use the same stale role-permission pruning lifecycle as admin-confirmed permission sync.
 - Tightened repeated seed synchronization so existing super-administrator permission grants are repaired back to allow-effect records.
+- Tightened repeated seed synchronization so duplicate super-administrator permission grants are collapsed back to one allow record per permission.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 
