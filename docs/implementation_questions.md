@@ -37,3 +37,49 @@
 9. **Default initialization records for system configuration, dictionaries, and i18n**
 
    The PRD and design spec require initialization to create default system configuration, default dictionaries, and default i18n messages, but they do not define the canonical keys, dictionary types/items, languages/messages, editable flags, or default values. Please confirm the exact default record set before adding seed data or database migrations for these modules.
+
+## Backend Infrastructure Modules Blockers
+
+10. **Executable database-backed infrastructure depends on PostgreSQL test provisioning and migration execution**
+
+    The infrastructure goal requires PostgreSQL-only tests, database-backed cache/queue/event-bus/rate-limit/token-store/job/log/file/notification/import-export persistence, and the `pnpm db:migrate` validation command. Existing question 2 still blocks how PostgreSQL integration tests and migrations should connect to a database. Please confirm the PostgreSQL test database source/provisioning approach before adding executable DB-backed infrastructure tests and migration behavior.
+
+11. **SQLite driver selection still blocks local/demo database-backed infrastructure**
+
+    The infrastructure goal requires SQLite to remain usable for local development, testing, and demo usage, while existing questions 1 and 3 confirm the SQLite driver and int64 mapping are still unresolved. Please confirm whether database-backed infrastructure adapters should wait for the SQLite driver decision, or whether they should be implemented only behind Drizzle interfaces until the concrete SQLite runtime is selected.
+
+12. **Database LockAdapter concrete algorithm**
+
+    The design spec explicitly states that the database lock internal algorithm is intentionally not fixed and that PostgreSQL advisory locks, SQLite table-lock behavior, or a specific lease-table algorithm must not be hard-coded unless separately approved. Please confirm the v1 database lock semantics, including lease storage, owner/fencing token behavior, timeout/heartbeat behavior, and dialect-specific constraints, before implementing a concrete database `LockAdapter` driver.
+
+13. **RabbitMQ driver package and delivery semantics**
+
+    The spec requires RabbitMQ queue and RabbitMQ-compatible event bus drivers, but does not define the Node package, connection configuration, exchange/queue topology, acknowledgement and nack behavior, persistence/durability settings, requeue behavior, ordering expectations, or idempotency contract. Please confirm these details before adding concrete RabbitMQ drivers and dependencies.
+
+14. **Optional Redis dependency strategy**
+
+    Redis drivers are listed for cache, rate limit, and token store, while the infrastructure goal says Redis must not be a mandatory dependency. Please confirm whether Redis drivers should be implemented through optional peer dependencies and dynamic imports, interface-only placeholders, or postponed until a concrete optional dependency strategy is approved.
+
+15. **S3-compatible storage client and configuration contract**
+
+    The spec requires S3-compatible storage and private download through backend authentication, but does not define the client package or configuration keys such as endpoint, region, bucket, credentials source, path-style addressing, server-side encryption, object key layout, or presigned URL policy. Please confirm the v1 S3-compatible storage contract before adding a concrete driver.
+
+16. **SMTP and webhook delivery semantics**
+
+    The spec requires SMTP email and webhook notification channels, but does not define the SMTP client package, TLS/auth settings, sender configuration, webhook signing format, timeout, retry behavior, delivery persistence, or failure status model. Please confirm these driver-level semantics before adding concrete SMTP and webhook sending drivers.
+
+17. **Infrastructure table scope for adapter persistence**
+
+    The PRD/design define logical tables for files, notifications, scheduled tasks, queue jobs, import/export tasks, and logs, but database cache, database rate limit, database lock, and database outbox persistence shapes are not fully specified. Please confirm whether v1 should introduce concrete tables for these adapter internals, and if so the canonical table names, fields, indexes, and retention rules.
+
+18. **Import/export resource scope in the infrastructure goal**
+
+    The design says the import/export framework is reusable for base modules and future business modules, and no example business module may be implemented. Please confirm whether this goal should implement only the generic CSV framework/tasks/utilities, or also concrete import/export handlers for existing base resources such as users and logs.
+
+19. **Scheduled task retry behavior versus reserved queue retry/dead-letter behavior**
+
+    The PRD requires scheduled jobs to support retry configuration, while the design says detailed dead-letter queue behavior is reserved and queue retry/dead-letter behavior is not required beyond the simple status model. Please confirm the exact v1 retry behavior expected for scheduled tasks and queue jobs so the implementation does not overbuild reserved dead-letter semantics.
+
+20. **Notification template seed records**
+
+    The spec requires multilingual templates for in-app, email, and reserved SMS templates, but does not define canonical template codes, default languages, subjects, bodies, variables, or seed records. Please confirm whether v1 should add schemas only, or seed a specific default template set.
