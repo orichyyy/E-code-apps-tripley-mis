@@ -163,6 +163,7 @@ export const menus = sqliteTable(
     tenantId: integer("tenant_id"),
     parentMenuId: integer("parent_menu_id"),
     permissionId: integer("permission_id"),
+    code: text("code").notNull(),
     routeCode: text("route_code"),
     titleI18nKey: text("title_i18n_key").notNull(),
     path: text("path").notNull(),
@@ -173,6 +174,7 @@ export const menus = sqliteTable(
     ...timestamps
   },
   (table) => ({
+    codeUnique: uniqueIndex("menus_code_unique").on(table.code),
     pathUnique: uniqueIndex("menus_path_unique").on(table.path)
   })
 );

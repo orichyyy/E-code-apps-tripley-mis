@@ -1,5 +1,4 @@
 import {
-  baseMenuManifest,
   type ChangePasswordRequest,
   type LoginRequest,
   type SwitchCurrentOrganizationRequest
@@ -290,8 +289,11 @@ export class AuthService {
   }
 
   private filterMenus(permissionCodes: string[]) {
-    return baseMenuManifest.filter(
-      (menu) => !menu.requiredPermission || permissionCodes.includes(menu.requiredPermission)
+    return [...this.context.store.menus.values()].filter(
+      (menu) =>
+        !menu.isDeleted &&
+        menu.status === "enabled" &&
+        (!menu.requiredPermission || permissionCodes.includes(menu.requiredPermission))
     );
   }
 

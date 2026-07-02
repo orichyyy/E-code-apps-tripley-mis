@@ -422,5 +422,35 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     requiredPermission: "menu:view",
     logLevel: "basic",
     public: false
+  },
+  {
+    method: "POST",
+    path: "/api/menus",
+    code: "api.menus.create",
+    description: "Create menu",
+    module: "menus",
+    requiredPermission: "menu:create",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "PATCH",
+    path: "/api/menus/:id",
+    code: "api.menus.update",
+    description: "Update menu",
+    module: "menus",
+    requiredPermission: "menu:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "DELETE",
+    path: "/api/menus/:id",
+    code: "api.menus.delete",
+    description: "Delete menu",
+    module: "menus",
+    requiredPermission: "menu:delete",
+    logLevel: "request",
+    public: false
   }
 ];

@@ -134,6 +134,7 @@ CREATE TABLE IF NOT EXISTS menus (
   tenant_id INTEGER,
   parent_menu_id INTEGER,
   permission_id INTEGER,
+  code TEXT NOT NULL,
   route_code TEXT,
   title_i18n_key TEXT NOT NULL,
   path TEXT NOT NULL,
@@ -148,6 +149,7 @@ CREATE TABLE IF NOT EXISTS menus (
   CHECK (status IN ('enabled', 'disabled'))
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS menus_code_unique ON menus (code);
 CREATE UNIQUE INDEX IF NOT EXISTS menus_path_unique ON menus (path);
 
 CREATE TABLE IF NOT EXISTS route_metadata (

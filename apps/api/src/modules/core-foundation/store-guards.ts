@@ -1,4 +1,4 @@
-import type { OrganizationRecord, RoleRecord, UserRecord } from "./domain";
+import type { MenuRecord, OrganizationRecord, RoleRecord, UserRecord } from "./domain";
 import type { InMemoryBackendStore } from "./in-memory-store";
 import { createKnownError } from "../../core/errors/error-codes";
 
@@ -33,4 +33,10 @@ export function requireEnabledRole(store: InMemoryBackendStore, id: string): Rol
   const role = requireRole(store, id);
   if (role.status === "disabled") throw createKnownError("BUSINESS_ROLE_DISABLED");
   return role;
+}
+
+export function requireMenu(store: InMemoryBackendStore, id: string): MenuRecord {
+  const menu = store.menus.get(id);
+  if (!menu || menu.isDeleted) throw createKnownError("MENU_NOT_FOUND");
+  return menu;
 }

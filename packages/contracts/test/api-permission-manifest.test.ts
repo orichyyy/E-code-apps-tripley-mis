@@ -49,6 +49,21 @@ describe("baseApiPermissionManifest", () => {
           method: "GET",
           path: "/api/roles/:id/permissions",
           requiredPermission: "role:view"
+        }),
+        expect.objectContaining({
+          method: "POST",
+          path: "/api/menus",
+          requiredPermission: "menu:create"
+        }),
+        expect.objectContaining({
+          method: "PATCH",
+          path: "/api/menus/:id",
+          requiredPermission: "menu:update"
+        }),
+        expect.objectContaining({
+          method: "DELETE",
+          path: "/api/menus/:id",
+          requiredPermission: "menu:delete"
         })
       ])
     );

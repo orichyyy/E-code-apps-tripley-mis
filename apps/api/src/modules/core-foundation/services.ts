@@ -3,7 +3,6 @@ import {
   createInMemoryTokenStoreAdapter
 } from "@web-admin-base/adapters";
 import {
-  baseMenuManifest,
   basePermissionManifest,
   baseRouteManifest,
   type BaseApiPermissionManifestEntry
@@ -14,10 +13,12 @@ import type {
   CreateOrganizationRequest,
   CreateRoleRequest,
   CreateUserRequest,
+  CreateMenuRequest,
   InitializationSetupRequest,
   LoginRequest,
   ResetPasswordRequest,
   SwitchCurrentOrganizationRequest,
+  UpdateMenuRequest,
   UpdateOrganizationRequest,
   UpdateRolePermissionsRequest,
   UpdateRoleRequest,
@@ -27,6 +28,7 @@ import type {
 import { AuthService } from "./auth.service";
 import { InitializationService } from "./initialization.service";
 import { InMemoryBackendStore } from "./in-memory-store";
+import { MenuService } from "./menu.service";
 import { OrganizationService } from "./organization.service";
 import { PermissionService } from "./permission.service";
 import { RoleService } from "./role.service";
@@ -43,6 +45,7 @@ export type { BackendCoreConfig } from "./service-context";
 export class BackendCoreServices {
   readonly auth: AuthService;
   readonly initialization: InitializationService;
+  readonly menus: MenuService;
   readonly organizations: OrganizationService;
   readonly permissions: PermissionService;
   readonly roles: RoleService;
@@ -50,6 +53,7 @@ export class BackendCoreServices {
 
   constructor(private readonly context: BackendCoreContext) {
     this.organizations = new OrganizationService(context);
+    this.menus = new MenuService(context);
     this.roles = new RoleService(context);
     this.users = new UserService(context);
     this.auth = new AuthService(context);
@@ -57,6 +61,7 @@ export class BackendCoreServices {
     this.initialization = new InitializationService(
       context,
       this.organizations,
+      this.menus,
       this.roles,
       this.users
     );
@@ -231,7 +236,19 @@ export class BackendCoreServices {
   }
 
   listMenus() {
-    return baseMenuManifest;
+    return this.menus.list();
+  }
+
+  createMenu(input: CreateMenuRequest) {
+    return this.menus.create(input);
+  }
+
+  updateMenu(id: string, input: UpdateMenuRequest) {
+    return this.menus.update(id, input);
+  }
+
+  deleteMenu(id: string) {
+    return this.menus.delete(id);
   }
 }
 

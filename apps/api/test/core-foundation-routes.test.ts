@@ -374,6 +374,57 @@ describe("backend core foundation routes", () => {
     expect(body.data).toEqual(["user:view", "role:view"]);
   });
 
+  it("creates, updates, and soft deletes managed menus", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const createResponse = await app.request("/api/menus", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentMenuId: "2",
+        code: "system.audit",
+        titleI18nKey: "routes.system.audit",
+        path: "/system/audit",
+        requiredPermission: "menu:view",
+        sortOrder: 150
+      })
+    });
+    const created = await createResponse.json();
+
+    const updateResponse = await app.request(`/api/menus/${created.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ titleI18nKey: "routes.system.auditLogs", status: "disabled" })
+    });
+    const updated = await updateResponse.json();
+    const contextResponse = await app.request("/api/auth/me", { headers: authHeaders });
+    const context = await contextResponse.json();
+    const deleteResponse = await app.request(`/api/menus/${created.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const deleted = await deleteResponse.json();
+
+    expect(createResponse.status).toBe(201);
+    expect(created.data).toMatchObject({
+      id: expect.any(String),
+      parentMenuId: "2",
+      code: "system.audit"
+    });
+    expect(updated.data).toMatchObject({
+      titleI18nKey: "routes.system.auditLogs",
+      status: "disabled"
+    });
+    expect(context.data.menus).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "system.audit" })])
+    );
+    expect(deleted.data).toMatchObject({
+      id: created.data.id,
+      isDeleted: true,
+      deletedAt: expect.any(String)
+    });
+  });
+
   it("rejects role updates that would duplicate role code", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

@@ -65,6 +65,21 @@ export type UserOrganizationRoleRecord = AuditFields & {
   roleId: string;
 };
 
+export type MenuRecord = AuditFields &
+  SoftDeleteFields & {
+    id: string;
+    tenantId: string | null;
+    parentMenuId: string | null;
+    code: string;
+    titleI18nKey: string;
+    path: string;
+    requiredPermission: string | null;
+    routeCode: string | null;
+    icon: string | null;
+    sortOrder: number;
+    status: EntityStatus;
+  };
+
 export type AuthSessionRecord = {
   id: string;
   tenantId: string | null;
@@ -111,5 +126,7 @@ export type PublicOrganization = Omit<OrganizationRecord, "path"> & {
 };
 
 export type PublicUser = Omit<UserRecord, "passwordHash">;
+
+export type PublicMenu = MenuRecord;
 
 export type PublicSession = AuthSessionRecord;

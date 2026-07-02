@@ -1,6 +1,5 @@
 import {
   baseApiPermissionManifest,
-  baseMenuManifest,
   basePermissionManifest,
   baseRouteManifest
 } from "@web-admin-base/contracts";
@@ -15,10 +14,6 @@ export function createManifestRoutes() {
 
   routes.get("/routes/manifest", (context) => {
     return context.json({ data: baseRouteManifest });
-  });
-
-  routes.get("/menus/tree", (context) => {
-    return context.json({ data: baseMenuManifest });
   });
 
   return routes;

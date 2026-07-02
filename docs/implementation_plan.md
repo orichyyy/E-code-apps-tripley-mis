@@ -70,6 +70,7 @@ The backend core goal has partial implementation progress:
 - Tightened role-change permission behavior so disabled/deleted assigned roles no longer grant permissions, and role update/delete operations invalidate affected user permission-cache entries.
 - Added `GET /api/roles/:id/permissions` to read a role's configured permission codes, with API permission metadata and route coverage.
 - Added `GET /api/users/:id/organizations` to read a user's organization-role bindings, with API permission metadata and route coverage.
+- Added managed menu records seeded during initialization, moved `/api/menus/tree` to the backend core service, and added `POST /api/menus`, `PATCH /api/menus/:id`, and `DELETE /api/menus/:id` with API permission metadata and route coverage.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, and finalized CSRF protection still depend on the unresolved implementation questions.
 

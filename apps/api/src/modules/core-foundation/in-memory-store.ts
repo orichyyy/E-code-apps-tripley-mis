@@ -1,6 +1,7 @@
 import type {
   AuthSessionRecord,
   InitializationStateRecord,
+  MenuRecord,
   OrganizationRecord,
   RefreshTokenRecord,
   RolePermissionRecord,
@@ -12,6 +13,7 @@ import type {
 type SequenceName =
   | "authSession"
   | "initializationState"
+  | "menu"
   | "organization"
   | "refreshToken"
   | "role"
@@ -22,6 +24,7 @@ export class InMemoryBackendStore {
   readonly organizations = new Map<string, OrganizationRecord>();
   readonly users = new Map<string, UserRecord>();
   readonly roles = new Map<string, RoleRecord>();
+  readonly menus = new Map<string, MenuRecord>();
   readonly userOrganizationRoles = new Map<string, UserOrganizationRoleRecord>();
   readonly authSessions = new Map<string, AuthSessionRecord>();
   readonly refreshTokens = new Map<string, RefreshTokenRecord>();

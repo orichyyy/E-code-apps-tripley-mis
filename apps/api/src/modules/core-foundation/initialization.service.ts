@@ -10,6 +10,7 @@ import {
   validatePasswordComplexity
 } from "../../infra/security/password-policy";
 import type { BackendCoreContext } from "./service-context";
+import type { MenuService } from "./menu.service";
 import type { OrganizationService } from "./organization.service";
 import type { RoleService } from "./role.service";
 import type { UserService } from "./user.service";
@@ -23,6 +24,7 @@ export class InitializationService {
   constructor(
     private readonly context: BackendCoreContext,
     private readonly organizations: OrganizationService,
+    private readonly menus: MenuService,
     private readonly roles: RoleService,
     private readonly users: UserService
   ) {}
@@ -75,6 +77,7 @@ export class InitializationService {
       code: normalUserRoleCode,
       remark: "Built-in role"
     });
+    const menus = this.menus.seedBaseMenus(baseMenuManifest);
 
     const admin = await this.users.createRecord({
       username: input.adminUsername,
@@ -105,7 +108,7 @@ export class InitializationService {
       organization: toPublicOrganization(organization),
       admin: toPublicUser(admin),
       roles: this.roles.list(),
-      menus: baseMenuManifest
+      menus
     };
   }
 }
