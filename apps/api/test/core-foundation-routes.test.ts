@@ -2806,6 +2806,62 @@ describe("backend core foundation routes", () => {
     expect(afterDelete.error.code).toBe("PERMISSION_API_DENIED");
   });
 
+  it("soft deletes role bindings and prevents login when the assigned role is deleted", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const { authHeaders } = await loginAsAdmin(app);
+    const roleResponse = await app.request("/api/roles", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        name: "Deleted Login Role",
+        code: "deleted_login_role"
+      })
+    });
+    const role = await roleResponse.json();
+    const userResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "deleted-login-role-user",
+        displayName: "Deleted Login Role User",
+        email: "deleted-login-role-user@example.com",
+        phone: "10000000044",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: role.data.id
+      })
+    });
+    const user = await userResponse.json();
+
+    const deleteRoleResponse = await app.request(`/api/roles/${role.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "deleted-login-role-user", password: "password1" })
+    });
+    const login = await loginResponse.json();
+    const bindings = [...services["context"].store.userOrganizationRoles.values()].filter(
+      (binding) => binding.userId === user.data.id
+    );
+
+    expect(deleteRoleResponse.status).toBe(200);
+    expect(bindings).toEqual([
+      expect.objectContaining({
+        organizationId: "1",
+        roleId: role.data.id,
+        isDeleted: true,
+        status: "disabled",
+        isPrimary: false,
+        deletedBy: "1"
+      })
+    ]);
+    expect(loginResponse.status).toBe(403);
+    expect(login.error.code).toBe("BUSINESS_NO_ENABLED_ORGANIZATION");
+  });
+
   it("does not grant disabled permission metadata through role permissions", async () => {
     const services = createInMemoryBackendCoreServices();
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));

@@ -397,7 +397,13 @@ export class AuthService {
 
   private resolveEnabledLoginOrganization(user: UserRecord): string {
     const primary = this.context.store.organizations.get(user.primaryOrganizationId);
-    if (primary?.status === "enabled" && !primary.isDeleted) return primary.id;
+    if (
+      primary?.status === "enabled" &&
+      !primary.isDeleted &&
+      (this.hasActiveOrganizationBinding(user.id, primary.id) || this.hasActiveSuperAdminBinding(user.id))
+    ) {
+      return primary.id;
+    }
 
     const enabledBinding = [...this.context.store.userOrganizationRoles.values()].find((binding) => {
       if (binding.userId !== user.id || !isActiveBinding(binding)) return false;
@@ -412,6 +418,15 @@ export class AuthService {
     }
     if (!enabledBinding) throw createKnownError("BUSINESS_NO_ENABLED_ORGANIZATION");
     return enabledBinding.organizationId;
+  }
+
+  private hasActiveOrganizationBinding(userId: string, organizationId: string): boolean {
+    return [...this.context.store.userOrganizationRoles.values()].some(
+      (binding) =>
+        binding.userId === userId &&
+        binding.organizationId === organizationId &&
+        isActiveBinding(binding)
+    );
   }
 
   private listAvailableOrganizations(userId: string) {

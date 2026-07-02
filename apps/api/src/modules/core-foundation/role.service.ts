@@ -148,7 +148,25 @@ export class RoleService {
     role.deletedBy = deletedBy;
     role.updatedAt = now;
     role.updatedBy = deletedBy;
+    this.softDeleteRoleBindings(role.id, now, deletedBy);
     return role;
+  }
+
+  private softDeleteRoleBindings(
+    roleId: string,
+    deletedAt: string,
+    deletedBy: string | null
+  ): void {
+    for (const binding of this.context.store.userOrganizationRoles.values()) {
+      if (binding.roleId !== roleId || binding.isDeleted) continue;
+      binding.isDeleted = true;
+      binding.isPrimary = false;
+      binding.status = "disabled";
+      binding.deletedAt = deletedAt;
+      binding.deletedBy = deletedBy;
+      binding.updatedAt = deletedAt;
+      binding.updatedBy = deletedBy;
+    }
   }
 
   private ensureUniqueRoleCode(code: string, currentRoleId?: string): void {
