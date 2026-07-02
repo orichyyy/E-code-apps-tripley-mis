@@ -614,6 +614,46 @@ describe("backend core foundation routes", () => {
     expect(refresh.error.code).toBe("BUSINESS_ORG_DISABLED");
   });
 
+  it("rejects refresh token exchange when the current organization is soft deleted", async () => {
+    const { app } = await setupInitializedApp();
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const login = await loginResponse.json();
+    const cookie = loginResponse.headers.get("set-cookie") ?? "";
+    const authHeaders = { authorization: `Bearer ${login.data.accessToken}` };
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Deleted Session Organization",
+        code: "deleted-session-organization"
+      })
+    });
+    const child = await childResponse.json();
+    const switchResponse = await app.request("/api/context/current-organization", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: child.data.id })
+    });
+    const switched = await switchResponse.json();
+
+    await app.request(`/api/organizations/${child.data.id}`, {
+      method: "DELETE",
+      headers: { authorization: `Bearer ${switched.data.accessToken}` }
+    });
+    const refreshResponse = await app.request("/api/auth/refresh", {
+      method: "POST",
+      headers: { cookie: cookie.split(";")[0] }
+    });
+    const refresh = await refreshResponse.json();
+
+    expect(refreshResponse.status).toBe(409);
+    expect(refresh.error.code).toBe("BUSINESS_ORG_DISABLED");
+  });
+
   it("excludes sessions from online users when their current organization is disabled", async () => {
     const { app } = await setupInitializedApp();
     const firstLoginResponse = await app.request("/api/auth/login", {

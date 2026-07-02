@@ -122,7 +122,10 @@ export class AuthService {
       throw createKnownError("AUTH_SESSION_NOT_FOUND");
     }
     if (session.tokenVersion !== user.tokenVersion) throw createKnownError("AUTH_TOKEN_INVALIDATED");
-    requireEnabledOrganization(this.context.store, session.currentOrganizationId);
+    const organization = this.context.store.organizations.get(session.currentOrganizationId);
+    if (!organization || organization.status !== "enabled" || organization.isDeleted) {
+      throw createKnownError("BUSINESS_ORG_DISABLED");
+    }
 
     session.lastSeenAt = toUtcIso(nowUtc());
     session.tokenVersion = user.tokenVersion;

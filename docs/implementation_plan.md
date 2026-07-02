@@ -113,6 +113,7 @@ The backend core goal has partial implementation progress:
 - Tightened Super Administrator organization handling so an active built-in `super_admin` role binding can list all enabled organizations, switch to enabled organizations without a separate user-organization-role binding, and receive all enabled base permissions across selectable organization contexts. Ordinary users remain scoped to their enabled bound organizations and current organization role.
 - Tightened refresh-token exchange so disabled or locked accounts cannot receive new access tokens from an otherwise valid refresh token.
 - Tightened refresh-token exchange so sessions whose current organization has been disabled cannot receive new access tokens.
+- Tightened refresh-token exchange so sessions whose current organization has been soft deleted are rejected with the same unusable-organization business error as disabled organizations.
 - Added route coverage proving login falls back to another enabled organization when the user's primary organization is disabled, and denies login when no enabled organization is available.
 - Tightened logout so the ordinary logout endpoint revokes the current authenticated session and rejects attempts to revoke a different session id.
 - Aligned the login response with the documented authentication contract by returning the current organization, selectable organizations, effective permission codes, filtered menus, and password-change requirement flag alongside the access token, session, and user summary.
