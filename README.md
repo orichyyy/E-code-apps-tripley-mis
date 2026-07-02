@@ -8,7 +8,7 @@ Reusable multi-organization admin-system foundation built as a pnpm monorepo.
 - `apps/web`: React Vite SPA admin shell using TanStack Router, TanStack Query, TanStack Form, Zod, Zustand, Tailwind CSS, and shadcn/ui.
 - `apps/worker`: Node.js worker skeleton.
 - `packages/contracts`: Zod contracts, Hono RPC boundary types, permission/route/menu/API manifests, and OpenAPI generation.
-- `packages/db`: Drizzle schemas and SQLite/PostgreSQL migration files.
+- `packages/db`: Drizzle schemas, SQLite/PostgreSQL migration files, and executable migration runners.
 - `packages/adapters`: adapter interfaces and selected in-memory drivers.
 - `packages/shared`: shared constants, result types, i18n keys, and utilities.
 
@@ -23,7 +23,7 @@ pnpm db:migrate
 pnpm build
 ```
 
-`pnpm db:migrate` is intentionally blocked until the unresolved database driver/provisioning questions in `docs/implementation_questions.md` are answered. See `docs/known_gaps.md`.
+`pnpm db:migrate` runs SQLite migrations with `better-sqlite3` by default. PostgreSQL migrations run when `TEST_DATABASE_URL` or `DATABASE_URL` is provided; `pnpm db:migrate:postgresql` requires one of those variables.
 
 ## API Documentation
 

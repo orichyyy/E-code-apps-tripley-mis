@@ -2,7 +2,7 @@
 
 ## Current State
 
-`packages/db` contains Drizzle schemas and hand-written migration files for SQLite and PostgreSQL.
+`packages/db` contains Drizzle schemas, hand-written migration files, and executable migration runners for SQLite and PostgreSQL.
 
 ```text
 packages/db/src/schema/sqlite.ts
@@ -22,4 +22,8 @@ pnpm db:migrate:sqlite
 pnpm db:migrate:postgresql
 ```
 
-Migration execution is intentionally blocked until the SQLite driver and PostgreSQL test/provisioning strategy are confirmed. The open questions are tracked in `docs/implementation_questions.md` and summarized in `docs/known_gaps.md`.
+SQLite local/demo migrations use `better-sqlite3`.
+
+`pnpm db:migrate` runs SQLite migrations by default and runs PostgreSQL migrations only when `TEST_DATABASE_URL` or `DATABASE_URL` is present. `pnpm db:migrate:postgresql` is explicit and requires one of those PostgreSQL URLs.
+
+PostgreSQL integration tests follow the same `TEST_DATABASE_URL` contract. When the variable is absent, PostgreSQL-only migration smoke tests are skipped instead of silently using SQLite.

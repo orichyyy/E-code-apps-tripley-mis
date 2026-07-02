@@ -1,14 +1,22 @@
 # Troubleshooting Guide
 
-## `pnpm db:migrate` Fails
+## `pnpm db:migrate:postgresql` Fails
 
-Expected current behavior:
+PostgreSQL migration execution requires an explicit database URL:
 
 ```text
-Database migration execution ... is blocked until the SQLite driver and PostgreSQL test/provisioning strategy are confirmed
+TEST_DATABASE_URL=postgres://...
 ```
 
-See `docs/implementation_questions.md` and `docs/known_gaps.md`.
+`pnpm db:migrate` itself runs SQLite by default and skips PostgreSQL when no PostgreSQL URL is present. Use `TEST_DATABASE_URL` for local PostgreSQL migration smoke tests.
+
+## `better-sqlite3` Binding Is Missing
+
+The workspace allows the `better-sqlite3` build script through `pnpm-workspace.yaml`. If a local install still reports a missing native binding, run:
+
+```bash
+pnpm rebuild better-sqlite3
+```
 
 ## API Route Returns 403
 

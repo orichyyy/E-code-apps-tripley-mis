@@ -1,4 +1,6 @@
 import type { DatabaseConfig, DatabaseDialect } from "../dialects/types";
+import { createPostgresqlDatabase } from "./postgresql";
+import { createSqliteDatabase } from "./sqlite";
 
 export type DrizzleClientFactory = (url: string) => unknown;
 
@@ -20,4 +22,11 @@ export function createDatabase(config: DatabaseConfig, factories: DatabaseFactor
     dialect: config.dialect,
     client: factory(config.url)
   };
+}
+
+export function createDefaultDatabase(config: DatabaseConfig): DatabaseHandle {
+  return createDatabase(config, {
+    postgresql: createPostgresqlDatabase,
+    sqlite: createSqliteDatabase
+  });
 }

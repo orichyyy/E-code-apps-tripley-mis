@@ -4,3 +4,4 @@ dist/
 coverage/
 .turbo/
 packages/contracts/generated/
+packages/db/data/

@@ -29,7 +29,7 @@ pnpm test
 pnpm build
 ```
 
-`pnpm db:migrate` currently reports the explicit database blocker from `packages/db/src/migrations/run-migrations.ts`.
+`pnpm db:migrate` runs local SQLite migrations using `better-sqlite3`. Set `TEST_DATABASE_URL` or `DATABASE_URL` to run PostgreSQL migrations as part of the same command; `pnpm db:migrate:postgresql` requires one of those variables.
 
 ## API Docs
 

@@ -1,18 +1,20 @@
 # Implementation Questions
 
-## Backend Core Foundation Blockers
+## Confirmed Backend Core Decisions
 
 1. **Concrete SQLite driver for local/demo migrations**
 
-   The new goal requires SQLite to remain usable for local development, testing, and demo usage, and requires a `pnpm db:migrate` validation command. The design spec still says the concrete SQLite driver package is intentionally unspecified and must not be chosen silently. Please confirm the SQLite driver package for v1, for example `better-sqlite3`, Node's built-in `node:sqlite`, or another Drizzle-supported SQLite driver.
+   Confirmed: v1 local development, testing, and demo migrations use `better-sqlite3` behind the database package connection boundary.
 
 2. **PostgreSQL integration test database source**
 
-   The new goal requires tests for PostgreSQL only. Please confirm whether integration tests should require an externally provided PostgreSQL URL, such as `TEST_DATABASE_URL`, or whether the repository should introduce a test database provisioning approach. This should be confirmed before adding test infrastructure.
+   Confirmed: PostgreSQL integration tests use an externally provided `TEST_DATABASE_URL`. Explicit PostgreSQL migration execution may also use `DATABASE_URL`.
 
 3. **SQLite int64 materialized-path JavaScript mapping**
 
-   The SQLite SQL migration stores organization `path` as `INTEGER`, which is SQLite's signed 64-bit integer storage class. The current Drizzle SQLite TypeScript schema maps it as an integer column without choosing a runtime driver-specific bigint mode. Please confirm whether the selected SQLite driver must preserve this value as `bigint`, or whether repositories should serialize/deserialize the organization path through a driver-specific conversion boundary.
+   Confirmed: the `better-sqlite3` driver boundary enables safe integer reads so organization `path` values round-trip as `bigint` when raw driver access is used. DB-backed repositories must preserve this boundary when they are introduced.
+
+## Backend Core Foundation Blockers
 
 4. **CSRF strategy for refresh/logout cookie endpoints**
 
@@ -40,13 +42,13 @@
 
 ## Backend Infrastructure Modules Blockers
 
-10. **Executable database-backed infrastructure depends on PostgreSQL test provisioning and migration execution**
+10. **Executable database-backed infrastructure depends on durable repository scope**
 
-    The infrastructure goal requires PostgreSQL-only tests, database-backed cache/queue/event-bus/rate-limit/token-store/job/log/file/notification/import-export persistence, and the `pnpm db:migrate` validation command. Existing question 2 still blocks how PostgreSQL integration tests and migrations should connect to a database. Please confirm the PostgreSQL test database source/provisioning approach before adding executable DB-backed infrastructure tests and migration behavior.
+    The infrastructure goal requires PostgreSQL-only tests and database-backed cache/queue/event-bus/rate-limit/token-store/job/log/file/notification/import-export persistence. PostgreSQL test connectivity is now confirmed through `TEST_DATABASE_URL`, but durable adapter table shape and repository scope remain unconfirmed.
 
-11. **SQLite driver selection still blocks local/demo database-backed infrastructure**
+11. **SQLite local/demo database-backed infrastructure boundary**
 
-    The infrastructure goal requires SQLite to remain usable for local development, testing, and demo usage, while existing questions 1 and 3 confirm the SQLite driver and int64 mapping are still unresolved. Please confirm whether database-backed infrastructure adapters should wait for the SQLite driver decision, or whether they should be implemented only behind Drizzle interfaces until the concrete SQLite runtime is selected.
+    SQLite driver selection is now confirmed as `better-sqlite3`. Please confirm whether database-backed infrastructure adapters should be implemented for SQLite immediately, or whether they should be implemented only behind Drizzle interfaces until durable PostgreSQL repositories are completed.
 
 12. **Database LockAdapter concrete algorithm**
 

@@ -2,11 +2,11 @@
 
 This file records incomplete requirements that must not be claimed complete.
 
-## Blocked Database and Persistence Work
+## Database and Persistence Work
 
-- Executable SQLite migration support is blocked by the unconfirmed concrete SQLite driver.
-- PostgreSQL migration execution and PostgreSQL database tests are blocked by the unconfirmed test/provisioning strategy.
-- SQLite organization-path int64 JavaScript mapping is blocked by the unconfirmed SQLite driver behavior.
+- SQLite local/demo migration execution uses the confirmed `better-sqlite3` driver.
+- PostgreSQL migration execution and PostgreSQL smoke tests use an externally provided `TEST_DATABASE_URL` or `DATABASE_URL`.
+- PostgreSQL tests are skipped when `TEST_DATABASE_URL` is absent in the local environment.
 - Durable DB-backed repositories for auth, sessions, users, organizations, roles, permissions, menus, route metadata, API permission metadata, and initialization are not implemented.
 - CLI seed and first-start initialization currently use the in-memory service boundary, not durable DB-backed persistence.
 
@@ -26,6 +26,6 @@ This file records incomplete requirements that must not be claimed complete.
 
 ## Validation Gaps
 
-- `pnpm db:migrate` does not pass by design until the database provisioning questions are answered.
-- PostgreSQL database tests are not implemented yet.
-- SQLite remains schema/migration-file usable, but no concrete runtime driver has been selected.
+- `pnpm db:migrate:postgresql` cannot run without `TEST_DATABASE_URL` or `DATABASE_URL`.
+- PostgreSQL database tests are smoke-level only until DB-backed repositories are implemented.
+- SQLite is executable locally through `better-sqlite3`, including bigint-safe organization path reads at the driver boundary.

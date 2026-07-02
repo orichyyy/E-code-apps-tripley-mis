@@ -12,7 +12,7 @@ The v1 backend runtime target is Node.js only. Bun, Deno, and SQL Server deploym
 
 ## Database
 
-The design supports SQLite for local/demo usage and PostgreSQL for supported deployment. Durable PostgreSQL runtime wiring and migration execution are listed in `docs/known_gaps.md` until the provisioning questions are confirmed.
+The design supports SQLite for local/demo usage and PostgreSQL for supported deployment. PostgreSQL migration execution uses `DATABASE_URL` or `TEST_DATABASE_URL`; durable DB-backed application repositories are still tracked in `docs/known_gaps.md`.
 
 ## Observability
 

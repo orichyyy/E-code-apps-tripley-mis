@@ -238,15 +238,15 @@ The backend core goal has partial implementation progress:
 - Added route coverage proving current-user and logout session responses also hide the internal session token-version snapshot.
 - Added route coverage proving public auth and user-management responses do not serialize raw passwords or password hashes.
 
-This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
+This is not yet the complete backend core foundation. Executable SQLite migrations and PostgreSQL migration smoke-test wiring now exist, but DB-backed repositories, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection are still incomplete.
 
 ## Recommended Next Goals
 
-1. Confirm the concrete SQLite driver and PostgreSQL test provisioning approach.
-2. Wire real SQLite and PostgreSQL Drizzle connections plus executable migrations.
-3. Implement DB-backed repositories for initialization, auth/session, users, organizations, roles, permissions, menus, and route/API permission metadata.
-4. Wire the existing initialization setup and seed CLI paths to the DB-backed repositories.
-5. Implement auth/session endpoints and core CRUD routes with PostgreSQL integration tests.
+1. Implement DB-backed repositories for initialization, auth/session, users, organizations, roles, permissions, menus, and route/API permission metadata.
+2. Wire the existing initialization setup and seed CLI paths to the DB-backed repositories.
+3. Implement auth/session endpoints and core CRUD routes with PostgreSQL integration tests.
+4. Finalize CSRF strategy for refresh/logout cookie endpoints.
+5. Expand PostgreSQL integration coverage beyond migration smoke tests.
 
 ## Frontend Admin UI Progress
 
@@ -288,4 +288,16 @@ pnpm test
 pnpm build
 ```
 
-`pnpm db:migrate` remains intentionally blocked until the database driver/provisioning questions in `docs/implementation_questions.md` are answered. The gap is explicitly listed in `docs/known_gaps.md`.
+`pnpm db:migrate` now runs SQLite migrations through `better-sqlite3` and runs PostgreSQL migrations when `TEST_DATABASE_URL` or `DATABASE_URL` is provided.
+
+## Database Execution Progress
+
+The database execution slice completed the following:
+
+- Confirmed `better-sqlite3` as the v1 SQLite local/demo driver and `TEST_DATABASE_URL` as the PostgreSQL integration-test database source.
+- Added real SQLite and PostgreSQL Drizzle connection factories in `packages/db`.
+- Added executable migration runners for SQLite and PostgreSQL using the existing dialect-specific SQL migration files.
+- Added SQLite migration smoke tests, including bigint-safe organization materialized-path reads at the driver boundary.
+- Added PostgreSQL migration smoke tests that run only when `TEST_DATABASE_URL` is present.
+
+Durable DB-backed repositories remain the next recommended implementation goal.
