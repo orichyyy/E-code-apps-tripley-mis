@@ -118,6 +118,7 @@ The backend core goal has partial implementation progress:
 - Tightened session activity tracking so successful bearer-token authentication updates the session `lastSeenAt` value used by the online-user data source.
 - Tightened failed-login state tracking so failed password attempts update the user's failed-attempt counter, timed lock fields, and `updatedAt` audit timestamp together.
 - Tightened repeated seed synchronization so existing built-in roles are restored to enabled built-in metadata while preserving idempotent role and permission creation.
+- Tightened core entity path-ID validation so user, organization, role, menu, and nested user-organization route IDs must be integer strings before resource lookup, matching the API ID input contract.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

@@ -1880,6 +1880,26 @@ describe("backend core foundation routes", () => {
     expect(body.error.code).toBe("VALIDATION_INVALID_REQUEST");
   });
 
+  it("validates integer string path IDs before resource lookup", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const userResponse = await app.request("/api/users/not-an-id", {
+      headers: authHeaders
+    });
+    const userBody = await userResponse.json();
+    const bindingResponse = await app.request("/api/users/1/organizations/not-an-id", {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const bindingBody = await bindingResponse.json();
+
+    expect(userResponse.status).toBe(400);
+    expect(userBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(bindingResponse.status).toBe(400);
+    expect(bindingBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+  });
+
   it("returns stable business error codes", async () => {
     const { app } = await setupInitializedApp();
     const response = await app.request("/api/initialization/setup", {

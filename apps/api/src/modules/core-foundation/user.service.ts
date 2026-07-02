@@ -16,6 +16,7 @@ import type { BackendCoreContext } from "./service-context";
 import {
   requireEnabledOrganization,
   requireEnabledRole,
+  requireIntegerIdString,
   requireUser
 } from "./store-guards";
 import { toPublicUser } from "./serializers";
@@ -199,6 +200,8 @@ export class UserService {
     organizationId: string,
     deletedBy: string | null = null
   ): { removed: boolean } {
+    requireUser(this.context.store, userId);
+    requireIntegerIdString(organizationId);
     const binding = [...this.context.store.userOrganizationRoles.values()].find(
       (candidate) =>
         candidate.userId === userId &&
