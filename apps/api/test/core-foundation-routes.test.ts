@@ -533,6 +533,28 @@ describe("backend core foundation routes", () => {
     expect(refresh.data.session).not.toHaveProperty("refreshTokenHash");
   });
 
+  it("does not require a bearer access token for public refresh-token exchange", async () => {
+    const { app } = await setupInitializedApp();
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const cookie = loginResponse.headers.get("set-cookie") ?? "";
+
+    const refreshResponse = await app.request("/api/auth/refresh", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer not-a-valid-access-token",
+        cookie: cookie.split(";")[0]
+      }
+    });
+    const refresh = await refreshResponse.json();
+
+    expect(refreshResponse.status).toBe(200);
+    expect(refresh.data.accessToken).toEqual(expect.any(String));
+    expect(refresh.data.session.id).toBe("1");
+  });
+
   it("uses the configured refresh token TTL for the HttpOnly cookie lifetime", async () => {
     const services = createInMemoryBackendCoreServices({ refreshTokenTtlDays: 2 });
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));

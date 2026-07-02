@@ -14,7 +14,9 @@ export function createApiAuthorizationMiddleware(
 ): MiddlewareHandler<AuthorizationBindings> {
   return async (context: Context<AuthorizationBindings>, next: Next) => {
     const apiPermission = findApiPermission(context.req.method, context.req.path);
-    const authContext = services.findAuthContext(context.req.header("authorization"));
+    const authContext = apiPermission?.public
+      ? null
+      : services.findAuthContext(context.req.header("authorization"));
 
     context.set("authContext", authContext);
 
