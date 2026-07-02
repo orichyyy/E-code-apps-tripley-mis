@@ -233,12 +233,14 @@ export class BackendCoreServices {
     return this.users.update(id, input, actorId);
   }
 
-  setUserStatus(
+  async setUserStatus(
     id: string,
     status: "enabled" | "disabled" | "locked",
     actorId: string | null = null
   ) {
-    return this.users.setStatus(id, status, actorId);
+    const user = this.users.setStatus(id, status, actorId);
+    await this.permissions.invalidateUser(id);
+    return user;
   }
 
   resetUserPassword(
