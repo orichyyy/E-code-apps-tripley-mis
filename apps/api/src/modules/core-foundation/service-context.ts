@@ -12,6 +12,7 @@ export type BackendCoreConfig = {
   jwtIssuer: string;
   accessTokenTtlSeconds: number;
   refreshTokenTtlDays: number;
+  refreshTokenCookiePath: string;
   failedLoginMaxAttempts: number;
   failedLoginLockMinutes: number;
   maxOrganizationDepth: number;
@@ -23,6 +24,7 @@ export const defaultBackendCoreConfig: BackendCoreConfig = {
   jwtIssuer: "web-admin-base",
   accessTokenTtlSeconds: 900,
   refreshTokenTtlDays: 30,
+  refreshTokenCookiePath: "/api/auth/refresh",
   failedLoginMaxAttempts: 5,
   failedLoginLockMinutes: 30,
   maxOrganizationDepth: 8,

@@ -27,6 +27,10 @@ import type { KnownErrorCode } from "../../core/errors/error-codes";
 export class AuthService {
   constructor(private readonly context: BackendCoreContext) {}
 
+  getRefreshTokenCookiePath(): string {
+    return this.context.config.refreshTokenCookiePath;
+  }
+
   async login(input: LoginRequest, request: { ipAddress?: string | null; userAgent?: string | null }) {
     const user = [...this.context.store.users.values()].find(
       (candidate) => candidate.username === input.username && !candidate.isDeleted
@@ -91,6 +95,7 @@ export class AuthService {
         name: "refresh_token",
         httpOnly: true,
         sameSite: "Strict" as const,
+        path: this.context.config.refreshTokenCookiePath,
         maxAgeSeconds: this.context.config.refreshTokenTtlDays * 24 * 60 * 60
       },
       session: toPublicSession(session),

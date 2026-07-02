@@ -117,6 +117,10 @@ export class BackendCoreServices {
     return this.auth.refreshAccessToken(refreshToken);
   }
 
+  getRefreshTokenCookiePath() {
+    return this.auth.getRefreshTokenCookiePath();
+  }
+
   async changePassword(
     authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
     input: ChangePasswordRequest

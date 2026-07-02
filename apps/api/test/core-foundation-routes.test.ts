@@ -579,11 +579,13 @@ describe("backend core foundation routes", () => {
 
     expect(cookie).toContain("HttpOnly");
     expect(cookie).toContain("SameSite=Strict");
+    expect(cookie).toContain("Path=/api/auth/refresh");
     expect(cookie).toContain("Max-Age=172800");
     expect(login.data.refreshTokenCookie).toMatchObject({
       name: "refresh_token",
       httpOnly: true,
       sameSite: "Strict",
+      path: "/api/auth/refresh",
       maxAgeSeconds: 172800
     });
   });
@@ -824,6 +826,7 @@ describe("backend core foundation routes", () => {
 
     expect(logoutResponse.status).toBe(200);
     expect(logoutResponse.headers.get("set-cookie")).toContain("refresh_token=");
+    expect(logoutResponse.headers.get("set-cookie")).toContain("Path=/api/auth/refresh");
     expect(logoutResponse.headers.get("set-cookie")).toContain("Max-Age=0");
     expect(logout.data.status).toBe("revoked");
     expect(logout.data).not.toHaveProperty("refreshTokenHash");

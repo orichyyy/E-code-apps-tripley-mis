@@ -26,7 +26,10 @@ export function createAuthRoutes(services: BackendCoreServices) {
 
     context.header(
       "set-cookie",
-      `refresh_token=${encodeURIComponent(result.refreshToken)}; HttpOnly; SameSite=Strict; Path=/api/auth; Max-Age=${result.refreshTokenCookie.maxAgeSeconds}`
+      formatRefreshTokenCookie(result.refreshToken, {
+        path: result.refreshTokenCookie.path,
+        maxAgeSeconds: result.refreshTokenCookie.maxAgeSeconds
+      })
     );
 
     return context.json({
@@ -60,7 +63,10 @@ export function createAuthRoutes(services: BackendCoreServices) {
     const result = await services.logout(authContext.sessionId);
     context.header(
       "set-cookie",
-      "refresh_token=; HttpOnly; SameSite=Strict; Path=/api/auth; Max-Age=0"
+      formatRefreshTokenCookie("", {
+        path: services.getRefreshTokenCookiePath(),
+        maxAgeSeconds: 0
+      })
     );
     return context.json({ data: result });
   });
@@ -127,6 +133,19 @@ function readCookie(cookieHeader: string, name: string): string | null {
   } catch {
     return null;
   }
+}
+
+function formatRefreshTokenCookie(
+  value: string,
+  options: { path: string; maxAgeSeconds: number }
+): string {
+  return [
+    `refresh_token=${encodeURIComponent(value)}`,
+    "HttpOnly",
+    "SameSite=Strict",
+    `Path=${options.path}`,
+    `Max-Age=${options.maxAgeSeconds}`
+  ].join("; ");
 }
 
 async function readOptionalJson<T>(request: Request): Promise<T | null> {

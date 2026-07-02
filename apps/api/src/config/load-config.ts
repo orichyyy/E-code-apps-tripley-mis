@@ -25,6 +25,7 @@ const apiConfigSchema = z.object({
       .int()
       .positive()
       .default(defaultBackendCoreConfig.refreshTokenTtlDays),
+    refreshTokenCookiePath: z.string().min(1).default(defaultBackendCoreConfig.refreshTokenCookiePath),
     failedLoginMaxAttempts: z.coerce
       .number()
       .int()
@@ -75,6 +76,7 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       jwtIssuer: env.JWT_ISSUER,
       accessTokenTtlSeconds: env.ACCESS_TOKEN_TTL_SECONDS,
       refreshTokenTtlDays: env.REFRESH_TOKEN_TTL_DAYS,
+      refreshTokenCookiePath: env.AUTH_REFRESH_COOKIE_PATH,
       failedLoginMaxAttempts: env.FAILED_LOGIN_MAX_ATTEMPTS,
       failedLoginLockMinutes: env.FAILED_LOGIN_LOCK_MINUTES,
       maxOrganizationDepth: env.ORGANIZATION_MAX_DEPTH,
