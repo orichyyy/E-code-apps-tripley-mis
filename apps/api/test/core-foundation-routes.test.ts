@@ -2059,6 +2059,40 @@ describe("backend core foundation routes", () => {
     expect(usersResponse.status).toBe(200);
   });
 
+  it("invalidates super administrator cached permissions in unbound organization contexts", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Unbound Child", code: "unbound-child" })
+    });
+    const child = await childResponse.json();
+    const switchResponse = await app.request("/api/context/current-organization", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: child.data.id })
+    });
+    const switched = await switchResponse.json();
+    const childHeaders = {
+      authorization: `Bearer ${switched.data.accessToken}`
+    };
+    const beforeDisableResponse = await app.request("/api/users", { headers: childHeaders });
+
+    const disableResponse = await app.request("/api/roles/1/disable", {
+      method: "POST",
+      headers: childHeaders
+    });
+    const afterDisableResponse = await app.request("/api/users", { headers: childHeaders });
+    const afterDisable = await afterDisableResponse.json();
+
+    expect(switchResponse.status).toBe(200);
+    expect(beforeDisableResponse.status).toBe(200);
+    expect(disableResponse.status).toBe(200);
+    expect(afterDisableResponse.status).toBe(403);
+    expect(afterDisable.error.code).toBe("PERMISSION_API_DENIED");
+  });
+
   it("supports the PRD auth current-organization alias", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

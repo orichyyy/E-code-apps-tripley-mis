@@ -130,6 +130,7 @@ The backend core goal has partial implementation progress:
 - Tightened failed-login lock expiration so expired timed locks clear status, lock timestamp, and stale failure count before new credential checks, while administrator locks remain manual.
 - Tightened online-user session bookkeeping so active sessions whose expiration has passed are marked `expired` when the online-user data source is queried.
 - Tightened administrator user updates so successful profile or primary-organization changes clear the user's permission cache, and route coverage proves the updated primary organization drives the next login context.
+- Tightened per-user permission cache invalidation so super-administrator contexts cached in organizations without direct user-role bindings are cleared when that user's effective permissions change.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

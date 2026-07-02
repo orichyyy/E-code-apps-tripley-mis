@@ -50,11 +50,15 @@ export class PermissionService {
   }
 
   async invalidateUser(userId: string) {
-    const bindings = [...this.context.store.userOrganizationRoles.values()].filter(
-      (binding) => binding.userId === userId
-    );
+    const organizationIds = new Set<string>();
+    for (const binding of this.context.store.userOrganizationRoles.values()) {
+      if (binding.userId === userId) organizationIds.add(binding.organizationId);
+    }
+    for (const organization of this.context.store.organizations.values()) {
+      if (!organization.isDeleted) organizationIds.add(organization.id);
+    }
     await Promise.all(
-      bindings.map((binding) => this.cache.invalidate(binding.userId, binding.organizationId))
+      [...organizationIds].map((organizationId) => this.cache.invalidate(userId, organizationId))
     );
   }
 
