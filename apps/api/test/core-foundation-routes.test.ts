@@ -555,6 +555,18 @@ describe("backend core foundation routes", () => {
     expect(refresh.data.session.id).toBe("1");
   });
 
+  it("returns a stable auth error for malformed refresh-token cookies", async () => {
+    const { app } = await setupInitializedApp();
+    const response = await app.request("/api/auth/refresh", {
+      method: "POST",
+      headers: { cookie: "refresh_token=%" }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(body.error.code).toBe("AUTH_TOKEN_EXPIRED");
+  });
+
   it("uses the configured refresh token TTL for the HttpOnly cookie lifetime", async () => {
     const services = createInMemoryBackendCoreServices({ refreshTokenTtlDays: 2 });
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));

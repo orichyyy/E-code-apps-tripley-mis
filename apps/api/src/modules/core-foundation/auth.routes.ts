@@ -121,7 +121,12 @@ function readCookie(cookieHeader: string, name: string): string | null {
   const cookies = cookieHeader.split(";").map((cookie) => cookie.trim());
   const prefix = `${name}=`;
   const cookie = cookies.find((candidate) => candidate.startsWith(prefix));
-  return cookie ? decodeURIComponent(cookie.slice(prefix.length)) : null;
+  if (!cookie) return null;
+  try {
+    return decodeURIComponent(cookie.slice(prefix.length));
+  } catch {
+    return null;
+  }
 }
 
 async function readOptionalJson<T>(request: Request): Promise<T | null> {
