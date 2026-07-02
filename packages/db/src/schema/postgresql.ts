@@ -163,7 +163,9 @@ export const rolePermissions = pgTable(
     tenantId: integer("tenant_id"),
     roleId: integer("role_id").notNull(),
     permissionId: integer("permission_id").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull()
+    effect: text("effect").notNull().default("allow"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull()
   },
   (table) => ({
     rolePermissionUnique: uniqueIndex("role_permissions_role_permission_unique").on(

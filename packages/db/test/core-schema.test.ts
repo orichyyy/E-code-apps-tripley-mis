@@ -21,6 +21,13 @@ describe("backend core schema", () => {
     expect(postgresql.roles.updatedBy.name).toBe("updated_by");
   });
 
+  it("keeps role permission effect metadata aligned across dialects", () => {
+    expect(sqlite.rolePermissions.effect.name).toBe("effect");
+    expect(sqlite.rolePermissions.updatedAt.name).toBe("updated_at");
+    expect(postgresql.rolePermissions.effect.name).toBe("effect");
+    expect(postgresql.rolePermissions.updatedAt.name).toBe("updated_at");
+  });
+
   it("keeps user organization role binding soft-delete columns aligned across dialects", () => {
     expect(sqlite.userOrganizationRoles.isPrimary.name).toBe("is_primary");
     expect(sqlite.userOrganizationRoles.status.name).toBe("status");

@@ -173,7 +173,13 @@ export class InitializationService {
     );
     permissionCodes.forEach((permissionCode) => {
       if (existing.has(permissionCode)) return;
-      this.context.store.rolePermissions.push({ roleId, permissionCode, createdAt: now });
+      this.context.store.rolePermissions.push({
+        roleId,
+        permissionCode,
+        effect: "allow",
+        createdAt: now,
+        updatedAt: now
+      });
       existing.add(permissionCode);
     });
   }

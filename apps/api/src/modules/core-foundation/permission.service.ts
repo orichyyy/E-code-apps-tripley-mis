@@ -196,7 +196,7 @@ export class PermissionService {
   ): string[] {
     if (!roleId || role?.status !== "enabled" || role.isDeleted) return [];
     return this.context.store.rolePermissions
-      .filter((permission) => permission.roleId === roleId)
+      .filter((permission) => permission.roleId === roleId && permission.effect === "allow")
       .map((permission) => permission.permissionCode);
   }
 }

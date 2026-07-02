@@ -181,7 +181,9 @@ export type InitializationStateRecord = AuditFields & {
 export type RolePermissionRecord = {
   roleId: string;
   permissionCode: string;
+  effect: "allow" | "deny";
   createdAt: string;
+  updatedAt: string;
 };
 
 export type PublicOrganization = Omit<OrganizationRecord, "path"> & {

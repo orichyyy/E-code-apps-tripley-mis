@@ -137,7 +137,10 @@ CREATE TABLE IF NOT EXISTS role_permissions (
   tenant_id INTEGER,
   role_id INTEGER NOT NULL,
   permission_id INTEGER NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL
+  effect TEXT NOT NULL DEFAULT 'allow',
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL,
+  CHECK (effect IN ('allow', 'deny'))
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS role_permissions_role_permission_unique

@@ -95,7 +95,9 @@ export class RoleService {
         this.context.store.rolePermissions.push({
           roleId: copy.id,
           permissionCode: permission.permissionCode,
-          createdAt: now
+          effect: permission.effect,
+          createdAt: now,
+          updatedAt: now
         });
       });
     return copy;
@@ -112,7 +114,13 @@ export class RoleService {
     this.context.store.rolePermissions.splice(0, this.context.store.rolePermissions.length, ...retained);
     const now = toUtcIso(nowUtc());
     input.permissionCodes.forEach((permissionCode) => {
-      this.context.store.rolePermissions.push({ roleId: id, permissionCode, createdAt: now });
+      this.context.store.rolePermissions.push({
+        roleId: id,
+        permissionCode,
+        effect: "allow",
+        createdAt: now,
+        updatedAt: now
+      });
     });
     role.updatedAt = now;
     return role;
@@ -121,7 +129,7 @@ export class RoleService {
   listPermissionCodes(id: string): string[] {
     requireRole(this.context.store, id);
     return this.context.store.rolePermissions
-      .filter((permission) => permission.roleId === id)
+      .filter((permission) => permission.roleId === id && permission.effect === "allow")
       .map((permission) => permission.permissionCode);
   }
 

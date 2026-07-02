@@ -157,7 +157,9 @@ export const rolePermissions = sqliteTable(
     tenantId: integer("tenant_id"),
     roleId: integer("role_id").notNull(),
     permissionId: integer("permission_id").notNull(),
-    createdAt: text("created_at").notNull()
+    effect: text("effect", { enum: ["allow", "deny"] }).notNull().default("allow"),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull()
   },
   (table) => ({
     rolePermissionUnique: uniqueIndex("role_permissions_role_permission_unique").on(
