@@ -147,6 +147,7 @@ The backend core goal has partial implementation progress:
 - Tightened user status changes so disable, enable, lock, and unlock operations invalidate that user's permission cache after the account state change.
 - Tightened organization mutations so create, update, disable, enable, and soft delete operations clear cached permission contexts through the permission-cache boundary.
 - Tightened administrator password reset so reset operations clear the user's permission cache and route coverage proves old access tokens, refresh tokens, and online-session visibility are invalidated through the user token version.
+- Added route coverage proving administrator password reset enforces the configured password policy and leaves user lifecycle state unchanged when the reset password is rejected.
 - Tightened login cookie handling so the HttpOnly refresh-token cookie `Max-Age` is derived from the configured refresh-token TTL instead of a fixed value.
 - Tightened current-user password changes so successful changes clear the user's permission cache and route coverage proves stale sessions are removed from the online-user data source through token-version checks.
 - Tightened failed-login lock expiration so expired timed locks clear status, lock timestamp, and stale failure count before new credential checks, while administrator locks remain manual.

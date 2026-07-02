@@ -1233,6 +1233,27 @@ describe("backend core foundation routes", () => {
     expect(reset.data.firstLoginPasswordChangeRequired).toBe(true);
   });
 
+  it("rejects administrator password resets that violate the password policy", async () => {
+    const { app, setup } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const response = await app.request(`/api/users/${setup.data.admin.id}/reset-password`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ password: "password" })
+    });
+    const body = await response.json();
+    const unchangedResponse = await app.request(`/api/users/${setup.data.admin.id}`, {
+      headers: authHeaders
+    });
+    const unchanged = await unchangedResponse.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("PASSWORD_REQUIRES_NUMBER");
+    expect(unchanged.data.tokenVersion).toBe(0);
+    expect(unchanged.data.firstLoginPasswordChangeRequired).toBe(false);
+  });
+
   it("creates and updates optional user profile fields", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
