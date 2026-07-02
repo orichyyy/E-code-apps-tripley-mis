@@ -1104,7 +1104,7 @@ describe("backend core foundation routes", () => {
     await app.request("/api/roles/2/permissions", {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["user:view", "role:view"] })
+      body: JSON.stringify({ permissionCodes: ["user:view", "role:view", "user:view"] })
     });
 
     const response = await app.request("/api/roles/2/permissions", {

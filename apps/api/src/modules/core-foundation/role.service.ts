@@ -106,14 +106,15 @@ export class RoleService {
   updatePermissions(id: string, input: UpdateRolePermissionsRequest): RoleRecord {
     const role = requireRole(this.context.store, id);
     const knownPermissions = new Set(basePermissionManifest.map((permission) => permission.code));
-    input.permissionCodes.forEach((permissionCode) => {
+    const permissionCodes = [...new Set(input.permissionCodes)];
+    permissionCodes.forEach((permissionCode) => {
       if (!knownPermissions.has(permissionCode)) throw createKnownError("PERMISSION_UNKNOWN_CODE");
     });
 
     const retained = this.context.store.rolePermissions.filter((permission) => permission.roleId !== id);
     this.context.store.rolePermissions.splice(0, this.context.store.rolePermissions.length, ...retained);
     const now = toUtcIso(nowUtc());
-    input.permissionCodes.forEach((permissionCode) => {
+    permissionCodes.forEach((permissionCode) => {
       this.context.store.rolePermissions.push({
         roleId: id,
         permissionCode,
