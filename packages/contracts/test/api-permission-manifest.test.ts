@@ -74,6 +74,11 @@ describe("baseApiPermissionManifest", () => {
           method: "POST",
           path: "/api/routes/sync",
           requiredPermission: "route:sync"
+        }),
+        expect.objectContaining({
+          method: "POST",
+          path: "/api/permissions/sync",
+          requiredPermission: "permission:sync"
         })
       ])
     );

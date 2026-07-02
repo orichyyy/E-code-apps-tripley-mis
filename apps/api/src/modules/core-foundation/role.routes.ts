@@ -49,5 +49,9 @@ export function createRoleRoutes(services: BackendCoreServices) {
     return context.json({ data: services.listPermissions() });
   });
 
+  routes.post("/permissions/sync", async (context) => {
+    return context.json({ data: await services.syncPermissions() });
+  });
+
   return routes;
 }

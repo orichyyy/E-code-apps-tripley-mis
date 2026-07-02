@@ -391,6 +391,24 @@ describe("backend core foundation routes", () => {
     expect(role.data.id).toBe("1");
   });
 
+  it("syncs permission and API permission manifests", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const response = await app.request("/api/permissions/sync", {
+      method: "POST",
+      headers: authHeaders
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.permissions).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "permission:sync" })])
+    );
+    expect(body.data.apiPermissions).toEqual(
+      expect.arrayContaining([expect.objectContaining({ path: "/api/permissions/sync" })])
+    );
+  });
+
   it("reads role permission codes", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

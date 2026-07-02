@@ -1,4 +1,8 @@
-import type { BaseApiPermissionManifestEntry } from "@web-admin-base/contracts";
+import {
+  baseApiPermissionManifest,
+  basePermissionManifest,
+  type BaseApiPermissionManifestEntry
+} from "@web-admin-base/contracts";
 
 import type { AuthContext } from "../../core/auth-context/auth-context";
 import { createKnownError } from "../../core/errors/error-codes";
@@ -50,6 +54,14 @@ export class PermissionService {
         this.cache.invalidate(binding.userId, binding.organizationId)
       )
     );
+  }
+
+  async syncPermissionManifests() {
+    await this.invalidateAllPermissionContexts();
+    return {
+      permissions: basePermissionManifest,
+      apiPermissions: baseApiPermissionManifest
+    };
   }
 
   async getPermissionContext(userId: string, organizationId: string) {

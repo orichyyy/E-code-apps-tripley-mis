@@ -403,6 +403,16 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     public: false
   },
   {
+    method: "POST",
+    path: "/api/permissions/sync",
+    code: "api.permissions.sync",
+    description: "Sync permission and API permission manifests",
+    module: "permissions",
+    requiredPermission: "permission:sync",
+    logLevel: "request",
+    public: false
+  },
+  {
     method: "GET",
     path: "/api/permissions/manifest",
     code: "api.permissions.manifest",

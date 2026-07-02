@@ -257,6 +257,10 @@ export class BackendCoreServices {
     return basePermissionManifest;
   }
 
+  syncPermissions() {
+    return this.permissions.syncPermissionManifests();
+  }
+
   listRoutes() {
     return this.routeMetadata.list();
   }
