@@ -5,6 +5,7 @@ import { postgresql, sqlite } from "../src";
 
 type TableWithSymbols = Record<PropertyKey, unknown>;
 type ExtraConfigItem = {
+  config?: { name?: string };
   constructor: { name: string };
   name?: string;
 };
@@ -32,6 +33,33 @@ function getCheckNames(table: unknown): string[] {
   return Object.values(buildExtraConfig(tableRecord[columnsSymbol]))
     .filter((item) => item.constructor.name === "CheckBuilder")
     .map((item) => item.name)
+    .filter((name): name is string => Boolean(name))
+    .sort();
+}
+
+function getIndexNames(table: unknown): string[] {
+  const tableRecord = table as TableWithSymbols;
+  const symbols = Object.getOwnPropertySymbols(tableRecord);
+  const builderSymbol = symbols.find((symbol) => symbol.toString() === "Symbol(drizzle:ExtraConfigBuilder)");
+  const columnsSymbol = symbols.find((symbol) => symbol.toString() === "Symbol(drizzle:ExtraConfigColumns)");
+
+  if (!builderSymbol || !columnsSymbol) {
+    return [];
+  }
+
+  const buildExtraConfig = tableRecord[builderSymbol] as
+    | ((columns: unknown) => Record<string, ExtraConfigItem>)
+    | undefined;
+
+  if (!buildExtraConfig) {
+    return [];
+  }
+
+  return Object.values(buildExtraConfig(tableRecord[columnsSymbol]))
+    .filter((item): item is ExtraConfigItem & { config: { name?: string } } => {
+      return item.constructor.name === "IndexBuilder" && Boolean(item.config);
+    })
+    .map((item) => item.config.name)
     .filter((name): name is string => Boolean(name))
     .sort();
 }
@@ -155,6 +183,31 @@ describe("backend core schema", () => {
     for (const [tableName, expectedChecks] of expectedChecksByTable) {
       expect(getCheckNames(sqlite[tableName])).toEqual(expectedChecks);
       expect(getCheckNames(postgresql[tableName])).toEqual(expectedChecks);
+    }
+  });
+
+  it("keeps Drizzle indexes aligned with backend core migrations", () => {
+    const expectedIndexesByTable = new Map<SharedSchemaTableName, string[]>([
+      [
+        "organizations",
+        ["organizations_code_unique", "organizations_path_level_idx", "organizations_path_unique"]
+      ],
+      ["users", ["users_email_unique", "users_phone_unique", "users_username_unique"]],
+      ["roles", ["roles_code_unique"]],
+      ["userOrganizationRoles", ["user_organization_roles_user_org_unique"]],
+      ["permissions", ["permissions_code_unique"]],
+      ["rolePermissions", ["role_permissions_role_permission_unique"]],
+      ["menus", ["menus_code_unique", "menus_path_unique"]],
+      ["routeMetadata", ["route_metadata_route_code_unique"]],
+      ["apiPermissions", ["api_permissions_code_unique", "api_permissions_method_path_unique"]],
+      ["menuApiBindings", ["menu_api_bindings_unique"]],
+      ["authSessions", ["auth_sessions_user_active_idx"]],
+      ["refreshTokens", ["refresh_tokens_hash_unique"]]
+    ]);
+
+    for (const [tableName, expectedIndexes] of expectedIndexesByTable) {
+      expect(getIndexNames(sqlite[tableName])).toEqual(expectedIndexes);
+      expect(getIndexNames(postgresql[tableName])).toEqual(expectedIndexes);
     }
   });
 });

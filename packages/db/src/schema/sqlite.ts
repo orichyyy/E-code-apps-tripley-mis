@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { check, index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 const timestamps = {
   createdAt: text("created_at").notNull(),
@@ -43,6 +43,7 @@ export const organizations = sqliteTable(
   },
   (table) => ({
     codeUnique: uniqueIndex("organizations_code_unique").on(table.code),
+    pathLevelIndex: index("organizations_path_level_idx").on(table.path, table.level),
     pathUnique: uniqueIndex("organizations_path_unique").on(table.path),
     levelCheck: check("organizations_level_check", sql`${table.level} BETWEEN 1 AND 8`),
     rootSegmentCheck: check(
@@ -302,6 +303,11 @@ export const authSessions = sqliteTable(
     lastSeenAt: text("last_seen_at").notNull()
   },
   (table) => ({
+    userActiveIndex: index("auth_sessions_user_active_idx").on(
+      table.userId,
+      table.revokedAt,
+      table.expiresAt
+    ),
     statusCheck: check(
       "auth_sessions_status_check",
       sql`${table.status} IN ('active', 'revoked', 'expired')`
