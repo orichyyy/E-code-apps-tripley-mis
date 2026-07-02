@@ -97,7 +97,7 @@ export class InitializationService {
       name: "Super Administrator",
       code: builtInRoleCodes.superAdmin,
       remark: "Built-in role"
-    });
+    }, null, { isBuiltin: true });
     const permissions = this.permissions.syncBasePermissions();
     const apiPermissions = this.permissions.syncBaseApiPermissions();
     this.grantAllPermissions(superAdminRole.id, permissions.map((permission) => permission.code));
@@ -105,12 +105,12 @@ export class InitializationService {
       name: "Organization Administrator",
       code: builtInRoleCodes.organizationAdmin,
       remark: "Built-in role"
-    });
+    }, null, { isBuiltin: true });
     this.roles.createRecord({
       name: "Normal User",
       code: builtInRoleCodes.normalUser,
       remark: "Built-in role"
-    });
+    }, null, { isBuiltin: true });
     const menus = this.menus.seedBaseMenus(baseMenuManifest);
     const routes = this.routes.syncBaseRoutes(baseRouteManifest);
 
@@ -157,7 +157,7 @@ export class InitializationService {
       name,
       code,
       remark: "Built-in role"
-    });
+    }, null, { isBuiltin: true });
   }
 
   private grantAllPermissions(roleId: string, permissionCodes: string[]) {

@@ -63,16 +63,20 @@ export type UserRecord = AuditFields &
   };
 
 export type RoleRecord = AuditFields &
+  ActorAuditFields &
   SoftDeleteFields & {
     id: string;
     tenantId: string | null;
     name: string;
     code: string;
+    dataScopeRuleId: string | null;
+    isBuiltin: boolean;
     status: EntityStatus;
     remark: string | null;
   };
 
 export type UserOrganizationRoleRecord = AuditFields &
+  ActorAuditFields &
   SoftDeleteFields & {
     id: string;
     tenantId: string | null;

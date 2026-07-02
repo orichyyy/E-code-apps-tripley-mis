@@ -8,14 +8,31 @@ describe("backend core schema", () => {
     expect(postgresql.permissions.module.name).toBe("module");
   });
 
+  it("keeps role metadata and audit columns aligned across dialects", () => {
+    expect(sqlite.roles.description.name).toBe("description");
+    expect(sqlite.roles.dataScopeRuleId.name).toBe("data_scope_rule_id");
+    expect(sqlite.roles.isBuiltin.name).toBe("is_builtin");
+    expect(sqlite.roles.createdBy.name).toBe("created_by");
+    expect(sqlite.roles.updatedBy.name).toBe("updated_by");
+    expect(postgresql.roles.description.name).toBe("description");
+    expect(postgresql.roles.dataScopeRuleId.name).toBe("data_scope_rule_id");
+    expect(postgresql.roles.isBuiltin.name).toBe("is_builtin");
+    expect(postgresql.roles.createdBy.name).toBe("created_by");
+    expect(postgresql.roles.updatedBy.name).toBe("updated_by");
+  });
+
   it("keeps user organization role binding soft-delete columns aligned across dialects", () => {
     expect(sqlite.userOrganizationRoles.isPrimary.name).toBe("is_primary");
     expect(sqlite.userOrganizationRoles.status.name).toBe("status");
+    expect(sqlite.userOrganizationRoles.createdBy.name).toBe("created_by");
+    expect(sqlite.userOrganizationRoles.updatedBy.name).toBe("updated_by");
     expect(sqlite.userOrganizationRoles.isDeleted.name).toBe("is_deleted");
     expect(sqlite.userOrganizationRoles.deletedAt.name).toBe("deleted_at");
     expect(sqlite.userOrganizationRoles.deletedBy.name).toBe("deleted_by");
     expect(postgresql.userOrganizationRoles.isPrimary.name).toBe("is_primary");
     expect(postgresql.userOrganizationRoles.status.name).toBe("status");
+    expect(postgresql.userOrganizationRoles.createdBy.name).toBe("created_by");
+    expect(postgresql.userOrganizationRoles.updatedBy.name).toBe("updated_by");
     expect(postgresql.userOrganizationRoles.isDeleted.name).toBe("is_deleted");
     expect(postgresql.userOrganizationRoles.deletedAt.name).toBe("deleted_at");
     expect(postgresql.userOrganizationRoles.deletedBy.name).toBe("deleted_by");

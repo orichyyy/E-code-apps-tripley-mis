@@ -20,8 +20,9 @@ export function createRoleRoutes(services: BackendCoreServices) {
   });
 
   routes.post("/roles", async (context) => {
+    const authContext = context.get("authContext");
     const input = createRoleRequestSchema.parse(await context.req.json());
-    return context.json({ data: services.createRole(input) }, 201);
+    return context.json({ data: services.createRole(input, authContext?.userId ?? null) }, 201);
   });
 
   routes.get("/roles/:id", (context) => {
@@ -29,16 +30,25 @@ export function createRoleRoutes(services: BackendCoreServices) {
   });
 
   routes.patch("/roles/:id", async (context) => {
+    const authContext = context.get("authContext");
     const input = updateRoleRequestSchema.parse(await context.req.json());
-    return context.json({ data: await services.updateRole(context.req.param("id"), input) });
+    return context.json({
+      data: await services.updateRole(context.req.param("id"), input, authContext?.userId ?? null)
+    });
   });
 
   routes.post("/roles/:id/enable", async (context) => {
-    return context.json({ data: await services.setRoleStatus(context.req.param("id"), "enabled") });
+    const authContext = context.get("authContext");
+    return context.json({
+      data: await services.setRoleStatus(context.req.param("id"), "enabled", authContext?.userId ?? null)
+    });
   });
 
   routes.post("/roles/:id/disable", async (context) => {
-    return context.json({ data: await services.setRoleStatus(context.req.param("id"), "disabled") });
+    const authContext = context.get("authContext");
+    return context.json({
+      data: await services.setRoleStatus(context.req.param("id"), "disabled", authContext?.userId ?? null)
+    });
   });
 
   routes.delete("/roles/:id", async (context) => {
@@ -49,7 +59,10 @@ export function createRoleRoutes(services: BackendCoreServices) {
   });
 
   routes.post("/roles/:id/copy", (context) => {
-    return context.json({ data: services.copyRole(context.req.param("id")) }, 201);
+    const authContext = context.get("authContext");
+    return context.json({
+      data: services.copyRole(context.req.param("id"), authContext?.userId ?? null)
+    }, 201);
   });
 
   routes.get("/roles/:id/permissions", (context) => {

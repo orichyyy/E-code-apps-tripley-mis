@@ -81,7 +81,7 @@ export class UserService {
       updatedBy: actorId
     };
     this.context.store.users.set(user.id, user);
-    this.bindToOrganization(user.id, input.primaryOrganizationId, input.roleId, true);
+    this.bindToOrganization(user.id, input.primaryOrganizationId, input.roleId, true, actorId);
     return user;
   }
 
@@ -172,7 +172,8 @@ export class UserService {
 
   assignOrganizationRole(
     userId: string,
-    input: AssignUserOrganizationRoleRequest
+    input: AssignUserOrganizationRoleRequest,
+    actorId: string | null = null
   ): UserOrganizationRoleRecord {
     const user = requireUser(this.context.store, userId);
     requireEnabledOrganization(this.context.store, input.organizationId);
@@ -181,7 +182,8 @@ export class UserService {
       userId,
       input.organizationId,
       input.roleId,
-      user.primaryOrganizationId === input.organizationId
+      user.primaryOrganizationId === input.organizationId,
+      actorId
     );
   }
 
@@ -221,7 +223,8 @@ export class UserService {
     userId: string,
     organizationId: string,
     roleId: string,
-    isPrimary: boolean
+    isPrimary: boolean,
+    actorId: string | null = null
   ): UserOrganizationRoleRecord {
     const existing = [...this.context.store.userOrganizationRoles.values()].find(
       (binding) => binding.userId === userId && binding.organizationId === organizationId
@@ -234,6 +237,7 @@ export class UserService {
       existing.deletedAt = null;
       existing.deletedBy = null;
       existing.updatedAt = toUtcIso(nowUtc());
+      existing.updatedBy = actorId;
       if (isPrimary) this.markPrimaryOrganization(userId, organizationId);
       return existing;
     }
@@ -251,7 +255,9 @@ export class UserService {
       deletedAt: null,
       deletedBy: null,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      createdBy: actorId,
+      updatedBy: actorId
     };
     this.context.store.userOrganizationRoles.set(binding.id, binding);
     if (isPrimary) this.markPrimaryOrganization(userId, organizationId);

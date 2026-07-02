@@ -219,8 +219,12 @@ export class BackendCoreServices {
     return this.users.delete(id, deletedBy);
   }
 
-  async assignUserOrganizationRole(userId: string, input: AssignUserOrganizationRoleRequest) {
-    const binding = this.users.assignOrganizationRole(userId, input);
+  async assignUserOrganizationRole(
+    userId: string,
+    input: AssignUserOrganizationRoleRequest,
+    actorId: string | null = null
+  ) {
+    const binding = this.users.assignOrganizationRole(userId, input, actorId);
     await this.permissions.invalidateUser(userId);
     return binding;
   }
@@ -247,24 +251,28 @@ export class BackendCoreServices {
     return this.roles.get(id);
   }
 
-  createRole(input: CreateRoleRequest) {
-    return this.roles.create(input);
+  createRole(input: CreateRoleRequest, actorId: string | null = null) {
+    return this.roles.create(input, actorId);
   }
 
-  async updateRole(id: string, input: UpdateRoleRequest) {
-    const role = this.roles.update(id, input);
+  async updateRole(id: string, input: UpdateRoleRequest, actorId: string | null = null) {
+    const role = this.roles.update(id, input, actorId);
     await this.permissions.invalidateRole(id);
     return role;
   }
 
-  async setRoleStatus(id: string, status: "enabled" | "disabled") {
-    const role = this.roles.setStatus(id, status);
+  async setRoleStatus(
+    id: string,
+    status: "enabled" | "disabled",
+    actorId: string | null = null
+  ) {
+    const role = this.roles.setStatus(id, status, actorId);
     await this.permissions.invalidateRole(id);
     return role;
   }
 
-  copyRole(id: string) {
-    return this.roles.copy(id);
+  copyRole(id: string, actorId: string | null = null) {
+    return this.roles.copy(id, actorId);
   }
 
   async updateRolePermissions(id: string, input: UpdateRolePermissionsRequest) {

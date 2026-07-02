@@ -92,10 +92,15 @@ export const roles = sqliteTable(
     tenantId: integer("tenant_id"),
     name: text("name").notNull(),
     code: text("code").notNull(),
+    description: text("description"),
+    dataScopeRuleId: integer("data_scope_rule_id"),
+    isBuiltin: integer("is_builtin", { mode: "boolean" }).notNull().default(false),
     status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
     remark: text("remark"),
     ...softDelete,
-    ...timestamps
+    ...timestamps,
+    createdBy: integer("created_by"),
+    updatedBy: integer("updated_by")
   },
   (table) => ({
     codeUnique: uniqueIndex("roles_code_unique").on(table.code)
@@ -113,7 +118,9 @@ export const userOrganizationRoles = sqliteTable(
     isPrimary: integer("is_primary", { mode: "boolean" }).notNull().default(false),
     status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
     ...softDelete,
-    ...timestamps
+    ...timestamps,
+    createdBy: integer("created_by"),
+    updatedBy: integer("updated_by")
   },
   (table) => ({
     userOrgUnique: uniqueIndex("user_organization_roles_user_org_unique").on(

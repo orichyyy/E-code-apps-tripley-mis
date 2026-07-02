@@ -77,6 +77,9 @@ CREATE TABLE IF NOT EXISTS roles (
   tenant_id INTEGER,
   name TEXT NOT NULL,
   code TEXT NOT NULL,
+  description TEXT,
+  data_scope_rule_id INTEGER,
+  is_builtin BOOLEAN NOT NULL DEFAULT FALSE,
   status TEXT NOT NULL DEFAULT 'enabled',
   remark TEXT,
   is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
@@ -84,6 +87,8 @@ CREATE TABLE IF NOT EXISTS roles (
   deleted_by INTEGER,
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL,
+  created_by INTEGER,
+  updated_by INTEGER,
   CHECK (status IN ('enabled', 'disabled'))
 );
 
@@ -102,6 +107,8 @@ CREATE TABLE IF NOT EXISTS user_organization_roles (
   deleted_by INTEGER,
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL,
+  created_by INTEGER,
+  updated_by INTEGER,
   CHECK (status IN ('enabled', 'disabled'))
 );
 

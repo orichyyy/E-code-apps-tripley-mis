@@ -60,6 +60,15 @@ describe("backend core foundation routes", () => {
         })
       ])
     );
+    expect(setup.data.roles).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "super_admin",
+          isBuiltin: true,
+          dataScopeRuleId: null
+        })
+      ])
+    );
     expect(status.data.initialized).toBe(true);
   });
 
@@ -1054,6 +1063,23 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({ password: "password2" })
     });
     const reset = await resetResponse.json();
+    const roleResponse = await app.request("/api/roles", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ name: "Audited Role", code: "audited_role" })
+    });
+    const role = await roleResponse.json();
+    const roleUpdateResponse = await app.request(`/api/roles/${role.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ name: "Audited Role Updated" })
+    });
+    const roleUpdate = await roleUpdateResponse.json();
+    const roleDisableResponse = await app.request(`/api/roles/${role.data.id}/disable`, {
+      method: "POST",
+      headers: authHeaders
+    });
+    const roleDisable = await roleDisableResponse.json();
 
     expect(organization.data).toMatchObject({ createdBy: "1", updatedBy: "1" });
     expect(organizationUpdate.data).toMatchObject({ updatedBy: "1" });
@@ -1064,6 +1090,14 @@ describe("backend core foundation routes", () => {
     expect(userUpdate.data).toMatchObject({ updatedBy: "1" });
     expect(userLock.data).toMatchObject({ updatedBy: "1" });
     expect(reset.data).toMatchObject({ updatedBy: "1" });
+    expect(role.data).toMatchObject({
+      createdBy: "1",
+      updatedBy: "1",
+      isBuiltin: false,
+      dataScopeRuleId: null
+    });
+    expect(roleUpdate.data).toMatchObject({ updatedBy: "1" });
+    expect(roleDisable.data).toMatchObject({ updatedBy: "1" });
   });
 
   it("serves and syncs route metadata from the base route manifest", async () => {
@@ -1153,6 +1187,7 @@ describe("backend core foundation routes", () => {
     expect(secondCopy.data.id).not.toBe(copy.data.id);
     expect(copy.data).toMatchObject({ id: expect.any(String), status: "enabled" });
     expect(copy.data.code).toBe("organization_admin_copy");
+    expect(copy.data).toMatchObject({ isBuiltin: false, createdBy: "1", updatedBy: "1" });
     expect(secondCopy.data.code).toBe("organization_admin_copy_2");
     expect(permissions.data).toEqual(expect.arrayContaining(["user:view", "role:view"]));
   });
@@ -1315,7 +1350,9 @@ describe("backend core foundation routes", () => {
       organizationId: child.data.id,
       roleId: "2",
       isPrimary: false,
-      status: "enabled"
+      status: "enabled",
+      createdBy: "1",
+      updatedBy: "1"
     });
     expect(listResponse.status).toBe(200);
     expect(primaryBinding).toMatchObject({

@@ -100,10 +100,15 @@ export const roles = pgTable(
     tenantId: integer("tenant_id"),
     name: text("name").notNull(),
     code: text("code").notNull(),
+    description: text("description"),
+    dataScopeRuleId: integer("data_scope_rule_id"),
+    isBuiltin: boolean("is_builtin").notNull().default(false),
     status: text("status").notNull().default("enabled"),
     remark: text("remark"),
     ...softDelete,
-    ...timestamps
+    ...timestamps,
+    createdBy: integer("created_by"),
+    updatedBy: integer("updated_by")
   },
   (table) => ({
     codeUnique: uniqueIndex("roles_code_unique").on(table.code)
@@ -121,7 +126,9 @@ export const userOrganizationRoles = pgTable(
     isPrimary: boolean("is_primary").notNull().default(false),
     status: text("status").notNull().default("enabled"),
     ...softDelete,
-    ...timestamps
+    ...timestamps,
+    createdBy: integer("created_by"),
+    updatedBy: integer("updated_by")
   },
   (table) => ({
     userOrgUnique: uniqueIndex("user_organization_roles_user_org_unique").on(

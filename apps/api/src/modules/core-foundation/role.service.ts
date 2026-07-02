@@ -22,11 +22,15 @@ export class RoleService {
     return requireRole(this.context.store, id);
   }
 
-  create(input: CreateRoleRequest): RoleRecord {
-    return this.createRecord(input);
+  create(input: CreateRoleRequest, actorId: string | null = null): RoleRecord {
+    return this.createRecord(input, actorId);
   }
 
-  createRecord(input: CreateRoleRequest): RoleRecord {
+  createRecord(
+    input: CreateRoleRequest,
+    actorId: string | null = null,
+    options: { isBuiltin?: boolean; dataScopeRuleId?: string | null } = {}
+  ): RoleRecord {
     const store = this.context.store;
     this.ensureUniqueRoleCode(input.code);
     const now = toUtcIso(nowUtc());
@@ -35,42 +39,52 @@ export class RoleService {
       tenantId: null,
       name: input.name,
       code: input.code,
+      dataScopeRuleId: options.dataScopeRuleId ?? null,
+      isBuiltin: options.isBuiltin ?? false,
       status: "enabled",
       remark: input.remark ?? null,
       isDeleted: false,
       deletedAt: null,
       deletedBy: null,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      createdBy: actorId,
+      updatedBy: actorId
     };
     store.roles.set(role.id, role);
     return role;
   }
 
-  update(id: string, input: UpdateRoleRequest): RoleRecord {
+  update(id: string, input: UpdateRoleRequest, actorId: string | null = null): RoleRecord {
     const role = requireRole(this.context.store, id);
     if (input.code !== undefined) this.ensureUniqueRoleCode(input.code, role.id);
     if (input.name !== undefined) role.name = input.name;
     if (input.code !== undefined) role.code = input.code;
     if (input.remark !== undefined) role.remark = input.remark;
     role.updatedAt = toUtcIso(nowUtc());
+    role.updatedBy = actorId;
     return role;
   }
 
-  setStatus(id: string, status: "enabled" | "disabled"): RoleRecord {
+  setStatus(
+    id: string,
+    status: "enabled" | "disabled",
+    actorId: string | null = null
+  ): RoleRecord {
     const role = requireRole(this.context.store, id);
     role.status = status;
     role.updatedAt = toUtcIso(nowUtc());
+    role.updatedBy = actorId;
     return role;
   }
 
-  copy(id: string): RoleRecord {
+  copy(id: string, actorId: string | null = null): RoleRecord {
     const source = requireRole(this.context.store, id);
     const copy = this.createRecord({
       name: `${source.name} Copy`,
       code: this.nextCopyCode(source.code),
       remark: source.remark ?? undefined
-    });
+    }, actorId, { dataScopeRuleId: source.dataScopeRuleId });
     const now = toUtcIso(nowUtc());
     this.context.store.rolePermissions
       .filter((permission) => permission.roleId === source.id)
@@ -115,6 +129,7 @@ export class RoleService {
     role.deletedAt = now;
     role.deletedBy = deletedBy;
     role.updatedAt = now;
+    role.updatedBy = deletedBy;
     return role;
   }
 
