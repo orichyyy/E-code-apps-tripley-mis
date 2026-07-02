@@ -93,6 +93,15 @@ describe("backend core foundation routes", () => {
     expect(login.data.session.id).toBe("1");
     expect(login.data.session.status).toBe("active");
     expect(login.data.session.tokenVersion).toBe(0);
+    expect(login.data.currentOrganization).toMatchObject({ id: "1", code: "default" });
+    expect(login.data.organizations).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: "1", code: "default" })])
+    );
+    expect(login.data.permissionCodes).toEqual(expect.arrayContaining(["user:view", "role:view"]));
+    expect(login.data.menus).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "system.users" })])
+    );
+    expect(login.data.passwordChangeRequired).toBe(false);
     expect(onlineUsers.data).toHaveLength(1);
     expect(onlineUsers.data[0].status).toBe("active");
     expect(onlineUsers.data[0].tokenVersion).toBe(0);

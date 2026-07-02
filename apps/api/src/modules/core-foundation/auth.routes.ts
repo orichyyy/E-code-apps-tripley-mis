@@ -33,7 +33,12 @@ export function createAuthRoutes(services: BackendCoreServices) {
         accessToken: result.accessToken,
         refreshTokenCookie: result.refreshTokenCookie,
         session: result.session,
-        user: result.user
+        user: result.user,
+        currentOrganization: result.currentOrganization,
+        organizations: result.organizations,
+        permissionCodes: result.permissionCodes,
+        menus: result.menus,
+        passwordChangeRequired: result.passwordChangeRequired
       }
     });
   });

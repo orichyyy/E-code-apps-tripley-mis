@@ -84,8 +84,33 @@ export class BackendCoreServices {
     return this.initialization.seed(input);
   }
 
-  login(input: LoginRequest, request: { ipAddress?: string | null; userAgent?: string | null }) {
-    return this.auth.login(input, request);
+  async login(input: LoginRequest, request: { ipAddress?: string | null; userAgent?: string | null }) {
+    const login = await this.auth.login(input, request);
+    const authContext = {
+      userId: login.user.id,
+      sessionId: login.session.id,
+      username: login.user.username,
+      currentOrganizationId: login.session.currentOrganizationId,
+      tokenVersion: login.user.tokenVersion,
+      passwordChangeRequired: login.user.firstLoginPasswordChangeRequired
+    };
+    const permissionContext = await this.permissions.getPermissionContext(
+      authContext.userId,
+      authContext.currentOrganizationId
+    );
+    const userContext = this.auth.getCurrentUserContext(
+      authContext,
+      permissionContext.permissionCodes
+    );
+
+    return {
+      ...login,
+      currentOrganization: userContext.currentOrganization,
+      organizations: userContext.organizations,
+      permissionCodes: userContext.permissionCodes,
+      menus: userContext.menus,
+      passwordChangeRequired: userContext.passwordChangeRequired
+    };
   }
 
   refreshAccessToken(refreshToken: string) {
