@@ -138,6 +138,7 @@ The backend core goal has partial implementation progress:
 - Tightened administrator user updates so successful profile or primary-organization changes clear the user's permission cache, and route coverage proves the updated primary organization drives the next login context.
 - Tightened per-user permission cache invalidation so super-administrator contexts cached in organizations without direct user-role bindings are cleared when that user's effective permissions change.
 - Tightened the online-user data source so sessions whose current organization becomes disabled or deleted are no longer listed as online.
+- Added route coverage proving sessions whose current organization is soft deleted are excluded from the online-user data source while other active sessions remain listed.
 - Tightened account lock transitions so administrator locks and configured failed-login locks advance user token version, keeping pre-lock access and refresh tokens invalid after unlock or timed lock expiry.
 - Tightened user-organization-role binding audit updates so primary-organization changes and binding removals retain the authenticated administrator actor in the binding lifecycle fields.
 - Tightened managed menu tree validation so administrators cannot reparent a menu under one of its descendants and create a cycle in the permission-controlled menu tree.

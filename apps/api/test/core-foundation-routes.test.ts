@@ -708,6 +708,60 @@ describe("backend core foundation routes", () => {
     );
   });
 
+  it("excludes sessions from online users when their current organization is soft deleted", async () => {
+    const { app } = await setupInitializedApp();
+    const firstLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const firstLogin = await firstLoginResponse.json();
+    const firstHeaders = { authorization: `Bearer ${firstLogin.data.accessToken}` };
+    const alternateResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: firstHeaders,
+      body: JSON.stringify({ name: "Deleted Online Alternate", code: "deleted-online-alternate" })
+    });
+    const alternate = await alternateResponse.json();
+    const secondLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const secondLogin = await secondLoginResponse.json();
+    const secondSwitchResponse = await app.request("/api/context/current-organization", {
+      method: "POST",
+      headers: { authorization: `Bearer ${secondLogin.data.accessToken}` },
+      body: JSON.stringify({ organizationId: alternate.data.id })
+    });
+    const secondSwitch = await secondSwitchResponse.json();
+    const alternateHeaders = { authorization: `Bearer ${secondSwitch.data.accessToken}` };
+    const beforeDeleteResponse = await app.request("/api/online-users", {
+      headers: alternateHeaders
+    });
+    const beforeDelete = await beforeDeleteResponse.json();
+
+    await app.request("/api/organizations/1", {
+      method: "DELETE",
+      headers: alternateHeaders
+    });
+    const afterDeleteResponse = await app.request("/api/online-users", {
+      headers: alternateHeaders
+    });
+    const afterDelete = await afterDeleteResponse.json();
+
+    expect(beforeDelete.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: firstLogin.data.session.id }),
+        expect.objectContaining({ id: secondSwitch.data.session.id })
+      ])
+    );
+    expect(afterDelete.data).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: firstLogin.data.session.id })])
+    );
+    expect(afterDelete.data).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: secondSwitch.data.session.id })])
+    );
+  });
+
   it("revokes refresh-token usage when logging out", async () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {
