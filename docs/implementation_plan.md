@@ -82,6 +82,7 @@ The backend core goal has partial implementation progress:
 - Tightened account lock behavior so administrator locks without an expiration deny login until administrator unlock, while configured failed-login locks still use `lockedUntil` for timed release. Unlocking clears failed-login counters and lock expiration.
 - Tightened user update validation so administrator edits preserve unique username, email, and phone values and cannot set a disabled organization as the user's primary organization.
 - Added route coverage for the historical disabled-organization write rule: disabled organizations reject new users and new user-organization-role bindings while existing historical records remain queryable.
+- Added route coverage for the disabled-role assignment rule: disabled roles reject new users and new user-organization-role bindings.
 - Aligned in-memory user and organization API records with the existing schema audit fields by recording authenticated `created_by` and `updated_by` actors on administrator create/update/status/reset/delete flows.
 - Tightened user-organization-role binding removal to soft delete bindings with `is_deleted`, `deleted_at`, and `deleted_by`, and aligned the SQLite/PostgreSQL schemas and migrations with that lifecycle.
 - Aligned user-organization-role bindings with the confirmed `is_primary` and `status` fields in the in-memory model and SQLite/PostgreSQL schemas/migrations; permission and auth checks now treat only enabled, non-deleted bindings as active while cache invalidation still clears stale binding contexts.

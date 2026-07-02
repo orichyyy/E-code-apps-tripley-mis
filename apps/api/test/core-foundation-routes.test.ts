@@ -827,6 +827,47 @@ describe("backend core foundation routes", () => {
     expect(assign.error.code).toBe("BUSINESS_ORG_DISABLED");
   });
 
+  it("rejects creating users and role bindings with a disabled role", async () => {
+    const { app, setup } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Role Child", code: "role-child" })
+    });
+    const child = await childResponse.json();
+    await app.request("/api/roles/3/disable", {
+      method: "POST",
+      headers: authHeaders
+    });
+
+    const createUserResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "disabled-role-user",
+        displayName: "Disabled Role User",
+        email: "disabled-role-user@example.com",
+        phone: "10000000124",
+        password: "password1",
+        primaryOrganizationId: child.data.id,
+        roleId: "3"
+      })
+    });
+    const createUser = await createUserResponse.json();
+    const assignResponse = await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "3" })
+    });
+    const assign = await assignResponse.json();
+
+    expect(createUserResponse.status).toBe(409);
+    expect(createUser.error.code).toBe("BUSINESS_ROLE_DISABLED");
+    expect(assignResponse.status).toBe(409);
+    expect(assign.error.code).toBe("BUSINESS_ROLE_DISABLED");
+  });
+
   it("rejects updating a user's primary organization to an unbound organization", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
