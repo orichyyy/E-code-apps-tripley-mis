@@ -2172,6 +2172,10 @@ describe("backend core foundation routes", () => {
       method: "POST",
       body: JSON.stringify({ username: "new-user", password: "password1" })
     });
+    const onlineUsersResponse = await app.request("/api/online-users", {
+      headers: authHeaders
+    });
+    const onlineUsers = await onlineUsersResponse.json();
 
     expect(blockedResponse.status).toBe(403);
     expect(blocked.error.code).toBe("AUTH_PASSWORD_CHANGE_REQUIRED");
@@ -2181,6 +2185,9 @@ describe("backend core foundation routes", () => {
     expect(oldTokenResponse.status).toBe(401);
     expect(oldToken.error.code).toBe("AUTH_TOKEN_INVALIDATED");
     expect(oldPasswordLoginResponse.status).toBe(401);
+    expect(onlineUsers.data).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ userId: firstLogin.data.user.id })])
+    );
   });
 
   it("allows current user context while first-login password change is required", async () => {

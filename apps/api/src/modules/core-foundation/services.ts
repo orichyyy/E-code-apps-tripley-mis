@@ -117,8 +117,13 @@ export class BackendCoreServices {
     return this.auth.refreshAccessToken(refreshToken);
   }
 
-  changePassword(authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>, input: ChangePasswordRequest) {
-    return this.auth.changePassword(authContext, input);
+  async changePassword(
+    authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
+    input: ChangePasswordRequest
+  ) {
+    const user = await this.auth.changePassword(authContext, input);
+    await this.permissions.invalidateUser(authContext.userId);
+    return user;
   }
 
   async switchCurrentOrganization(
