@@ -175,6 +175,7 @@ The backend core goal has partial implementation progress:
 - Aligned refresh-token cookie configuration with the design-spec `AUTH_REFRESH_COOKIE_PATH` setting; login and logout now set or clear the HttpOnly refresh cookie on the configured path, defaulting to `/api/auth/refresh`.
 - Tightened managed menu soft deletion so deleted menu records and descendants are marked disabled while retaining `is_deleted`, `deleted_at`, and `deleted_by` audit fields.
 - Tightened permission manifest synchronization so stale base permission/API metadata is disabled, and role permission updates only accept currently enabled permission metadata.
+- Tightened stale role-permission lifecycle so disabled or missing permission metadata is pruned during manifest sync and excluded from role permission reads/copies.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

@@ -88,8 +88,13 @@ export class RoleService {
       remark: source.remark ?? undefined
     }, actorId, { dataScopeRuleId: source.dataScopeRuleId });
     const now = toUtcIso(nowUtc());
+    const enabledPermissionCodes = this.listEnabledPermissionCodeSet();
     this.context.store.rolePermissions
-      .filter((permission) => permission.roleId === source.id)
+      .filter(
+        (permission) =>
+          permission.roleId === source.id &&
+          enabledPermissionCodes.has(permission.permissionCode)
+      )
       .forEach((permission) => {
         this.context.store.rolePermissions.push({
           roleId: copy.id,
@@ -108,11 +113,7 @@ export class RoleService {
     actorId: string | null = null
   ): RoleRecord {
     const role = requireRole(this.context.store, id);
-    const knownPermissions = new Set(
-      [...this.context.store.permissions.values()]
-        .filter((permission) => permission.status === "enabled")
-        .map((permission) => permission.code)
-    );
+    const knownPermissions = this.listEnabledPermissionCodeSet();
     const permissionCodes = [...new Set(input.permissionCodes)];
     permissionCodes.forEach((permissionCode) => {
       if (!knownPermissions.has(permissionCode)) throw createKnownError("PERMISSION_UNKNOWN_CODE");
@@ -137,8 +138,14 @@ export class RoleService {
 
   listPermissionCodes(id: string): string[] {
     requireRole(this.context.store, id);
+    const enabledPermissionCodes = this.listEnabledPermissionCodeSet();
     return this.context.store.rolePermissions
-      .filter((permission) => permission.roleId === id && permission.effect === "allow")
+      .filter(
+        (permission) =>
+          permission.roleId === id &&
+          permission.effect === "allow" &&
+          enabledPermissionCodes.has(permission.permissionCode)
+      )
       .map((permission) => permission.permissionCode);
   }
 
@@ -189,6 +196,14 @@ export class RoleService {
   private roleCodeExists(code: string, currentRoleId?: string): boolean {
     return [...this.context.store.roles.values()].some(
       (role) => role.id !== currentRoleId && role.code === code
+    );
+  }
+
+  private listEnabledPermissionCodeSet(): Set<string> {
+    return new Set(
+      [...this.context.store.permissions.values()]
+        .filter((permission) => permission.status === "enabled")
+        .map((permission) => permission.code)
     );
   }
 }

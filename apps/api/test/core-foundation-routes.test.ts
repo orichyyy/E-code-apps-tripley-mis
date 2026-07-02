@@ -1744,7 +1744,7 @@ describe("backend core foundation routes", () => {
 
     expect(response.status).toBe(400);
     expect(body.error.code).toBe("PERMISSION_UNKNOWN_CODE");
-    expect(permissions.data).toEqual(["user:view", "role:view"]);
+    expect(permissions.data).toEqual(["role:view"]);
   });
 
   it("syncs permission and API permission manifests", async () => {
@@ -1841,6 +1841,13 @@ describe("backend core foundation routes", () => {
       createdAt: now,
       updatedAt: now
     });
+    store.rolePermissions.push({
+      roleId: "2",
+      permissionCode: "obsolete:view",
+      effect: "allow",
+      createdAt: now,
+      updatedAt: now
+    });
 
     const syncResponse = await app.request("/api/permissions/sync", {
       method: "POST",
@@ -1858,12 +1865,17 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({ permissionCodes: ["obsolete:view"] })
     });
     const roleUpdate = await roleUpdateResponse.json();
+    const configuredResponse = await app.request("/api/roles/2/permissions", {
+      headers: authHeaders
+    });
+    const configured = await configuredResponse.json();
 
     expect(syncResponse.status).toBe(200);
     expect(stalePermission).toMatchObject({ status: "disabled" });
     expect(staleApiPermission).toMatchObject({ status: "disabled" });
     expect(roleUpdateResponse.status).toBe(400);
     expect(roleUpdate.error.code).toBe("PERMISSION_UNKNOWN_CODE");
+    expect(configured.data).not.toContain("obsolete:view");
   });
 
   it("lists initialized permission records with API JSON string ids", async () => {

@@ -92,6 +92,7 @@ export class PermissionService {
   async syncPermissionManifests() {
     const permissions = this.syncBasePermissions();
     const apiPermissions = this.syncBaseApiPermissions();
+    this.pruneDisabledRolePermissions();
     await this.invalidateAllPermissionContexts();
     return {
       permissions,
@@ -250,6 +251,18 @@ export class PermissionService {
           enabledPermissionCodes.has(permission.permissionCode)
       )
       .map((permission) => permission.permissionCode);
+  }
+
+  private pruneDisabledRolePermissions(): void {
+    const enabledPermissionCodes = new Set(this.listEnabledPermissionCodes());
+    const retained = this.context.store.rolePermissions.filter((permission) =>
+      enabledPermissionCodes.has(permission.permissionCode)
+    );
+    this.context.store.rolePermissions.splice(
+      0,
+      this.context.store.rolePermissions.length,
+      ...retained
+    );
   }
 }
 
