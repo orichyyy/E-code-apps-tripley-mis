@@ -380,6 +380,7 @@ export class AuthService {
     const now = nowUtc();
     user.failedLoginAttempts += 1;
     if (user.failedLoginAttempts >= this.context.config.failedLoginMaxAttempts) {
+      if (user.status !== "locked") user.tokenVersion += 1;
       user.status = "locked";
       user.lockedUntil = toUtcIso(
         addSecondsUtc(now, this.context.config.failedLoginLockMinutes * 60)

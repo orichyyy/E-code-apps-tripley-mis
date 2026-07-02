@@ -126,6 +126,9 @@ export class UserService {
     if (status === "disabled" && previousStatus !== "disabled") {
       user.tokenVersion += 1;
     }
+    if (status === "locked" && previousStatus !== "locked") {
+      user.tokenVersion += 1;
+    }
     if (status === "enabled") {
       user.lockedUntil = null;
       user.failedLoginAttempts = 0;
