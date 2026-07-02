@@ -68,4 +68,25 @@ describe("initialization seed", () => {
       status: "enabled"
     });
   });
+
+  it("restores soft-deleted built-in roles during repeated seed sync", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const input = readInitializationSeedInput(seedEnv);
+
+    await services.seedInitialization(input);
+    await services.deleteRole("1");
+    const result = await services.seedInitialization(input);
+    const superAdmin = services.getRole("1");
+
+    expect(result.seeded).toBe(false);
+    expect(superAdmin).toMatchObject({
+      id: "1",
+      code: "super_admin",
+      isBuiltin: true,
+      isDeleted: false,
+      deletedAt: null,
+      deletedBy: null,
+      status: "enabled"
+    });
+  });
 });

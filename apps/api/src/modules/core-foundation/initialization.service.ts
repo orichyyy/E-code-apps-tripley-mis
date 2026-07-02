@@ -154,13 +154,16 @@ export class InitializationService {
   }
 
   private ensureBuiltInRole(name: string, code: string) {
-    const existing = this.roles.list().find((role) => role.code === code);
+    const existing = [...this.context.store.roles.values()].find((role) => role.code === code);
     if (existing) {
       existing.name = name;
       existing.description = "Built-in role";
       existing.remark = "Built-in role";
       existing.isBuiltin = true;
       existing.status = "enabled";
+      existing.isDeleted = false;
+      existing.deletedAt = null;
+      existing.deletedBy = null;
       existing.updatedAt = toUtcIso(nowUtc());
       return existing;
     }

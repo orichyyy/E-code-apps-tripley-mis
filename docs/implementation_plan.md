@@ -119,6 +119,7 @@ The backend core goal has partial implementation progress:
 - Tightened session activity tracking so successful bearer-token authentication updates the session `lastSeenAt` value used by the online-user data source.
 - Tightened failed-login state tracking so failed password attempts update the user's failed-attempt counter, timed lock fields, and `updatedAt` audit timestamp together.
 - Tightened repeated seed synchronization so existing built-in roles are restored to enabled built-in metadata while preserving idempotent role and permission creation.
+- Tightened repeated seed synchronization so soft-deleted built-in roles are restored in place instead of creating replacement role records with duplicate historical codes.
 - Tightened core entity path-ID validation so user, organization, role, menu, and nested user-organization route IDs must be integer strings before resource lookup, matching the API ID input contract.
 - Tightened organization re-enable behavior so a descendant cannot be re-enabled while any ancestor remains disabled; administrators must re-enable the parent path first and descendants remain separate explicit actions.
 - Tightened role permission updates so duplicate permission codes in an update request are normalized before writing role-permission records, matching the unique role/permission relationship.
