@@ -45,9 +45,13 @@ export function createAuthRoutes(services: BackendCoreServices) {
   });
 
   routes.post("/auth/logout", async (context) => {
-    const body = (await context.req.json()) as { sessionId?: string };
-    if (!body.sessionId) throw createKnownError("VALIDATION_REQUIRED_FIELD");
-    return context.json({ data: await services.logout(body.sessionId) });
+    const authContext = context.get("authContext");
+    if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
+    const body = await readOptionalJson<{ sessionId?: string }>(context.req.raw);
+    if (body?.sessionId && body.sessionId !== authContext.sessionId) {
+      throw createKnownError("PERMISSION_DENIED");
+    }
+    return context.json({ data: await services.logout(authContext.sessionId) });
   });
 
   routes.post("/auth/change-password", async (context) => {
@@ -88,4 +92,11 @@ function readCookie(cookieHeader: string, name: string): string | null {
   const prefix = `${name}=`;
   const cookie = cookies.find((candidate) => candidate.startsWith(prefix));
   return cookie ? decodeURIComponent(cookie.slice(prefix.length)) : null;
+}
+
+async function readOptionalJson<T>(request: Request): Promise<T | null> {
+  if (!request.body) return null;
+  const text = await request.text();
+  if (!text.trim()) return null;
+  return JSON.parse(text) as T;
 }

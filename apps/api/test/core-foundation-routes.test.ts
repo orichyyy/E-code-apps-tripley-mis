@@ -201,6 +201,47 @@ describe("backend core foundation routes", () => {
     expect(refresh.error.code).toBe("AUTH_TOKEN_EXPIRED");
   });
 
+  it("logs out the current authenticated session without requiring a session body", async () => {
+    const { app } = await setupInitializedApp();
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const login = await loginResponse.json();
+
+    const logoutResponse = await app.request("/api/auth/logout", {
+      method: "POST",
+      headers: { authorization: `Bearer ${login.data.accessToken}` }
+    });
+    const oldTokenResponse = await app.request("/api/auth/me", {
+      headers: { authorization: `Bearer ${login.data.accessToken}` }
+    });
+    const oldToken = await oldTokenResponse.json();
+
+    expect(logoutResponse.status).toBe(200);
+    expect(oldTokenResponse.status).toBe(401);
+    expect(oldToken.error.code).toBe("AUTH_SESSION_NOT_FOUND");
+  });
+
+  it("rejects logout attempts for another session id", async () => {
+    const { app } = await setupInitializedApp();
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const login = await loginResponse.json();
+
+    const response = await app.request("/api/auth/logout", {
+      method: "POST",
+      headers: { authorization: `Bearer ${login.data.accessToken}` },
+      body: JSON.stringify({ sessionId: "999" })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe("PERMISSION_DENIED");
+  });
+
   it("creates child organizations and disables descendants when a parent is disabled", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
