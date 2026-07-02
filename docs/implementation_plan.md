@@ -130,6 +130,7 @@ The backend core goal has partial implementation progress:
 - Tightened logout request validation so the optional session ID body field uses the shared integer-string API ID contract before session authorization checks.
 - Tightened organization re-enable behavior so a descendant cannot be re-enabled while any ancestor remains disabled; administrators must re-enable the parent path first and descendants remain separate explicit actions.
 - Tightened role permission updates so duplicate permission codes in an update request are normalized before writing role-permission records, matching the unique role/permission relationship.
+- Tightened role permission update coverage so unknown permission codes return the stable `PERMISSION_UNKNOWN_CODE` error and leave the previous role grants unchanged.
 - Tightened user soft deletion so deleting a user advances token version, invalidates that user's permission cache, and causes old access/refresh tokens to fail with `AUTH_TOKEN_INVALIDATED`.
 - Added route coverage proving a soft-deleted user cannot start a new username/password login session.
 - Tightened user status changes so disable, enable, lock, and unlock operations invalidate that user's permission cache after the account state change.
