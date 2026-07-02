@@ -285,6 +285,52 @@ describe("backend core foundation routes", () => {
     );
   });
 
+  it("creates and updates organization contact fields", async () => {
+    const { app, setup } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const createResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Contact Organization",
+        code: "contact-org",
+        managerUserId: setup.data.admin.id,
+        phone: "10000000099",
+        email: "org@example.com",
+        address: "100 Admin Road"
+      })
+    });
+    const created = await createResponse.json();
+
+    const updateResponse = await app.request(`/api/organizations/${created.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({
+        managerUserId: null,
+        phone: "10000000100",
+        email: null,
+        address: "200 Admin Road"
+      })
+    });
+    const updated = await updateResponse.json();
+
+    expect(createResponse.status).toBe(201);
+    expect(created.data).toMatchObject({
+      managerUserId: setup.data.admin.id,
+      phone: "10000000099",
+      email: "org@example.com",
+      address: "100 Admin Road"
+    });
+    expect(updateResponse.status).toBe(200);
+    expect(updated.data).toMatchObject({
+      managerUserId: null,
+      phone: "10000000100",
+      email: null,
+      address: "200 Admin Road"
+    });
+  });
+
   it("logs in through another enabled organization when the primary organization is disabled", async () => {
     const { app, setup } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

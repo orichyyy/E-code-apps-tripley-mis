@@ -63,6 +63,10 @@ export class OrganizationService {
       segment,
       name: input.name,
       code: input.code,
+      managerUserId: input.managerUserId ?? null,
+      phone: input.phone ?? null,
+      email: input.email ?? null,
+      address: input.address ?? null,
       sortOrder: input.sortOrder ?? 0,
       status: "enabled",
       remark: input.remark ?? null,
@@ -87,6 +91,10 @@ export class OrganizationService {
     if (input.code !== undefined) this.ensureUniqueOrganizationCode(input.code, organization.id);
     if (input.name !== undefined) organization.name = input.name;
     if (input.code !== undefined) organization.code = input.code;
+    if (input.managerUserId !== undefined) organization.managerUserId = input.managerUserId;
+    if (input.phone !== undefined) organization.phone = input.phone;
+    if (input.email !== undefined) organization.email = input.email;
+    if (input.address !== undefined) organization.address = input.address;
     if (input.sortOrder !== undefined) organization.sortOrder = input.sortOrder;
     if (input.remark !== undefined) organization.remark = input.remark;
     organization.updatedAt = toUtcIso(nowUtc());

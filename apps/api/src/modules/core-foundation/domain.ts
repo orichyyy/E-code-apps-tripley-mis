@@ -27,6 +27,10 @@ export type OrganizationRecord = AuditFields &
     segment: number;
     name: string;
     code: string;
+    managerUserId: string | null;
+    phone: string | null;
+    email: string | null;
+    address: string | null;
     sortOrder: number;
     status: EntityStatus;
     remark: string | null;
