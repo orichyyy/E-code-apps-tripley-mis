@@ -259,4 +259,27 @@ describe("initialization seed", () => {
       expect.arrayContaining([expect.objectContaining({ permissionCode: "obsolete:view" })])
     );
   });
+
+  it("repairs super administrator permission grant effects during repeated seed sync", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const input = readInitializationSeedInput(seedEnv);
+
+    await services.seedInitialization(input);
+    const userViewGrant = services["context"].store.rolePermissions.find(
+      (permission) => permission.roleId === "1" && permission.permissionCode === "user:view"
+    );
+    if (!userViewGrant) throw new Error("Expected super administrator user:view grant");
+    userViewGrant.effect = "deny";
+
+    await services.seedInitialization(input);
+    const repairedGrant = services["context"].store.rolePermissions.find(
+      (permission) => permission.roleId === "1" && permission.permissionCode === "user:view"
+    );
+
+    expect(repairedGrant).toMatchObject({
+      roleId: "1",
+      permissionCode: "user:view",
+      effect: "allow"
+    });
+  });
 });

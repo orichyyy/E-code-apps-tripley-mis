@@ -190,13 +190,18 @@ export class InitializationService {
 
   private grantAllPermissions(roleId: string, permissionCodes: string[]) {
     const now = toUtcIso(nowUtc());
-    const existing = new Set(
+    const existing = new Map(
       this.context.store.rolePermissions
         .filter((permission) => permission.roleId === roleId)
-        .map((permission) => permission.permissionCode)
+        .map((permission) => [permission.permissionCode, permission])
     );
     permissionCodes.forEach((permissionCode) => {
-      if (existing.has(permissionCode)) return;
+      const existingGrant = existing.get(permissionCode);
+      if (existingGrant) {
+        existingGrant.effect = "allow";
+        existingGrant.updatedAt = now;
+        return;
+      }
       this.context.store.rolePermissions.push({
         roleId,
         permissionCode,
@@ -204,7 +209,6 @@ export class InitializationService {
         createdAt: now,
         updatedAt: now
       });
-      existing.add(permissionCode);
     });
   }
 }
