@@ -2100,6 +2100,58 @@ describe("backend core foundation routes", () => {
     });
   });
 
+  it("soft deletes user organization-role bindings when a user is soft deleted", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Delete User Child",
+        code: "delete-user-child"
+      })
+    });
+    const child = await childResponse.json();
+    const userResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "delete-bindings-user",
+        displayName: "Delete Bindings User",
+        email: "delete-bindings-user@example.com",
+        phone: "10000000042",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const user = await userResponse.json();
+    await app.request(`/api/users/${user.data.id}/organizations`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+    });
+
+    const deleteResponse = await app.request(`/api/users/${user.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const bindings = [...services["context"].store.userOrganizationRoles.values()].filter(
+      (binding) => binding.userId === user.data.id
+    );
+
+    expect(deleteResponse.status).toBe(200);
+    expect(bindings).toHaveLength(2);
+    expect(bindings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ organizationId: "1", isDeleted: true, deletedBy: "1" }),
+        expect.objectContaining({ organizationId: child.data.id, isDeleted: true, deletedBy: "1" })
+      ])
+    );
+  });
+
   it("keeps unique identifiers reserved after soft delete", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

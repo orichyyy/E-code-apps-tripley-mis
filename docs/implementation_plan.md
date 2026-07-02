@@ -165,6 +165,7 @@ The backend core goal has partial implementation progress:
 - Tightened organization soft deletion so deleting a parent organization also soft deletes descendants through the materialized-path relationship, preventing orphaned child organizations from appearing as root entries in `/api/organizations/tree`.
 - Tightened organization disable cascade responses so already soft-deleted organizations remain excluded, matching the default repository rule that soft-deleted records are hidden from normal queries.
 - Tightened role permission updates so grant requests are validated against the current synced permission metadata records, not only the static manifest, and stale/missing permission metadata leaves existing grants unchanged.
+- Tightened user soft deletion so the user's organization-role bindings are also soft deleted, disabled, marked non-primary, and audited with the same deleting actor while preserving historical binding records.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

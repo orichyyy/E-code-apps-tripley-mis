@@ -172,6 +172,7 @@ export class UserService {
     user.tokenVersion += 1;
     user.updatedAt = now;
     user.updatedBy = deletedBy;
+    this.softDeleteUserOrganizationRoles(user.id, now, deletedBy);
     return toPublicUser(user);
   }
 
@@ -283,6 +284,23 @@ export class UserService {
       binding.isPrimary = binding.organizationId === organizationId;
       binding.updatedAt = now;
       binding.updatedBy = actorId;
+    }
+  }
+
+  private softDeleteUserOrganizationRoles(
+    userId: string,
+    deletedAt: string,
+    deletedBy: string | null
+  ): void {
+    for (const binding of this.context.store.userOrganizationRoles.values()) {
+      if (binding.userId !== userId || binding.isDeleted) continue;
+      binding.isDeleted = true;
+      binding.isPrimary = false;
+      binding.status = "disabled";
+      binding.deletedAt = deletedAt;
+      binding.deletedBy = deletedBy;
+      binding.updatedAt = deletedAt;
+      binding.updatedBy = deletedBy;
     }
   }
 
