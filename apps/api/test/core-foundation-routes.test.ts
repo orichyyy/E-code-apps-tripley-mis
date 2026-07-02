@@ -1019,6 +1019,56 @@ describe("backend core foundation routes", () => {
     expect(login.data.session.currentOrganizationId).toBe(alternate.data.id);
   });
 
+  it("logs in through another enabled organization when the primary organization is soft deleted", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const primaryResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Deleted Primary", code: "deleted-primary" })
+    });
+    const primary = await primaryResponse.json();
+    const alternateResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Deleted Fallback", code: "deleted-fallback" })
+    });
+    const alternate = await alternateResponse.json();
+    const userResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "primary-deleted-user",
+        displayName: "Primary Deleted User",
+        email: "primary-deleted-user@example.com",
+        phone: "10000000021",
+        password: "password1",
+        primaryOrganizationId: primary.data.id,
+        roleId: "3"
+      })
+    });
+    const user = await userResponse.json();
+    await app.request(`/api/users/${user.data.id}/organizations`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: alternate.data.id, roleId: "3" })
+    });
+    await app.request(`/api/organizations/${primary.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "primary-deleted-user", password: "password1" })
+    });
+    const login = await loginResponse.json();
+
+    expect(loginResponse.status).toBe(200);
+    expect(login.data.session.currentOrganizationId).toBe(alternate.data.id);
+    expect(login.data.currentOrganization.id).toBe(alternate.data.id);
+  });
+
   it("denies login when the user has no enabled organization", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
