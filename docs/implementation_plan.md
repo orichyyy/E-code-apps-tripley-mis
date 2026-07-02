@@ -236,6 +236,7 @@ The backend core goal has partial implementation progress:
 - Added route coverage proving login responses do not serialize the raw refresh token; the token is delivered only through the configured HttpOnly cookie boundary.
 - Added route coverage proving refresh responses do not serialize the raw refresh token or internal session token-version snapshot.
 - Added route coverage proving current-user and logout session responses also hide the internal session token-version snapshot.
+- Added route coverage proving public auth and user-management responses do not serialize raw passwords or password hashes.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

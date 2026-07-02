@@ -157,6 +157,8 @@ describe("backend core foundation routes", () => {
     expect(loginResponse.headers.get("set-cookie")).toContain("HttpOnly");
     expect(login.data.accessToken).toEqual(expect.any(String));
     expect(login.data).not.toHaveProperty("refreshToken");
+    expect(login.data.user).not.toHaveProperty("password");
+    expect(login.data.user).not.toHaveProperty("passwordHash");
     expect(login.data.session.id).toBe("1");
     expect(login.data.session.status).toBe("active");
     expect(login.data.session).not.toHaveProperty("refreshTokenHash");
@@ -548,6 +550,8 @@ describe("backend core foundation routes", () => {
 
     expect(response.status).toBe(200);
     expect(body.data.user.username).toBe("admin");
+    expect(body.data.user).not.toHaveProperty("password");
+    expect(body.data.user).not.toHaveProperty("passwordHash");
     expect(body.data.session.currentOrganizationId).toBe("1");
     expect(body.data.session).not.toHaveProperty("refreshTokenHash");
     expect(body.data.session).not.toHaveProperty("tokenVersion");
@@ -1521,6 +1525,8 @@ describe("backend core foundation routes", () => {
     expect(users.data.items).toEqual([
       expect.objectContaining({ id: "1", username: "admin" })
     ]);
+    expect(users.data.items[0]).not.toHaveProperty("password");
+    expect(users.data.items[0]).not.toHaveProperty("passwordHash");
     expect(rolesResponse.status).toBe(200);
     expect(roles.data).toMatchObject({
       page: 1,
@@ -1671,6 +1677,8 @@ describe("backend core foundation routes", () => {
 
     expect(reset.data.tokenVersion).toBe(1);
     expect(reset.data.firstLoginPasswordChangeRequired).toBe(true);
+    expect(reset.data).not.toHaveProperty("password");
+    expect(reset.data).not.toHaveProperty("passwordHash");
   });
 
   it("rejects administrator password resets that violate the password policy", async () => {
