@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS menus (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   tenant_id INTEGER,
   parent_menu_id INTEGER,
-  permission_id INTEGER,
+  permission_code TEXT,
   code TEXT NOT NULL,
   route_code TEXT,
   title_i18n_key TEXT NOT NULL,

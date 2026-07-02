@@ -129,6 +129,11 @@ describe("backend core schema", () => {
     expect(postgresql.menus.visible.name).toBe("visible");
   });
 
+  it("keeps menu permission-code columns aligned across SQLite and PostgreSQL", () => {
+    expect(sqlite.menus.permissionCode.name).toBe("permission_code");
+    expect(postgresql.menus.permissionCode.name).toBe("permission_code");
+  });
+
   it("keeps route manifest metadata columns aligned across SQLite and PostgreSQL", () => {
     expect(sqlite.routeMetadata.metadataJson.name).toBe("metadata_json");
     expect(sqlite.routeMetadata.manifestHash.name).toBe("manifest_hash");

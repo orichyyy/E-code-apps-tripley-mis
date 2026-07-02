@@ -208,7 +208,7 @@ export const menus = pgTable(
     id: serial("id").primaryKey(),
     tenantId: integer("tenant_id"),
     parentMenuId: integer("parent_menu_id"),
-    permissionId: integer("permission_id"),
+    permissionCode: text("permission_code"),
     code: text("code").notNull(),
     routeCode: text("route_code"),
     titleI18nKey: text("title_i18n_key").notNull(),
