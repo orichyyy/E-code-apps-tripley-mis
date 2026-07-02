@@ -94,6 +94,8 @@ export class AuthService {
 
     const user = requireUser(this.context.store, storedToken.subjectId);
     if (storedToken.tokenVersion !== user.tokenVersion) throw createKnownError("AUTH_TOKEN_INVALIDATED");
+    if (user.status === "disabled") throw createKnownError("AUTH_ACCOUNT_DISABLED");
+    if (user.status === "locked") throw createKnownError("AUTH_ACCOUNT_LOCKED");
 
     const session = this.context.store.authSessions.get(storedToken.sessionId);
     if (!session || session.revokedAt) throw createKnownError("AUTH_SESSION_NOT_FOUND");

@@ -116,6 +116,43 @@ describe("backend core foundation routes", () => {
     expect(refresh.data.session.id).toBe("1");
   });
 
+  it("rejects refresh token exchange after the account is disabled", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "refresh-disabled",
+        displayName: "Refresh Disabled",
+        email: "refresh-disabled@example.com",
+        phone: "10000000010",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "refresh-disabled", password: "password1" })
+    });
+    const login = await loginResponse.json();
+    const cookie = loginResponse.headers.get("set-cookie") ?? "";
+    await app.request(`/api/users/${login.data.user.id}/disable`, {
+      method: "POST",
+      headers: authHeaders
+    });
+
+    const refreshResponse = await app.request("/api/auth/refresh", {
+      method: "POST",
+      headers: { cookie: cookie.split(";")[0] }
+    });
+    const refresh = await refreshResponse.json();
+
+    expect(refreshResponse.status).toBe(403);
+    expect(refresh.error.code).toBe("AUTH_ACCOUNT_DISABLED");
+  });
+
   it("revokes refresh-token usage when logging out", async () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {
