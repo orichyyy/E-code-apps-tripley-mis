@@ -80,10 +80,10 @@ export function createUserRoutes(services: BackendCoreServices) {
     });
   });
 
-  routes.delete("/users/:id", (context) => {
+  routes.delete("/users/:id", async (context) => {
     const authContext = context.get("authContext");
     return context.json({
-      data: services.deleteUser(context.req.param("id"), authContext?.userId ?? null)
+      data: await services.deleteUser(context.req.param("id"), authContext?.userId ?? null)
     });
   });
 

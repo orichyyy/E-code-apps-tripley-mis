@@ -166,6 +166,7 @@ export class UserService {
     user.isDeleted = true;
     user.deletedAt = now;
     user.deletedBy = deletedBy;
+    user.tokenVersion += 1;
     user.updatedAt = now;
     user.updatedBy = deletedBy;
     return toPublicUser(user);

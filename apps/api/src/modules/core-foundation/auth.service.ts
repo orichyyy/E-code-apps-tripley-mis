@@ -104,7 +104,8 @@ export class AuthService {
       throw createKnownError("AUTH_TOKEN_EXPIRED");
     }
 
-    const user = requireUser(this.context.store, storedToken.subjectId);
+    const user = this.context.store.users.get(storedToken.subjectId);
+    if (!user || user.isDeleted) throw createKnownError("AUTH_TOKEN_INVALIDATED");
     if (user.status === "disabled") throw createKnownError("AUTH_ACCOUNT_DISABLED");
     if (user.status === "locked") throw createKnownError("AUTH_ACCOUNT_LOCKED");
     if (storedToken.tokenVersion !== user.tokenVersion) throw createKnownError("AUTH_TOKEN_INVALIDATED");
@@ -229,7 +230,8 @@ export class AuthService {
         secret: this.context.config.jwtSecret,
         issuer: this.context.config.jwtIssuer
       });
-      const user = requireUser(this.context.store, claims.sub);
+      const user = this.context.store.users.get(claims.sub);
+      if (!user || user.isDeleted) throw createKnownError("AUTH_TOKEN_INVALIDATED");
       const session = this.requireActiveSession(claims.sid, user.id);
       const organization = this.context.store.organizations.get(claims.currentOrganizationId);
 

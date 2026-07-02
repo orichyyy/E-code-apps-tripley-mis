@@ -189,6 +189,65 @@ describe("backend core foundation routes", () => {
     );
   });
 
+  it("invalidates access and refresh tokens when a user is soft deleted", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "delete-token-user",
+        displayName: "Delete Token User",
+        email: "delete-token-user@example.com",
+        phone: "10000000015",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const firstLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "delete-token-user", password: "password1" })
+    });
+    const firstLogin = await firstLoginResponse.json();
+    await app.request("/api/auth/change-password", {
+      method: "POST",
+      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+    });
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "delete-token-user", password: "password2" })
+    });
+    const login = await loginResponse.json();
+    const cookie = loginResponse.headers.get("set-cookie") ?? "";
+
+    const deleteResponse = await app.request(`/api/users/${login.data.user.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const deleted = await deleteResponse.json();
+    const oldAccessResponse = await app.request("/api/auth/me", {
+      headers: { authorization: `Bearer ${login.data.accessToken}` }
+    });
+    const oldAccess = await oldAccessResponse.json();
+    const oldRefreshResponse = await app.request("/api/auth/refresh", {
+      method: "POST",
+      headers: { cookie: cookie.split(";")[0] }
+    });
+    const oldRefresh = await oldRefreshResponse.json();
+
+    expect(deleted.data).toMatchObject({
+      id: login.data.user.id,
+      isDeleted: true,
+      tokenVersion: login.data.user.tokenVersion + 1
+    });
+    expect(oldAccessResponse.status).toBe(401);
+    expect(oldAccess.error.code).toBe("AUTH_TOKEN_INVALIDATED");
+    expect(oldRefreshResponse.status).toBe(401);
+    expect(oldRefresh.error.code).toBe("AUTH_TOKEN_INVALIDATED");
+  });
+
   it("returns current user context with organizations, permissions, and menus", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

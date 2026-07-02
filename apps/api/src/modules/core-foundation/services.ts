@@ -249,8 +249,10 @@ export class BackendCoreServices {
     return this.users.resetPassword(id, input, actorId);
   }
 
-  deleteUser(id: string, deletedBy: string | null = null) {
-    return this.users.delete(id, deletedBy);
+  async deleteUser(id: string, deletedBy: string | null = null) {
+    const user = this.users.delete(id, deletedBy);
+    await this.permissions.invalidateUser(id);
+    return user;
   }
 
   async assignUserOrganizationRole(
