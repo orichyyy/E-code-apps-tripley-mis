@@ -214,6 +214,7 @@ The backend core goal has partial implementation progress:
 - Tightened organization manager references so create/update requests can only set `managerUserId` to an existing non-deleted user, preventing broken organization-user references before DB-backed foreign keys are available.
 - Added service coverage proving expired refresh-token exchange marks the backing login session `expired` and keeps it excluded from the online-user data source.
 - Aligned the SQLite/PostgreSQL menu schema and migrations with the documented menu permission-code model by storing menu permission references as `permission_code` instead of `permission_id`.
+- Added route coverage proving first-start initialization rejects a weak super-administrator password under the configured password policy and leaves the system uninitialized.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

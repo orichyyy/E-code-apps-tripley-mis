@@ -123,6 +123,29 @@ describe("backend core foundation routes", () => {
     expect(duplicate.error.code).toBe("BUSINESS_SYSTEM_ALREADY_INITIALIZED");
   });
 
+  it("rejects first-start initialization when the administrator password violates policy", async () => {
+    const app = createApp();
+    const setupResponse = await app.request("/api/initialization/setup", {
+      method: "POST",
+      body: JSON.stringify({
+        organizationName: "Default Organization",
+        organizationCode: "default",
+        adminUsername: "admin",
+        adminDisplayName: "Super Admin",
+        adminEmail: "admin@example.com",
+        adminPhone: "10000000000",
+        adminPassword: "password"
+      })
+    });
+    const setup = await setupResponse.json();
+    const statusResponse = await app.request("/api/initialization/status");
+    const status = await statusResponse.json();
+
+    expect(setupResponse.status).toBe(400);
+    expect(setup.error.code).toBe("PASSWORD_REQUIRES_NUMBER");
+    expect(status.data.initialized).toBe(false);
+  });
+
   it("logs in with username/password, creates a session, and lists online users", async () => {
     const { app } = await setupInitializedApp();
     const { login, loginResponse, authHeaders } = await loginAsAdmin(app);
