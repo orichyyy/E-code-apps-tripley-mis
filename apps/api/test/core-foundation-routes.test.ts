@@ -2956,13 +2956,21 @@ describe("backend core foundation routes", () => {
   });
 
   it("copies a role with its permission configuration", async () => {
-    const { app } = await setupInitializedApp();
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
     const { authHeaders } = await loginAsAdmin(app);
 
     await app.request("/api/roles/2/permissions", {
       method: "PUT",
       headers: authHeaders,
       body: JSON.stringify({ permissionCodes: ["user:view", "role:view"] })
+    });
+    services["context"].store.rolePermissions.push({
+      roleId: "2",
+      permissionCode: "user:view",
+      effect: "allow",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z"
     });
     const copyResponse = await app.request("/api/roles/2/copy", {
       method: "POST",
@@ -2992,7 +3000,7 @@ describe("backend core foundation routes", () => {
       updatedBy: "1"
     });
     expect(secondCopy.data.code).toBe("organization_admin_copy_2");
-    expect(permissions.data).toEqual(expect.arrayContaining(["user:view", "role:view"]));
+    expect(permissions.data).toEqual(["user:view", "role:view"]);
   });
 
   it("invalidates permission cache and removes grants when an assigned role is disabled", async () => {

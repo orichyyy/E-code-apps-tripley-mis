@@ -89,21 +89,20 @@ export class RoleService {
     }, actorId, { dataScopeRuleId: source.dataScopeRuleId });
     const now = toUtcIso(nowUtc());
     const enabledPermissionCodes = this.listEnabledPermissionCodeSet();
-    this.context.store.rolePermissions
-      .filter(
-        (permission) =>
-          permission.roleId === source.id &&
-          enabledPermissionCodes.has(permission.permissionCode)
-      )
-      .forEach((permission) => {
-        this.context.store.rolePermissions.push({
-          roleId: copy.id,
-          permissionCode: permission.permissionCode,
-          effect: permission.effect,
-          createdAt: now,
-          updatedAt: now
-        });
+    const copiedPermissionCodes = new Set<string>();
+    for (const permission of this.context.store.rolePermissions) {
+      if (permission.roleId !== source.id) continue;
+      if (!enabledPermissionCodes.has(permission.permissionCode)) continue;
+      if (copiedPermissionCodes.has(permission.permissionCode)) continue;
+      copiedPermissionCodes.add(permission.permissionCode);
+      this.context.store.rolePermissions.push({
+        roleId: copy.id,
+        permissionCode: permission.permissionCode,
+        effect: permission.effect,
+        createdAt: now,
+        updatedAt: now
       });
+    }
     return copy;
   }
 
