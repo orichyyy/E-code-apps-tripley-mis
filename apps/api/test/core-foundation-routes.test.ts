@@ -1939,6 +1939,60 @@ describe("backend core foundation routes", () => {
     expect(afterDisable.error.code).toBe("PERMISSION_API_DENIED");
   });
 
+  it("does not grant disabled permission metadata through role permissions", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const { authHeaders } = await loginAsAdmin(app);
+
+    await app.request("/api/roles/2/permissions", {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({ permissionCodes: ["user:view"] })
+    });
+    await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "disabled-permission-user",
+        displayName: "Disabled Permission User",
+        email: "disabled-permission-user@example.com",
+        phone: "10000000018",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "2"
+      })
+    });
+    const userViewPermission = services
+      .listPermissions()
+      .find((permission) => permission.code === "user:view");
+    if (!userViewPermission) throw new Error("Expected user:view permission to exist");
+    userViewPermission.status = "disabled";
+
+    const firstLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "disabled-permission-user", password: "password1" })
+    });
+    const firstLogin = await firstLoginResponse.json();
+    await app.request("/api/auth/change-password", {
+      method: "POST",
+      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+    });
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "disabled-permission-user", password: "password2" })
+    });
+    const login = await loginResponse.json();
+    const usersResponse = await app.request("/api/users", {
+      headers: { authorization: `Bearer ${login.data.accessToken}` }
+    });
+    const users = await usersResponse.json();
+
+    expect(login.data.permissionCodes).not.toEqual(expect.arrayContaining(["user:view"]));
+    expect(usersResponse.status).toBe(403);
+    expect(users.error.code).toBe("PERMISSION_API_DENIED");
+  });
+
   it("enables and disables roles through role status endpoints", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

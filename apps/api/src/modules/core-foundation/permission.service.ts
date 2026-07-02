@@ -227,8 +227,14 @@ export class PermissionService {
     role: { status: "enabled" | "disabled"; isDeleted: boolean } | null
   ): string[] {
     if (!roleId || role?.status !== "enabled" || role.isDeleted) return [];
+    const enabledPermissionCodes = new Set(this.listEnabledPermissionCodes());
     return this.context.store.rolePermissions
-      .filter((permission) => permission.roleId === roleId && permission.effect === "allow")
+      .filter(
+        (permission) =>
+          permission.roleId === roleId &&
+          permission.effect === "allow" &&
+          enabledPermissionCodes.has(permission.permissionCode)
+      )
       .map((permission) => permission.permissionCode);
   }
 }
