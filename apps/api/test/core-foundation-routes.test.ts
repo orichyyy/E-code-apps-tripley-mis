@@ -735,6 +735,27 @@ describe("backend core foundation routes", () => {
     expect(body.error.code).toBe("BUSINESS_ORG_DISABLED");
   });
 
+  it("rejects updating a user's primary organization to an unbound organization", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
+    });
+    const child = await childResponse.json();
+
+    const response = await app.request("/api/users/1", {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ primaryOrganizationId: child.data.id })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("VALIDATION_INVALID_REQUEST");
+  });
+
   it("locks accounts according to the configured failed-login policy", async () => {
     const services = createInMemoryBackendCoreServices({
       failedLoginMaxAttempts: 2,
@@ -1328,6 +1349,20 @@ describe("backend core foundation routes", () => {
       deletedAt: null,
       deletedBy: null
     });
+  });
+
+  it("rejects removing a user's primary organization binding", async () => {
+    const { app, setup } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const response = await app.request(
+      `/api/users/${setup.data.admin.id}/organizations/1`,
+      { method: "DELETE", headers: authHeaders }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("VALIDATION_INVALID_REQUEST");
   });
 
   it("switches current organization and refreshes permission context", async () => {

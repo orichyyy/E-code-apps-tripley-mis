@@ -94,6 +94,7 @@ export class UserService {
     this.ensureUniqueUserUpdate(user, input);
     if (input.primaryOrganizationId !== undefined) {
       requireEnabledOrganization(this.context.store, input.primaryOrganizationId);
+      this.requireActiveOrganizationBinding(user.id, input.primaryOrganizationId);
     }
 
     if (input.username !== undefined) user.username = input.username;
@@ -203,6 +204,9 @@ export class UserService {
         !candidate.isDeleted
     );
     if (!binding) return { removed: false };
+    if (binding.isPrimary || requireUser(this.context.store, userId).primaryOrganizationId === organizationId) {
+      throw createKnownError("VALIDATION_INVALID_REQUEST");
+    }
     const now = toUtcIso(nowUtc());
     binding.isDeleted = true;
     binding.isPrimary = false;
@@ -261,6 +265,17 @@ export class UserService {
       binding.isPrimary = binding.organizationId === organizationId;
       binding.updatedAt = now;
     }
+  }
+
+  private requireActiveOrganizationBinding(userId: string, organizationId: string): void {
+    const binding = [...this.context.store.userOrganizationRoles.values()].find(
+      (candidate) =>
+        candidate.userId === userId &&
+        candidate.organizationId === organizationId &&
+        !candidate.isDeleted &&
+        candidate.status === "enabled"
+    );
+    if (!binding) throw createKnownError("VALIDATION_INVALID_REQUEST");
   }
 
   private ensureUniqueUser(username: string, email: string, phone: string): void {

@@ -81,6 +81,7 @@ The backend core goal has partial implementation progress:
 - Aligned in-memory user and organization API records with the existing schema audit fields by recording authenticated `created_by` and `updated_by` actors on administrator create/update/status/reset/delete flows.
 - Tightened user-organization-role binding removal to soft delete bindings with `is_deleted`, `deleted_at`, and `deleted_by`, and aligned the SQLite/PostgreSQL schemas and migrations with that lifecycle.
 - Aligned user-organization-role bindings with the confirmed `is_primary` and `status` fields in the in-memory model and SQLite/PostgreSQL schemas/migrations; permission and auth checks now treat only enabled, non-deleted bindings as active while cache invalidation still clears stale binding contexts.
+- Tightened primary-organization integrity so administrator updates can only select an organization where the user already has an active binding, and the current primary organization binding cannot be removed.
 - Tightened core soft-delete endpoints so organization, user, role, menu, and user-organization-role binding removals record the authenticated actor in `deleted_by`.
 - Tightened organization and role update validation so administrator edits cannot duplicate existing organization codes or role codes.
 - Tightened role-change permission behavior so disabled/deleted assigned roles no longer grant permissions, and role update/delete operations invalidate affected user permission-cache entries.
