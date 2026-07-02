@@ -53,7 +53,6 @@ export class RoleService {
     if (input.name !== undefined) role.name = input.name;
     if (input.code !== undefined) role.code = input.code;
     if (input.remark !== undefined) role.remark = input.remark;
-    if (input.status !== undefined) role.status = input.status;
     role.updatedAt = toUtcIso(nowUtc());
     return role;
   }

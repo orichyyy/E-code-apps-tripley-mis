@@ -668,6 +668,21 @@ describe("backend core foundation routes", () => {
     expect(body.error.code).toBe("VALIDATION_DUPLICATE_ROLE_CODE");
   });
 
+  it("does not allow generic role updates to change role status", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const response = await app.request("/api/roles/2", {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ status: "disabled" })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toMatchObject({ id: "2", status: "enabled" });
+  });
+
   it("invalidates permission cache and removes grants when an assigned role is disabled", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
@@ -708,10 +723,9 @@ describe("backend core foundation routes", () => {
     const userHeaders = { authorization: `Bearer ${login.data.accessToken}` };
     const beforeDisableResponse = await app.request("/api/users", { headers: userHeaders });
 
-    await app.request("/api/roles/2", {
-      method: "PATCH",
+    await app.request("/api/roles/2/disable", {
+      method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ status: "disabled" })
     });
     const afterDisableResponse = await app.request("/api/users", { headers: userHeaders });
     const afterDisable = await afterDisableResponse.json();

@@ -76,6 +76,7 @@ The backend core goal has partial implementation progress:
 - Added route metadata records seeded during initialization, moved `/api/routes/manifest` to the backend core service, and added `POST /api/routes/sync` as the admin-confirmed route manifest synchronization placeholder with API permission metadata and route coverage.
 - Added `POST /api/permissions/sync` as the admin-confirmed permission/API-permission manifest synchronization placeholder for the in-memory foundation; it invalidates cached permission contexts and returns the confirmed manifests without claiming DB-backed persistence.
 - Added `POST /api/roles/:id/enable` and `POST /api/roles/:id/disable` for explicit role status management guarded by `role:status:update`, with permission-cache invalidation and route coverage.
+- Tightened generic role updates so role status changes must use the explicit role status endpoints instead of the `role:update` endpoint.
 - Tightened refresh-token exchange so disabled or locked accounts cannot receive new access tokens from an otherwise valid refresh token.
 - Tightened refresh-token exchange so sessions whose current organization has been disabled cannot receive new access tokens.
 - Added route coverage proving login falls back to another enabled organization when the user's primary organization is disabled, and denies login when no enabled organization is available.

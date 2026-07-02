@@ -78,8 +78,7 @@ export const createRoleRequestSchema = z.object({
 export const updateRoleRequestSchema = z.object({
   name: z.string().min(1).optional(),
   code: z.string().min(1).optional(),
-  remark: z.string().nullable().optional(),
-  status: z.enum(["enabled", "disabled"]).optional()
+  remark: z.string().nullable().optional()
 });
 
 export const updateRolePermissionsRequestSchema = z.object({
