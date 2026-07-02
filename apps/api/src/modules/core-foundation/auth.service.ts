@@ -34,6 +34,7 @@ export class AuthService {
     if (!user) throw createKnownError("AUTH_INVALID_CREDENTIALS");
 
     const now = nowUtc();
+    this.clearExpiredTimedLock(user, now);
     if (user.status === "disabled" || user.isDeleted) throw createKnownError("AUTH_ACCOUNT_DISABLED");
     if (this.isUserLocked(user, now)) {
       throw createKnownError("AUTH_ACCOUNT_LOCKED");
@@ -111,6 +112,7 @@ export class AuthService {
 
     const user = this.context.store.users.get(storedToken.subjectId);
     if (!user || user.isDeleted) throw createKnownError("AUTH_TOKEN_INVALIDATED");
+    this.clearExpiredTimedLock(user, nowUtc());
     if (user.status === "disabled") throw createKnownError("AUTH_ACCOUNT_DISABLED");
     if (user.status === "locked") throw createKnownError("AUTH_ACCOUNT_LOCKED");
     if (storedToken.tokenVersion !== user.tokenVersion) throw createKnownError("AUTH_TOKEN_INVALIDATED");
@@ -237,6 +239,7 @@ export class AuthService {
       });
       const user = this.context.store.users.get(claims.sub);
       if (!user || user.isDeleted) throw createKnownError("AUTH_TOKEN_INVALIDATED");
+      this.clearExpiredTimedLock(user, nowUtc());
       const session = this.requireActiveSession(claims.sid, user.id);
       const organization = this.context.store.organizations.get(claims.currentOrganizationId);
 
@@ -433,6 +436,14 @@ export class AuthService {
   private isUserLocked(user: UserRecord, now: Date): boolean {
     if (user.status !== "locked") return false;
     return !user.lockedUntil || new Date(user.lockedUntil) > now;
+  }
+
+  private clearExpiredTimedLock(user: UserRecord, now: Date): void {
+    if (user.status !== "locked" || !user.lockedUntil || new Date(user.lockedUntil) > now) return;
+    user.status = "enabled";
+    user.lockedUntil = null;
+    user.failedLoginAttempts = 0;
+    user.updatedAt = toUtcIso(now);
   }
 }
 

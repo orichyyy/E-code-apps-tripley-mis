@@ -1153,6 +1153,38 @@ describe("backend core foundation routes", () => {
     );
   });
 
+  it("clears expired timed failed-login locks before counting new failures", async () => {
+    const services = createInMemoryBackendCoreServices({
+      failedLoginMaxAttempts: 2,
+      failedLoginLockMinutes: 0
+    });
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+
+    await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "wrong-password" })
+    });
+    await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "wrong-password" })
+    });
+    const lockedAdmin = services.getUser("1");
+    const nextFailureResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "wrong-password" })
+    });
+    const nextFailure = await nextFailureResponse.json();
+    const unlockedAdmin = services.getUser("1");
+
+    expect(lockedAdmin.status).toBe("locked");
+    expect(lockedAdmin.lockedUntil).toEqual(expect.any(String));
+    expect(nextFailureResponse.status).toBe(401);
+    expect(nextFailure.error.code).toBe("AUTH_INVALID_CREDENTIALS");
+    expect(unlockedAdmin.status).toBe("enabled");
+    expect(unlockedAdmin.failedLoginAttempts).toBe(1);
+    expect(unlockedAdmin.lockedUntil).toBeNull();
+  });
+
   it("updates role permissions from the base permission manifest", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
