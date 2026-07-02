@@ -370,6 +370,8 @@ describe("backend core foundation routes", () => {
     const refresh = await refreshResponse.json();
 
     expect(logoutResponse.status).toBe(200);
+    expect(logoutResponse.headers.get("set-cookie")).toContain("refresh_token=");
+    expect(logoutResponse.headers.get("set-cookie")).toContain("Max-Age=0");
     expect(logout.data.status).toBe("revoked");
     expect(refreshResponse.status).toBe(401);
     expect(refresh.error.code).toBe("AUTH_TOKEN_EXPIRED");

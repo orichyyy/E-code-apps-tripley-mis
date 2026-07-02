@@ -56,7 +56,12 @@ export function createAuthRoutes(services: BackendCoreServices) {
     if (body?.sessionId && body.sessionId !== authContext.sessionId) {
       throw createKnownError("PERMISSION_DENIED");
     }
-    return context.json({ data: await services.logout(authContext.sessionId) });
+    const result = await services.logout(authContext.sessionId);
+    context.header(
+      "set-cookie",
+      "refresh_token=; HttpOnly; SameSite=Strict; Path=/api/auth; Max-Age=0"
+    );
+    return context.json({ data: result });
   });
 
   routes.post("/auth/change-password", async (context) => {

@@ -114,6 +114,7 @@ The backend core goal has partial implementation progress:
 - Added route coverage proving login falls back to another enabled organization when the user's primary organization is disabled, and denies login when no enabled organization is available.
 - Tightened logout so the ordinary logout endpoint revokes the current authenticated session and rejects attempts to revoke a different session id.
 - Aligned the login response with the documented authentication contract by returning the current organization, selectable organizations, effective permission codes, filtered menus, and password-change requirement flag alongside the access token, session, and user summary.
+- Tightened logout cookie handling so successful logout revokes the stored refresh token/session and also clears the HttpOnly refresh-token cookie used by the browser refresh flow.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 
