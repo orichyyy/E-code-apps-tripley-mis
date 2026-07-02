@@ -33,3 +33,7 @@
 8. **User permission override persistence and endpoint contract**
 
    The PRD requires `PUT /api/permissions/user-overrides/{userId}` and lists `user_permission_overrides.permission_resource_id`. The v2 design spec lists `user_permission_overrides.permission_id`, matching the v2 flat `permissions` table. The backend core deliverables explicitly call out RBAC through user-organization-role bindings but do not otherwise define override behavior, conflict resolution, or cache invalidation rules. Please confirm whether user-level overrides are in v1 scope, which foreign key shape to use, and how overrides should combine with role permissions.
+
+9. **Default initialization records for system configuration, dictionaries, and i18n**
+
+   The PRD and design spec require initialization to create default system configuration, default dictionaries, and default i18n messages, but they do not define the canonical keys, dictionary types/items, languages/messages, editable flags, or default values. Please confirm the exact default record set before adding seed data or database migrations for these modules.
