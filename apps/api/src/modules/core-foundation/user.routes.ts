@@ -9,6 +9,7 @@ import { Hono } from "hono";
 import type { AuthContextVariables } from "../../core/auth-context/auth-context";
 import { pageItems } from "./pagination";
 import type { BackendCoreServices } from "./services";
+import type { UserListFilters } from "./user.service";
 
 type UserRouteBindings = {
   Variables: AuthContextVariables;
@@ -19,7 +20,11 @@ export function createUserRoutes(services: BackendCoreServices) {
 
   routes.get("/users", (context) => {
     return context.json({
-      data: pageItems(services.listUsers(), {
+      data: pageItems(services.listUsers({
+        keyword: context.req.query("keyword"),
+        organizationId: context.req.query("organizationId"),
+        status: context.req.query("status") as UserListFilters["status"] | undefined
+      }), {
         page: context.req.query("page"),
         pageSize: context.req.query("pageSize")
       })

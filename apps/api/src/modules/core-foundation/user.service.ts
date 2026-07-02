@@ -21,11 +21,32 @@ import {
 } from "./store-guards";
 import { toPublicUser } from "./serializers";
 
+export type UserListFilters = {
+  keyword?: string;
+  organizationId?: string;
+  status?: UserRecord["status"];
+};
+
 export class UserService {
   constructor(private readonly context: BackendCoreContext) {}
 
-  list(): PublicUser[] {
-    return [...this.context.store.users.values()].filter((user) => !user.isDeleted).map(toPublicUser);
+  list(filters: UserListFilters = {}): PublicUser[] {
+    if (filters.organizationId !== undefined) requireIntegerIdString(filters.organizationId);
+    if (filters.status !== undefined && !isUserStatus(filters.status)) {
+      throw createKnownError("VALIDATION_INVALID_REQUEST");
+    }
+
+    const keyword = filters.keyword?.trim().toLocaleLowerCase();
+    return [...this.context.store.users.values()]
+      .filter((user) => !user.isDeleted)
+      .filter((user) => filters.status === undefined || user.status === filters.status)
+      .filter(
+        (user) =>
+          filters.organizationId === undefined ||
+          this.hasUsableOrganizationBinding(user.id, filters.organizationId)
+      )
+      .filter((user) => keyword === undefined || matchesUserKeyword(user, keyword))
+      .map(toPublicUser);
   }
 
   get(id: string): PublicUser {
@@ -352,6 +373,19 @@ export class UserService {
     }
   }
 
+  private hasUsableOrganizationBinding(userId: string, organizationId: string): boolean {
+    const binding = [...this.context.store.userOrganizationRoles.values()].find(
+      (candidate) =>
+        candidate.userId === userId &&
+        candidate.organizationId === organizationId &&
+        !candidate.isDeleted &&
+        candidate.status === "enabled"
+    );
+    if (!binding) return false;
+    const role = this.context.store.roles.get(binding.roleId);
+    return Boolean(role && !role.isDeleted && role.status === "enabled");
+  }
+
   private ensureUniqueUser(username: string, email: string, phone: string): void {
     for (const user of this.context.store.users.values()) {
       if (user.username === username) throw createKnownError("VALIDATION_DUPLICATE_USERNAME");
@@ -374,4 +408,18 @@ export class UserService {
       }
     }
   }
+}
+
+function isUserStatus(status: string): status is UserRecord["status"] {
+  return status === "enabled" || status === "disabled" || status === "locked";
+}
+
+function matchesUserKeyword(user: UserRecord, keyword: string): boolean {
+  return [
+    user.username,
+    user.displayName,
+    user.email,
+    user.phone,
+    user.employeeNumber ?? ""
+  ].some((value) => value.toLocaleLowerCase().includes(keyword));
 }

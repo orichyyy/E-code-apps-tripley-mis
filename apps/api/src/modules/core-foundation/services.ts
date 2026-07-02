@@ -39,7 +39,7 @@ import {
   type BackendCoreConfig,
   type BackendCoreContext
 } from "./service-context";
-import { UserService } from "./user.service";
+import { UserService, type UserListFilters } from "./user.service";
 import { PermissionCache } from "../permissions/permission-cache";
 
 export type { BackendCoreConfig } from "./service-context";
@@ -241,8 +241,8 @@ export class BackendCoreServices {
     return organization;
   }
 
-  listUsers() {
-    return this.users.list();
+  listUsers(filters: UserListFilters = {}) {
+    return this.users.list(filters);
   }
 
   getUser(id: string) {

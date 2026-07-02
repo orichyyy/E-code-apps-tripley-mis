@@ -1265,6 +1265,57 @@ describe("backend core foundation routes", () => {
     expect(roles.data.items[0].id).toBe("2");
   });
 
+  it("filters the user list by keyword, status, and organization", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Filter Child", code: "filter-child" })
+    });
+    const child = await childResponse.json();
+    const createResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "filtered-user",
+        displayName: "Filtered User",
+        email: "filtered-user@example.com",
+        phone: "10000000101",
+        password: "password1",
+        primaryOrganizationId: child.data.id,
+        roleId: "3"
+      })
+    });
+    const created = await createResponse.json();
+    await app.request(`/api/users/${created.data.id}/disable`, {
+      method: "POST",
+      headers: authHeaders
+    });
+
+    const response = await app.request(
+      `/api/users?keyword=filtered&status=disabled&organizationId=${child.data.id}&page=1&pageSize=10`,
+      { headers: authHeaders }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toMatchObject({
+      page: 1,
+      pageSize: 10,
+      total: 1,
+      totalPages: 1
+    });
+    expect(body.data.items).toEqual([
+      expect.objectContaining({
+        id: created.data.id,
+        username: "filtered-user",
+        status: "disabled",
+        primaryOrganizationId: child.data.id
+      })
+    ]);
+  });
+
   it("resets a user password and increments user token version", async () => {
     const { app, setup } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
