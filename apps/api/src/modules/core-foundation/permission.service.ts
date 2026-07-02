@@ -14,6 +14,14 @@ import { builtInRoleCodes } from "./built-in-roles";
 import type { ApiPermissionRecord, PermissionRecord } from "./domain";
 import type { BackendCoreContext } from "./service-context";
 
+export type ApiPermissionListFilters = {
+  keyword?: string;
+  method?: string;
+  module?: string;
+  public?: boolean;
+  status?: ApiPermissionRecord["status"];
+};
+
 export class PermissionService {
   constructor(
     private readonly context: BackendCoreContext,
@@ -105,8 +113,20 @@ export class PermissionService {
     return [...this.context.store.permissions.values()];
   }
 
-  listApiPermissions(): ApiPermissionRecord[] {
-    return [...this.context.store.apiPermissions.values()];
+  listApiPermissions(filters: ApiPermissionListFilters = {}): ApiPermissionRecord[] {
+    if (filters.status !== undefined && !isEntityStatus(filters.status)) {
+      throw createKnownError("VALIDATION_INVALID_REQUEST");
+    }
+
+    const keyword = filters.keyword?.trim().toLocaleLowerCase();
+    const method = filters.method?.trim().toUpperCase();
+    const module = filters.module?.trim().toLocaleLowerCase();
+    return [...this.context.store.apiPermissions.values()]
+      .filter((permission) => filters.status === undefined || permission.status === filters.status)
+      .filter((permission) => method === undefined || permission.method.toUpperCase() === method)
+      .filter((permission) => module === undefined || permission.module.toLocaleLowerCase() === module)
+      .filter((permission) => filters.public === undefined || permission.public === filters.public)
+      .filter((permission) => keyword === undefined || matchesApiPermissionKeyword(permission, keyword));
   }
 
   syncBasePermissions(): PermissionRecord[] {
@@ -309,6 +329,22 @@ function isPasswordLifecycleRoute(apiPermissionCode: string): boolean {
     apiPermissionCode === "api.auth.change-password" ||
     apiPermissionCode === "api.auth.logout"
   );
+}
+
+function isEntityStatus(status: string): status is ApiPermissionRecord["status"] {
+  return status === "enabled" || status === "disabled";
+}
+
+function matchesApiPermissionKeyword(
+  permission: ApiPermissionRecord,
+  keyword: string
+): boolean {
+  return [
+    permission.code,
+    permission.path,
+    permission.description ?? "",
+    permission.requiredPermission ?? ""
+  ].some((value) => value.toLocaleLowerCase().includes(keyword));
 }
 
 function hashBasePermissionManifestEntry(entry: PermissionManifestEntry): string {

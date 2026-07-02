@@ -6,7 +6,9 @@ import {
 import { Hono } from "hono";
 
 import type { AuthContextVariables } from "../../core/auth-context/auth-context";
+import { createKnownError } from "../../core/errors/error-codes";
 import { pageItems } from "./pagination";
+import type { ApiPermissionListFilters } from "./permission.service";
 import type { RoleListFilters } from "./role.service";
 import type { BackendCoreServices } from "./services";
 
@@ -100,7 +102,15 @@ export function createRoleRoutes(services: BackendCoreServices) {
   });
 
   routes.get("/permissions/api", (context) => {
-    return context.json({ data: services.listApiPermissions() });
+    return context.json({
+      data: services.listApiPermissions({
+        keyword: context.req.query("keyword"),
+        method: context.req.query("method"),
+        module: context.req.query("module"),
+        public: parseOptionalBoolean(context.req.query("public")),
+        status: context.req.query("status") as ApiPermissionListFilters["status"] | undefined
+      })
+    });
   });
 
   routes.post("/permissions/api/sync", async (context) => {
@@ -109,4 +119,11 @@ export function createRoleRoutes(services: BackendCoreServices) {
   });
 
   return routes;
+}
+
+function parseOptionalBoolean(value: string | undefined): boolean | undefined {
+  if (value === undefined) return undefined;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  throw createKnownError("VALIDATION_INVALID_REQUEST");
 }

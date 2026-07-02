@@ -2046,6 +2046,29 @@ describe("backend core foundation routes", () => {
     );
   });
 
+  it("filters API permission identifiers by keyword and metadata fields", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const response = await app.request(
+      "/api/permissions/api?keyword=profile&method=GET&module=auth&status=enabled&public=false",
+      { headers: authHeaders }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toEqual([
+      expect.objectContaining({
+        code: "api.auth.me",
+        method: "GET",
+        path: "/api/auth/me",
+        module: "auth",
+        status: "enabled",
+        public: false
+      })
+    ]);
+  });
+
   it("disables stale base manifest permission metadata on sync", async () => {
     const services = createInMemoryBackendCoreServices();
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));

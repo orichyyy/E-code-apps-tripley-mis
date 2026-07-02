@@ -31,7 +31,7 @@ import { InitializationService } from "./initialization.service";
 import { InMemoryBackendStore } from "./in-memory-store";
 import { MenuService } from "./menu.service";
 import { OrganizationService } from "./organization.service";
-import { PermissionService } from "./permission.service";
+import { PermissionService, type ApiPermissionListFilters } from "./permission.service";
 import { RouteMetadataService } from "./route-metadata.service";
 import { RoleService, type RoleListFilters } from "./role.service";
 import {
@@ -365,8 +365,8 @@ export class BackendCoreServices {
     return this.permissions.listPermissions();
   }
 
-  listApiPermissions() {
-    return this.permissions.listApiPermissions();
+  listApiPermissions(filters: ApiPermissionListFilters = {}) {
+    return this.permissions.listApiPermissions(filters);
   }
 
   syncPermissions() {
