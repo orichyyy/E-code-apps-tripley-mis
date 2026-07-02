@@ -80,6 +80,49 @@ describe("backend core foundation routes", () => {
     expect(status.data.initialized).toBe(true);
   });
 
+  it("supports PRD-compatible setup initialization aliases", async () => {
+    const app = createApp();
+    const initialStatusResponse = await app.request("/api/setup/status");
+    const initialStatus = await initialStatusResponse.json();
+    const setupResponse = await app.request("/api/setup/initialize", {
+      method: "POST",
+      body: JSON.stringify({
+        organizationName: "Alias Organization",
+        organizationCode: "alias",
+        adminUsername: "alias-admin",
+        adminDisplayName: "Alias Admin",
+        adminEmail: "alias-admin@example.com",
+        adminPhone: "10000000001",
+        adminPassword: "password1"
+      })
+    });
+    const setup = await setupResponse.json();
+    const finalStatusResponse = await app.request("/api/setup/status");
+    const finalStatus = await finalStatusResponse.json();
+    const duplicateResponse = await app.request("/api/initialization/setup", {
+      method: "POST",
+      body: JSON.stringify({
+        organizationName: "Duplicate Organization",
+        organizationCode: "duplicate",
+        adminUsername: "duplicate-admin",
+        adminDisplayName: "Duplicate Admin",
+        adminEmail: "duplicate-admin@example.com",
+        adminPhone: "10000000002",
+        adminPassword: "password1"
+      })
+    });
+    const duplicate = await duplicateResponse.json();
+
+    expect(initialStatusResponse.status).toBe(200);
+    expect(initialStatus.data.initialized).toBe(false);
+    expect(setupResponse.status).toBe(201);
+    expect(setup.data.state.status).toBe("initialized");
+    expect(finalStatusResponse.status).toBe(200);
+    expect(finalStatus.data.initialized).toBe(true);
+    expect(duplicateResponse.status).toBe(409);
+    expect(duplicate.error.code).toBe("BUSINESS_SYSTEM_ALREADY_INITIALIZED");
+  });
+
   it("logs in with username/password, creates a session, and lists online users", async () => {
     const { app } = await setupInitializedApp();
     const { login, loginResponse, authHeaders } = await loginAsAdmin(app);

@@ -40,6 +40,24 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     public: true
   },
   {
+    method: "GET",
+    path: "/api/setup/status",
+    code: "api.setup.status",
+    description: "PRD-compatible initialization status alias",
+    module: "initialization",
+    logLevel: "basic",
+    public: true
+  },
+  {
+    method: "POST",
+    path: "/api/setup/initialize",
+    code: "api.setup.initialize",
+    description: "PRD-compatible first-start initialization alias",
+    module: "initialization",
+    logLevel: "request",
+    public: true
+  },
+  {
     method: "POST",
     path: "/api/auth/login",
     code: "api.auth.login",
