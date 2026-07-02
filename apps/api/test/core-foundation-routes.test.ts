@@ -432,6 +432,27 @@ describe("backend core foundation routes", () => {
     expect(refresh.data.session.id).toBe("1");
   });
 
+  it("uses the configured refresh token TTL for the HttpOnly cookie lifetime", async () => {
+    const services = createInMemoryBackendCoreServices({ refreshTokenTtlDays: 2 });
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const login = await loginResponse.json();
+    const cookie = loginResponse.headers.get("set-cookie") ?? "";
+
+    expect(cookie).toContain("HttpOnly");
+    expect(cookie).toContain("SameSite=Strict");
+    expect(cookie).toContain("Max-Age=172800");
+    expect(login.data.refreshTokenCookie).toMatchObject({
+      name: "refresh_token",
+      httpOnly: true,
+      sameSite: "Strict",
+      maxAgeSeconds: 172800
+    });
+  });
+
   it("rejects refresh token exchange after the account is disabled", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

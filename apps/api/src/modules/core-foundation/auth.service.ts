@@ -86,7 +86,12 @@ export class AuthService {
     return {
       accessToken: this.signAccessToken(user, organizationId, session.id),
       refreshToken,
-      refreshTokenCookie: { name: "refresh_token", httpOnly: true, sameSite: "Strict" as const },
+      refreshTokenCookie: {
+        name: "refresh_token",
+        httpOnly: true,
+        sameSite: "Strict" as const,
+        maxAgeSeconds: this.context.config.refreshTokenTtlDays * 24 * 60 * 60
+      },
       session,
       user: toPublicUser(user)
     };

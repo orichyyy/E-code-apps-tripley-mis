@@ -25,7 +25,7 @@ export function createAuthRoutes(services: BackendCoreServices) {
 
     context.header(
       "set-cookie",
-      `refresh_token=${result.refreshToken}; HttpOnly; SameSite=Strict; Path=/api/auth; Max-Age=2592000`
+      `refresh_token=${encodeURIComponent(result.refreshToken)}; HttpOnly; SameSite=Strict; Path=/api/auth; Max-Age=${result.refreshTokenCookie.maxAgeSeconds}`
     );
 
     return context.json({
