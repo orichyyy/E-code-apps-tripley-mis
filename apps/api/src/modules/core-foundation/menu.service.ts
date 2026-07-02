@@ -105,6 +105,7 @@ export class MenuService {
     const affectedMenus = [menu, ...this.findDescendantMenus(id)];
     for (const affectedMenu of affectedMenus) {
       affectedMenu.isDeleted = true;
+      affectedMenu.status = "disabled";
       affectedMenu.deletedAt = now;
       affectedMenu.deletedBy = deletedBy;
       affectedMenu.updatedAt = now;

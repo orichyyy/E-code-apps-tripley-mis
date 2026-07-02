@@ -2020,7 +2020,8 @@ describe("backend core foundation routes", () => {
   });
 
   it("soft deletes managed menu descendants with their parent", async () => {
-    const { app } = await setupInitializedApp();
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
     const { authHeaders } = await loginAsAdmin(app);
     const parentResponse = await app.request("/api/menus", {
       method: "POST",
@@ -2051,6 +2052,7 @@ describe("backend core foundation routes", () => {
       headers: authHeaders
     });
     const deleted = await deleteResponse.json();
+    const storedMenus = [...services["context"].store.menus.values()];
     const treeResponse = await app.request("/api/menus/tree", { headers: authHeaders });
     const tree = await treeResponse.json();
 
@@ -2062,6 +2064,22 @@ describe("backend core foundation routes", () => {
       isDeleted: true,
       deletedBy: "1"
     });
+    expect(storedMenus).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: parent.data.id,
+          isDeleted: true,
+          status: "disabled",
+          deletedBy: "1"
+        }),
+        expect.objectContaining({
+          id: child.data.id,
+          isDeleted: true,
+          status: "disabled",
+          deletedBy: "1"
+        })
+      ])
+    );
     expect(tree.data).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: parent.data.id }),
