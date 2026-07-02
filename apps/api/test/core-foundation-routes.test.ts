@@ -2014,6 +2014,78 @@ describe("backend core foundation routes", () => {
     );
   });
 
+  it("invalidates existing sessions when the failed-login policy locks an account", async () => {
+    const services = createInMemoryBackendCoreServices({
+      failedLoginMaxAttempts: 2,
+      failedLoginLockMinutes: 30
+    });
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const { authHeaders } = await loginAsAdmin(app);
+    await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "failed-lock-session-user",
+        displayName: "Failed Lock Session User",
+        email: "failed-lock-session-user@example.com",
+        phone: "10000000024",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const firstLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "failed-lock-session-user", password: "password1" })
+    });
+    const firstLogin = await firstLoginResponse.json();
+    await app.request("/api/auth/change-password", {
+      method: "POST",
+      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+    });
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "failed-lock-session-user", password: "password2" })
+    });
+    const login = await loginResponse.json();
+    const cookie = loginResponse.headers.get("set-cookie") ?? "";
+
+    await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "failed-lock-session-user", password: "wrong-password" })
+    });
+    await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "failed-lock-session-user", password: "wrong-password" })
+    });
+    const lockedUser = services.getUser(login.data.user.id);
+    const oldAccessResponse = await app.request("/api/auth/me", {
+      headers: { authorization: `Bearer ${login.data.accessToken}` }
+    });
+    const oldAccess = await oldAccessResponse.json();
+    const oldRefreshResponse = await app.request("/api/auth/refresh", {
+      method: "POST",
+      headers: { cookie: cookie.split(";")[0] }
+    });
+    const oldRefresh = await oldRefreshResponse.json();
+    const onlineUsersResponse = await app.request("/api/online-users", { headers: authHeaders });
+    const onlineUsers = await onlineUsersResponse.json();
+
+    expect(lockedUser).toMatchObject({
+      status: "locked",
+      failedLoginAttempts: 2,
+      tokenVersion: login.data.user.tokenVersion + 1
+    });
+    expect(oldAccessResponse.status).toBe(401);
+    expect(oldAccess.error.code).toBe("AUTH_TOKEN_INVALIDATED");
+    expect(oldRefreshResponse.status).toBe(423);
+    expect(oldRefresh.error.code).toBe("AUTH_ACCOUNT_LOCKED");
+    expect(onlineUsers.data).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ userId: login.data.user.id })])
+    );
+  });
+
   it("clears expired timed failed-login locks before counting new failures", async () => {
     const services = createInMemoryBackendCoreServices({
       failedLoginMaxAttempts: 2,
