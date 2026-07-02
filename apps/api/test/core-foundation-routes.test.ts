@@ -311,6 +311,42 @@ describe("backend core foundation routes", () => {
     expect(oldRefresh.error.code).toBe("AUTH_TOKEN_INVALIDATED");
   });
 
+  it("denies login for a soft-deleted user", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "deleted-login-user",
+        displayName: "Deleted Login User",
+        email: "deleted-login-user@example.com",
+        phone: "10000000019",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const firstLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "deleted-login-user", password: "password1" })
+    });
+    const firstLogin = await firstLoginResponse.json();
+
+    await app.request(`/api/users/${firstLogin.data.user.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const deletedLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "deleted-login-user", password: "password1" })
+    });
+    const deletedLogin = await deletedLoginResponse.json();
+
+    expect(deletedLoginResponse.status).toBe(401);
+    expect(deletedLogin.error.code).toBe("AUTH_INVALID_CREDENTIALS");
+  });
+
   it("invalidates access and refresh tokens when an administrator resets a password", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
