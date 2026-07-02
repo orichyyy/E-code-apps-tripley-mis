@@ -17,6 +17,7 @@ import { hashPassword, verifyPassword } from "../../infra/security/password-hash
 import {
   validatePasswordComplexity
 } from "../../infra/security/password-policy";
+import { builtInRoleCodes } from "./built-in-roles";
 import type { AuthSessionRecord, OrganizationRecord, PublicSession, UserRecord } from "./domain";
 import type { BackendCoreContext } from "./service-context";
 import { requireEnabledOrganization, requireUser } from "./store-guards";
@@ -150,7 +151,9 @@ export class AuthService {
         candidate.organizationId === input.organizationId &&
         !candidate.isDeleted
     );
-    if (!binding) throw createKnownError("PERMISSION_DENIED");
+    if (!binding && !this.hasActiveSuperAdminBinding(user.id)) {
+      throw createKnownError("PERMISSION_DENIED");
+    }
 
     session.currentOrganizationId = organization.id;
     session.lastSeenAt = toUtcIso(nowUtc());
@@ -171,11 +174,7 @@ export class AuthService {
       this.context.store,
       authContext.currentOrganizationId
     );
-    const organizations = [...this.context.store.userOrganizationRoles.values()]
-      .filter((binding) => binding.userId === user.id && !binding.isDeleted)
-      .map((binding) => this.context.store.organizations.get(binding.organizationId))
-      .filter(isEnabledOrganization)
-      .map((organization) => toPublicOrganization(organization));
+    const organizations = this.listAvailableOrganizations(user.id);
 
     return {
       user: toPublicUser(user),
@@ -186,6 +185,12 @@ export class AuthService {
       menus: this.filterMenus(permissionCodes),
       passwordChangeRequired: this.isPasswordChangeRequired(user)
     };
+  }
+
+  listCurrentUserOrganizations(authContext: AuthContext) {
+    const user = requireUser(this.context.store, authContext.userId);
+    this.requireActiveSession(authContext.sessionId, user.id);
+    return this.listAvailableOrganizations(user.id);
   }
 
   getCurrentPermissionContext(authContext: AuthContext, permissionCodes: string[]) {
@@ -336,8 +341,42 @@ export class AuthService {
       const organization = this.context.store.organizations.get(binding.organizationId);
       return organization?.status === "enabled" && !organization.isDeleted;
     });
+    if (!enabledBinding && this.hasActiveSuperAdminBinding(user.id)) {
+      const enabledOrganization = [...this.context.store.organizations.values()].find(
+        isEnabledOrganization
+      );
+      if (enabledOrganization) return enabledOrganization.id;
+    }
     if (!enabledBinding) throw createKnownError("BUSINESS_NO_ENABLED_ORGANIZATION");
     return enabledBinding.organizationId;
+  }
+
+  private listAvailableOrganizations(userId: string) {
+    if (this.hasActiveSuperAdminBinding(userId)) {
+      return [...this.context.store.organizations.values()]
+        .filter(isEnabledOrganization)
+        .map((organization) => toPublicOrganization(organization));
+    }
+
+    const organizationIds = new Set<string>();
+    return [...this.context.store.userOrganizationRoles.values()]
+      .filter((binding) => binding.userId === userId && !binding.isDeleted)
+      .map((binding) => this.context.store.organizations.get(binding.organizationId))
+      .filter(isEnabledOrganization)
+      .filter((organization) => {
+        if (organizationIds.has(organization.id)) return false;
+        organizationIds.add(organization.id);
+        return true;
+      })
+      .map((organization) => toPublicOrganization(organization));
+  }
+
+  private hasActiveSuperAdminBinding(userId: string): boolean {
+    return [...this.context.store.userOrganizationRoles.values()].some((binding) => {
+      if (binding.userId !== userId || binding.isDeleted) return false;
+      const role = this.context.store.roles.get(binding.roleId);
+      return role?.code === builtInRoleCodes.superAdmin && role.status === "enabled" && !role.isDeleted;
+    });
   }
 
   private isPasswordChangeRequired(user: UserRecord): boolean {

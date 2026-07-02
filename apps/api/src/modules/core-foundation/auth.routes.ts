@@ -68,6 +68,12 @@ export function createAuthRoutes(services: BackendCoreServices) {
     return context.json({ data: await services.switchCurrentOrganization(authContext, input) });
   });
 
+  routes.get("/context/organizations", (context) => {
+    const authContext = context.get("authContext");
+    if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
+    return context.json({ data: services.listCurrentUserOrganizations(authContext) });
+  });
+
   routes.get("/context/permissions", async (context) => {
     const authContext = context.get("authContext");
     if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");

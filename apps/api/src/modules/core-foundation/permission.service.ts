@@ -8,10 +8,9 @@ import type { AuthContext } from "../../core/auth-context/auth-context";
 import { createKnownError } from "../../core/errors/error-codes";
 import { nowUtc, toUtcIso } from "../../core/time/utc";
 import { PermissionCache } from "../permissions/permission-cache";
+import { builtInRoleCodes } from "./built-in-roles";
 import type { ApiPermissionRecord, PermissionRecord } from "./domain";
 import type { BackendCoreContext } from "./service-context";
-
-const superAdminRoleCode = "super_admin";
 
 export class PermissionService {
   constructor(
@@ -182,7 +181,7 @@ export class PermissionService {
     return [...this.context.store.userOrganizationRoles.values()].some((binding) => {
       if (binding.userId !== userId || binding.isDeleted) return false;
       const role = this.context.store.roles.get(binding.roleId);
-      return role?.code === superAdminRoleCode && role.status === "enabled" && !role.isDeleted;
+      return role?.code === builtInRoleCodes.superAdmin && role.status === "enabled" && !role.isDeleted;
     });
   }
 

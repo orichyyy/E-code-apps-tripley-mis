@@ -114,6 +114,10 @@ export class BackendCoreServices {
     return this.auth.getCurrentUserContext(authContext, permissionContext.permissionCodes);
   }
 
+  listCurrentUserOrganizations(authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>) {
+    return this.auth.listCurrentUserOrganizations(authContext);
+  }
+
   async getCurrentPermissionContext(
     authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>
   ) {

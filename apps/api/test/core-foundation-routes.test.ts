@@ -97,6 +97,62 @@ describe("backend core foundation routes", () => {
     expect(body.data.passwordChangeRequired).toBe(false);
   });
 
+  it("lists organizations available to the current user context", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
+    });
+    const child = await childResponse.json();
+    await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "context-org-user",
+        displayName: "Context Org User",
+        email: "context-org-user@example.com",
+        phone: "10000000012",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const firstLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "context-org-user", password: "password1" })
+    });
+    const firstLogin = await firstLoginResponse.json();
+    await app.request("/api/auth/change-password", {
+      method: "POST",
+      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+    });
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "context-org-user", password: "password2" })
+    });
+    const login = await loginResponse.json();
+
+    const adminResponse = await app.request("/api/context/organizations", { headers: authHeaders });
+    const adminOrganizations = await adminResponse.json();
+    const userResponse = await app.request("/api/context/organizations", {
+      headers: { authorization: `Bearer ${login.data.accessToken}` }
+    });
+    const userOrganizations = await userResponse.json();
+
+    expect(adminResponse.status).toBe(200);
+    expect(adminOrganizations.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "1" }),
+        expect.objectContaining({ id: child.data.id })
+      ])
+    );
+    expect(userResponse.status).toBe(200);
+    expect(userOrganizations.data).toEqual([expect.objectContaining({ id: "1" })]);
+  });
+
   it("returns the current permission context", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
@@ -1274,7 +1330,7 @@ describe("backend core foundation routes", () => {
   });
 
   it("keeps super administrator permissions across organization context", async () => {
-    const { app, setup } = await setupInitializedApp();
+    const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
@@ -1287,11 +1343,6 @@ describe("backend core foundation routes", () => {
       method: "PUT",
       headers: authHeaders,
       body: JSON.stringify({ permissionCodes: ["organization:view"] })
-    });
-    await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
-      method: "POST",
-      headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
     });
 
     const switchResponse = await app.request("/api/context/current-organization", {

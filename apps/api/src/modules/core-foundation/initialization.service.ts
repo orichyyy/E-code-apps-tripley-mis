@@ -17,10 +17,7 @@ import type { RouteMetadataService } from "./route-metadata.service";
 import type { RoleService } from "./role.service";
 import type { UserService } from "./user.service";
 import { toPublicOrganization, toPublicUser } from "./serializers";
-
-const superAdminRoleCode = "super_admin";
-const orgAdminRoleCode = "organization_admin";
-const normalUserRoleCode = "normal_user";
+import { builtInRoleCodes } from "./built-in-roles";
 
 export class InitializationService {
   constructor(
@@ -61,7 +58,7 @@ export class InitializationService {
     });
     const superAdminRole = this.roles.createRecord({
       name: "Super Administrator",
-      code: superAdminRoleCode,
+      code: builtInRoleCodes.superAdmin,
       remark: "Built-in role"
     });
     const permissions = this.permissions.syncBasePermissions();
@@ -75,12 +72,12 @@ export class InitializationService {
     );
     this.roles.createRecord({
       name: "Organization Administrator",
-      code: orgAdminRoleCode,
+      code: builtInRoleCodes.organizationAdmin,
       remark: "Built-in role"
     });
     this.roles.createRecord({
       name: "Normal User",
-      code: normalUserRoleCode,
+      code: builtInRoleCodes.normalUser,
       remark: "Built-in role"
     });
     const menus = this.menus.seedBaseMenus(baseMenuManifest);
