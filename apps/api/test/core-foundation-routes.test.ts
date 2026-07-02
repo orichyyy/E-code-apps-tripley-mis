@@ -48,7 +48,12 @@ describe("backend core foundation routes", () => {
     expect(setup.data.admin.id).toBe("1");
     expect(setup.data.permissions).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: expect.any(String), code: "user:view" })
+        expect.objectContaining({
+          id: expect.any(String),
+          code: "user:view",
+          source: "base_manifest",
+          manifestHash: expect.stringMatching(/^[a-f0-9]{64}$/)
+        })
       ])
     );
     expect(setup.data.apiPermissions).toEqual(
@@ -847,6 +852,8 @@ describe("backend core foundation routes", () => {
           id: expect.any(String),
           code: "user:view",
           permissionType: "action",
+          source: "base_manifest",
+          manifestHash: expect.stringMatching(/^[a-f0-9]{64}$/),
           status: "enabled"
         })
       ])

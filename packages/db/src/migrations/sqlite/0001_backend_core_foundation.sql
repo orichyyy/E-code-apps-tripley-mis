@@ -123,6 +123,8 @@ CREATE TABLE IF NOT EXISTS permissions (
   permission_type TEXT NOT NULL,
   description TEXT,
   module TEXT NOT NULL,
+  source TEXT NOT NULL DEFAULT 'base_manifest',
+  manifest_hash TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'enabled',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,

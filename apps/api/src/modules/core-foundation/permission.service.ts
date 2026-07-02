@@ -1,8 +1,10 @@
 import {
   baseApiPermissionManifest,
   basePermissionManifest,
-  type BaseApiPermissionManifestEntry
+  type BaseApiPermissionManifestEntry,
+  type PermissionManifestEntry
 } from "@web-admin-base/contracts";
+import { createHash } from "node:crypto";
 
 import type { AuthContext } from "../../core/auth-context/auth-context";
 import { createKnownError } from "../../core/errors/error-codes";
@@ -88,6 +90,7 @@ export class PermissionService {
   syncBasePermissions(): PermissionRecord[] {
     const now = toUtcIso(nowUtc());
     return basePermissionManifest.map((entry) => {
+      const manifestHash = hashBasePermissionManifestEntry(entry);
       const existing = [...this.context.store.permissions.values()].find(
         (permission) => permission.code === entry.code
       );
@@ -95,6 +98,8 @@ export class PermissionService {
         existing.name = entry.code;
         existing.description = entry.description;
         existing.module = entry.module;
+        existing.source = "base_manifest";
+        existing.manifestHash = manifestHash;
         existing.status = "enabled";
         existing.updatedAt = now;
         return existing;
@@ -108,6 +113,8 @@ export class PermissionService {
         permissionType: "action",
         description: entry.description,
         module: entry.module,
+        source: "base_manifest",
+        manifestHash,
         status: "enabled",
         createdAt: now,
         updatedAt: now
@@ -211,4 +218,14 @@ function isPasswordLifecycleRoute(apiPermissionCode: string): boolean {
     apiPermissionCode === "api.auth.change-password" ||
     apiPermissionCode === "api.auth.logout"
   );
+}
+
+function hashBasePermissionManifestEntry(entry: PermissionManifestEntry): string {
+  return createHash("sha256")
+    .update(JSON.stringify({
+      code: entry.code,
+      description: entry.description,
+      module: entry.module
+    }))
+    .digest("hex");
 }

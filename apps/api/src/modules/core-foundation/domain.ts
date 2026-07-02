@@ -125,6 +125,8 @@ export type PermissionRecord = AuditFields & {
   permissionType: "menu" | "page" | "action" | "api" | "data" | "field";
   description: string | null;
   module: string;
+  source: string;
+  manifestHash: string;
   status: EntityStatus;
 };
 

@@ -5,7 +5,11 @@ import { postgresql, sqlite } from "../src";
 describe("backend core schema", () => {
   it("keeps permission metadata columns aligned across SQLite and PostgreSQL", () => {
     expect(sqlite.permissions.module.name).toBe("module");
+    expect(sqlite.permissions.source.name).toBe("source");
+    expect(sqlite.permissions.manifestHash.name).toBe("manifest_hash");
     expect(postgresql.permissions.module.name).toBe("module");
+    expect(postgresql.permissions.source.name).toBe("source");
+    expect(postgresql.permissions.manifestHash.name).toBe("manifest_hash");
   });
 
   it("keeps role metadata and audit columns aligned across dialects", () => {
