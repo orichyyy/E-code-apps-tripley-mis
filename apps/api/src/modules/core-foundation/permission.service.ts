@@ -93,6 +93,7 @@ export class PermissionService {
     const permissions = this.syncBasePermissions();
     const apiPermissions = this.syncBaseApiPermissions();
     this.pruneDisabledRolePermissions();
+    this.pruneDisabledMenuApiBindings();
     await this.invalidateAllPermissionContexts();
     return {
       permissions,
@@ -282,6 +283,19 @@ export class PermissionService {
       this.context.store.rolePermissions.length,
       ...retained
     );
+  }
+
+  private pruneDisabledMenuApiBindings(): void {
+    const enabledApiPermissionIds = new Set(
+      [...this.context.store.apiPermissions.values()]
+        .filter((apiPermission) => apiPermission.status === "enabled")
+        .map((apiPermission) => apiPermission.id)
+    );
+    for (const [bindingId, binding] of this.context.store.menuApiBindings.entries()) {
+      if (!enabledApiPermissionIds.has(binding.apiPermissionId)) {
+        this.context.store.menuApiBindings.delete(bindingId);
+      }
+    }
   }
 }
 

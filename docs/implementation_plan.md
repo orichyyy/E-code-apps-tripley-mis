@@ -179,6 +179,7 @@ The backend core goal has partial implementation progress:
 - Tightened managed menu soft deletion so deleted menu records and descendants are marked disabled while retaining `is_deleted`, `deleted_at`, and `deleted_by` audit fields.
 - Tightened permission manifest synchronization so stale base permission/API metadata is disabled, and role permission updates only accept currently enabled permission metadata.
 - Tightened API permission manifest synchronization so legacy metadata records are reconciled by method/path when the canonical API permission code record is missing, matching the database unique constraints.
+- Tightened permission manifest synchronization so menu/API permission bindings pointing at disabled or missing API permission metadata are pruned.
 - Tightened stale role-permission lifecycle so disabled or missing permission metadata is pruned during manifest sync and excluded from role permission reads/copies.
 - Tightened repeated seed synchronization so base menus are reconciled by path when the canonical menu code record is missing, matching the menu path uniqueness rule.
 - Tightened managed menu validation so menu bindings can only reference currently enabled permission metadata.

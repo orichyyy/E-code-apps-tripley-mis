@@ -1917,6 +1917,13 @@ describe("backend core foundation routes", () => {
       createdAt: now,
       updatedAt: now
     });
+    store.menuApiBindings.set("999", {
+      id: "999",
+      tenantId: null,
+      menuId: "2",
+      apiPermissionId: "999",
+      createdAt: now
+    });
 
     const syncResponse = await app.request("/api/permissions/sync", {
       method: "POST",
@@ -1941,10 +1948,14 @@ describe("backend core foundation routes", () => {
       headers: authHeaders
     });
     const configured = await configuredResponse.json();
+    const staleMenuApiBinding = [...store.menuApiBindings.values()].find(
+      (binding) => binding.apiPermissionId === "999"
+    );
 
     expect(syncResponse.status).toBe(200);
     expect(stalePermission).toMatchObject({ status: "disabled" });
     expect(staleApiPermission).toMatchObject({ status: "disabled" });
+    expect(staleMenuApiBinding).toBeUndefined();
     expect(reconciledUsersApiPermissions).toEqual([
       expect.objectContaining({
         id: "1000",
