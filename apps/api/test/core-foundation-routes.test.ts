@@ -2365,12 +2365,27 @@ describe("backend core foundation routes", () => {
       })
     });
     const child = await childResponse.json();
+    const apiPermission = services
+      .listApiPermissions()
+      .find((candidate) => candidate.code === "api.users.list");
+    if (!apiPermission) throw new Error("Expected api.users.list API permission metadata");
+    await app.request(`/api/menus/${parent.data.id}/api-bindings`, {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({ apiPermissionIds: [apiPermission.id] })
+    });
+    await app.request(`/api/menus/${child.data.id}/api-bindings`, {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({ apiPermissionIds: [apiPermission.id] })
+    });
     const deleteResponse = await app.request(`/api/menus/${parent.data.id}`, {
       method: "DELETE",
       headers: authHeaders
     });
     const deleted = await deleteResponse.json();
     const storedMenus = [...services["context"].store.menus.values()];
+    const storedBindings = [...services["context"].store.menuApiBindings.values()];
     const treeResponse = await app.request("/api/menus/tree", { headers: authHeaders });
     const tree = await treeResponse.json();
 
@@ -2398,6 +2413,7 @@ describe("backend core foundation routes", () => {
         })
       ])
     );
+    expect(storedBindings).toEqual([]);
     expect(tree.data).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: parent.data.id }),

@@ -111,6 +111,7 @@ export class MenuService {
       affectedMenu.deletedBy = deletedBy;
       affectedMenu.updatedAt = now;
     }
+    this.deleteApiBindingsForMenus(affectedMenus.map((affectedMenu) => affectedMenu.id));
     return menu;
   }
 
@@ -263,6 +264,15 @@ export class MenuService {
     const apiPermission = this.context.store.apiPermissions.get(apiPermissionId);
     if (!apiPermission || apiPermission.status !== "enabled") {
       throw createKnownError("VALIDATION_INVALID_REQUEST");
+    }
+  }
+
+  private deleteApiBindingsForMenus(menuIds: string[]): void {
+    const affectedMenuIds = new Set(menuIds);
+    for (const [bindingId, binding] of this.context.store.menuApiBindings.entries()) {
+      if (affectedMenuIds.has(binding.menuId)) {
+        this.context.store.menuApiBindings.delete(bindingId);
+      }
     }
   }
 }
