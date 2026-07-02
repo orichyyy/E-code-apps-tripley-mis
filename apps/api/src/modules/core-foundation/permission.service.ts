@@ -16,6 +16,7 @@ import type { BackendCoreContext } from "./service-context";
 
 export type ApiPermissionListFilters = {
   keyword?: string;
+  logLevel?: ApiPermissionRecord["logLevel"];
   method?: string;
   module?: string;
   public?: boolean;
@@ -120,12 +121,17 @@ export class PermissionService {
     if (filters.method !== undefined && !isApiPermissionMethod(filters.method)) {
       throw createKnownError("VALIDATION_INVALID_REQUEST");
     }
+    if (filters.logLevel !== undefined && !isApiPermissionLogLevel(filters.logLevel)) {
+      throw createKnownError("VALIDATION_INVALID_REQUEST");
+    }
 
     const keyword = filters.keyword?.trim().toLocaleLowerCase();
+    const logLevel = filters.logLevel?.trim();
     const method = filters.method?.trim().toUpperCase();
     const module = filters.module?.trim().toLocaleLowerCase();
     return [...this.context.store.apiPermissions.values()]
       .filter((permission) => filters.status === undefined || permission.status === filters.status)
+      .filter((permission) => logLevel === undefined || permission.logLevel === logLevel)
       .filter((permission) => method === undefined || permission.method.toUpperCase() === method)
       .filter((permission) => module === undefined || permission.module.toLocaleLowerCase() === module)
       .filter((permission) => filters.public === undefined || permission.public === filters.public)
@@ -340,6 +346,10 @@ function isEntityStatus(status: string): status is ApiPermissionRecord["status"]
 
 function isApiPermissionMethod(method: string): boolean {
   return ["GET", "POST", "PATCH", "PUT", "DELETE"].includes(method.toUpperCase());
+}
+
+function isApiPermissionLogLevel(logLevel: string): logLevel is ApiPermissionRecord["logLevel"] {
+  return ["none", "basic", "request", "request_response"].includes(logLevel);
 }
 
 function matchesApiPermissionKeyword(

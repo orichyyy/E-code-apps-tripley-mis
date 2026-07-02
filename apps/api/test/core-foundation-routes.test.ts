@@ -2273,6 +2273,24 @@ describe("backend core foundation routes", () => {
     ]);
   });
 
+  it("filters API permission identifiers by log level metadata", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const response = await app.request("/api/permissions/api?logLevel=none", {
+      headers: authHeaders
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toEqual([
+      expect.objectContaining({
+        code: "api.health.view",
+        logLevel: "none"
+      })
+    ]);
+  });
+
   it("rejects invalid API permission identifier filters", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
@@ -2285,11 +2303,17 @@ describe("backend core foundation routes", () => {
       headers: authHeaders
     });
     const publicBody = await publicResponse.json();
+    const logLevelResponse = await app.request("/api/permissions/api?logLevel=verbose", {
+      headers: authHeaders
+    });
+    const logLevelBody = await logLevelResponse.json();
 
     expect(methodResponse.status).toBe(400);
     expect(methodBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
     expect(publicResponse.status).toBe(400);
     expect(publicBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(logLevelResponse.status).toBe(400);
+    expect(logLevelBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
   });
 
   it("disables stale base manifest permission metadata on sync", async () => {

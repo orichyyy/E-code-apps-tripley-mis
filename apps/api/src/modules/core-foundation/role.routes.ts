@@ -105,6 +105,7 @@ export function createRoleRoutes(services: BackendCoreServices) {
     return context.json({
       data: services.listApiPermissions({
         keyword: context.req.query("keyword"),
+        logLevel: context.req.query("logLevel") as ApiPermissionListFilters["logLevel"] | undefined,
         method: context.req.query("method"),
         module: context.req.query("module"),
         public: parseOptionalBoolean(context.req.query("public")),
