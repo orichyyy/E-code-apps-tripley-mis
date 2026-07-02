@@ -156,6 +156,7 @@ describe("backend core foundation routes", () => {
 
     expect(loginResponse.headers.get("set-cookie")).toContain("HttpOnly");
     expect(login.data.accessToken).toEqual(expect.any(String));
+    expect(login.data).not.toHaveProperty("refreshToken");
     expect(login.data.session.id).toBe("1");
     expect(login.data.session.status).toBe("active");
     expect(login.data.session).not.toHaveProperty("refreshTokenHash");

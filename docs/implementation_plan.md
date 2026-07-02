@@ -233,6 +233,7 @@ The backend core goal has partial implementation progress:
 - Added the reserved public `GET /api/metrics` observability placeholder with request ID propagation and API permission manifest coverage.
 - Tightened refresh-token exchange so the backing login session expiry is enforced even if the token-store record still appears valid, and expired sessions are marked `expired`.
 - Aligned the serialized JWT access-token payload with the confirmed `token_version` claim while keeping the internal TypeScript auth context camelCase.
+- Added route coverage proving login responses do not serialize the raw refresh token; the token is delivered only through the configured HttpOnly cookie boundary.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 
