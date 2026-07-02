@@ -235,18 +235,28 @@ export class UserService {
     isPrimary: boolean,
     actorId: string | null = null
   ): UserOrganizationRoleRecord {
-    const existing = [...this.context.store.userOrganizationRoles.values()].find(
+    const existingBindings = [...this.context.store.userOrganizationRoles.values()].filter(
       (binding) => binding.userId === userId && binding.organizationId === organizationId
     );
+    const existing =
+      existingBindings.find((binding) => !binding.isDeleted && binding.status === "enabled") ??
+      existingBindings[0];
     if (existing) {
+      const now = toUtcIso(nowUtc());
       existing.roleId = roleId;
       existing.isPrimary = isPrimary;
       existing.status = "enabled";
       existing.isDeleted = false;
       existing.deletedAt = null;
       existing.deletedBy = null;
-      existing.updatedAt = toUtcIso(nowUtc());
+      existing.updatedAt = now;
       existing.updatedBy = actorId;
+      this.softDeleteDuplicateOrganizationBindings(
+        existingBindings,
+        existing.id,
+        now,
+        actorId
+      );
       if (isPrimary) this.markPrimaryOrganization(userId, organizationId, actorId);
       return existing;
     }
@@ -271,6 +281,24 @@ export class UserService {
     this.context.store.userOrganizationRoles.set(binding.id, binding);
     if (isPrimary) this.markPrimaryOrganization(userId, organizationId, actorId);
     return binding;
+  }
+
+  private softDeleteDuplicateOrganizationBindings(
+    bindings: UserOrganizationRoleRecord[],
+    retainedBindingId: string,
+    deletedAt: string,
+    deletedBy: string | null
+  ): void {
+    for (const binding of bindings) {
+      if (binding.id === retainedBindingId || binding.isDeleted) continue;
+      binding.isDeleted = true;
+      binding.isPrimary = false;
+      binding.status = "disabled";
+      binding.deletedAt = deletedAt;
+      binding.deletedBy = deletedBy;
+      binding.updatedAt = deletedAt;
+      binding.updatedBy = deletedBy;
+    }
   }
 
   private markPrimaryOrganization(

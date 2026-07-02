@@ -185,6 +185,7 @@ The backend core goal has partial implementation progress:
 - Tightened role copy so duplicate source role-permission rows are normalized to one copied grant per permission code.
 - Tightened role permission reads so duplicate backing role-permission rows are exposed as one effective permission code while preserving first-seen order and enabled-permission filtering.
 - Tightened effective RBAC permission resolution so ordinary user permission contexts also collapse duplicate backing role-permission rows to one permission code.
+- Tightened user-organization-role assignment so reassignment repairs duplicate active bindings and preserves the one-role-per-user-organization invariant.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

@@ -3314,7 +3314,8 @@ describe("backend core foundation routes", () => {
   });
 
   it("assigns one role per user organization and supports removing the binding", async () => {
-    const { app, setup } = await setupInitializedApp();
+    const services = createInMemoryBackendCoreServices();
+    const { app, setup } = await setupInitializedApp(createApp({ backendCoreServices: services }));
     const { authHeaders } = await loginAsAdmin(app);
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
@@ -3351,6 +3352,32 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
     });
     const reassign = await reassignResponse.json();
+    const childBinding = services["context"].store.userOrganizationRoles.get(reassign.data.id);
+    if (!childBinding) throw new Error("Expected child organization binding to exist");
+    const duplicateBindingId = services["context"].store.nextId("userOrganizationRole");
+    services["context"].store.userOrganizationRoles.set(duplicateBindingId, {
+      ...childBinding,
+      id: duplicateBindingId,
+      roleId: "3",
+      createdAt: childBinding.updatedAt,
+      updatedAt: childBinding.updatedAt
+    });
+    const repairDuplicateResponse = await app.request(
+      `/api/users/${setup.data.admin.id}/organizations`,
+      {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+      }
+    );
+    const listAfterDuplicateRepairResponse = await app.request(
+      `/api/users/${setup.data.admin.id}/organizations`,
+      { headers: authHeaders }
+    );
+    const listAfterDuplicateRepair = await listAfterDuplicateRepairResponse.json();
+    const childBindingsAfterRepair = listAfterDuplicateRepair.data.filter(
+      (binding: { organizationId: string }) => binding.organizationId === child.data.id
+    );
     const primaryUpdateResponse = await app.request(`/api/users/${setup.data.admin.id}`, {
       method: "PATCH",
       headers: authHeaders,
@@ -3403,6 +3430,16 @@ describe("backend core foundation routes", () => {
       deletedAt: null,
       deletedBy: null
     });
+    expect(repairDuplicateResponse.status).toBe(200);
+    expect(childBindingsAfterRepair).toEqual([
+      expect.objectContaining({
+        id: reassign.data.id,
+        organizationId: child.data.id,
+        roleId: "2",
+        isDeleted: false,
+        status: "enabled"
+      })
+    ]);
     expect(primaryUpdateResponse.status).toBe(200);
     expect(listAfterPrimaryUpdate.data).toEqual(
       expect.arrayContaining([
