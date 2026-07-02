@@ -17,3 +17,7 @@
 4. **CSRF strategy for refresh/logout cookie endpoints**
 
    The design spec requires CSRF protection for refresh/logout cookie auth endpoints, but does not confirm the concrete CSRF token strategy, header name, cookie pairing, or same-origin policy. Please confirm the intended CSRF mechanism before the cookie-backed refresh/logout endpoints are considered complete.
+
+5. **Role data/field permission persistence model**
+
+   The design spec defines role-scoped endpoints `PUT /api/roles/:id/data-permissions` and `PUT /api/roles/:id/field-permissions`, but the logical data model lists `data_permission_rules` without an explicit role, target, or binding table. `field_permission_rules` has `target_type` and `target_id`, but the role endpoint contract still needs confirmation on whether role-specific field rules should be stored through those fields, through a separate role binding table, or through another confirmed model. Please confirm the persistence model before implementing these endpoints and migrations.
