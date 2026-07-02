@@ -1213,6 +1213,39 @@ describe("backend core foundation routes", () => {
     expect(assign.error.code).toBe("BUSINESS_ORG_DISABLED");
   });
 
+  it("rejects creating child organizations under a disabled parent organization", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const parentResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Disabled Parent",
+        code: "disabled-parent"
+      })
+    });
+    const parent = await parentResponse.json();
+
+    await app.request(`/api/organizations/${parent.data.id}/disable`, {
+      method: "POST",
+      headers: authHeaders
+    });
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: parent.data.id,
+        name: "Rejected Child",
+        code: "rejected-child"
+      })
+    });
+    const child = await childResponse.json();
+
+    expect(childResponse.status).toBe(409);
+    expect(child.error.code).toBe("BUSINESS_ORG_DISABLED");
+  });
+
   it("rejects creating users and role bindings with a disabled role", async () => {
     const { app, setup } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
