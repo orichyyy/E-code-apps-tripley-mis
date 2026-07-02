@@ -213,12 +213,14 @@ CREATE TABLE IF NOT EXISTS auth_sessions (
   refresh_token_hash TEXT NOT NULL,
   current_organization_id INTEGER NOT NULL,
   token_version INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active',
   ip_address TEXT,
   user_agent TEXT,
   expires_at TIMESTAMPTZ NOT NULL,
   revoked_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL,
-  last_seen_at TIMESTAMPTZ NOT NULL
+  last_seen_at TIMESTAMPTZ NOT NULL,
+  CHECK (status IN ('active', 'revoked', 'expired'))
 );
 
 CREATE INDEX IF NOT EXISTS auth_sessions_user_active_idx ON auth_sessions (user_id, revoked_at, expires_at);

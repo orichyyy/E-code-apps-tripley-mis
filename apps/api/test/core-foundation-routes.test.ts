@@ -74,8 +74,10 @@ describe("backend core foundation routes", () => {
     expect(loginResponse.headers.get("set-cookie")).toContain("HttpOnly");
     expect(login.data.accessToken).toEqual(expect.any(String));
     expect(login.data.session.id).toBe("1");
+    expect(login.data.session.status).toBe("active");
     expect(login.data.session.tokenVersion).toBe(0);
     expect(onlineUsers.data).toHaveLength(1);
+    expect(onlineUsers.data[0].status).toBe("active");
     expect(onlineUsers.data[0].tokenVersion).toBe(0);
   });
 
@@ -328,6 +330,7 @@ describe("backend core foundation routes", () => {
       headers: { authorization: `Bearer ${login.data.accessToken}` },
       body: JSON.stringify({ sessionId: login.data.session.id })
     });
+    const logout = await logoutResponse.json();
     const refreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
       headers: { cookie: cookie.split(";")[0] }
@@ -335,6 +338,7 @@ describe("backend core foundation routes", () => {
     const refresh = await refreshResponse.json();
 
     expect(logoutResponse.status).toBe(200);
+    expect(logout.data.status).toBe("revoked");
     expect(refreshResponse.status).toBe(401);
     expect(refresh.error.code).toBe("AUTH_TOKEN_EXPIRED");
   });

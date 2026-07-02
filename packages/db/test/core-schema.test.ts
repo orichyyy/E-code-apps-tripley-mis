@@ -28,6 +28,8 @@ describe("backend core schema", () => {
 
   it("keeps login session token-version snapshot columns aligned across dialects", () => {
     expect(sqlite.authSessions.tokenVersion.name).toBe("token_version");
+    expect(sqlite.authSessions.status.name).toBe("status");
     expect(postgresql.authSessions.tokenVersion.name).toBe("token_version");
+    expect(postgresql.authSessions.status.name).toBe("status");
   });
 });

@@ -1,5 +1,6 @@
 export type EntityStatus = "enabled" | "disabled";
 export type UserStatus = EntityStatus | "locked";
+export type AuthSessionStatus = "active" | "revoked" | "expired";
 
 export type AuditFields = {
   createdAt: string;
@@ -140,6 +141,7 @@ export type AuthSessionRecord = {
   refreshTokenHash: string;
   currentOrganizationId: string;
   tokenVersion: number;
+  status: AuthSessionStatus;
   ipAddress: string | null;
   userAgent: string | null;
   expiresAt: string;

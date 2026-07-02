@@ -95,7 +95,12 @@ export class AuthService {
   async refreshAccessToken(refreshToken: string) {
     const tokenHash = hashToken(refreshToken, this.context.config.jwtSecret);
     const storedToken = await this.context.tokenStore.findByHash(tokenHash);
-    if (!storedToken || storedToken.revokedAt || new Date(storedToken.expiresAt) <= nowUtc()) {
+    if (!storedToken || storedToken.revokedAt) {
+      throw createKnownError("AUTH_TOKEN_EXPIRED");
+    }
+    if (new Date(storedToken.expiresAt) <= nowUtc()) {
+      const session = this.context.store.authSessions.get(storedToken.sessionId);
+      if (session?.status === "active") session.status = "expired";
       throw createKnownError("AUTH_TOKEN_EXPIRED");
     }
 
@@ -105,7 +110,9 @@ export class AuthService {
     if (storedToken.tokenVersion !== user.tokenVersion) throw createKnownError("AUTH_TOKEN_INVALIDATED");
 
     const session = this.context.store.authSessions.get(storedToken.sessionId);
-    if (!session || session.revokedAt) throw createKnownError("AUTH_SESSION_NOT_FOUND");
+    if (!session || session.revokedAt || session.status !== "active") {
+      throw createKnownError("AUTH_SESSION_NOT_FOUND");
+    }
     if (session.tokenVersion !== user.tokenVersion) throw createKnownError("AUTH_TOKEN_INVALIDATED");
     requireEnabledOrganization(this.context.store, session.currentOrganizationId);
 
@@ -262,6 +269,7 @@ export class AuthService {
 
     const revokedAt = toUtcIso(nowUtc());
     session.revokedAt = revokedAt;
+    session.status = "revoked";
     for (const refreshToken of this.context.store.refreshTokens.values()) {
       if (refreshToken.sessionId === sessionId) refreshToken.revokedAt = revokedAt;
     }
@@ -272,7 +280,9 @@ export class AuthService {
   listOnlineUsers(): PublicSession[] {
     const now = nowUtc();
     return [...this.context.store.authSessions.values()].filter((session) => {
-      if (session.revokedAt || new Date(session.expiresAt) <= now) return false;
+      if (session.status !== "active" || session.revokedAt || new Date(session.expiresAt) <= now) {
+        return false;
+      }
       const user = this.context.store.users.get(session.userId);
       return (
         user?.status === "enabled" &&
@@ -313,6 +323,7 @@ export class AuthService {
       refreshTokenHash,
       currentOrganizationId: organizationId,
       tokenVersion,
+      status: "active",
       ipAddress: request.ipAddress ?? null,
       userAgent: request.userAgent ?? null,
       expiresAt: toUtcIso(addDaysUtc(now, this.context.config.refreshTokenTtlDays)),
@@ -326,10 +337,13 @@ export class AuthService {
 
   private requireActiveSession(sessionId: string, userId: string): AuthSessionRecord {
     const session = this.context.store.authSessions.get(sessionId);
-    if (!session || session.userId !== userId || session.revokedAt) {
+    if (!session || session.userId !== userId || session.revokedAt || session.status !== "active") {
       throw createKnownError("AUTH_SESSION_NOT_FOUND");
     }
-    if (new Date(session.expiresAt) <= nowUtc()) throw createKnownError("AUTH_TOKEN_EXPIRED");
+    if (new Date(session.expiresAt) <= nowUtc()) {
+      session.status = "expired";
+      throw createKnownError("AUTH_TOKEN_EXPIRED");
+    }
     return session;
   }
 

@@ -246,6 +246,7 @@ export const authSessions = sqliteTable("auth_sessions", {
   refreshTokenHash: text("refresh_token_hash").notNull(),
   currentOrganizationId: integer("current_organization_id").notNull(),
   tokenVersion: integer("token_version").notNull(),
+  status: text("status", { enum: ["active", "revoked", "expired"] }).notNull().default("active"),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
   expiresAt: text("expires_at").notNull(),
