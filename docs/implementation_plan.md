@@ -137,6 +137,7 @@ The backend core goal has partial implementation progress:
 - Tightened repeated seed synchronization so soft-deleted base menus are restored in place with manifest metadata instead of creating replacement menu records.
 - Tightened repeated seed synchronization so restored manifest permissions, API permission metadata, base menus, and route metadata clear stale cached permission contexts before users read permissions again.
 - Tightened core entity path-ID validation so user, organization, role, menu, and nested user-organization route IDs must be integer strings before resource lookup, matching the API ID input contract.
+- Broadened route coverage for core entity path-ID validation across organization, user, role, menu, and nested user-organization endpoints.
 - Tightened logout request validation so the optional session ID body field uses the shared integer-string API ID contract before session authorization checks.
 - Tightened organization re-enable behavior so a descendant cannot be re-enabled while any ancestor remains disabled; administrators must re-enable the parent path first and descendants remain separate explicit actions.
 - Tightened role permission updates so duplicate permission codes in an update request are normalized before writing role-permission records, matching the unique role/permission relationship.

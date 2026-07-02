@@ -4043,18 +4043,37 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
 
+    const organizationResponse = await app.request("/api/organizations/not-an-id", {
+      headers: authHeaders
+    });
+    const organizationBody = await organizationResponse.json();
     const userResponse = await app.request("/api/users/not-an-id", {
       headers: authHeaders
     });
     const userBody = await userResponse.json();
+    const roleResponse = await app.request("/api/roles/not-an-id", {
+      headers: authHeaders
+    });
+    const roleBody = await roleResponse.json();
+    const menuResponse = await app.request("/api/menus/not-an-id", {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const menuBody = await menuResponse.json();
     const bindingResponse = await app.request("/api/users/1/organizations/not-an-id", {
       method: "DELETE",
       headers: authHeaders
     });
     const bindingBody = await bindingResponse.json();
 
+    expect(organizationResponse.status).toBe(400);
+    expect(organizationBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
     expect(userResponse.status).toBe(400);
     expect(userBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(roleResponse.status).toBe(400);
+    expect(roleBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(menuResponse.status).toBe(400);
+    expect(menuBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
     expect(bindingResponse.status).toBe(400);
     expect(bindingBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
   });
