@@ -1,5 +1,4 @@
 import {
-  basePermissionManifest,
   type CreateRoleRequest,
   type UpdateRolePermissionsRequest,
   type UpdateRoleRequest
@@ -109,7 +108,9 @@ export class RoleService {
     actorId: string | null = null
   ): RoleRecord {
     const role = requireRole(this.context.store, id);
-    const knownPermissions = new Set(basePermissionManifest.map((permission) => permission.code));
+    const knownPermissions = new Set(
+      [...this.context.store.permissions.values()].map((permission) => permission.code)
+    );
     const permissionCodes = [...new Set(input.permissionCodes)];
     permissionCodes.forEach((permissionCode) => {
       if (!knownPermissions.has(permissionCode)) throw createKnownError("PERMISSION_UNKNOWN_CODE");

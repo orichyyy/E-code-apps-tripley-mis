@@ -1664,6 +1664,37 @@ describe("backend core foundation routes", () => {
     expect(permissions.data).toEqual(["user:view", "role:view"]);
   });
 
+  it("rejects role permission codes missing from synced permission metadata", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const { authHeaders } = await loginAsAdmin(app);
+    await app.request("/api/roles/1/permissions", {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({ permissionCodes: ["user:view", "role:view"] })
+    });
+    const userViewPermission = services
+      .listPermissions()
+      .find((permission) => permission.code === "user:view");
+    if (!userViewPermission) throw new Error("Expected user:view permission to exist");
+    userViewPermission.code = "user:view:stale";
+
+    const response = await app.request("/api/roles/1/permissions", {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({ permissionCodes: ["user:view"] })
+    });
+    const body = await response.json();
+    const permissionsResponse = await app.request("/api/roles/1/permissions", {
+      headers: authHeaders
+    });
+    const permissions = await permissionsResponse.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("PERMISSION_UNKNOWN_CODE");
+    expect(permissions.data).toEqual(["user:view", "role:view"]);
+  });
+
   it("syncs permission and API permission manifests", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
