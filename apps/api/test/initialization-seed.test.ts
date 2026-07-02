@@ -114,6 +114,50 @@ describe("initialization seed", () => {
     });
   });
 
+  it("restores disabled route metadata during repeated seed sync", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const input = readInitializationSeedInput(seedEnv);
+
+    await services.seedInitialization(input);
+    const route = services.listRoutes().find((candidate) => candidate.routeCode === "system.users");
+    if (!route) throw new Error("Expected system.users base route to exist");
+    route.status = "disabled";
+    const result = await services.seedInitialization(input);
+    const restoredRoute = services
+      .listRoutes()
+      .find((candidate) => candidate.routeCode === "system.users");
+
+    expect(result.seeded).toBe(false);
+    expect(restoredRoute).toMatchObject({
+      id: route.id,
+      routeCode: "system.users",
+      status: "enabled"
+    });
+  });
+
+  it("restores disabled API permission metadata during repeated seed sync", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const input = readInitializationSeedInput(seedEnv);
+
+    await services.seedInitialization(input);
+    const apiPermission = services
+      .listApiPermissions()
+      .find((candidate) => candidate.code === "api.users.list");
+    if (!apiPermission) throw new Error("Expected api.users.list base API permission to exist");
+    apiPermission.status = "disabled";
+    const result = await services.seedInitialization(input);
+    const restoredApiPermission = services
+      .listApiPermissions()
+      .find((candidate) => candidate.code === "api.users.list");
+
+    expect(result.seeded).toBe(false);
+    expect(restoredApiPermission).toMatchObject({
+      id: apiPermission.id,
+      code: "api.users.list",
+      status: "enabled"
+    });
+  });
+
   it("invalidates cached permission contexts during repeated seed sync", async () => {
     const services = createInMemoryBackendCoreServices();
     const app = createApp({ backendCoreServices: services });
