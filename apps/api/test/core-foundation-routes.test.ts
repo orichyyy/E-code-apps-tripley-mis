@@ -4545,6 +4545,48 @@ describe("backend core foundation routes", () => {
     expect(body.error.code).toBe("PERMISSION_API_DENIED");
   });
 
+  it("denies online-user listing without the online-user view permission", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "online-denied",
+        displayName: "Online Denied",
+        email: "online-denied@example.com",
+        phone: "10000000023",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+
+    const firstLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "online-denied", password: "password1" })
+    });
+    const firstLogin = await firstLoginResponse.json();
+    await app.request("/api/auth/change-password", {
+      method: "POST",
+      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+    });
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "online-denied", password: "password2" })
+    });
+    const login = await loginResponse.json();
+    const response = await app.request("/api/online-users", {
+      headers: { authorization: `Bearer ${login.data.accessToken}` }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe("PERMISSION_API_DENIED");
+  });
+
   it("forces first-login password change and invalidates old credentials after change", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

@@ -117,6 +117,8 @@ export function createAuthRoutes(services: BackendCoreServices) {
   });
 
   routes.get("/online-users", (context) => {
+    const authContext = context.get("authContext");
+    if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
     return context.json({ data: services.listOnlineUsers() });
   });
 
