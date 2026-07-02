@@ -5,7 +5,8 @@ import {
   decodeOrgPath,
   encodeOrgPath,
   getOrgPathRange,
-  isDescendantPath
+  isDescendantPath,
+  OrgSegmentRangeExhaustedError
 } from "../src";
 
 describe("organization materialized path helpers", () => {
@@ -34,5 +35,13 @@ describe("organization materialized path helpers", () => {
 
   it("allocates the first available sibling segment", () => {
     expect(allocateNextOrgSegment([1, 2, 4], 2)).toBe(3);
+  });
+
+  it("throws a typed error when sibling segments are exhausted", () => {
+    const usedRootSegments = Array.from({ length: 127 }, (_, index) => index + 1);
+
+    expect(() => allocateNextOrgSegment(usedRootSegments, 1)).toThrow(
+      OrgSegmentRangeExhaustedError
+    );
   });
 });

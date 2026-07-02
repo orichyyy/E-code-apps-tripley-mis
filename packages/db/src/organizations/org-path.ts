@@ -9,6 +9,13 @@ export type OrgPathRange = {
   max: bigint;
 };
 
+export class OrgSegmentRangeExhaustedError extends Error {
+  constructor() {
+    super("Organization sibling segment range is exhausted");
+    this.name = "OrgSegmentRangeExhaustedError";
+  }
+}
+
 export function encodeOrgPath(segments: number[]): bigint {
   if (segments.length < 1 || segments.length > maxLevel) {
     throw new Error("Organization path must contain 1 to 8 segments");
@@ -87,7 +94,7 @@ export function allocateNextOrgSegment(usedSegments: number[], level: number): n
     }
   }
 
-  throw new Error("Organization sibling segment range is exhausted");
+  throw new OrgSegmentRangeExhaustedError();
 }
 
 function validateSegments(segments: number[]): void {

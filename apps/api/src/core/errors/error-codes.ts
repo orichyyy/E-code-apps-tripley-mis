@@ -11,6 +11,11 @@ const errorDefinitions = {
   BUSINESS_MAX_ORG_DEPTH_EXCEEDED: ["Organization maximum depth exceeded", 409, "business"],
   BUSINESS_NO_ENABLED_ORGANIZATION: ["User has no enabled organization", 403, "business"],
   BUSINESS_ORG_DISABLED: ["Organization is disabled", 409, "business"],
+  BUSINESS_ORG_SEGMENT_RANGE_EXHAUSTED: [
+    "Organization sibling segment range is exhausted",
+    409,
+    "business"
+  ],
   BUSINESS_ROLE_DISABLED: ["Role is disabled", 409, "business"],
   BUSINESS_SYSTEM_ALREADY_INITIALIZED: ["System is already initialized", 409, "business"],
   MENU_NOT_FOUND: ["Menu was not found", 404, "business"],

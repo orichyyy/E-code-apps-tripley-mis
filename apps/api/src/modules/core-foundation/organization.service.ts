@@ -6,7 +6,8 @@ import {
   allocateNextOrgSegment,
   decodeOrgPath,
   encodeOrgPath,
-  isDescendantPath
+  isDescendantPath,
+  OrgSegmentRangeExhaustedError
 } from "@web-admin-base/db";
 
 import { createKnownError } from "../../core/errors/error-codes";
@@ -52,7 +53,7 @@ export class OrganizationService {
     const level = parent ? parent.level + 1 : 1;
     if (level > 8) throw createKnownError("BUSINESS_MAX_ORG_DEPTH_EXCEEDED");
 
-    const segment = allocateNextOrgSegment(this.findUsedSiblingSegments(parent), level);
+    const segment = this.allocateSegment(parent, level);
     const path = encodeOrgPath([...(parent ? decodeOrgPath(parent.path) : []), segment]);
     const now = toUtcIso(nowUtc());
     const organization: OrganizationRecord = {
@@ -147,6 +148,17 @@ export class OrganizationService {
         );
       })
       .map((organization) => organization.segment);
+  }
+
+  private allocateSegment(parent: OrganizationRecord | undefined, level: number): number {
+    try {
+      return allocateNextOrgSegment(this.findUsedSiblingSegments(parent), level);
+    } catch (error) {
+      if (error instanceof OrgSegmentRangeExhaustedError) {
+        throw createKnownError("BUSINESS_ORG_SEGMENT_RANGE_EXHAUSTED");
+      }
+      throw error;
+    }
   }
 
   private ensureUniqueOrganizationCode(code: string, currentOrganizationId?: string): void {
