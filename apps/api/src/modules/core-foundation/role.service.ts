@@ -39,6 +39,7 @@ export class RoleService {
       tenantId: null,
       name: input.name,
       code: input.code,
+      description: input.description ?? null,
       dataScopeRuleId: options.dataScopeRuleId ?? null,
       isBuiltin: options.isBuiltin ?? false,
       status: "enabled",
@@ -60,6 +61,7 @@ export class RoleService {
     if (input.code !== undefined) this.ensureUniqueRoleCode(input.code, role.id);
     if (input.name !== undefined) role.name = input.name;
     if (input.code !== undefined) role.code = input.code;
+    if (input.description !== undefined) role.description = input.description;
     if (input.remark !== undefined) role.remark = input.remark;
     role.updatedAt = toUtcIso(nowUtc());
     role.updatedBy = actorId;
@@ -83,6 +85,7 @@ export class RoleService {
     const copy = this.createRecord({
       name: `${source.name} Copy`,
       code: this.nextCopyCode(source.code),
+      description: source.description ?? undefined,
       remark: source.remark ?? undefined
     }, actorId, { dataScopeRuleId: source.dataScopeRuleId });
     const now = toUtcIso(nowUtc());

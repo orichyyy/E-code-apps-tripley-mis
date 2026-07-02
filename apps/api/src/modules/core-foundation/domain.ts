@@ -69,6 +69,7 @@ export type RoleRecord = AuditFields &
     tenantId: string | null;
     name: string;
     code: string;
+    description: string | null;
     dataScopeRuleId: string | null;
     isBuiltin: boolean;
     status: EntityStatus;

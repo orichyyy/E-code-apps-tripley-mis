@@ -85,6 +85,7 @@ The backend core goal has partial implementation progress:
 - Tightened core soft-delete endpoints so organization, user, role, menu, and user-organization-role binding removals record the authenticated actor in `deleted_by`.
 - Tightened organization and role update validation so administrator edits cannot duplicate existing organization codes or role codes.
 - Aligned role and user-organization-role metadata with the confirmed design fields by adding built-in role flags, reserved role data-scope identifiers, role audit actors, and binding audit actors to the in-memory model and SQLite/PostgreSQL schemas/migrations.
+- Wired the confirmed role `description` field through role create/update/copy contracts, in-memory records, initialization seed data, and route coverage while retaining existing `remark` compatibility.
 - Tightened role-change permission behavior so disabled/deleted assigned roles no longer grant permissions, and role update/delete operations invalidate affected user permission-cache entries.
 - Tightened role copy code generation to allocate deterministic next-available copy codes instead of timestamp-derived codes.
 - Added route coverage proving role copy creates a new role and preserves the copied permission configuration.

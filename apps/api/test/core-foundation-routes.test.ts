@@ -64,6 +64,7 @@ describe("backend core foundation routes", () => {
       expect.arrayContaining([
         expect.objectContaining({
           code: "super_admin",
+          description: "Built-in role",
           isBuiltin: true,
           dataScopeRuleId: null
         })
@@ -1066,13 +1067,20 @@ describe("backend core foundation routes", () => {
     const roleResponse = await app.request("/api/roles", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ name: "Audited Role", code: "audited_role" })
+      body: JSON.stringify({
+        name: "Audited Role",
+        code: "audited_role",
+        description: "Audited role description"
+      })
     });
     const role = await roleResponse.json();
     const roleUpdateResponse = await app.request(`/api/roles/${role.data.id}`, {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ name: "Audited Role Updated" })
+      body: JSON.stringify({
+        name: "Audited Role Updated",
+        description: "Updated role description"
+      })
     });
     const roleUpdate = await roleUpdateResponse.json();
     const roleDisableResponse = await app.request(`/api/roles/${role.data.id}/disable`, {
@@ -1093,10 +1101,14 @@ describe("backend core foundation routes", () => {
     expect(role.data).toMatchObject({
       createdBy: "1",
       updatedBy: "1",
+      description: "Audited role description",
       isBuiltin: false,
       dataScopeRuleId: null
     });
-    expect(roleUpdate.data).toMatchObject({ updatedBy: "1" });
+    expect(roleUpdate.data).toMatchObject({
+      description: "Updated role description",
+      updatedBy: "1"
+    });
     expect(roleDisable.data).toMatchObject({ updatedBy: "1" });
   });
 
@@ -1187,7 +1199,12 @@ describe("backend core foundation routes", () => {
     expect(secondCopy.data.id).not.toBe(copy.data.id);
     expect(copy.data).toMatchObject({ id: expect.any(String), status: "enabled" });
     expect(copy.data.code).toBe("organization_admin_copy");
-    expect(copy.data).toMatchObject({ isBuiltin: false, createdBy: "1", updatedBy: "1" });
+    expect(copy.data).toMatchObject({
+      description: "Built-in role",
+      isBuiltin: false,
+      createdBy: "1",
+      updatedBy: "1"
+    });
     expect(secondCopy.data.code).toBe("organization_admin_copy_2");
     expect(permissions.data).toEqual(expect.arrayContaining(["user:view", "role:view"]));
   });

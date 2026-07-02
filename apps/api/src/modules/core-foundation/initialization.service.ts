@@ -96,6 +96,7 @@ export class InitializationService {
     const superAdminRole = this.roles.createRecord({
       name: "Super Administrator",
       code: builtInRoleCodes.superAdmin,
+      description: "Built-in role",
       remark: "Built-in role"
     }, null, { isBuiltin: true });
     const permissions = this.permissions.syncBasePermissions();
@@ -104,11 +105,13 @@ export class InitializationService {
     this.roles.createRecord({
       name: "Organization Administrator",
       code: builtInRoleCodes.organizationAdmin,
+      description: "Built-in role",
       remark: "Built-in role"
     }, null, { isBuiltin: true });
     this.roles.createRecord({
       name: "Normal User",
       code: builtInRoleCodes.normalUser,
+      description: "Built-in role",
       remark: "Built-in role"
     }, null, { isBuiltin: true });
     const menus = this.menus.seedBaseMenus(baseMenuManifest);
@@ -156,6 +159,7 @@ export class InitializationService {
     return this.roles.createRecord({
       name,
       code,
+      description: "Built-in role",
       remark: "Built-in role"
     }, null, { isBuiltin: true });
   }

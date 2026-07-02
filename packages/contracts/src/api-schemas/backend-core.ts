@@ -86,12 +86,14 @@ export const assignUserOrganizationRoleRequestSchema = z.object({
 export const createRoleRequestSchema = z.object({
   name: z.string().min(1),
   code: z.string().min(1),
+  description: z.string().optional(),
   remark: z.string().optional()
 });
 
 export const updateRoleRequestSchema = z.object({
   name: z.string().min(1).optional(),
   code: z.string().min(1).optional(),
+  description: z.string().nullable().optional(),
   remark: z.string().nullable().optional()
 });
 
