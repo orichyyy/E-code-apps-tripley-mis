@@ -14,6 +14,7 @@ export type BackendCoreConfig = {
   refreshTokenTtlDays: number;
   failedLoginMaxAttempts: number;
   failedLoginLockMinutes: number;
+  maxOrganizationDepth: number;
   passwordPolicy: PasswordPolicy;
 };
 
@@ -24,6 +25,7 @@ export const defaultBackendCoreConfig: BackendCoreConfig = {
   refreshTokenTtlDays: 30,
   failedLoginMaxAttempts: 5,
   failedLoginLockMinutes: 30,
+  maxOrganizationDepth: 8,
   passwordPolicy: defaultPasswordPolicy
 };
 

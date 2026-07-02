@@ -35,6 +35,12 @@ const apiConfigSchema = z.object({
       .int()
       .positive()
       .default(defaultBackendCoreConfig.failedLoginLockMinutes),
+    maxOrganizationDepth: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(8)
+      .default(defaultBackendCoreConfig.maxOrganizationDepth),
     passwordPolicy: z.object({
       minLength: z.coerce
         .number()
@@ -71,6 +77,7 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       refreshTokenTtlDays: env.REFRESH_TOKEN_TTL_DAYS,
       failedLoginMaxAttempts: env.FAILED_LOGIN_MAX_ATTEMPTS,
       failedLoginLockMinutes: env.FAILED_LOGIN_LOCK_MINUTES,
+      maxOrganizationDepth: env.ORGANIZATION_MAX_DEPTH,
       passwordPolicy: {
         minLength: env.PASSWORD_MIN_LENGTH,
         requireLetters: env.PASSWORD_REQUIRE_LETTERS,

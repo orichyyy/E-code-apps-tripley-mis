@@ -17,6 +17,7 @@ import type {
   LoginRequest,
   ResetPasswordRequest,
   SwitchCurrentOrganizationRequest,
+  UpdateOrganizationDepthConfigRequest,
   UpdateMenuRequest,
   UpdateOrganizationRequest,
   UpdateRolePermissionsRequest,
@@ -153,6 +154,14 @@ export class BackendCoreServices {
 
   listOrganizations() {
     return this.organizations.list();
+  }
+
+  getOrganizationDepthConfig() {
+    return this.organizations.getDepthConfig();
+  }
+
+  updateOrganizationDepthConfig(input: UpdateOrganizationDepthConfigRequest) {
+    return this.organizations.updateDepthConfig(input);
   }
 
   getOrganization(id: string) {

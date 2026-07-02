@@ -34,6 +34,16 @@ describe("baseApiPermissionManifest", () => {
           public: false
         }),
         expect.objectContaining({
+          method: "GET",
+          path: "/api/organizations/config/depth",
+          requiredPermission: "organization:view"
+        }),
+        expect.objectContaining({
+          method: "PATCH",
+          path: "/api/organizations/config/depth",
+          requiredPermission: "organization:depth:configure"
+        }),
+        expect.objectContaining({
           method: "POST",
           path: "/api/auth/change-password",
           public: false

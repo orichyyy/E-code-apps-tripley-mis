@@ -150,6 +150,26 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     public: false
   },
   {
+    method: "GET",
+    path: "/api/organizations/config/depth",
+    code: "api.organizations.depth.get",
+    description: "Get organization maximum depth configuration",
+    module: "organizations",
+    requiredPermission: "organization:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "PATCH",
+    path: "/api/organizations/config/depth",
+    code: "api.organizations.depth.update",
+    description: "Update organization maximum depth configuration",
+    module: "organizations",
+    requiredPermission: "organization:depth:configure",
+    logLevel: "request",
+    public: false
+  },
+  {
     method: "POST",
     path: "/api/organizations",
     code: "api.organizations.create",

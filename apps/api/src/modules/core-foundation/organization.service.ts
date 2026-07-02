@@ -1,5 +1,6 @@
 import type {
   CreateOrganizationRequest,
+  UpdateOrganizationDepthConfigRequest,
   UpdateOrganizationRequest
 } from "@web-admin-base/contracts";
 import {
@@ -19,6 +20,18 @@ import { toPublicOrganization } from "./serializers";
 
 export class OrganizationService {
   constructor(private readonly context: BackendCoreContext) {}
+
+  getDepthConfig() {
+    return {
+      maxDepth: this.context.config.maxOrganizationDepth,
+      maxSupportedDepth: 8
+    };
+  }
+
+  updateDepthConfig(input: UpdateOrganizationDepthConfigRequest) {
+    this.context.config.maxOrganizationDepth = input.maxDepth;
+    return this.getDepthConfig();
+  }
 
   list(): PublicOrganization[] {
     return [...this.context.store.organizations.values()]
@@ -51,7 +64,9 @@ export class OrganizationService {
     if (parent?.status === "disabled") throw createKnownError("BUSINESS_ORG_DISABLED");
 
     const level = parent ? parent.level + 1 : 1;
-    if (level > 8) throw createKnownError("BUSINESS_MAX_ORG_DEPTH_EXCEEDED");
+    if (level > this.context.config.maxOrganizationDepth || level > 8) {
+      throw createKnownError("BUSINESS_MAX_ORG_DEPTH_EXCEEDED");
+    }
 
     const segment = this.allocateSegment(parent, level);
     const path = encodeOrgPath([...(parent ? decodeOrgPath(parent.path) : []), segment]);

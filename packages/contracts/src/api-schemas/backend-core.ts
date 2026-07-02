@@ -49,6 +49,10 @@ export const updateOrganizationRequestSchema = z.object({
   remark: z.string().nullable().optional()
 });
 
+export const updateOrganizationDepthConfigRequestSchema = z.object({
+  maxDepth: z.number().int().min(1).max(8)
+});
+
 export const createUserRequestSchema = z.object({
   username: z.string().min(1),
   displayName: z.string().min(1),
@@ -135,6 +139,9 @@ export type SwitchCurrentOrganizationRequest = z.infer<
 >;
 export type CreateOrganizationRequest = z.infer<typeof createOrganizationRequestSchema>;
 export type UpdateOrganizationRequest = z.infer<typeof updateOrganizationRequestSchema>;
+export type UpdateOrganizationDepthConfigRequest = z.infer<
+  typeof updateOrganizationDepthConfigRequestSchema
+>;
 export type CreateUserRequest = z.infer<typeof createUserRequestSchema>;
 export type UpdateUserRequest = z.infer<typeof updateUserRequestSchema>;
 export type ResetPasswordRequest = z.infer<typeof resetPasswordRequestSchema>;

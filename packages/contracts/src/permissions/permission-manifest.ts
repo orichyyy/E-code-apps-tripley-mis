@@ -11,6 +11,7 @@ export const basePermissionManifest: PermissionManifestEntry[] = [
   { code: "organization:disable", description: "Disable organization", module: "organizations" },
   { code: "organization:enable", description: "Enable organization", module: "organizations" },
   { code: "organization:delete", description: "Soft delete organization", module: "organizations" },
+  { code: "organization:depth:configure", description: "Configure organization max depth", module: "organizations" },
   { code: "user:view", description: "View users", module: "users" },
   { code: "user:create", description: "Create user", module: "users" },
   { code: "user:update", description: "Update user", module: "users" },

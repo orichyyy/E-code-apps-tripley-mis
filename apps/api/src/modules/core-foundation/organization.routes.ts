@@ -1,5 +1,6 @@
 import {
   createOrganizationRequestSchema,
+  updateOrganizationDepthConfigRequestSchema,
   updateOrganizationRequestSchema
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
@@ -16,6 +17,15 @@ export function createOrganizationRoutes(services: BackendCoreServices) {
 
   routes.get("/organizations/tree", (context) => {
     return context.json({ data: services.listOrganizations() });
+  });
+
+  routes.get("/organizations/config/depth", (context) => {
+    return context.json({ data: services.getOrganizationDepthConfig() });
+  });
+
+  routes.patch("/organizations/config/depth", async (context) => {
+    const input = updateOrganizationDepthConfigRequestSchema.parse(await context.req.json());
+    return context.json({ data: services.updateOrganizationDepthConfig(input) });
   });
 
   routes.post("/organizations", async (context) => {

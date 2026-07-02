@@ -14,6 +14,7 @@ describe("API configuration", () => {
       REFRESH_TOKEN_TTL_DAYS: "7",
       FAILED_LOGIN_MAX_ATTEMPTS: "3",
       FAILED_LOGIN_LOCK_MINUTES: "10",
+      ORGANIZATION_MAX_DEPTH: "6",
       PASSWORD_MIN_LENGTH: "12",
       PASSWORD_REQUIRE_LETTERS: "false",
       PASSWORD_REQUIRE_NUMBERS: "true",
@@ -30,6 +31,7 @@ describe("API configuration", () => {
         refreshTokenTtlDays: 7,
         failedLoginMaxAttempts: 3,
         failedLoginLockMinutes: 10,
+        maxOrganizationDepth: 6,
         passwordPolicy: {
           minLength: 12,
           requireLetters: false,

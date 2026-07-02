@@ -510,6 +510,53 @@ describe("backend core foundation routes", () => {
     });
   });
 
+  it("configures organization maximum depth within the supported 8-level path limit", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const configResponse = await app.request("/api/organizations/config/depth", {
+      headers: authHeaders
+    });
+    const config = await configResponse.json();
+    const updateResponse = await app.request("/api/organizations/config/depth", {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ maxDepth: 2 })
+    });
+    const update = await updateResponse.json();
+    const invalidResponse = await app.request("/api/organizations/config/depth", {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ maxDepth: 9 })
+    });
+    const invalid = await invalidResponse.json();
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Depth Child", code: "depth-child" })
+    });
+    const child = await childResponse.json();
+    const tooDeepResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: child.data.id,
+        name: "Too Deep",
+        code: "too-deep"
+      })
+    });
+    const tooDeep = await tooDeepResponse.json();
+
+    expect(configResponse.status).toBe(200);
+    expect(config.data).toEqual({ maxDepth: 8, maxSupportedDepth: 8 });
+    expect(updateResponse.status).toBe(200);
+    expect(update.data).toEqual({ maxDepth: 2, maxSupportedDepth: 8 });
+    expect(invalidResponse.status).toBe(400);
+    expect(invalid.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(childResponse.status).toBe(201);
+    expect(tooDeepResponse.status).toBe(409);
+    expect(tooDeep.error.code).toBe("BUSINESS_MAX_ORG_DEPTH_EXCEEDED");
+  });
+
   it("logs in through another enabled organization when the primary organization is disabled", async () => {
     const { app, setup } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
