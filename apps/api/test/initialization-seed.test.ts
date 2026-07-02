@@ -91,6 +91,38 @@ describe("initialization seed", () => {
     });
   });
 
+  it("restores the initialized administrator super-admin binding during repeated seed sync", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const app = createApp({ backendCoreServices: services });
+    const input = readInitializationSeedInput(seedEnv);
+
+    await services.seedInitialization(input);
+    await services.deleteRole("1", "1");
+    const result = await services.seedInitialization(input);
+    const bindings = services.listUserOrganizationRoles("1");
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "seed-admin", password: "password1" })
+    });
+    const login = await loginResponse.json();
+
+    expect(result.seeded).toBe(false);
+    expect(bindings).toEqual([
+      expect.objectContaining({
+        userId: "1",
+        organizationId: "1",
+        roleId: "1",
+        isPrimary: true,
+        status: "enabled",
+        isDeleted: false,
+        deletedAt: null,
+        deletedBy: null
+      })
+    ]);
+    expect(loginResponse.status).toBe(200);
+    expect(login.data.permissionCodes).toEqual(expect.arrayContaining(["user:view"]));
+  });
+
   it("restores soft-deleted base menus during repeated seed sync", async () => {
     const services = createInMemoryBackendCoreServices();
     const input = readInitializationSeedInput(seedEnv);

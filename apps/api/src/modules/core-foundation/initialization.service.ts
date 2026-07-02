@@ -62,9 +62,22 @@ export class InitializationService {
     this.ensureBuiltInRole("Normal User", builtInRoleCodes.normalUser);
     const routes = this.routes.syncBaseRoutes(baseRouteManifest);
     const menus = this.menus.seedBaseMenus(baseMenuManifest);
-    await this.permissions.invalidateAllPermissionContexts();
     const initializedBy = this.context.store.initializationState.initializedBy;
     const admin = initializedBy ? this.context.store.users.get(initializedBy) : undefined;
+    if (admin && !admin.isDeleted) {
+      const organization = this.context.store.organizations.get(admin.primaryOrganizationId);
+      if (organization && !organization.isDeleted && organization.status === "enabled") {
+        this.users.assignOrganizationRole(
+          admin.id,
+          {
+            organizationId: organization.id,
+            roleId: superAdminRole.id
+          },
+          null
+        );
+      }
+    }
+    await this.permissions.invalidateAllPermissionContexts();
 
     return {
       state: this.context.store.initializationState,
