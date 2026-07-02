@@ -292,7 +292,11 @@ export class AuthService {
   listOnlineUsers(): PublicSession[] {
     const now = nowUtc();
     return [...this.context.store.authSessions.values()].filter((session) => {
-      if (session.status !== "active" || session.revokedAt || new Date(session.expiresAt) <= now) {
+      if (session.status !== "active" || session.revokedAt) {
+        return false;
+      }
+      if (new Date(session.expiresAt) <= now) {
+        session.status = "expired";
         return false;
       }
       const user = this.context.store.users.get(session.userId);
