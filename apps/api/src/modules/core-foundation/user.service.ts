@@ -205,26 +205,31 @@ export class UserService {
     organizationId: string,
     deletedBy: string | null = null
   ): { removed: boolean } {
-    requireUser(this.context.store, userId);
+    const user = requireUser(this.context.store, userId);
     requireIntegerIdString(organizationId);
-    const binding = [...this.context.store.userOrganizationRoles.values()].find(
+    const bindings = [...this.context.store.userOrganizationRoles.values()].filter(
       (candidate) =>
         candidate.userId === userId &&
         candidate.organizationId === organizationId &&
         !candidate.isDeleted
     );
-    if (!binding) return { removed: false };
-    if (binding.isPrimary || requireUser(this.context.store, userId).primaryOrganizationId === organizationId) {
+    if (bindings.length === 0) return { removed: false };
+    if (
+      user.primaryOrganizationId === organizationId ||
+      bindings.some((binding) => binding.isPrimary)
+    ) {
       throw createKnownError("VALIDATION_INVALID_REQUEST");
     }
     const now = toUtcIso(nowUtc());
-    binding.isDeleted = true;
-    binding.isPrimary = false;
-    binding.status = "disabled";
-    binding.deletedAt = now;
-    binding.deletedBy = deletedBy;
-    binding.updatedAt = now;
-    binding.updatedBy = deletedBy;
+    for (const binding of bindings) {
+      binding.isDeleted = true;
+      binding.isPrimary = false;
+      binding.status = "disabled";
+      binding.deletedAt = now;
+      binding.deletedBy = deletedBy;
+      binding.updatedAt = now;
+      binding.updatedBy = deletedBy;
+    }
     return { removed: true };
   }
 

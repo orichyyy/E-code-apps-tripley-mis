@@ -3373,6 +3373,16 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
     });
     const assign = await assignResponse.json();
+    const assignedChildBinding = services["context"].store.userOrganizationRoles.get(assign.data.id);
+    if (!assignedChildBinding) throw new Error("Expected assigned child organization binding to exist");
+    const duplicateAssignedBindingId = services["context"].store.nextId("userOrganizationRole");
+    services["context"].store.userOrganizationRoles.set(duplicateAssignedBindingId, {
+      ...assignedChildBinding,
+      id: duplicateAssignedBindingId,
+      roleId: "3",
+      createdAt: assignedChildBinding.updatedAt,
+      updatedAt: assignedChildBinding.updatedAt
+    });
     const listResponse = await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
       headers: authHeaders
     });
@@ -3389,6 +3399,16 @@ describe("backend core foundation routes", () => {
       headers: authHeaders
     });
     const listAfterRemove = await listAfterRemoveResponse.json();
+    const activeChildBindingIdsAfterRemove = [
+      ...services["context"].store.userOrganizationRoles.values()
+    ]
+      .filter(
+        (binding) =>
+          binding.userId === setup.data.admin.id &&
+          binding.organizationId === child.data.id &&
+          !binding.isDeleted
+      )
+      .map((binding) => binding.id);
     const reassignResponse = await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
       method: "POST",
       headers: authHeaders,
@@ -3459,6 +3479,7 @@ describe("backend core foundation routes", () => {
       ])
     );
     expect(remove.data.removed).toBe(true);
+    expect(activeChildBindingIdsAfterRemove).toEqual([]);
     expect(listAfterRemove.data).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ organizationId: child.data.id })])
     );
