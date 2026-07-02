@@ -44,10 +44,13 @@ export const organizations = sqliteTable(
   (table) => ({
     codeUnique: uniqueIndex("organizations_code_unique").on(table.code),
     pathUnique: uniqueIndex("organizations_path_unique").on(table.path),
+    levelCheck: check("organizations_level_check", sql`${table.level} BETWEEN 1 AND 8`),
     rootSegmentCheck: check(
       "organizations_root_segment_check",
       sql`${table.level} <> 1 OR ${table.segment} BETWEEN 1 AND 127`
-    )
+    ),
+    segmentCheck: check("organizations_segment_check", sql`${table.segment} BETWEEN 1 AND 255`),
+    statusCheck: check("organizations_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
   })
 );
 
@@ -86,7 +89,8 @@ export const users = sqliteTable(
   (table) => ({
     usernameUnique: uniqueIndex("users_username_unique").on(table.username),
     emailUnique: uniqueIndex("users_email_unique").on(table.email),
-    phoneUnique: uniqueIndex("users_phone_unique").on(table.phone)
+    phoneUnique: uniqueIndex("users_phone_unique").on(table.phone),
+    statusCheck: check("users_status_check", sql`${table.status} IN ('enabled', 'disabled', 'locked')`)
   })
 );
 
@@ -108,7 +112,8 @@ export const roles = sqliteTable(
     updatedBy: integer("updated_by")
   },
   (table) => ({
-    codeUnique: uniqueIndex("roles_code_unique").on(table.code)
+    codeUnique: uniqueIndex("roles_code_unique").on(table.code),
+    statusCheck: check("roles_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
   })
 );
 
@@ -131,6 +136,10 @@ export const userOrganizationRoles = sqliteTable(
     userOrgUnique: uniqueIndex("user_organization_roles_user_org_unique").on(
       table.userId,
       table.organizationId
+    ),
+    statusCheck: check(
+      "user_organization_roles_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`
     )
   })
 );
@@ -155,7 +164,12 @@ export const permissions = sqliteTable(
     ...timestamps
   },
   (table) => ({
-    codeUnique: uniqueIndex("permissions_code_unique").on(table.code)
+    codeUnique: uniqueIndex("permissions_code_unique").on(table.code),
+    statusCheck: check("permissions_status_check", sql`${table.status} IN ('enabled', 'disabled')`),
+    typeCheck: check(
+      "permissions_type_check",
+      sql`${table.permissionType} IN ('menu', 'page', 'action', 'api', 'data', 'field')`
+    )
   })
 );
 
@@ -174,7 +188,8 @@ export const rolePermissions = sqliteTable(
     rolePermissionUnique: uniqueIndex("role_permissions_role_permission_unique").on(
       table.roleId,
       table.permissionId
-    )
+    ),
+    effectCheck: check("role_permissions_effect_check", sql`${table.effect} IN ('allow', 'deny')`)
   })
 );
 
@@ -198,7 +213,8 @@ export const menus = sqliteTable(
   },
   (table) => ({
     codeUnique: uniqueIndex("menus_code_unique").on(table.code),
-    pathUnique: uniqueIndex("menus_path_unique").on(table.path)
+    pathUnique: uniqueIndex("menus_path_unique").on(table.path),
+    statusCheck: check("menus_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
   })
 );
 
@@ -220,7 +236,8 @@ export const routeMetadata = sqliteTable(
     ...timestamps
   },
   (table) => ({
-    routeCodeUnique: uniqueIndex("route_metadata_route_code_unique").on(table.routeCode)
+    routeCodeUnique: uniqueIndex("route_metadata_route_code_unique").on(table.routeCode),
+    statusCheck: check("route_metadata_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
   })
 );
 
@@ -244,7 +261,12 @@ export const apiPermissions = sqliteTable(
   },
   (table) => ({
     codeUnique: uniqueIndex("api_permissions_code_unique").on(table.code),
-    methodPathUnique: uniqueIndex("api_permissions_method_path_unique").on(table.method, table.path)
+    methodPathUnique: uniqueIndex("api_permissions_method_path_unique").on(table.method, table.path),
+    logLevelCheck: check(
+      "api_permissions_log_level_check",
+      sql`${table.logLevel} IN ('none', 'basic', 'request', 'request_response')`
+    ),
+    statusCheck: check("api_permissions_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
   })
 );
 
@@ -262,21 +284,30 @@ export const menuApiBindings = sqliteTable(
   })
 );
 
-export const authSessions = sqliteTable("auth_sessions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  tenantId: integer("tenant_id"),
-  userId: integer("user_id").notNull(),
-  refreshTokenHash: text("refresh_token_hash").notNull(),
-  currentOrganizationId: integer("current_organization_id").notNull(),
-  tokenVersion: integer("token_version").notNull(),
-  status: text("status", { enum: ["active", "revoked", "expired"] }).notNull().default("active"),
-  ipAddress: text("ip_address"),
-  userAgent: text("user_agent"),
-  expiresAt: text("expires_at").notNull(),
-  revokedAt: text("revoked_at"),
-  createdAt: text("created_at").notNull(),
-  lastSeenAt: text("last_seen_at").notNull()
-});
+export const authSessions = sqliteTable(
+  "auth_sessions",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    tenantId: integer("tenant_id"),
+    userId: integer("user_id").notNull(),
+    refreshTokenHash: text("refresh_token_hash").notNull(),
+    currentOrganizationId: integer("current_organization_id").notNull(),
+    tokenVersion: integer("token_version").notNull(),
+    status: text("status", { enum: ["active", "revoked", "expired"] }).notNull().default("active"),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    expiresAt: text("expires_at").notNull(),
+    revokedAt: text("revoked_at"),
+    createdAt: text("created_at").notNull(),
+    lastSeenAt: text("last_seen_at").notNull()
+  },
+  (table) => ({
+    statusCheck: check(
+      "auth_sessions_status_check",
+      sql`${table.status} IN ('active', 'revoked', 'expired')`
+    )
+  })
+);
 
 export const refreshTokens = sqliteTable(
   "refresh_tokens",
@@ -296,15 +327,24 @@ export const refreshTokens = sqliteTable(
   })
 );
 
-export const systemInitializationState = sqliteTable("system_initialization_state", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  tenantId: integer("tenant_id"),
-  status: text("status", { enum: ["uninitialized", "initialized"] }).notNull(),
-  initializedAt: text("initialized_at"),
-  initializedBy: integer("initialized_by"),
-  version: text("version").notNull(),
-  ...timestamps
-});
+export const systemInitializationState = sqliteTable(
+  "system_initialization_state",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    tenantId: integer("tenant_id"),
+    status: text("status", { enum: ["uninitialized", "initialized"] }).notNull(),
+    initializedAt: text("initialized_at"),
+    initializedBy: integer("initialized_by"),
+    version: text("version").notNull(),
+    ...timestamps
+  },
+  (table) => ({
+    statusCheck: check(
+      "system_initialization_state_status_check",
+      sql`${table.status} IN ('uninitialized', 'initialized')`
+    )
+  })
+);
 
 export const sqliteSchema = {
   apiPermissions,

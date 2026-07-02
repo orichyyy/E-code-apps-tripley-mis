@@ -3,6 +3,39 @@ import { readFileSync } from "node:fs";
 
 import { postgresql, sqlite } from "../src";
 
+type TableWithSymbols = Record<PropertyKey, unknown>;
+type ExtraConfigItem = {
+  constructor: { name: string };
+  name?: string;
+};
+type SharedSchemaTableName = Exclude<keyof typeof sqlite, "sqliteSchema"> &
+  Exclude<keyof typeof postgresql, "postgresqlSchema">;
+
+function getCheckNames(table: unknown): string[] {
+  const tableRecord = table as TableWithSymbols;
+  const symbols = Object.getOwnPropertySymbols(tableRecord);
+  const builderSymbol = symbols.find((symbol) => symbol.toString() === "Symbol(drizzle:ExtraConfigBuilder)");
+  const columnsSymbol = symbols.find((symbol) => symbol.toString() === "Symbol(drizzle:ExtraConfigColumns)");
+
+  if (!builderSymbol || !columnsSymbol) {
+    return [];
+  }
+
+  const buildExtraConfig = tableRecord[builderSymbol] as
+    | ((columns: unknown) => Record<string, ExtraConfigItem>)
+    | undefined;
+
+  if (!buildExtraConfig) {
+    return [];
+  }
+
+  return Object.values(buildExtraConfig(tableRecord[columnsSymbol]))
+    .filter((item) => item.constructor.name === "CheckBuilder")
+    .map((item) => item.name)
+    .filter((name): name is string => Boolean(name))
+    .sort();
+}
+
 describe("backend core schema", () => {
   it("keeps permission metadata columns aligned across SQLite and PostgreSQL", () => {
     expect(sqlite.permissions.module.name).toBe("module");
@@ -94,5 +127,34 @@ describe("backend core schema", () => {
 
     expect(sqliteMigration).toContain("CHECK (level <> 1 OR segment BETWEEN 1 AND 127)");
     expect(postgresqlMigration).toContain("CHECK (level <> 1 OR segment BETWEEN 1 AND 127)");
+  });
+
+  it("keeps Drizzle check constraints aligned with backend core enum constraints", () => {
+    const expectedChecksByTable = new Map<SharedSchemaTableName, string[]>([
+      [
+        "organizations",
+        [
+          "organizations_level_check",
+          "organizations_root_segment_check",
+          "organizations_segment_check",
+          "organizations_status_check"
+        ]
+      ],
+      ["users", ["users_status_check"]],
+      ["roles", ["roles_status_check"]],
+      ["userOrganizationRoles", ["user_organization_roles_status_check"]],
+      ["permissions", ["permissions_status_check", "permissions_type_check"]],
+      ["rolePermissions", ["role_permissions_effect_check"]],
+      ["menus", ["menus_status_check"]],
+      ["routeMetadata", ["route_metadata_status_check"]],
+      ["apiPermissions", ["api_permissions_log_level_check", "api_permissions_status_check"]],
+      ["authSessions", ["auth_sessions_status_check"]],
+      ["systemInitializationState", ["system_initialization_state_status_check"]]
+    ]);
+
+    for (const [tableName, expectedChecks] of expectedChecksByTable) {
+      expect(getCheckNames(sqlite[tableName])).toEqual(expectedChecks);
+      expect(getCheckNames(postgresql[tableName])).toEqual(expectedChecks);
+    }
   });
 });
