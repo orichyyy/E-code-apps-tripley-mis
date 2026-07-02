@@ -164,6 +164,7 @@ export class RoleService {
     role.updatedAt = now;
     role.updatedBy = deletedBy;
     this.softDeleteRoleBindings(role.id, now, deletedBy);
+    this.deleteRolePermissions(role.id);
     return role;
   }
 
@@ -182,6 +183,17 @@ export class RoleService {
       binding.updatedAt = deletedAt;
       binding.updatedBy = deletedBy;
     }
+  }
+
+  private deleteRolePermissions(roleId: string): void {
+    const retained = this.context.store.rolePermissions.filter(
+      (permission) => permission.roleId !== roleId
+    );
+    this.context.store.rolePermissions.splice(
+      0,
+      this.context.store.rolePermissions.length,
+      ...retained
+    );
   }
 
   private ensureUniqueRoleCode(code: string, currentRoleId?: string): void {

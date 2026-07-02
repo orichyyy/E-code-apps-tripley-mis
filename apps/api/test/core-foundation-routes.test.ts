@@ -3330,6 +3330,11 @@ describe("backend core foundation routes", () => {
       })
     });
     const role = await roleResponse.json();
+    await app.request(`/api/roles/${role.data.id}/permissions`, {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({ permissionCodes: ["user:view"] })
+    });
     const userResponse = await app.request("/api/users", {
       method: "POST",
       headers: authHeaders,
@@ -3357,6 +3362,9 @@ describe("backend core foundation routes", () => {
     const bindings = [...services["context"].store.userOrganizationRoles.values()].filter(
       (binding) => binding.userId === user.data.id
     );
+    const rolePermissions = services["context"].store.rolePermissions.filter(
+      (permission) => permission.roleId === role.data.id
+    );
 
     expect(deleteRoleResponse.status).toBe(200);
     expect(bindings).toEqual([
@@ -3369,6 +3377,7 @@ describe("backend core foundation routes", () => {
         deletedBy: "1"
       })
     ]);
+    expect(rolePermissions).toEqual([]);
     expect(loginResponse.status).toBe(403);
     expect(login.error.code).toBe("BUSINESS_NO_ENABLED_ORGANIZATION");
   });
