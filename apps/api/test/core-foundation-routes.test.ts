@@ -107,6 +107,22 @@ describe("backend core foundation routes", () => {
     expect(onlineUsers.data[0].tokenVersion).toBe(0);
   });
 
+  it("updates session last seen time on authenticated API activity", async () => {
+    const { app } = await setupInitializedApp();
+    const { login, authHeaders } = await loginAsAdmin(app);
+
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await app.request("/api/auth/me", { headers: authHeaders });
+    const onlineUsersResponse = await app.request("/api/online-users", {
+      headers: authHeaders
+    });
+    const onlineUsers = await onlineUsersResponse.json();
+
+    expect(new Date(onlineUsers.data[0].lastSeenAt).getTime()).toBeGreaterThan(
+      new Date(login.data.session.lastSeenAt).getTime()
+    );
+  });
+
   it("keeps old user tokens invalid after disabling and re-enabling the account", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

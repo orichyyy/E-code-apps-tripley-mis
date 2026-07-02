@@ -249,6 +249,8 @@ export class AuthService {
         throw createKnownError("BUSINESS_ORG_DISABLED");
       }
 
+      session.lastSeenAt = toUtcIso(nowUtc());
+
       return {
         userId: user.id,
         sessionId: claims.sid,
