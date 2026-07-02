@@ -1539,6 +1539,46 @@ describe("backend core foundation routes", () => {
     });
   });
 
+  it("rejects managed menu parent updates that would create a cycle", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const parentResponse = await app.request("/api/menus", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentMenuId: "2",
+        code: "system.parent",
+        titleI18nKey: "routes.system.parent",
+        path: "/system/parent",
+        requiredPermission: "menu:view"
+      })
+    });
+    const parent = await parentResponse.json();
+    const childResponse = await app.request("/api/menus", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentMenuId: parent.data.id,
+        code: "system.parent.child",
+        titleI18nKey: "routes.system.parent.child",
+        path: "/system/parent/child",
+        requiredPermission: "menu:view"
+      })
+    });
+    const child = await childResponse.json();
+    const cycleResponse = await app.request(`/api/menus/${parent.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ parentMenuId: child.data.id })
+    });
+    const cycle = await cycleResponse.json();
+
+    expect(parentResponse.status).toBe(201);
+    expect(childResponse.status).toBe(201);
+    expect(cycleResponse.status).toBe(400);
+    expect(cycle.error.code).toBe("VALIDATION_INVALID_REQUEST");
+  });
+
   it("records the authenticated user on core soft deletes", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

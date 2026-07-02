@@ -122,6 +122,21 @@ export class MenuService {
     if (parentMenuId === null) return;
     if (parentMenuId === id) throw createKnownError("VALIDATION_INVALID_REQUEST");
     requireMenu(this.context.store, parentMenuId);
+    if (this.isDescendantMenu(parentMenuId, id)) {
+      throw createKnownError("VALIDATION_INVALID_REQUEST");
+    }
+  }
+
+  private isDescendantMenu(candidateId: string, ancestorId: string): boolean {
+    const visited = new Set<string>();
+    let current = this.context.store.menus.get(candidateId);
+    while (current?.parentMenuId) {
+      if (current.parentMenuId === ancestorId) return true;
+      if (visited.has(current.parentMenuId)) return true;
+      visited.add(current.parentMenuId);
+      current = this.context.store.menus.get(current.parentMenuId);
+    }
+    return false;
   }
 
   private ensureUniqueMenuCode(code: string, currentMenuId?: string): void {
