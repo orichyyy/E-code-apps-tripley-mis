@@ -1,7 +1,6 @@
 import {
   baseApiPermissionManifest,
-  basePermissionManifest,
-  baseRouteManifest
+  basePermissionManifest
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
@@ -10,10 +9,6 @@ export function createManifestRoutes() {
 
   routes.get("/permissions/manifest", (context) => {
     return context.json({ data: basePermissionManifest, apiPermissions: baseApiPermissionManifest });
-  });
-
-  routes.get("/routes/manifest", (context) => {
-    return context.json({ data: baseRouteManifest });
   });
 
   return routes;

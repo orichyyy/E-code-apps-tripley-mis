@@ -1,6 +1,7 @@
 import {
   baseMenuManifest,
   basePermissionManifest,
+  baseRouteManifest,
   type InitializationSetupRequest
 } from "@web-admin-base/contracts";
 
@@ -12,6 +13,7 @@ import {
 import type { BackendCoreContext } from "./service-context";
 import type { MenuService } from "./menu.service";
 import type { OrganizationService } from "./organization.service";
+import type { RouteMetadataService } from "./route-metadata.service";
 import type { RoleService } from "./role.service";
 import type { UserService } from "./user.service";
 import { toPublicOrganization, toPublicUser } from "./serializers";
@@ -25,6 +27,7 @@ export class InitializationService {
     private readonly context: BackendCoreContext,
     private readonly organizations: OrganizationService,
     private readonly menus: MenuService,
+    private readonly routes: RouteMetadataService,
     private readonly roles: RoleService,
     private readonly users: UserService
   ) {}
@@ -78,6 +81,7 @@ export class InitializationService {
       remark: "Built-in role"
     });
     const menus = this.menus.seedBaseMenus(baseMenuManifest);
+    const routes = this.routes.syncBaseRoutes(baseRouteManifest);
 
     const admin = await this.users.createRecord({
       username: input.adminUsername,
@@ -108,7 +112,8 @@ export class InitializationService {
       organization: toPublicOrganization(organization),
       admin: toPublicUser(admin),
       roles: this.roles.list(),
-      menus
+      menus,
+      routes
     };
   }
 }

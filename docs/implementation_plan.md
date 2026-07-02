@@ -73,6 +73,7 @@ The backend core goal has partial implementation progress:
 - Added managed menu records seeded during initialization, moved `/api/menus/tree` to the backend core service, and added `POST /api/menus`, `PATCH /api/menus/:id`, and `DELETE /api/menus/:id` with API permission metadata and route coverage.
 - Tightened organization, user, and role detail endpoints so missing records return stable `ORGANIZATION_NOT_FOUND`, `USER_NOT_FOUND`, and `ROLE_NOT_FOUND` errors instead of empty successful responses.
 - Added `GET /api/context/permissions` for the current RBAC/menu permission context and clears cached permission contexts when managed menus change.
+- Added route metadata records seeded during initialization, moved `/api/routes/manifest` to the backend core service, and added `POST /api/routes/sync` as the admin-confirmed route manifest synchronization placeholder with API permission metadata and route coverage.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, and finalized CSRF protection still depend on the unresolved implementation questions.
 

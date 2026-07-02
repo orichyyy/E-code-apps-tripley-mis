@@ -69,6 +69,11 @@ describe("baseApiPermissionManifest", () => {
           method: "DELETE",
           path: "/api/menus/:id",
           requiredPermission: "menu:delete"
+        }),
+        expect.objectContaining({
+          method: "POST",
+          path: "/api/routes/sync",
+          requiredPermission: "route:sync"
         })
       ])
     );

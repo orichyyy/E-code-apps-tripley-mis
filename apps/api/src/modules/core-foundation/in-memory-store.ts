@@ -4,6 +4,7 @@ import type {
   MenuRecord,
   OrganizationRecord,
   RefreshTokenRecord,
+  RouteMetadataRecord,
   RolePermissionRecord,
   RoleRecord,
   UserOrganizationRoleRecord,
@@ -16,6 +17,7 @@ type SequenceName =
   | "menu"
   | "organization"
   | "refreshToken"
+  | "routeMetadata"
   | "role"
   | "user"
   | "userOrganizationRole";
@@ -25,6 +27,7 @@ export class InMemoryBackendStore {
   readonly users = new Map<string, UserRecord>();
   readonly roles = new Map<string, RoleRecord>();
   readonly menus = new Map<string, MenuRecord>();
+  readonly routeMetadata = new Map<string, RouteMetadataRecord>();
   readonly userOrganizationRoles = new Map<string, UserOrganizationRoleRecord>();
   readonly authSessions = new Map<string, AuthSessionRecord>();
   readonly refreshTokens = new Map<string, RefreshTokenRecord>();

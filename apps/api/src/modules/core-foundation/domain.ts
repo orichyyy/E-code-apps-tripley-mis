@@ -80,6 +80,19 @@ export type MenuRecord = AuditFields &
     status: EntityStatus;
   };
 
+export type RouteMetadataRecord = AuditFields & {
+  id: string;
+  tenantId: string | null;
+  routeCode: string;
+  path: string;
+  titleI18nKey: string;
+  requiredPermission: string | null;
+  menuVisible: boolean;
+  icon: string | null;
+  sortOrder: number;
+  status: EntityStatus;
+};
+
 export type AuthSessionRecord = {
   id: string;
   tenantId: string | null;

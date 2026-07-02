@@ -460,6 +460,33 @@ describe("backend core foundation routes", () => {
     });
   });
 
+  it("serves and syncs route metadata from the base route manifest", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const manifestResponse = await app.request("/api/routes/manifest", { headers: authHeaders });
+    const manifest = await manifestResponse.json();
+    const syncResponse = await app.request("/api/routes/sync", {
+      method: "POST",
+      headers: authHeaders
+    });
+    const synced = await syncResponse.json();
+
+    expect(manifestResponse.status).toBe(200);
+    expect(manifest.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: expect.any(String),
+          routeCode: "system.users",
+          requiredPermission: "user:view"
+        })
+      ])
+    );
+    expect(syncResponse.status).toBe(200);
+    expect(synced.data).toEqual(
+      expect.arrayContaining([expect.objectContaining({ routeCode: "system.users" })])
+    );
+  });
+
   it("rejects role updates that would duplicate role code", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

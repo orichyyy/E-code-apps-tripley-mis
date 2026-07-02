@@ -423,6 +423,16 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     public: false
   },
   {
+    method: "POST",
+    path: "/api/routes/sync",
+    code: "api.routes.sync",
+    description: "Sync frontend route manifest metadata",
+    module: "routes",
+    requiredPermission: "route:sync",
+    logLevel: "request",
+    public: false
+  },
+  {
     method: "GET",
     path: "/api/menus/tree",
     code: "api.menus.tree",

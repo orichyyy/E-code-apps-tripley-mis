@@ -31,6 +31,7 @@ import { InMemoryBackendStore } from "./in-memory-store";
 import { MenuService } from "./menu.service";
 import { OrganizationService } from "./organization.service";
 import { PermissionService } from "./permission.service";
+import { RouteMetadataService } from "./route-metadata.service";
 import { RoleService } from "./role.service";
 import {
   defaultBackendCoreConfig,
@@ -48,12 +49,14 @@ export class BackendCoreServices {
   readonly menus: MenuService;
   readonly organizations: OrganizationService;
   readonly permissions: PermissionService;
+  readonly routeMetadata: RouteMetadataService;
   readonly roles: RoleService;
   readonly users: UserService;
 
   constructor(private readonly context: BackendCoreContext) {
     this.organizations = new OrganizationService(context);
     this.menus = new MenuService(context);
+    this.routeMetadata = new RouteMetadataService(context);
     this.roles = new RoleService(context);
     this.users = new UserService(context);
     this.auth = new AuthService(context);
@@ -62,6 +65,7 @@ export class BackendCoreServices {
       context,
       this.organizations,
       this.menus,
+      this.routeMetadata,
       this.roles,
       this.users
     );
@@ -254,7 +258,13 @@ export class BackendCoreServices {
   }
 
   listRoutes() {
-    return baseRouteManifest;
+    return this.routeMetadata.list();
+  }
+
+  async syncRoutes() {
+    const routes = this.routeMetadata.syncBaseRoutes(baseRouteManifest);
+    await this.permissions.invalidateAllPermissionContexts();
+    return routes;
   }
 
   listMenus() {
