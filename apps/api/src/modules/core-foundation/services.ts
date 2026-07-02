@@ -33,7 +33,7 @@ import { MenuService } from "./menu.service";
 import { OrganizationService } from "./organization.service";
 import { PermissionService } from "./permission.service";
 import { RouteMetadataService } from "./route-metadata.service";
-import { RoleService } from "./role.service";
+import { RoleService, type RoleListFilters } from "./role.service";
 import {
   defaultBackendCoreConfig,
   type BackendCoreConfig,
@@ -309,8 +309,8 @@ export class BackendCoreServices {
     return result;
   }
 
-  listRoles() {
-    return this.roles.list();
+  listRoles(filters: RoleListFilters = {}) {
+    return this.roles.list(filters);
   }
 
   getRole(id: string) {

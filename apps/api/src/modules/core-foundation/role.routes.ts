@@ -7,6 +7,7 @@ import { Hono } from "hono";
 
 import type { AuthContextVariables } from "../../core/auth-context/auth-context";
 import { pageItems } from "./pagination";
+import type { RoleListFilters } from "./role.service";
 import type { BackendCoreServices } from "./services";
 
 type RoleRouteBindings = {
@@ -18,7 +19,10 @@ export function createRoleRoutes(services: BackendCoreServices) {
 
   routes.get("/roles", (context) => {
     return context.json({
-      data: pageItems(services.listRoles(), {
+      data: pageItems(services.listRoles({
+        keyword: context.req.query("keyword"),
+        status: context.req.query("status") as RoleListFilters["status"] | undefined
+      }), {
         page: context.req.query("page"),
         pageSize: context.req.query("pageSize")
       })

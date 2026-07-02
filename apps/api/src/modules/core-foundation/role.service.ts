@@ -10,11 +10,24 @@ import type { RoleRecord } from "./domain";
 import type { BackendCoreContext } from "./service-context";
 import { requireRole } from "./store-guards";
 
+export type RoleListFilters = {
+  keyword?: string;
+  status?: RoleRecord["status"];
+};
+
 export class RoleService {
   constructor(private readonly context: BackendCoreContext) {}
 
-  list(): RoleRecord[] {
-    return [...this.context.store.roles.values()].filter((role) => !role.isDeleted);
+  list(filters: RoleListFilters = {}): RoleRecord[] {
+    if (filters.status !== undefined && !isRoleStatus(filters.status)) {
+      throw createKnownError("VALIDATION_INVALID_REQUEST");
+    }
+
+    const keyword = filters.keyword?.trim().toLocaleLowerCase();
+    return [...this.context.store.roles.values()]
+      .filter((role) => !role.isDeleted)
+      .filter((role) => filters.status === undefined || role.status === filters.status)
+      .filter((role) => keyword === undefined || matchesRoleKeyword(role, keyword));
   }
 
   get(id: string): RoleRecord {
@@ -224,4 +237,16 @@ export class RoleService {
         .map((permission) => permission.code)
     );
   }
+}
+
+function isRoleStatus(status: string): status is RoleRecord["status"] {
+  return status === "enabled" || status === "disabled";
+}
+
+function matchesRoleKeyword(role: RoleRecord, keyword: string): boolean {
+  return [
+    role.name,
+    role.code,
+    role.description ?? ""
+  ].some((value) => value.toLocaleLowerCase().includes(keyword));
 }

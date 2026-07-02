@@ -1351,6 +1351,46 @@ describe("backend core foundation routes", () => {
     ]);
   });
 
+  it("filters the role list by keyword and status", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const createResponse = await app.request("/api/roles", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        name: "Filtered Role",
+        code: "filtered_role",
+        description: "Role list filter target"
+      })
+    });
+    const created = await createResponse.json();
+    await app.request(`/api/roles/${created.data.id}/disable`, {
+      method: "POST",
+      headers: authHeaders
+    });
+
+    const response = await app.request(
+      "/api/roles?keyword=filter%20target&status=disabled&page=1&pageSize=10",
+      { headers: authHeaders }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toMatchObject({
+      page: 1,
+      pageSize: 10,
+      total: 1,
+      totalPages: 1
+    });
+    expect(body.data.items).toEqual([
+      expect.objectContaining({
+        id: created.data.id,
+        code: "filtered_role",
+        status: "disabled"
+      })
+    ]);
+  });
+
   it("resets a user password and increments user token version", async () => {
     const { app, setup } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
