@@ -2446,6 +2446,19 @@ describe("backend core foundation routes", () => {
     expect(body.error.code).toBe("VALIDATION_INVALID_REQUEST");
   });
 
+  it("returns stable validation error codes for malformed JSON requests", async () => {
+    const app = createApp();
+    const response = await app.request("/api/auth/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{"
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("VALIDATION_INVALID_REQUEST");
+  });
+
   it("validates integer string path IDs before resource lookup", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

@@ -19,6 +19,10 @@ export function normalizeError(error: unknown): AppError {
     return createKnownError("VALIDATION_INVALID_REQUEST", error.flatten());
   }
 
+  if (error instanceof SyntaxError) {
+    return createKnownError("VALIDATION_INVALID_REQUEST");
+  }
+
   if (error instanceof Error && isKnownErrorCode(error.message)) {
     return createKnownError(error.message);
   }
