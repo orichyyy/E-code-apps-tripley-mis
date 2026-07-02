@@ -1391,6 +1391,37 @@ describe("backend core foundation routes", () => {
     ]);
   });
 
+  it("rejects invalid user and role list query parameters", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const userStatusResponse = await app.request("/api/users?status=archived", {
+      headers: authHeaders
+    });
+    const userStatus = await userStatusResponse.json();
+    const userPageResponse = await app.request("/api/users?page=0", {
+      headers: authHeaders
+    });
+    const userPage = await userPageResponse.json();
+    const roleStatusResponse = await app.request("/api/roles?status=locked", {
+      headers: authHeaders
+    });
+    const roleStatus = await roleStatusResponse.json();
+    const rolePageResponse = await app.request("/api/roles?pageSize=0", {
+      headers: authHeaders
+    });
+    const rolePage = await rolePageResponse.json();
+
+    expect(userStatusResponse.status).toBe(400);
+    expect(userStatus.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(userPageResponse.status).toBe(400);
+    expect(userPage.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(roleStatusResponse.status).toBe(400);
+    expect(roleStatus.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(rolePageResponse.status).toBe(400);
+    expect(rolePage.error.code).toBe("VALIDATION_INVALID_REQUEST");
+  });
+
   it("resets a user password and increments user token version", async () => {
     const { app, setup } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

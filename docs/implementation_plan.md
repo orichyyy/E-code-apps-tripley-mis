@@ -206,6 +206,7 @@ The backend core goal has partial implementation progress:
 - Added role-list filters over documented role fields: keyword matching name/code/description and status matching enabled/disabled roles, with route coverage over the paged query response.
 - Added API-permission identifier filters over manifest-backed metadata: keyword matching code/path/description/required permission plus method, module, status, and public/private flags.
 - Tightened API-permission identifier filter validation so unsupported HTTP methods and malformed public/private boolean values return the stable validation error.
+- Added route coverage proving invalid user/role list status filters and pagination values return `VALIDATION_INVALID_REQUEST`.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 
