@@ -390,7 +390,15 @@ export class AuthService {
         !menu.isDeleted &&
         menu.status === "enabled" &&
         menu.visible &&
+        this.hasEnabledRouteMetadata(menu.routeCode) &&
         (!menu.requiredPermission || permissionCodes.includes(menu.requiredPermission))
+    );
+  }
+
+  private hasEnabledRouteMetadata(routeCode: string | null): boolean {
+    if (routeCode === null) return true;
+    return [...this.context.store.routeMetadata.values()].some(
+      (route) => route.routeCode === routeCode && route.status === "enabled"
     );
   }
 

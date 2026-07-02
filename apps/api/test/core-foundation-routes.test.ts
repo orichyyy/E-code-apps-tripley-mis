@@ -2869,6 +2869,62 @@ describe("backend core foundation routes", () => {
     );
   });
 
+  it("removes menus linked to stale route metadata from current permission context", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const { authHeaders } = await loginAsAdmin(app);
+    const now = "2026-01-01T00:00:00.000Z";
+    const staleRoute = {
+      id: services["context"].store.nextId("routeMetadata"),
+      tenantId: null,
+      routeCode: "system.obsolete",
+      path: "/system/obsolete",
+      titleI18nKey: "routes.system.obsolete",
+      requiredPermission: "menu:view",
+      metadataJson: {},
+      manifestHash: "obsolete",
+      menuVisible: true,
+      icon: null,
+      sortOrder: 999,
+      status: "enabled" as const,
+      createdAt: now,
+      updatedAt: now
+    };
+    services["context"].store.routeMetadata.set(staleRoute.id, staleRoute);
+    const menuResponse = await app.request("/api/menus", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentMenuId: "2",
+        code: "system.obsolete-route-menu",
+        titleI18nKey: "routes.system.obsoleteRouteMenu",
+        path: "/system/obsolete-route-menu",
+        requiredPermission: "menu:view",
+        routeCode: "system.obsolete"
+      })
+    });
+    const beforeSyncResponse = await app.request("/api/auth/me", { headers: authHeaders });
+
+    await app.request("/api/routes/sync", {
+      method: "POST",
+      headers: authHeaders
+    });
+    const afterSyncResponse = await app.request("/api/auth/me", { headers: authHeaders });
+    const menu = await menuResponse.json();
+    const beforeSync = await beforeSyncResponse.json();
+    const afterSync = await afterSyncResponse.json();
+
+    expect(menuResponse.status).toBe(201);
+    expect(menu.data.routeCode).toBe("system.obsolete");
+    expect(beforeSync.data.menus).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "system.obsolete-route-menu" })])
+    );
+    expect(staleRoute.status).toBe("disabled");
+    expect(afterSync.data.menus).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "system.obsolete-route-menu" })])
+    );
+  });
+
   it("rejects role updates that would duplicate role code", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
