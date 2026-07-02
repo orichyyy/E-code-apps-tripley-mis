@@ -201,4 +201,4 @@ export type PublicUser = Omit<UserRecord, "passwordHash">;
 
 export type PublicMenu = MenuRecord;
 
-export type PublicSession = AuthSessionRecord;
+export type PublicSession = Omit<AuthSessionRecord, "refreshTokenHash">;

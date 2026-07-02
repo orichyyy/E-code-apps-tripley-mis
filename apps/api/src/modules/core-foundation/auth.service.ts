@@ -21,7 +21,7 @@ import { builtInRoleCodes } from "./built-in-roles";
 import type { AuthSessionRecord, OrganizationRecord, PublicSession, UserRecord } from "./domain";
 import type { BackendCoreContext } from "./service-context";
 import { requireEnabledOrganization, requireUser } from "./store-guards";
-import { toPublicOrganization, toPublicUser } from "./serializers";
+import { toPublicOrganization, toPublicSession, toPublicUser } from "./serializers";
 import type { KnownErrorCode } from "../../core/errors/error-codes";
 
 export class AuthService {
@@ -93,7 +93,7 @@ export class AuthService {
         sameSite: "Strict" as const,
         maxAgeSeconds: this.context.config.refreshTokenTtlDays * 24 * 60 * 60
       },
-      session,
+      session: toPublicSession(session),
       user: toPublicUser(user)
     };
   }
@@ -128,7 +128,7 @@ export class AuthService {
     session.tokenVersion = user.tokenVersion;
     return {
       accessToken: this.signAccessToken(user, session.currentOrganizationId, session.id),
-      session
+      session: toPublicSession(session)
     };
   }
 
@@ -184,7 +184,7 @@ export class AuthService {
 
     return {
       accessToken: this.signAccessToken(user, organization.id, session.id),
-      session,
+      session: toPublicSession(session),
       currentOrganization: toPublicOrganization(organization),
       permissionCodes,
       menus: this.filterMenus(permissionCodes)
@@ -202,7 +202,7 @@ export class AuthService {
 
     return {
       user: toPublicUser(user),
-      session,
+      session: toPublicSession(session),
       currentOrganization: toPublicOrganization(currentOrganization),
       organizations,
       permissionCodes,
@@ -287,29 +287,31 @@ export class AuthService {
       if (refreshToken.sessionId === sessionId) refreshToken.revokedAt = revokedAt;
     }
     await this.context.tokenStore.revokeBySession(sessionId);
-    return session;
+    return toPublicSession(session);
   }
 
   listOnlineUsers(): PublicSession[] {
     const now = nowUtc();
-    return [...this.context.store.authSessions.values()].filter((session) => {
-      if (session.status !== "active" || session.revokedAt) {
-        return false;
-      }
-      if (new Date(session.expiresAt) <= now) {
-        session.status = "expired";
-        return false;
-      }
-      const user = this.context.store.users.get(session.userId);
-      const organization = this.context.store.organizations.get(session.currentOrganizationId);
-      return (
-        user?.status === "enabled" &&
-        !user.isDeleted &&
-        user.tokenVersion === session.tokenVersion &&
-        organization?.status === "enabled" &&
-        !organization.isDeleted
-      );
-    });
+    return [...this.context.store.authSessions.values()]
+      .filter((session) => {
+        if (session.status !== "active" || session.revokedAt) {
+          return false;
+        }
+        if (new Date(session.expiresAt) <= now) {
+          session.status = "expired";
+          return false;
+        }
+        const user = this.context.store.users.get(session.userId);
+        const organization = this.context.store.organizations.get(session.currentOrganizationId);
+        return (
+          user?.status === "enabled" &&
+          !user.isDeleted &&
+          user.tokenVersion === session.tokenVersion &&
+          organization?.status === "enabled" &&
+          !organization.isDeleted
+        );
+      })
+      .map(toPublicSession);
   }
 
   private signAccessToken(user: UserRecord, organizationId: string, sessionId: string): string {

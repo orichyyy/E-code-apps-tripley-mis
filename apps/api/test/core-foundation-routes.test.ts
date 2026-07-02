@@ -93,6 +93,7 @@ describe("backend core foundation routes", () => {
     expect(login.data.session.id).toBe("1");
     expect(login.data.session.status).toBe("active");
     expect(login.data.session.tokenVersion).toBe(0);
+    expect(login.data.session).not.toHaveProperty("refreshTokenHash");
     expect(login.data.currentOrganization).toMatchObject({ id: "1", code: "default" });
     expect(login.data.organizations).toEqual(
       expect.arrayContaining([expect.objectContaining({ id: "1", code: "default" })])
@@ -105,6 +106,7 @@ describe("backend core foundation routes", () => {
     expect(onlineUsers.data).toHaveLength(1);
     expect(onlineUsers.data[0].status).toBe("active");
     expect(onlineUsers.data[0].tokenVersion).toBe(0);
+    expect(onlineUsers.data[0]).not.toHaveProperty("refreshTokenHash");
   });
 
   it("updates session last seen time on authenticated API activity", async () => {
@@ -387,6 +389,7 @@ describe("backend core foundation routes", () => {
     expect(response.status).toBe(200);
     expect(body.data.user.username).toBe("admin");
     expect(body.data.session.currentOrganizationId).toBe("1");
+    expect(body.data.session).not.toHaveProperty("refreshTokenHash");
     expect(body.data.currentOrganization.id).toBe("1");
     expect(body.data.organizations).toEqual(
       expect.arrayContaining([expect.objectContaining({ id: "1" })])
@@ -491,6 +494,7 @@ describe("backend core foundation routes", () => {
 
     expect(refresh.data.accessToken).toEqual(expect.any(String));
     expect(refresh.data.session.id).toBe("1");
+    expect(refresh.data.session).not.toHaveProperty("refreshTokenHash");
   });
 
   it("uses the configured refresh token TTL for the HttpOnly cookie lifetime", async () => {
@@ -653,6 +657,7 @@ describe("backend core foundation routes", () => {
     expect(logoutResponse.headers.get("set-cookie")).toContain("refresh_token=");
     expect(logoutResponse.headers.get("set-cookie")).toContain("Max-Age=0");
     expect(logout.data.status).toBe("revoked");
+    expect(logout.data).not.toHaveProperty("refreshTokenHash");
     expect(refreshResponse.status).toBe(401);
     expect(refresh.error.code).toBe("AUTH_TOKEN_EXPIRED");
   });

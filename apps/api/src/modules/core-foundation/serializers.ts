@@ -1,4 +1,11 @@
-import type { OrganizationRecord, PublicOrganization, PublicUser, UserRecord } from "./domain";
+import type {
+  AuthSessionRecord,
+  OrganizationRecord,
+  PublicOrganization,
+  PublicSession,
+  PublicUser,
+  UserRecord
+} from "./domain";
 
 export function toPublicOrganization(organization: OrganizationRecord): PublicOrganization {
   return {
@@ -11,4 +18,10 @@ export function toPublicUser(user: UserRecord): PublicUser {
   const { passwordHash, ...publicUser } = user;
   void passwordHash;
   return publicUser;
+}
+
+export function toPublicSession(session: AuthSessionRecord): PublicSession {
+  const { refreshTokenHash, ...publicSession } = session;
+  void refreshTokenHash;
+  return publicSession;
 }

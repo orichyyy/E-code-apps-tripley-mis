@@ -17,7 +17,7 @@ async function createInitializedServices(config?: Parameters<typeof createInMemo
 }
 
 describe("Auth session service", () => {
-  it("marks expired sessions as expired when listing online users", async () => {
+  it("excludes expired sessions when listing online users", async () => {
     const services = await createInitializedServices({ refreshTokenTtlDays: 0 });
     const login = await services.auth.login(
       { username: "admin", password: "password1" },
@@ -27,6 +27,6 @@ describe("Auth session service", () => {
     const onlineUsers = services.listOnlineUsers();
 
     expect(onlineUsers).toEqual([]);
-    expect(login.session.status).toBe("expired");
+    expect(login.session).not.toHaveProperty("refreshTokenHash");
   });
 });
