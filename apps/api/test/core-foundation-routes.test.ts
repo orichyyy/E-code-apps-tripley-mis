@@ -248,6 +248,75 @@ describe("backend core foundation routes", () => {
     expect(oldRefresh.error.code).toBe("AUTH_TOKEN_INVALIDATED");
   });
 
+  it("invalidates access and refresh tokens when an administrator resets a password", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const userResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "reset-token-user",
+        displayName: "Reset Token User",
+        email: "reset-token-user@example.com",
+        phone: "10000000016",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const user = await userResponse.json();
+    const firstLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "reset-token-user", password: "password1" })
+    });
+    const firstLogin = await firstLoginResponse.json();
+    await app.request("/api/auth/change-password", {
+      method: "POST",
+      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+    });
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "reset-token-user", password: "password2" })
+    });
+    const login = await loginResponse.json();
+    const cookie = loginResponse.headers.get("set-cookie") ?? "";
+
+    const resetResponse = await app.request(`/api/users/${user.data.id}/reset-password`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ password: "password3" })
+    });
+    const reset = await resetResponse.json();
+    const oldAccessResponse = await app.request("/api/auth/me", {
+      headers: { authorization: `Bearer ${login.data.accessToken}` }
+    });
+    const oldAccess = await oldAccessResponse.json();
+    const oldRefreshResponse = await app.request("/api/auth/refresh", {
+      method: "POST",
+      headers: { cookie: cookie.split(";")[0] }
+    });
+    const oldRefresh = await oldRefreshResponse.json();
+    const onlineUsersResponse = await app.request("/api/online-users", {
+      headers: authHeaders
+    });
+    const onlineUsers = await onlineUsersResponse.json();
+
+    expect(resetResponse.status).toBe(200);
+    expect(reset.data).toMatchObject({
+      id: user.data.id,
+      firstLoginPasswordChangeRequired: true,
+      tokenVersion: login.data.user.tokenVersion + 1
+    });
+    expect(oldAccessResponse.status).toBe(401);
+    expect(oldAccess.error.code).toBe("AUTH_TOKEN_INVALIDATED");
+    expect(oldRefreshResponse.status).toBe(401);
+    expect(oldRefresh.error.code).toBe("AUTH_TOKEN_INVALIDATED");
+    expect(onlineUsers.data).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ userId: user.data.id })])
+    );
+  });
+
   it("returns current user context with organizations, permissions, and menus", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

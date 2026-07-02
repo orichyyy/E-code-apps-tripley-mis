@@ -253,12 +253,14 @@ export class BackendCoreServices {
     return user;
   }
 
-  resetUserPassword(
+  async resetUserPassword(
     id: string,
     input: ResetPasswordRequest,
     actorId: string | null = null
   ) {
-    return this.users.resetPassword(id, input, actorId);
+    const user = await this.users.resetPassword(id, input, actorId);
+    await this.permissions.invalidateUser(id);
+    return user;
   }
 
   async deleteUser(id: string, deletedBy: string | null = null) {

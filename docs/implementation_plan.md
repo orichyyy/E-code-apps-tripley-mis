@@ -124,6 +124,7 @@ The backend core goal has partial implementation progress:
 - Tightened user soft deletion so deleting a user advances token version, invalidates that user's permission cache, and causes old access/refresh tokens to fail with `AUTH_TOKEN_INVALIDATED`.
 - Tightened user status changes so disable, enable, lock, and unlock operations invalidate that user's permission cache after the account state change.
 - Tightened organization mutations so create, update, disable, enable, and soft delete operations clear cached permission contexts through the permission-cache boundary.
+- Tightened administrator password reset so reset operations clear the user's permission cache and route coverage proves old access tokens, refresh tokens, and online-session visibility are invalidated through the user token version.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 
