@@ -2,6 +2,7 @@ import { Hono } from "hono";
 
 import { createKnownError } from "../../core/errors/error-codes";
 import { pageItems } from "./pagination";
+import { assertEmptyJsonBody } from "./request-body";
 import type { RouteMetadataListFilters } from "./route-metadata.service";
 import type { BackendCoreServices } from "./services";
 
@@ -28,6 +29,7 @@ export function createRouteMetadataRoutes(services: BackendCoreServices) {
   });
 
   routes.post("/routes/sync", async (context) => {
+    await assertEmptyJsonBody(context.req.raw);
     return context.json({ data: await services.syncRoutes() });
   });
 

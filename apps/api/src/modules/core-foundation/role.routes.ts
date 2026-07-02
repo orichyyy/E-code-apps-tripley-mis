@@ -9,6 +9,7 @@ import type { AuthContextVariables } from "../../core/auth-context/auth-context"
 import { createKnownError } from "../../core/errors/error-codes";
 import { pageItems } from "./pagination";
 import type { ApiPermissionListFilters, PermissionListFilters } from "./permission.service";
+import { assertEmptyJsonBody } from "./request-body";
 import type { RoleListFilters } from "./role.service";
 import type { BackendCoreServices } from "./services";
 
@@ -51,6 +52,7 @@ export function createRoleRoutes(services: BackendCoreServices) {
 
   routes.post("/roles/:id/enable", async (context) => {
     const authContext = context.get("authContext");
+    await assertEmptyJsonBody(context.req.raw);
     return context.json({
       data: await services.setRoleStatus(context.req.param("id"), "enabled", authContext?.userId ?? null)
     });
@@ -58,6 +60,7 @@ export function createRoleRoutes(services: BackendCoreServices) {
 
   routes.post("/roles/:id/disable", async (context) => {
     const authContext = context.get("authContext");
+    await assertEmptyJsonBody(context.req.raw);
     return context.json({
       data: await services.setRoleStatus(context.req.param("id"), "disabled", authContext?.userId ?? null)
     });
@@ -65,13 +68,15 @@ export function createRoleRoutes(services: BackendCoreServices) {
 
   routes.delete("/roles/:id", async (context) => {
     const authContext = context.get("authContext");
+    await assertEmptyJsonBody(context.req.raw);
     return context.json({
       data: await services.deleteRole(context.req.param("id"), authContext?.userId ?? null)
     });
   });
 
-  routes.post("/roles/:id/copy", (context) => {
+  routes.post("/roles/:id/copy", async (context) => {
     const authContext = context.get("authContext");
+    await assertEmptyJsonBody(context.req.raw);
     return context.json({
       data: services.copyRole(context.req.param("id"), authContext?.userId ?? null)
     }, 201);
@@ -114,6 +119,7 @@ export function createRoleRoutes(services: BackendCoreServices) {
   });
 
   routes.post("/permissions/sync", async (context) => {
+    await assertEmptyJsonBody(context.req.raw);
     return context.json({ data: await services.syncPermissions() });
   });
 
@@ -137,6 +143,7 @@ export function createRoleRoutes(services: BackendCoreServices) {
   });
 
   routes.post("/permissions/api/sync", async (context) => {
+    await assertEmptyJsonBody(context.req.raw);
     const result = await services.syncPermissions();
     return context.json({ data: result.apiPermissions });
   });

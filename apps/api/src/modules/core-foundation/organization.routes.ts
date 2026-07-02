@@ -6,6 +6,7 @@ import {
 import { Hono } from "hono";
 
 import type { AuthContextVariables } from "../../core/auth-context/auth-context";
+import { assertEmptyJsonBody } from "./request-body";
 import type { BackendCoreServices } from "./services";
 
 type OrganizationRouteBindings = {
@@ -50,6 +51,7 @@ export function createOrganizationRoutes(services: BackendCoreServices) {
 
   routes.post("/organizations/:id/disable", async (context) => {
     const authContext = context.get("authContext");
+    await assertEmptyJsonBody(context.req.raw);
     return context.json({
       data: await services.disableOrganization(context.req.param("id"), authContext?.userId ?? null)
     });
@@ -57,6 +59,7 @@ export function createOrganizationRoutes(services: BackendCoreServices) {
 
   routes.post("/organizations/:id/enable", async (context) => {
     const authContext = context.get("authContext");
+    await assertEmptyJsonBody(context.req.raw);
     return context.json({
       data: await services.enableOrganization(context.req.param("id"), authContext?.userId ?? null)
     });
@@ -64,6 +67,7 @@ export function createOrganizationRoutes(services: BackendCoreServices) {
 
   routes.delete("/organizations/:id", async (context) => {
     const authContext = context.get("authContext");
+    await assertEmptyJsonBody(context.req.raw);
     return context.json({
       data: await services.deleteOrganization(context.req.param("id"), authContext?.userId ?? null)
     });

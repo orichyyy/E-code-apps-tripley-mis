@@ -9,6 +9,7 @@ import { Hono } from "hono";
 import type { AuthContextVariables } from "../../core/auth-context/auth-context";
 import { createKnownError } from "../../core/errors/error-codes";
 import { pageItems } from "./pagination";
+import { readOptionalJson } from "./request-body";
 import type { BackendCoreServices } from "./services";
 
 type AuthRouteBindings = {
@@ -160,13 +161,6 @@ function formatRefreshTokenCookie(
     `Path=${options.path}`,
     `Max-Age=${options.maxAgeSeconds}`
   ].join("; ");
-}
-
-async function readOptionalJson<T>(request: Request): Promise<T | null> {
-  if (!request.body) return null;
-  const text = await request.text();
-  if (!text.trim()) return null;
-  return JSON.parse(text) as T;
 }
 
 function hasPaginationQuery(context: { req: { query: (name: string) => string | undefined } }): boolean {

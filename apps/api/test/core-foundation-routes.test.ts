@@ -1816,6 +1816,74 @@ describe("backend core foundation routes", () => {
     expect(menu.error.code).toBe("VALIDATION_INVALID_REQUEST");
   });
 
+  it("rejects unexpected bodies on no-body action endpoints", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const userStatusResponse = await app.request("/api/users/1/disable", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ status: "disabled" })
+    });
+    const userStatus = await userStatusResponse.json();
+
+    const organizationStatusResponse = await app.request("/api/organizations/1/disable", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ cascade: true })
+    });
+    const organizationStatus = await organizationStatusResponse.json();
+
+    const roleStatusResponse = await app.request("/api/roles/2/disable", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ status: "disabled" })
+    });
+    const roleStatus = await roleStatusResponse.json();
+
+    const roleCopyResponse = await app.request("/api/roles/2/copy", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ code: "unconfirmed-copy-code" })
+    });
+    const roleCopy = await roleCopyResponse.json();
+
+    const permissionsSyncResponse = await app.request("/api/permissions/sync", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ force: true })
+    });
+    const permissionsSync = await permissionsSyncResponse.json();
+
+    const routesSyncResponse = await app.request("/api/routes/sync", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ source: "client" })
+    });
+    const routesSync = await routesSyncResponse.json();
+
+    for (const response of [
+      userStatusResponse,
+      organizationStatusResponse,
+      roleStatusResponse,
+      roleCopyResponse,
+      permissionsSyncResponse,
+      routesSyncResponse
+    ]) {
+      expect(response.status).toBe(400);
+    }
+    for (const body of [
+      userStatus,
+      organizationStatus,
+      roleStatus,
+      roleCopy,
+      permissionsSync,
+      routesSync
+    ]) {
+      expect(body.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    }
+  });
+
   it("prevents login for administrator-locked users until unlocked", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

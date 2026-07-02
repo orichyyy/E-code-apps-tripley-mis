@@ -226,6 +226,7 @@ The backend core goal has partial implementation progress:
 - Added online-user session filtering by user and organization plus optional paged envelopes for `/api/online-users`, while preserving the existing array response without pagination parameters.
 - Tightened organization update contracts so v1 organization move attempts using `parentOrganizationId` are rejected instead of silently ignored, preserving the confirmed no-move materialized-path rule.
 - Tightened backend-core mutation contracts so unknown JSON fields are rejected instead of silently stripped, preventing unconfirmed lifecycle, hierarchy, and permission-reference fields from being accepted on implemented create/update/action endpoints.
+- Tightened no-body lifecycle and manifest-sync action routes so unexpected JSON payload fields are rejected instead of ignored, while still allowing absent or empty-object bodies on routes whose target is fully defined by path/auth context.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

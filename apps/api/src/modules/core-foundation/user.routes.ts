@@ -8,6 +8,7 @@ import { Hono } from "hono";
 
 import type { AuthContextVariables } from "../../core/auth-context/auth-context";
 import { pageItems } from "./pagination";
+import { assertEmptyJsonBody } from "./request-body";
 import type { BackendCoreServices } from "./services";
 import type { UserListFilters } from "./user.service";
 
@@ -53,6 +54,7 @@ export function createUserRoutes(services: BackendCoreServices) {
 
   routes.post("/users/:id/disable", async (context) => {
     const authContext = context.get("authContext");
+    await assertEmptyJsonBody(context.req.raw);
     return context.json({
       data: await services.setUserStatus(context.req.param("id"), "disabled", authContext?.userId ?? null)
     });
@@ -60,6 +62,7 @@ export function createUserRoutes(services: BackendCoreServices) {
 
   routes.post("/users/:id/enable", async (context) => {
     const authContext = context.get("authContext");
+    await assertEmptyJsonBody(context.req.raw);
     return context.json({
       data: await services.setUserStatus(context.req.param("id"), "enabled", authContext?.userId ?? null)
     });
@@ -67,6 +70,7 @@ export function createUserRoutes(services: BackendCoreServices) {
 
   routes.post("/users/:id/lock", async (context) => {
     const authContext = context.get("authContext");
+    await assertEmptyJsonBody(context.req.raw);
     return context.json({
       data: await services.setUserStatus(context.req.param("id"), "locked", authContext?.userId ?? null)
     });
@@ -74,6 +78,7 @@ export function createUserRoutes(services: BackendCoreServices) {
 
   routes.post("/users/:id/unlock", async (context) => {
     const authContext = context.get("authContext");
+    await assertEmptyJsonBody(context.req.raw);
     return context.json({
       data: await services.setUserStatus(context.req.param("id"), "enabled", authContext?.userId ?? null)
     });
@@ -93,6 +98,7 @@ export function createUserRoutes(services: BackendCoreServices) {
 
   routes.delete("/users/:id", async (context) => {
     const authContext = context.get("authContext");
+    await assertEmptyJsonBody(context.req.raw);
     return context.json({
       data: await services.deleteUser(context.req.param("id"), authContext?.userId ?? null)
     });
@@ -116,6 +122,7 @@ export function createUserRoutes(services: BackendCoreServices) {
 
   routes.delete("/users/:id/organizations/:organizationId", async (context) => {
     const authContext = context.get("authContext");
+    await assertEmptyJsonBody(context.req.raw);
     return context.json({
       data: await services.removeUserOrganizationRole(
         context.req.param("id"),
