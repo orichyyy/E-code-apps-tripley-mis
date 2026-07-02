@@ -138,10 +138,7 @@ export class AuthService {
     if (user.status === "locked") throw createKnownError("AUTH_ACCOUNT_LOCKED");
     if (storedToken.tokenVersion !== user.tokenVersion) throw createKnownError("AUTH_TOKEN_INVALIDATED");
 
-    const session = this.context.store.authSessions.get(storedToken.sessionId);
-    if (!session || session.revokedAt || session.status !== "active") {
-      throw createKnownError("AUTH_SESSION_NOT_FOUND");
-    }
+    const session = this.requireActiveSession(storedToken.sessionId, user.id);
     if (session.tokenVersion !== user.tokenVersion) throw createKnownError("AUTH_TOKEN_INVALIDATED");
     const organization = this.context.store.organizations.get(session.currentOrganizationId);
     if (!organization || organization.status !== "enabled" || organization.isDeleted) {

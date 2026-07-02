@@ -48,4 +48,25 @@ describe("Auth session service", () => {
     });
     expect(services.listOnlineUsers()).toEqual([]);
   });
+
+  it("rejects refresh-token exchange when the backing login session is expired", async () => {
+    const services = await createInitializedServices({ refreshTokenTtlDays: 1 });
+    const login = await services.auth.login(
+      { username: "admin", password: "password1" },
+      { ipAddress: "127.0.0.1", userAgent: "vitest" }
+    );
+    const session = services["context"].store.authSessions.get(login.session.id);
+    if (!session) throw new Error("Expected login session to exist");
+    session.expiresAt = "2026-01-01T00:00:00.000Z";
+
+    await expect(services.refreshAccessToken(login.refreshToken)).rejects.toMatchObject({
+      code: "AUTH_TOKEN_EXPIRED"
+    });
+
+    expect(session).toMatchObject({
+      id: login.session.id,
+      status: "expired",
+      revokedAt: null
+    });
+  });
 });
