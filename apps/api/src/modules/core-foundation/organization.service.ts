@@ -30,11 +30,17 @@ export class OrganizationService {
     return toPublicOrganization(requireOrganization(this.context.store, id));
   }
 
-  create(input: CreateOrganizationRequest): PublicOrganization {
-    return toPublicOrganization(this.createRecord(input));
+  create(
+    input: CreateOrganizationRequest,
+    actorId: string | null = null
+  ): PublicOrganization {
+    return toPublicOrganization(this.createRecord(input, actorId));
   }
 
-  createRecord(input: CreateOrganizationRequest): OrganizationRecord {
+  createRecord(
+    input: CreateOrganizationRequest,
+    actorId: string | null = null
+  ): OrganizationRecord {
     const store = this.context.store;
     this.ensureUniqueOrganizationCode(input.code);
 
@@ -64,13 +70,19 @@ export class OrganizationService {
       deletedAt: null,
       deletedBy: null,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      createdBy: actorId,
+      updatedBy: actorId
     };
     store.organizations.set(organization.id, organization);
     return organization;
   }
 
-  update(id: string, input: UpdateOrganizationRequest): PublicOrganization {
+  update(
+    id: string,
+    input: UpdateOrganizationRequest,
+    actorId: string | null = null
+  ): PublicOrganization {
     const organization = requireOrganization(this.context.store, id);
     if (input.code !== undefined) this.ensureUniqueOrganizationCode(input.code, organization.id);
     if (input.name !== undefined) organization.name = input.name;
@@ -78,10 +90,11 @@ export class OrganizationService {
     if (input.sortOrder !== undefined) organization.sortOrder = input.sortOrder;
     if (input.remark !== undefined) organization.remark = input.remark;
     organization.updatedAt = toUtcIso(nowUtc());
+    organization.updatedBy = actorId;
     return toPublicOrganization(organization);
   }
 
-  disable(id: string): PublicOrganization[] {
+  disable(id: string, actorId: string | null = null): PublicOrganization[] {
     const organization = requireOrganization(this.context.store, id);
     const now = toUtcIso(nowUtc());
     const affected = [...this.context.store.organizations.values()].filter(
@@ -91,14 +104,16 @@ export class OrganizationService {
     affected.forEach((candidate) => {
       candidate.status = "disabled";
       candidate.updatedAt = now;
+      candidate.updatedBy = actorId;
     });
     return affected.map(toPublicOrganization);
   }
 
-  enable(id: string): PublicOrganization {
+  enable(id: string, actorId: string | null = null): PublicOrganization {
     const organization = requireOrganization(this.context.store, id);
     organization.status = "enabled";
     organization.updatedAt = toUtcIso(nowUtc());
+    organization.updatedBy = actorId;
     return toPublicOrganization(organization);
   }
 
@@ -109,6 +124,7 @@ export class OrganizationService {
     organization.deletedAt = now;
     organization.deletedBy = deletedBy;
     organization.updatedAt = now;
+    organization.updatedBy = deletedBy;
     return toPublicOrganization(organization);
   }
 

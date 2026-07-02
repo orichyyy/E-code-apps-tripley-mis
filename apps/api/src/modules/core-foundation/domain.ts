@@ -6,6 +6,11 @@ export type AuditFields = {
   updatedAt: string;
 };
 
+export type ActorAuditFields = {
+  createdBy: string | null;
+  updatedBy: string | null;
+};
+
 export type SoftDeleteFields = {
   isDeleted: boolean;
   deletedAt: string | null;
@@ -13,6 +18,7 @@ export type SoftDeleteFields = {
 };
 
 export type OrganizationRecord = AuditFields &
+  ActorAuditFields &
   SoftDeleteFields & {
     id: string;
     tenantId: string | null;
@@ -27,6 +33,7 @@ export type OrganizationRecord = AuditFields &
   };
 
 export type UserRecord = AuditFields &
+  ActorAuditFields &
   SoftDeleteFields & {
     id: string;
     tenantId: string | null;

@@ -21,8 +21,11 @@ export function createUserRoutes(services: BackendCoreServices) {
   });
 
   routes.post("/users", async (context) => {
+    const authContext = context.get("authContext");
     const input = createUserRequestSchema.parse(await context.req.json());
-    return context.json({ data: await services.createUser(input) }, 201);
+    return context.json({
+      data: await services.createUser(input, authContext?.userId ?? null)
+    }, 201);
   });
 
   routes.get("/users/:id", (context) => {
@@ -30,29 +33,51 @@ export function createUserRoutes(services: BackendCoreServices) {
   });
 
   routes.patch("/users/:id", async (context) => {
+    const authContext = context.get("authContext");
     const input = updateUserRequestSchema.parse(await context.req.json());
-    return context.json({ data: services.updateUser(context.req.param("id"), input) });
+    return context.json({
+      data: services.updateUser(context.req.param("id"), input, authContext?.userId ?? null)
+    });
   });
 
   routes.post("/users/:id/disable", (context) => {
-    return context.json({ data: services.setUserStatus(context.req.param("id"), "disabled") });
+    const authContext = context.get("authContext");
+    return context.json({
+      data: services.setUserStatus(context.req.param("id"), "disabled", authContext?.userId ?? null)
+    });
   });
 
   routes.post("/users/:id/enable", (context) => {
-    return context.json({ data: services.setUserStatus(context.req.param("id"), "enabled") });
+    const authContext = context.get("authContext");
+    return context.json({
+      data: services.setUserStatus(context.req.param("id"), "enabled", authContext?.userId ?? null)
+    });
   });
 
   routes.post("/users/:id/lock", (context) => {
-    return context.json({ data: services.setUserStatus(context.req.param("id"), "locked") });
+    const authContext = context.get("authContext");
+    return context.json({
+      data: services.setUserStatus(context.req.param("id"), "locked", authContext?.userId ?? null)
+    });
   });
 
   routes.post("/users/:id/unlock", (context) => {
-    return context.json({ data: services.setUserStatus(context.req.param("id"), "enabled") });
+    const authContext = context.get("authContext");
+    return context.json({
+      data: services.setUserStatus(context.req.param("id"), "enabled", authContext?.userId ?? null)
+    });
   });
 
   routes.post("/users/:id/reset-password", async (context) => {
+    const authContext = context.get("authContext");
     const input = resetPasswordRequestSchema.parse(await context.req.json());
-    return context.json({ data: await services.resetUserPassword(context.req.param("id"), input) });
+    return context.json({
+      data: await services.resetUserPassword(
+        context.req.param("id"),
+        input,
+        authContext?.userId ?? null
+      )
+    });
   });
 
   routes.delete("/users/:id", (context) => {

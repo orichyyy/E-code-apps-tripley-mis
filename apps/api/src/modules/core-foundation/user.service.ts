@@ -31,11 +31,17 @@ export class UserService {
     return toPublicUser(requireUser(this.context.store, id));
   }
 
-  async create(input: CreateUserRequest): Promise<PublicUser> {
-    return toPublicUser(await this.createRecord(input));
+  async create(
+    input: CreateUserRequest,
+    actorId: string | null = null
+  ): Promise<PublicUser> {
+    return toPublicUser(await this.createRecord(input, actorId));
   }
 
-  async createRecord(input: CreateUserRequest): Promise<UserRecord> {
+  async createRecord(
+    input: CreateUserRequest,
+    actorId: string | null = null
+  ): Promise<UserRecord> {
     requireEnabledOrganization(this.context.store, input.primaryOrganizationId);
     requireEnabledRole(this.context.store, input.roleId);
     this.ensureUniqueUser(input.username, input.email, input.phone);
@@ -67,14 +73,20 @@ export class UserService {
       deletedAt: null,
       deletedBy: null,
       createdAt: toUtcIso(now),
-      updatedAt: toUtcIso(now)
+      updatedAt: toUtcIso(now),
+      createdBy: actorId,
+      updatedBy: actorId
     };
     this.context.store.users.set(user.id, user);
     this.bindToOrganization(user.id, input.primaryOrganizationId, input.roleId);
     return user;
   }
 
-  update(id: string, input: UpdateUserRequest): PublicUser {
+  update(
+    id: string,
+    input: UpdateUserRequest,
+    actorId: string | null = null
+  ): PublicUser {
     const user = requireUser(this.context.store, id);
     this.ensureUniqueUserUpdate(user, input);
     if (input.primaryOrganizationId !== undefined) {
@@ -88,10 +100,15 @@ export class UserService {
     if (input.primaryOrganizationId !== undefined) user.primaryOrganizationId = input.primaryOrganizationId;
     if (input.remark !== undefined) user.remark = input.remark;
     user.updatedAt = toUtcIso(nowUtc());
+    user.updatedBy = actorId;
     return toPublicUser(user);
   }
 
-  setStatus(id: string, status: "enabled" | "disabled" | "locked"): PublicUser {
+  setStatus(
+    id: string,
+    status: "enabled" | "disabled" | "locked",
+    actorId: string | null = null
+  ): PublicUser {
     const user = requireUser(this.context.store, id);
     user.status = status;
     if (status === "enabled") {
@@ -102,10 +119,15 @@ export class UserService {
       user.lockedUntil = null;
     }
     user.updatedAt = toUtcIso(nowUtc());
+    user.updatedBy = actorId;
     return toPublicUser(user);
   }
 
-  async resetPassword(id: string, input: ResetPasswordRequest): Promise<PublicUser> {
+  async resetPassword(
+    id: string,
+    input: ResetPasswordRequest,
+    actorId: string | null = null
+  ): Promise<PublicUser> {
     const result = validatePasswordComplexity(input.password, this.context.config.passwordPolicy);
     if (!result.valid) {
       throw createKnownError((result.reasons[0] ?? "VALIDATION_PASSWORD_POLICY") as KnownErrorCode);
@@ -119,6 +141,7 @@ export class UserService {
     user.firstLoginPasswordChangeRequired = true;
     user.tokenVersion += 1;
     user.updatedAt = toUtcIso(now);
+    user.updatedBy = actorId;
     return toPublicUser(user);
   }
 
@@ -129,6 +152,7 @@ export class UserService {
     user.deletedAt = now;
     user.deletedBy = deletedBy;
     user.updatedAt = now;
+    user.updatedBy = deletedBy;
     return toPublicUser(user);
   }
 

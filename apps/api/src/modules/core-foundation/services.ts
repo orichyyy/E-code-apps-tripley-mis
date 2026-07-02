@@ -151,20 +151,24 @@ export class BackendCoreServices {
     return this.organizations.get(id);
   }
 
-  createOrganization(input: CreateOrganizationRequest) {
-    return this.organizations.create(input);
+  createOrganization(input: CreateOrganizationRequest, actorId: string | null = null) {
+    return this.organizations.create(input, actorId);
   }
 
-  updateOrganization(id: string, input: UpdateOrganizationRequest) {
-    return this.organizations.update(id, input);
+  updateOrganization(
+    id: string,
+    input: UpdateOrganizationRequest,
+    actorId: string | null = null
+  ) {
+    return this.organizations.update(id, input, actorId);
   }
 
-  disableOrganization(id: string) {
-    return this.organizations.disable(id);
+  disableOrganization(id: string, actorId: string | null = null) {
+    return this.organizations.disable(id, actorId);
   }
 
-  enableOrganization(id: string) {
-    return this.organizations.enable(id);
+  enableOrganization(id: string, actorId: string | null = null) {
+    return this.organizations.enable(id, actorId);
   }
 
   deleteOrganization(id: string, deletedBy: string | null = null) {
@@ -179,20 +183,28 @@ export class BackendCoreServices {
     return this.users.get(id);
   }
 
-  createUser(input: CreateUserRequest) {
-    return this.users.create(input);
+  createUser(input: CreateUserRequest, actorId: string | null = null) {
+    return this.users.create(input, actorId);
   }
 
-  updateUser(id: string, input: UpdateUserRequest) {
-    return this.users.update(id, input);
+  updateUser(id: string, input: UpdateUserRequest, actorId: string | null = null) {
+    return this.users.update(id, input, actorId);
   }
 
-  setUserStatus(id: string, status: "enabled" | "disabled" | "locked") {
-    return this.users.setStatus(id, status);
+  setUserStatus(
+    id: string,
+    status: "enabled" | "disabled" | "locked",
+    actorId: string | null = null
+  ) {
+    return this.users.setStatus(id, status, actorId);
   }
 
-  resetUserPassword(id: string, input: ResetPasswordRequest) {
-    return this.users.resetPassword(id, input);
+  resetUserPassword(
+    id: string,
+    input: ResetPasswordRequest,
+    actorId: string | null = null
+  ) {
+    return this.users.resetPassword(id, input, actorId);
   }
 
   deleteUser(id: string, deletedBy: string | null = null) {

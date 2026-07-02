@@ -753,6 +753,78 @@ describe("backend core foundation routes", () => {
     });
   });
 
+  it("records authenticated user audit fields on user and organization changes", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const organizationResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Audited Organization",
+        code: "audited-org"
+      })
+    });
+    const organization = await organizationResponse.json();
+    const organizationUpdateResponse = await app.request(
+      `/api/organizations/${organization.data.id}`,
+      {
+        method: "PATCH",
+        headers: authHeaders,
+        body: JSON.stringify({ name: "Audited Organization Updated" })
+      }
+    );
+    const organizationUpdate = await organizationUpdateResponse.json();
+    const organizationDisableResponse = await app.request(
+      `/api/organizations/${organization.data.id}/disable`,
+      { method: "POST", headers: authHeaders }
+    );
+    const organizationDisable = await organizationDisableResponse.json();
+
+    const userResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "audited-user",
+        displayName: "Audited User",
+        email: "audited-user@example.com",
+        phone: "10000000012",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const user = await userResponse.json();
+    const userUpdateResponse = await app.request(`/api/users/${user.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ displayName: "Audited User Updated" })
+    });
+    const userUpdate = await userUpdateResponse.json();
+    const userLockResponse = await app.request(`/api/users/${user.data.id}/lock`, {
+      method: "POST",
+      headers: authHeaders
+    });
+    const userLock = await userLockResponse.json();
+    const resetResponse = await app.request(`/api/users/${user.data.id}/reset-password`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ password: "password2" })
+    });
+    const reset = await resetResponse.json();
+
+    expect(organization.data).toMatchObject({ createdBy: "1", updatedBy: "1" });
+    expect(organizationUpdate.data).toMatchObject({ updatedBy: "1" });
+    expect(organizationDisable.data).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: organization.data.id, updatedBy: "1" })])
+    );
+    expect(user.data).toMatchObject({ createdBy: "1", updatedBy: "1" });
+    expect(userUpdate.data).toMatchObject({ updatedBy: "1" });
+    expect(userLock.data).toMatchObject({ updatedBy: "1" });
+    expect(reset.data).toMatchObject({ updatedBy: "1" });
+  });
+
   it("serves and syncs route metadata from the base route manifest", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

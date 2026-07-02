@@ -19,8 +19,11 @@ export function createOrganizationRoutes(services: BackendCoreServices) {
   });
 
   routes.post("/organizations", async (context) => {
+    const authContext = context.get("authContext");
     const input = createOrganizationRequestSchema.parse(await context.req.json());
-    return context.json({ data: services.createOrganization(input) }, 201);
+    return context.json({
+      data: services.createOrganization(input, authContext?.userId ?? null)
+    }, 201);
   });
 
   routes.get("/organizations/:id", (context) => {
@@ -28,16 +31,25 @@ export function createOrganizationRoutes(services: BackendCoreServices) {
   });
 
   routes.patch("/organizations/:id", async (context) => {
+    const authContext = context.get("authContext");
     const input = updateOrganizationRequestSchema.parse(await context.req.json());
-    return context.json({ data: services.updateOrganization(context.req.param("id"), input) });
+    return context.json({
+      data: services.updateOrganization(context.req.param("id"), input, authContext?.userId ?? null)
+    });
   });
 
   routes.post("/organizations/:id/disable", (context) => {
-    return context.json({ data: services.disableOrganization(context.req.param("id")) });
+    const authContext = context.get("authContext");
+    return context.json({
+      data: services.disableOrganization(context.req.param("id"), authContext?.userId ?? null)
+    });
   });
 
   routes.post("/organizations/:id/enable", (context) => {
-    return context.json({ data: services.enableOrganization(context.req.param("id")) });
+    const authContext = context.get("authContext");
+    return context.json({
+      data: services.enableOrganization(context.req.param("id"), authContext?.userId ?? null)
+    });
   });
 
   routes.delete("/organizations/:id", (context) => {
