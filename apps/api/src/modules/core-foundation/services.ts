@@ -233,6 +233,12 @@ export class BackendCoreServices {
     return role;
   }
 
+  async setRoleStatus(id: string, status: "enabled" | "disabled") {
+    const role = this.roles.setStatus(id, status);
+    await this.permissions.invalidateRole(id);
+    return role;
+  }
+
   copyRole(id: string) {
     return this.roles.copy(id);
   }

@@ -58,6 +58,13 @@ export class RoleService {
     return role;
   }
 
+  setStatus(id: string, status: "enabled" | "disabled"): RoleRecord {
+    const role = requireRole(this.context.store, id);
+    role.status = status;
+    role.updatedAt = toUtcIso(nowUtc());
+    return role;
+  }
+
   copy(id: string): RoleRecord {
     const source = requireRole(this.context.store, id);
     const copy = this.createRecord({

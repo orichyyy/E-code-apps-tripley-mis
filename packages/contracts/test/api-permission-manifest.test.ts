@@ -46,6 +46,16 @@ describe("baseApiPermissionManifest", () => {
           requiredPermission: "role:copy"
         }),
         expect.objectContaining({
+          method: "POST",
+          path: "/api/roles/:id/disable",
+          requiredPermission: "role:status:update"
+        }),
+        expect.objectContaining({
+          method: "POST",
+          path: "/api/roles/:id/enable",
+          requiredPermission: "role:status:update"
+        }),
+        expect.objectContaining({
           method: "GET",
           path: "/api/users/:id/organizations",
           requiredPermission: "user:view"

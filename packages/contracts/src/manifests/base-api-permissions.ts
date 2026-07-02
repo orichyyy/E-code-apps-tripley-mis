@@ -353,6 +353,26 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     public: false
   },
   {
+    method: "POST",
+    path: "/api/roles/:id/enable",
+    code: "api.roles.enable",
+    description: "Enable role",
+    module: "roles",
+    requiredPermission: "role:status:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/roles/:id/disable",
+    code: "api.roles.disable",
+    description: "Disable role",
+    module: "roles",
+    requiredPermission: "role:status:update",
+    logLevel: "request",
+    public: false
+  },
+  {
     method: "DELETE",
     path: "/api/roles/:id",
     code: "api.roles.delete",

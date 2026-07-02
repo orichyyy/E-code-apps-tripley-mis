@@ -28,6 +28,14 @@ export function createRoleRoutes(services: BackendCoreServices) {
     return context.json({ data: await services.updateRole(context.req.param("id"), input) });
   });
 
+  routes.post("/roles/:id/enable", async (context) => {
+    return context.json({ data: await services.setRoleStatus(context.req.param("id"), "enabled") });
+  });
+
+  routes.post("/roles/:id/disable", async (context) => {
+    return context.json({ data: await services.setRoleStatus(context.req.param("id"), "disabled") });
+  });
+
   routes.delete("/roles/:id", async (context) => {
     return context.json({ data: await services.deleteRole(context.req.param("id")) });
   });

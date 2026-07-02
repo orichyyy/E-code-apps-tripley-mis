@@ -573,6 +573,68 @@ describe("backend core foundation routes", () => {
     expect(afterDisable.error.code).toBe("PERMISSION_API_DENIED");
   });
 
+  it("enables and disables roles through role status endpoints", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    await app.request("/api/roles/2/permissions", {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({ permissionCodes: ["user:view"] })
+    });
+    await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "status-user",
+        displayName: "Status User",
+        email: "status-user@example.com",
+        phone: "10000000009",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "2"
+      })
+    });
+    const firstLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "status-user", password: "password1" })
+    });
+    const firstLogin = await firstLoginResponse.json();
+    await app.request("/api/auth/change-password", {
+      method: "POST",
+      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+    });
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "status-user", password: "password2" })
+    });
+    const login = await loginResponse.json();
+    const userHeaders = { authorization: `Bearer ${login.data.accessToken}` };
+
+    const disableResponse = await app.request("/api/roles/2/disable", {
+      method: "POST",
+      headers: authHeaders
+    });
+    const disabledUserResponse = await app.request("/api/users", { headers: userHeaders });
+    const enableResponse = await app.request("/api/roles/2/enable", {
+      method: "POST",
+      headers: authHeaders
+    });
+    const enabledUserResponse = await app.request("/api/users", { headers: userHeaders });
+
+    expect(disableResponse.status).toBe(200);
+    await expect(disableResponse.json()).resolves.toMatchObject({
+      data: { id: "2", status: "disabled" }
+    });
+    expect(disabledUserResponse.status).toBe(403);
+    expect(enableResponse.status).toBe(200);
+    await expect(enableResponse.json()).resolves.toMatchObject({
+      data: { id: "2", status: "enabled" }
+    });
+    expect(enabledUserResponse.status).toBe(200);
+  });
+
   it("assigns one role per user organization and supports removing the binding", async () => {
     const { app, setup } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
