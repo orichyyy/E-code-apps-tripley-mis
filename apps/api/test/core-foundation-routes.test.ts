@@ -2596,6 +2596,10 @@ describe("backend core foundation routes", () => {
       expect.objectContaining({
         code: "api.health.view",
         logLevel: "none"
+      }),
+      expect.objectContaining({
+        code: "api.metrics.view",
+        logLevel: "none"
       })
     ]);
   });

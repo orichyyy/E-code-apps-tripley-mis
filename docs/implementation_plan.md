@@ -230,6 +230,7 @@ The backend core goal has partial implementation progress:
 - Tightened session API serialization so the internal session token-version snapshot remains hidden from login, refresh, logout, current-user context, and online-user responses while still being used for invalidation checks.
 - Tightened the cookie-backed refresh-token endpoint so JSON request bodies are rejected; refresh exchange now uses only the HttpOnly refresh-token cookie boundary until the unresolved CSRF strategy is confirmed.
 - Added confirmed refresh-token cookie configuration for SameSite, Secure, Domain, and Path; login and logout now use the same configured cookie attributes, and `.env.example` exposes the deployment knobs.
+- Added the reserved public `GET /api/metrics` observability placeholder with request ID propagation and API permission manifest coverage.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

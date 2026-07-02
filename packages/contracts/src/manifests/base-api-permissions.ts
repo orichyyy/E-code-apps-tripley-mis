@@ -23,6 +23,15 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
   },
   {
     method: "GET",
+    path: "/api/metrics",
+    code: "api.metrics.view",
+    description: "Metrics endpoint placeholder",
+    module: "observability",
+    logLevel: "none",
+    public: true
+  },
+  {
+    method: "GET",
     path: "/api/initialization/status",
     code: "api.initialization.status",
     description: "Check initialization status",

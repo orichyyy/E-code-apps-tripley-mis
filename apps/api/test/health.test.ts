@@ -20,4 +20,24 @@ describe("api health route", () => {
       requestId: "test-request-123"
     });
   });
+
+  it("exposes the reserved metrics endpoint with a request id", async () => {
+    const app = createApp();
+    const response = await app.request("/api/metrics", {
+      headers: {
+        "x-request-id": "metrics-request-123"
+      }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("x-request-id")).toBe("metrics-request-123");
+    expect(body).toMatchObject({
+      data: {
+        status: "reserved",
+        service: "api",
+        requestId: "metrics-request-123"
+      }
+    });
+  });
 });

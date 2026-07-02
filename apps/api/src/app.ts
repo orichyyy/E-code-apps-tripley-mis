@@ -39,6 +39,17 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
     );
   });
 
+  app.get("/metrics", (context) => {
+    return context.json({
+      data: {
+        status: "reserved",
+        service: "api",
+        requestId: context.get("requestId"),
+        timestamp: new Date().toISOString()
+      }
+    });
+  });
+
   app.route("/", createCoreFoundationRoutes(dependencies.backendCoreServices));
   app.route("/", createManifestRoutes());
 
