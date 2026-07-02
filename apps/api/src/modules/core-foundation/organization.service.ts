@@ -188,7 +188,6 @@ export class OrganizationService {
   private findUsedSiblingSegments(parent?: OrganizationRecord): number[] {
     return [...this.context.store.organizations.values()]
       .filter((organization) => {
-        if (organization.isDeleted) return false;
         if (!parent) return organization.level === 1;
         return (
           organization.level === parent.level + 1 &&

@@ -2175,6 +2175,40 @@ describe("backend core foundation routes", () => {
     expect(duplicateMenu.error.code).toBe("VALIDATION_DUPLICATE_MENU_CODE");
   });
 
+  it("keeps organization path segments reserved after soft delete", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const firstChildResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Reserved Path Child",
+        code: "reserved-path-child"
+      })
+    });
+    const firstChild = await firstChildResponse.json();
+    await app.request(`/api/organizations/${firstChild.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const secondChildResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Replacement Path Child",
+        code: "replacement-path-child"
+      })
+    });
+    const secondChild = await secondChildResponse.json();
+
+    expect(firstChildResponse.status).toBe(201);
+    expect(secondChildResponse.status).toBe(201);
+    expect(secondChild.data.segment).not.toBe(firstChild.data.segment);
+    expect(secondChild.data.path).not.toBe(firstChild.data.path);
+  });
+
   it("records authenticated user audit fields on user and organization changes", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
