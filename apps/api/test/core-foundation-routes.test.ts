@@ -1135,6 +1135,51 @@ describe("backend core foundation routes", () => {
     });
   });
 
+  it("rejects organization move attempts through update payloads", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "No Move Child",
+        code: "no-move-child"
+      })
+    });
+    const child = await childResponse.json();
+    const alternateRootResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ name: "No Move Root", code: "no-move-root" })
+    });
+    const alternateRoot = await alternateRootResponse.json();
+
+    const moveResponse = await app.request(`/api/organizations/${child.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: alternateRoot.data.id,
+        name: "Moved Child"
+      })
+    });
+    const move = await moveResponse.json();
+    const detailResponse = await app.request(`/api/organizations/${child.data.id}`, {
+      headers: authHeaders
+    });
+    const detail = await detailResponse.json();
+
+    expect(moveResponse.status).toBe(400);
+    expect(move.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(detail.data).toMatchObject({
+      id: child.data.id,
+      name: "No Move Child",
+      level: 2,
+      segment: child.data.segment,
+      path: child.data.path
+    });
+  });
+
   it("rejects organization manager references to missing or soft-deleted users", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

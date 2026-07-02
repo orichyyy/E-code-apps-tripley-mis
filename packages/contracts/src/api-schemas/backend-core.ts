@@ -42,16 +42,18 @@ export const createOrganizationRequestSchema = z.object({
   remark: z.string().optional()
 });
 
-export const updateOrganizationRequestSchema = z.object({
-  name: z.string().min(1).optional(),
-  code: z.string().min(1).optional(),
-  managerUserId: integerIdStringSchema.nullable().optional(),
-  phone: z.string().min(1).nullable().optional(),
-  email: z.string().email().nullable().optional(),
-  address: z.string().min(1).nullable().optional(),
-  sortOrder: z.number().int().optional(),
-  remark: z.string().nullable().optional()
-});
+export const updateOrganizationRequestSchema = z
+  .object({
+    name: z.string().min(1).optional(),
+    code: z.string().min(1).optional(),
+    managerUserId: integerIdStringSchema.nullable().optional(),
+    phone: z.string().min(1).nullable().optional(),
+    email: z.string().email().nullable().optional(),
+    address: z.string().min(1).nullable().optional(),
+    sortOrder: z.number().int().optional(),
+    remark: z.string().nullable().optional()
+  })
+  .strict();
 
 export const updateOrganizationDepthConfigRequestSchema = z.object({
   maxDepth: z.number().int().min(1).max(8)
