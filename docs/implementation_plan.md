@@ -159,6 +159,7 @@ The backend core goal has partial implementation progress:
 - Added contract coverage for base route and menu manifest consistency so seeded menus cannot reference undeclared route codes, parent menu codes, or permission codes.
 - Aligned `/api/organizations/tree` and `/api/menus/tree` with their management contracts by returning nested `children` trees. Organization nesting is derived from the confirmed materialized-path design without adding `parent_id`, and menu nesting uses the existing managed menu parent relationship.
 - Tightened managed menu validation so administrator-created or updated menus cannot reference unknown permission codes or undeclared route metadata records. Initialization now syncs base route metadata before seeding base menus so seed data follows the same validation path as API-created menus.
+- Aligned in-memory uniqueness rules with the current SQLite/PostgreSQL non-partial unique indexes so soft-deleted users, organizations, roles, and menus keep their unique identifiers reserved for audit-safe historical references.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

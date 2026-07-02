@@ -299,7 +299,6 @@ export class UserService {
 
   private ensureUniqueUser(username: string, email: string, phone: string): void {
     for (const user of this.context.store.users.values()) {
-      if (user.isDeleted) continue;
       if (user.username === username) throw createKnownError("VALIDATION_DUPLICATE_USERNAME");
       if (user.email === email) throw createKnownError("VALIDATION_DUPLICATE_EMAIL");
       if (user.phone === phone) throw createKnownError("VALIDATION_DUPLICATE_PHONE");
@@ -308,7 +307,7 @@ export class UserService {
 
   private ensureUniqueUserUpdate(user: UserRecord, input: UpdateUserRequest): void {
     for (const candidate of this.context.store.users.values()) {
-      if (candidate.isDeleted || candidate.id === user.id) continue;
+      if (candidate.id === user.id) continue;
       if (input.username !== undefined && candidate.username === input.username) {
         throw createKnownError("VALIDATION_DUPLICATE_USERNAME");
       }

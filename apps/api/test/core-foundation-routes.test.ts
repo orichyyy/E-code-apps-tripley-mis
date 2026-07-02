@@ -2017,6 +2017,112 @@ describe("backend core foundation routes", () => {
     });
   });
 
+  it("keeps unique identifiers reserved after soft delete", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const organizationResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ name: "Reusable Organization", code: "reserved-org" })
+    });
+    const organization = await organizationResponse.json();
+    const userResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "reserved-user",
+        displayName: "Reserved User",
+        email: "reserved-user@example.com",
+        phone: "15500000001",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const user = await userResponse.json();
+    const roleResponse = await app.request("/api/roles", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ name: "Reserved Role", code: "reserved_role" })
+    });
+    const role = await roleResponse.json();
+    const menuResponse = await app.request("/api/menus", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentMenuId: "2",
+        code: "system.reserved",
+        titleI18nKey: "routes.system.reserved",
+        path: "/system/reserved"
+      })
+    });
+    const menu = await menuResponse.json();
+
+    await app.request(`/api/organizations/${organization.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    await app.request(`/api/users/${user.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    await app.request(`/api/roles/${role.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    await app.request(`/api/menus/${menu.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+
+    const duplicateOrganizationResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ name: "Duplicate Organization", code: "reserved-org" })
+    });
+    const duplicateOrganization = await duplicateOrganizationResponse.json();
+    const duplicateUserResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "reserved-user",
+        displayName: "Duplicate User",
+        email: "duplicate-user@example.com",
+        phone: "15500000002",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const duplicateUser = await duplicateUserResponse.json();
+    const duplicateRoleResponse = await app.request("/api/roles", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ name: "Duplicate Role", code: "reserved_role" })
+    });
+    const duplicateRole = await duplicateRoleResponse.json();
+    const duplicateMenuResponse = await app.request("/api/menus", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentMenuId: "2",
+        code: "system.reserved",
+        titleI18nKey: "routes.system.reservedDuplicate",
+        path: "/system/reserved-duplicate"
+      })
+    });
+    const duplicateMenu = await duplicateMenuResponse.json();
+
+    expect(duplicateOrganizationResponse.status).toBe(409);
+    expect(duplicateOrganization.error.code).toBe("VALIDATION_DUPLICATE_ORGANIZATION_CODE");
+    expect(duplicateUserResponse.status).toBe(409);
+    expect(duplicateUser.error.code).toBe("VALIDATION_DUPLICATE_USERNAME");
+    expect(duplicateRoleResponse.status).toBe(409);
+    expect(duplicateRole.error.code).toBe("VALIDATION_DUPLICATE_ROLE_CODE");
+    expect(duplicateMenuResponse.status).toBe(409);
+    expect(duplicateMenu.error.code).toBe("VALIDATION_DUPLICATE_MENU_CODE");
+  });
+
   it("records authenticated user audit fields on user and organization changes", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

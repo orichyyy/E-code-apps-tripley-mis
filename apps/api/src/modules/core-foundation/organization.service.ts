@@ -221,7 +221,6 @@ export class OrganizationService {
   private ensureUniqueOrganizationCode(code: string, currentOrganizationId?: string): void {
     const duplicate = [...this.context.store.organizations.values()].some(
       (organization) =>
-        !organization.isDeleted &&
         organization.id !== currentOrganizationId &&
         organization.code === code
     );

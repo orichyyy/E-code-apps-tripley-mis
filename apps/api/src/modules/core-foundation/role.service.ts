@@ -167,7 +167,7 @@ export class RoleService {
 
   private roleCodeExists(code: string, currentRoleId?: string): boolean {
     return [...this.context.store.roles.values()].some(
-      (role) => !role.isDeleted && role.id !== currentRoleId && role.code === code
+      (role) => role.id !== currentRoleId && role.code === code
     );
   }
 }

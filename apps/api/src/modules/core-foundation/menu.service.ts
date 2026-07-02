@@ -180,14 +180,14 @@ export class MenuService {
 
   private ensureUniqueMenuCode(code: string, currentMenuId?: string): void {
     const duplicate = [...this.context.store.menus.values()].some(
-      (menu) => !menu.isDeleted && menu.id !== currentMenuId && menu.code === code
+      (menu) => menu.id !== currentMenuId && menu.code === code
     );
     if (duplicate) throw createKnownError("VALIDATION_DUPLICATE_MENU_CODE");
   }
 
   private ensureUniqueMenuPath(path: string, currentMenuId?: string): void {
     const duplicate = [...this.context.store.menus.values()].some(
-      (menu) => !menu.isDeleted && menu.id !== currentMenuId && menu.path === path
+      (menu) => menu.id !== currentMenuId && menu.path === path
     );
     if (duplicate) throw createKnownError("VALIDATION_DUPLICATE_MENU_PATH");
   }
