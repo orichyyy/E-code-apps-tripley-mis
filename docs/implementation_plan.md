@@ -178,6 +178,7 @@ The backend core goal has partial implementation progress:
 - Tightened permission manifest synchronization so stale base permission/API metadata is disabled, and role permission updates only accept currently enabled permission metadata.
 - Tightened API permission manifest synchronization so legacy metadata records are reconciled by method/path when the canonical API permission code record is missing, matching the database unique constraints.
 - Tightened stale role-permission lifecycle so disabled or missing permission metadata is pruned during manifest sync and excluded from role permission reads/copies.
+- Tightened repeated seed synchronization so base menus are reconciled by path when the canonical menu code record is missing, matching the menu path uniqueness rule.
 - Tightened managed menu validation so menu bindings can only reference currently enabled permission metadata.
 - Tightened route metadata lifecycle so route manifest sync disables stale route records, and managed menus can only reference enabled route metadata.
 - Tightened effective menu context filtering so menus linked to disabled or stale route metadata are hidden from user navigation after route manifest sync.

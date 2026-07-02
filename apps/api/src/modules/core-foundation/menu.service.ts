@@ -118,11 +118,10 @@ export class MenuService {
     const seeded: MenuRecord[] = [];
 
     for (const entry of manifest) {
-      const existing = [...this.context.store.menus.values()].find(
-        (menu) => menu.code === entry.code
-      );
+      const existing = this.findExistingBaseMenu(entry);
       const parentMenuId = entry.parentCode ? byCode.get(entry.parentCode)?.id : undefined;
       if (existing) {
+        existing.code = entry.code;
         existing.parentMenuId = parentMenuId ?? null;
         existing.titleI18nKey = entry.titleI18nKey;
         existing.path = entry.path;
@@ -155,6 +154,13 @@ export class MenuService {
     }
 
     return seeded;
+  }
+
+  private findExistingBaseMenu(entry: BaseMenuManifestEntry): MenuRecord | undefined {
+    return (
+      [...this.context.store.menus.values()].find((menu) => menu.code === entry.code) ??
+      [...this.context.store.menus.values()].find((menu) => menu.path === entry.path)
+    );
   }
 
   private ensureParentExists(parentMenuId: string | null): void {

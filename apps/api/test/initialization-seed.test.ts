@@ -146,6 +146,31 @@ describe("initialization seed", () => {
     });
   });
 
+  it("reconciles base menus by path during repeated seed sync", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const input = readInitializationSeedInput(seedEnv);
+
+    await services.seedInitialization(input);
+    const menu = services.listMenus().find((candidate) => candidate.code === "system.users");
+    if (!menu) throw new Error("Expected system.users base menu to exist");
+    menu.code = "system.users.legacy";
+    const result = await services.seedInitialization(input);
+    const usersMenus = services
+      .listMenus()
+      .filter((candidate) => candidate.path === "/system/users");
+
+    expect(result.seeded).toBe(false);
+    expect(usersMenus).toEqual([
+      expect.objectContaining({
+        id: menu.id,
+        code: "system.users",
+        path: "/system/users",
+        status: "enabled",
+        isDeleted: false
+      })
+    ]);
+  });
+
   it("restores disabled route metadata during repeated seed sync", async () => {
     const services = createInMemoryBackendCoreServices();
     const input = readInitializationSeedInput(seedEnv);
