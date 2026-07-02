@@ -26,6 +26,10 @@ export class OrganizationService {
       .map(toPublicOrganization);
   }
 
+  get(id: string): PublicOrganization {
+    return toPublicOrganization(requireOrganization(this.context.store, id));
+  }
+
   create(input: CreateOrganizationRequest): PublicOrganization {
     return toPublicOrganization(this.createRecord(input));
   }

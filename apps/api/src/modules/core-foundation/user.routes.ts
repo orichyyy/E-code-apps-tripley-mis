@@ -21,7 +21,7 @@ export function createUserRoutes(services: BackendCoreServices) {
   });
 
   routes.get("/users/:id", (context) => {
-    return context.json({ data: services.listUsers().find((user) => user.id === context.req.param("id")) });
+    return context.json({ data: services.getUser(context.req.param("id")) });
   });
 
   routes.patch("/users/:id", async (context) => {

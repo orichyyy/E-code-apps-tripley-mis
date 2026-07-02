@@ -19,9 +19,7 @@ export function createOrganizationRoutes(services: BackendCoreServices) {
   });
 
   routes.get("/organizations/:id", (context) => {
-    return context.json({
-      data: services.listOrganizations().find((organization) => organization.id === context.req.param("id"))
-    });
+    return context.json({ data: services.getOrganization(context.req.param("id")) });
   });
 
   routes.patch("/organizations/:id", async (context) => {

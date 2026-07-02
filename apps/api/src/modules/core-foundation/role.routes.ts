@@ -20,7 +20,7 @@ export function createRoleRoutes(services: BackendCoreServices) {
   });
 
   routes.get("/roles/:id", (context) => {
-    return context.json({ data: services.listRoles().find((role) => role.id === context.req.param("id")) });
+    return context.json({ data: services.getRole(context.req.param("id")) });
   });
 
   routes.patch("/roles/:id", async (context) => {

@@ -18,6 +18,10 @@ export class RoleService {
     return [...this.context.store.roles.values()].filter((role) => !role.isDeleted);
   }
 
+  get(id: string): RoleRecord {
+    return requireRole(this.context.store, id);
+  }
+
   create(input: CreateRoleRequest): RoleRecord {
     return this.createRecord(input);
   }

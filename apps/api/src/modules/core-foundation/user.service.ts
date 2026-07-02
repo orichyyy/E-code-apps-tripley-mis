@@ -27,6 +27,10 @@ export class UserService {
     return [...this.context.store.users.values()].filter((user) => !user.isDeleted).map(toPublicUser);
   }
 
+  get(id: string): PublicUser {
+    return toPublicUser(requireUser(this.context.store, id));
+  }
+
   async create(input: CreateUserRequest): Promise<PublicUser> {
     return toPublicUser(await this.createRecord(input));
   }

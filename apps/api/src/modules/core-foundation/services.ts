@@ -133,6 +133,10 @@ export class BackendCoreServices {
     return this.organizations.list();
   }
 
+  getOrganization(id: string) {
+    return this.organizations.get(id);
+  }
+
   createOrganization(input: CreateOrganizationRequest) {
     return this.organizations.create(input);
   }
@@ -155,6 +159,10 @@ export class BackendCoreServices {
 
   listUsers() {
     return this.users.list();
+  }
+
+  getUser(id: string) {
+    return this.users.get(id);
   }
 
   createUser(input: CreateUserRequest) {
@@ -195,6 +203,10 @@ export class BackendCoreServices {
 
   listRoles() {
     return this.roles.list();
+  }
+
+  getRole(id: string) {
+    return this.roles.get(id);
   }
 
   createRole(input: CreateRoleRequest) {

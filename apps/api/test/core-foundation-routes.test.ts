@@ -177,6 +177,27 @@ describe("backend core foundation routes", () => {
     expect(body.error.code).toBe("VALIDATION_DUPLICATE_ORGANIZATION_CODE");
   });
 
+  it("returns stable not-found errors for missing core detail records", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const organizationResponse = await app.request("/api/organizations/999", {
+      headers: authHeaders
+    });
+    const organization = await organizationResponse.json();
+    const userResponse = await app.request("/api/users/999", { headers: authHeaders });
+    const user = await userResponse.json();
+    const roleResponse = await app.request("/api/roles/999", { headers: authHeaders });
+    const role = await roleResponse.json();
+
+    expect(organizationResponse.status).toBe(404);
+    expect(organization.error.code).toBe("ORGANIZATION_NOT_FOUND");
+    expect(userResponse.status).toBe(404);
+    expect(user.error.code).toBe("USER_NOT_FOUND");
+    expect(roleResponse.status).toBe(404);
+    expect(role.error.code).toBe("ROLE_NOT_FOUND");
+  });
+
   it("resets a user password and increments user token version", async () => {
     const { app, setup } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
