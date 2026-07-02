@@ -215,6 +215,7 @@ The backend core goal has partial implementation progress:
 - Added service coverage proving expired refresh-token exchange marks the backing login session `expired` and keeps it excluded from the online-user data source.
 - Aligned the SQLite/PostgreSQL menu schema and migrations with the documented menu permission-code model by storing menu permission references as `permission_code` instead of `permission_id`.
 - Added route coverage proving first-start initialization rejects a weak super-administrator password under the configured password policy and leaves the system uninitialized.
+- Added seed-command coverage proving CLI initialization enforces the same configured super-administrator password policy as the first-start wizard path.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

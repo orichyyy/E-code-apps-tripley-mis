@@ -24,6 +24,18 @@ describe("initialization seed", () => {
     );
   });
 
+  it("rejects seed initialization when the administrator password violates policy", async () => {
+    await expect(
+      runInitializationSeed({
+        ...seedEnv,
+        WEB_ADMIN_SEED_ADMIN_PASSWORD: "password"
+      })
+    ).rejects.toMatchObject({
+      code: "PASSWORD_REQUIRES_NUMBER",
+      status: 400
+    });
+  });
+
   it("runs seed initialization from environment input", async () => {
     const summary = await runInitializationSeed(seedEnv);
 
