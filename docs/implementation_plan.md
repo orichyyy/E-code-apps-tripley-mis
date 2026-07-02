@@ -210,6 +210,7 @@ The backend core goal has partial implementation progress:
 - Added route coverage proving refresh-token exchange advances the backing session `lastSeenAt` timestamp, keeping the online-user data source aligned with refresh activity.
 - Tightened the online-user listing route so it asserts an authenticated context locally in addition to API-manifest authorization, with route coverage proving users without `online-user:view` cannot read the session-backed online-user source.
 - Tightened command-line seed summary coverage so route metadata and API-permission metadata creation are asserted alongside roles, permissions, menus, organization, and administrator output.
+- Tightened repeated seed synchronization so a soft-deleted initialization owner is not returned as the active administrator in seed results, preserving the default soft-delete response rule without inventing replacement-admin behavior.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

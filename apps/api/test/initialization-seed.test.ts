@@ -125,6 +125,18 @@ describe("initialization seed", () => {
     expect(login.data.permissionCodes).toEqual(expect.arrayContaining(["user:view"]));
   });
 
+  it("does not expose a soft-deleted initialized administrator during repeated seed sync", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const input = readInitializationSeedInput(seedEnv);
+
+    await services.seedInitialization(input);
+    await services.deleteUser("1", "1");
+    const result = await services.seedInitialization(input);
+
+    expect(result.seeded).toBe(false);
+    expect(result.admin).toBeNull();
+  });
+
   it("restores soft-deleted base menus during repeated seed sync", async () => {
     const services = createInMemoryBackendCoreServices();
     const input = readInitializationSeedInput(seedEnv);

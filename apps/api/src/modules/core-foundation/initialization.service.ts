@@ -63,11 +63,12 @@ export class InitializationService {
     const menus = this.menus.seedBaseMenus(baseMenuManifest);
     const initializedBy = this.context.store.initializationState.initializedBy;
     const admin = initializedBy ? this.context.store.users.get(initializedBy) : undefined;
-    if (admin && !admin.isDeleted) {
-      const organization = this.context.store.organizations.get(admin.primaryOrganizationId);
+    const activeAdmin = admin && !admin.isDeleted ? admin : null;
+    if (activeAdmin) {
+      const organization = this.context.store.organizations.get(activeAdmin.primaryOrganizationId);
       if (organization && !organization.isDeleted && organization.status === "enabled") {
         this.users.assignOrganizationRole(
-          admin.id,
+          activeAdmin.id,
           {
             organizationId: organization.id,
             roleId: superAdminRole.id
@@ -81,7 +82,7 @@ export class InitializationService {
     return {
       state: this.context.store.initializationState,
       organization: null,
-      admin: admin ? toPublicUser(admin) : null,
+      admin: activeAdmin ? toPublicUser(activeAdmin) : null,
       roles: this.roles.list(),
       permissions,
       apiPermissions,
