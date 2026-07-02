@@ -29,6 +29,7 @@ export const basePermissionManifest: PermissionManifestEntry[] = [
   { code: "role:delete", description: "Soft delete role", module: "roles" },
   { code: "permission:view", description: "View permissions", module: "permissions" },
   { code: "permission:sync", description: "Sync permission manifest", module: "permissions" },
+  { code: "permission:api:sync", description: "Sync API permissions", module: "permissions" },
   { code: "menu:view", description: "View menu tree", module: "menus" },
   { code: "menu:create", description: "Create menu", module: "menus" },
   { code: "menu:update", description: "Update menu", module: "menus" },

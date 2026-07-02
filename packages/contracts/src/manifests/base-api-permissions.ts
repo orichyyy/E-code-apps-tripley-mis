@@ -443,6 +443,26 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
   },
   {
     method: "GET",
+    path: "/api/permissions/api",
+    code: "api.permissions.api.list",
+    description: "Query API permission identifiers",
+    module: "permissions",
+    requiredPermission: "permission:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/permissions/api/sync",
+    code: "api.permissions.api.sync",
+    description: "Sync API permission identifiers",
+    module: "permissions",
+    requiredPermission: "permission:api:sync",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "GET",
     path: "/api/permissions/manifest",
     code: "api.permissions.manifest",
     description: "Preview generated permission manifest",

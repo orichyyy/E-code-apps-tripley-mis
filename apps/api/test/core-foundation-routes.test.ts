@@ -824,11 +824,19 @@ describe("backend core foundation routes", () => {
       headers: authHeaders
     });
     const secondBody = await secondResponse.json();
+    const apiListResponse = await app.request("/api/permissions/api", { headers: authHeaders });
+    const apiList = await apiListResponse.json();
+    const apiSyncResponse = await app.request("/api/permissions/api/sync", {
+      method: "POST",
+      headers: authHeaders
+    });
+    const apiSync = await apiSyncResponse.json();
 
     expect(response.status).toBe(200);
     expect(body.data.permissions).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: expect.any(String), code: "permission:sync" })
+        expect.objectContaining({ id: expect.any(String), code: "permission:sync" }),
+        expect.objectContaining({ id: expect.any(String), code: "permission:api:sync" })
       ])
     );
     expect(body.data.apiPermissions).toEqual(
@@ -838,6 +846,26 @@ describe("backend core foundation routes", () => {
     );
     expect(secondBody.data.permissions[0].id).toBe(body.data.permissions[0].id);
     expect(secondBody.data.apiPermissions[0].id).toBe(body.data.apiPermissions[0].id);
+    expect(apiListResponse.status).toBe(200);
+    expect(apiList.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: expect.any(String),
+          code: "api.permissions.api.sync",
+          requiredPermission: "permission:api:sync"
+        })
+      ])
+    );
+    expect(apiSyncResponse.status).toBe(200);
+    expect(apiSync.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: expect.any(String),
+          code: "api.permissions.api.sync",
+          path: "/api/permissions/api/sync"
+        })
+      ])
+    );
   });
 
   it("lists initialized permission records with API JSON string ids", async () => {

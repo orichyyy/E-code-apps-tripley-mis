@@ -82,5 +82,14 @@ export function createRoleRoutes(services: BackendCoreServices) {
     return context.json({ data: await services.syncPermissions() });
   });
 
+  routes.get("/permissions/api", (context) => {
+    return context.json({ data: services.listApiPermissions() });
+  });
+
+  routes.post("/permissions/api/sync", async (context) => {
+    const result = await services.syncPermissions();
+    return context.json({ data: result.apiPermissions });
+  });
+
   return routes;
 }
