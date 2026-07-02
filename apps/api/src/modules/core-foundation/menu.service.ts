@@ -213,7 +213,7 @@ export class MenuService {
   private ensureKnownRoute(routeCode: string | null): void {
     if (routeCode === null) return;
     const route = [...this.context.store.routeMetadata.values()].find(
-      (candidate) => candidate.routeCode === routeCode
+      (candidate) => candidate.routeCode === routeCode && candidate.status === "enabled"
     );
     if (!route) throw createKnownError("VALIDATION_INVALID_REQUEST");
   }

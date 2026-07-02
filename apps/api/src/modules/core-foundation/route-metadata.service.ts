@@ -15,6 +15,14 @@ export class RouteMetadataService {
   }
 
   syncBaseRoutes(manifest: AdminRouteMetadata[]): RouteMetadataRecord[] {
+    const currentRouteCodes = new Set(manifest.map((entry) => entry.routeCode));
+    const now = toUtcIso(nowUtc());
+    for (const route of this.context.store.routeMetadata.values()) {
+      if (!currentRouteCodes.has(route.routeCode)) {
+        route.status = "disabled";
+        route.updatedAt = now;
+      }
+    }
     return manifest.map((entry) => this.upsertManifestEntry(entry));
   }
 

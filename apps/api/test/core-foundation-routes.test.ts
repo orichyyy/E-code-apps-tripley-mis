@@ -1809,7 +1809,7 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
     const { authHeaders } = await loginAsAdmin(app);
     const store = services["context"].store;
-    const now = new Date().toISOString();
+    const now = "2026-01-01T00:00:00.000Z";
     store.permissions.set("999", {
       id: "999",
       tenantId: null,
@@ -2126,6 +2126,41 @@ describe("backend core foundation routes", () => {
     expect(create.error.code).toBe("PERMISSION_UNKNOWN_CODE");
     expect(updateResponse.status).toBe(400);
     expect(update.error.code).toBe("PERMISSION_UNKNOWN_CODE");
+  });
+
+  it("rejects managed menus that reference disabled route metadata", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const { authHeaders } = await loginAsAdmin(app);
+    const menuRoute = [...services["context"].store.routeMetadata.values()].find(
+      (route) => route.routeCode === "system.menus"
+    );
+    if (!menuRoute) throw new Error("Expected seeded system.menus route metadata");
+    menuRoute.status = "disabled";
+
+    const createResponse = await app.request("/api/menus", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentMenuId: "2",
+        code: "system.disabled-route",
+        titleI18nKey: "routes.system.disabledRoute",
+        path: "/system/disabled-route",
+        routeCode: "system.menus"
+      })
+    });
+    const create = await createResponse.json();
+    const updateResponse = await app.request("/api/menus/2", {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ routeCode: "system.menus" })
+    });
+    const update = await updateResponse.json();
+
+    expect(createResponse.status).toBe(400);
+    expect(create.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(updateResponse.status).toBe(400);
+    expect(update.error.code).toBe("VALIDATION_INVALID_REQUEST");
   });
 
   it("soft deletes managed menu descendants with their parent", async () => {
@@ -2794,6 +2829,43 @@ describe("backend core foundation routes", () => {
           manifestHash: expect.stringMatching(/^[a-f0-9]{64}$/)
         })
       ])
+    );
+  });
+
+  it("disables stale base route metadata on sync", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const { authHeaders } = await loginAsAdmin(app);
+    const now = "2026-01-01T00:00:00.000Z";
+    const staleRoute = {
+      id: services["context"].store.nextId("routeMetadata"),
+      tenantId: null,
+      routeCode: "system.obsolete",
+      path: "/system/obsolete",
+      titleI18nKey: "routes.system.obsolete",
+      requiredPermission: "menu:view",
+      metadataJson: {},
+      manifestHash: "obsolete",
+      menuVisible: true,
+      icon: null,
+      sortOrder: 999,
+      status: "enabled" as const,
+      createdAt: now,
+      updatedAt: now
+    };
+    services["context"].store.routeMetadata.set(staleRoute.id, staleRoute);
+
+    const syncResponse = await app.request("/api/routes/sync", {
+      method: "POST",
+      headers: authHeaders
+    });
+    const synced = await syncResponse.json();
+
+    expect(syncResponse.status).toBe(200);
+    expect(staleRoute.status).toBe("disabled");
+    expect(staleRoute.updatedAt).not.toBe(now);
+    expect(synced.data).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ routeCode: "system.obsolete" })])
     );
   });
 
