@@ -117,6 +117,9 @@ export class PermissionService {
     if (filters.status !== undefined && !isEntityStatus(filters.status)) {
       throw createKnownError("VALIDATION_INVALID_REQUEST");
     }
+    if (filters.method !== undefined && !isApiPermissionMethod(filters.method)) {
+      throw createKnownError("VALIDATION_INVALID_REQUEST");
+    }
 
     const keyword = filters.keyword?.trim().toLocaleLowerCase();
     const method = filters.method?.trim().toUpperCase();
@@ -333,6 +336,10 @@ function isPasswordLifecycleRoute(apiPermissionCode: string): boolean {
 
 function isEntityStatus(status: string): status is ApiPermissionRecord["status"] {
   return status === "enabled" || status === "disabled";
+}
+
+function isApiPermissionMethod(method: string): boolean {
+  return ["GET", "POST", "PATCH", "PUT", "DELETE"].includes(method.toUpperCase());
 }
 
 function matchesApiPermissionKeyword(

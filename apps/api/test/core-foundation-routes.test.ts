@@ -2069,6 +2069,25 @@ describe("backend core foundation routes", () => {
     ]);
   });
 
+  it("rejects invalid API permission identifier filters", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const methodResponse = await app.request("/api/permissions/api?method=TRACE", {
+      headers: authHeaders
+    });
+    const methodBody = await methodResponse.json();
+    const publicResponse = await app.request("/api/permissions/api?public=maybe", {
+      headers: authHeaders
+    });
+    const publicBody = await publicResponse.json();
+
+    expect(methodResponse.status).toBe(400);
+    expect(methodBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(publicResponse.status).toBe(400);
+    expect(publicBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+  });
+
   it("disables stale base manifest permission metadata on sync", async () => {
     const services = createInMemoryBackendCoreServices();
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
