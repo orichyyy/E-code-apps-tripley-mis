@@ -235,6 +235,7 @@ The backend core goal has partial implementation progress:
 - Aligned the serialized JWT access-token payload with the confirmed `token_version` claim while keeping the internal TypeScript auth context camelCase.
 - Added route coverage proving login responses do not serialize the raw refresh token; the token is delivered only through the configured HttpOnly cookie boundary.
 - Added route coverage proving refresh responses do not serialize the raw refresh token or internal session token-version snapshot.
+- Added route coverage proving current-user and logout session responses also hide the internal session token-version snapshot.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

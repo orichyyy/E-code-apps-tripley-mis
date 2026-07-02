@@ -550,6 +550,7 @@ describe("backend core foundation routes", () => {
     expect(body.data.user.username).toBe("admin");
     expect(body.data.session.currentOrganizationId).toBe("1");
     expect(body.data.session).not.toHaveProperty("refreshTokenHash");
+    expect(body.data.session).not.toHaveProperty("tokenVersion");
     expect(body.data.currentOrganization.id).toBe("1");
     expect(body.data.organizations).toEqual(
       expect.arrayContaining([expect.objectContaining({ id: "1" })])
@@ -1007,6 +1008,7 @@ describe("backend core foundation routes", () => {
     expect(logoutResponse.headers.get("set-cookie")).toContain("Max-Age=0");
     expect(logout.data.status).toBe("revoked");
     expect(logout.data).not.toHaveProperty("refreshTokenHash");
+    expect(logout.data).not.toHaveProperty("tokenVersion");
     expect(refreshResponse.status).toBe(401);
     expect(refresh.error.code).toBe("AUTH_TOKEN_EXPIRED");
   });
