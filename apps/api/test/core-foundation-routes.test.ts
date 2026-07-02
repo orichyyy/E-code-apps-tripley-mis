@@ -2263,6 +2263,50 @@ describe("backend core foundation routes", () => {
     expect(childDetail.error.code).toBe("ORGANIZATION_NOT_FOUND");
   });
 
+  it("does not include soft-deleted organizations in disable cascade responses", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const parentResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Disable Parent Organization",
+        code: "disable-parent-org"
+      })
+    });
+    const parent = await parentResponse.json();
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: parent.data.id,
+        name: "Deleted Before Disable Child",
+        code: "deleted-before-disable-child"
+      })
+    });
+    const child = await childResponse.json();
+    await app.request(`/api/organizations/${child.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const disableResponse = await app.request(`/api/organizations/${parent.data.id}/disable`, {
+      method: "POST",
+      headers: authHeaders
+    });
+    const disabled = await disableResponse.json();
+
+    expect(parentResponse.status).toBe(201);
+    expect(childResponse.status).toBe(201);
+    expect(disableResponse.status).toBe(200);
+    expect(disabled.data).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: parent.data.id })])
+    );
+    expect(disabled.data).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: child.data.id })])
+    );
+  });
+
   it("records authenticated user audit fields on user and organization changes", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

@@ -153,7 +153,9 @@ export class OrganizationService {
     const now = toUtcIso(nowUtc());
     const affected = [...this.context.store.organizations.values()].filter(
       (candidate) =>
-        candidate.id === id || isDescendantPath(candidate.path, organization.path, organization.level)
+        !candidate.isDeleted &&
+        (candidate.id === id ||
+          isDescendantPath(candidate.path, organization.path, organization.level))
     );
     affected.forEach((candidate) => {
       candidate.status = "disabled";

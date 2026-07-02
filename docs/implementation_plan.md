@@ -163,6 +163,7 @@ The backend core goal has partial implementation progress:
 - Tightened managed menu soft deletion so deleting a parent menu also soft deletes descendant menus, preventing orphaned children from appearing as root entries in `/api/menus/tree`.
 - Aligned organization segment allocation with the current non-partial `organizations.path` unique index so soft-deleted organization paths remain reserved and replacement siblings receive a new materialized-path segment.
 - Tightened organization soft deletion so deleting a parent organization also soft deletes descendants through the materialized-path relationship, preventing orphaned child organizations from appearing as root entries in `/api/organizations/tree`.
+- Tightened organization disable cascade responses so already soft-deleted organizations remain excluded, matching the default repository rule that soft-deleted records are hidden from normal queries.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 
