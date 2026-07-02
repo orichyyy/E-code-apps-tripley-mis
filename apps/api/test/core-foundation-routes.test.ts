@@ -2291,6 +2291,30 @@ describe("backend core foundation routes", () => {
     ]);
   });
 
+  it("returns paged API permission identifiers when pagination query parameters are provided", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const response = await app.request("/api/permissions/api?module=users&page=1&pageSize=2", {
+      headers: authHeaders
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toMatchObject({
+      page: 1,
+      pageSize: 2,
+      total: expect.any(Number),
+      totalPages: expect.any(Number)
+    });
+    expect(body.data.total).toBeGreaterThanOrEqual(2);
+    expect(body.data.items).toHaveLength(2);
+    expect(body.data.items).toEqual([
+      expect.objectContaining({ module: "users" }),
+      expect.objectContaining({ module: "users" })
+    ]);
+  });
+
   it("rejects invalid API permission identifier filters", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
@@ -2307,6 +2331,10 @@ describe("backend core foundation routes", () => {
       headers: authHeaders
     });
     const logLevelBody = await logLevelResponse.json();
+    const pageResponse = await app.request("/api/permissions/api?page=0", {
+      headers: authHeaders
+    });
+    const pageBody = await pageResponse.json();
 
     expect(methodResponse.status).toBe(400);
     expect(methodBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
@@ -2314,6 +2342,8 @@ describe("backend core foundation routes", () => {
     expect(publicBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
     expect(logLevelResponse.status).toBe(400);
     expect(logLevelBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(pageResponse.status).toBe(400);
+    expect(pageBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
   });
 
   it("disables stale base manifest permission metadata on sync", async () => {
@@ -2479,6 +2509,29 @@ describe("backend core foundation routes", () => {
     ]);
   });
 
+  it("returns paged initialized permission records when pagination query parameters are provided", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const response = await app.request("/api/permissions?module=users&page=2&pageSize=3", {
+      headers: authHeaders
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toMatchObject({
+      page: 2,
+      pageSize: 3,
+      total: 9,
+      totalPages: 3
+    });
+    expect(body.data.items).toEqual([
+      expect.objectContaining({ code: "user:disable" }),
+      expect.objectContaining({ code: "user:enable" }),
+      expect.objectContaining({ code: "user:lock" })
+    ]);
+  });
+
   it("rejects invalid initialized permission record filters", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
@@ -2491,11 +2544,17 @@ describe("backend core foundation routes", () => {
       headers: authHeaders
     });
     const typeBody = await typeResponse.json();
+    const pageResponse = await app.request("/api/permissions?pageSize=0", {
+      headers: authHeaders
+    });
+    const pageBody = await pageResponse.json();
 
     expect(statusResponse.status).toBe(400);
     expect(statusBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
     expect(typeResponse.status).toBe(400);
     expect(typeBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(pageResponse.status).toBe(400);
+    expect(pageBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
   });
 
   it("reads role permission codes", async () => {

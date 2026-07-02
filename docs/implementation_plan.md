@@ -220,6 +220,7 @@ The backend core goal has partial implementation progress:
 - Tightened access-token verification so signed JWTs with missing or malformed required auth/session claims are rejected before entering backend auth context logic.
 - Added API-permission identifier filtering by confirmed `log_level` metadata, including validation for unsupported log-level query values.
 - Added initialized permission-record filtering by confirmed flat metadata fields: keyword, module, resource, action, type, source, and status.
+- Added optional paged envelopes for permission and API-permission list endpoints when `page` or `pageSize` query parameters are provided, while preserving existing array responses without pagination parameters.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

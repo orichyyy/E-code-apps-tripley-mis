@@ -94,16 +94,22 @@ export function createRoleRoutes(services: BackendCoreServices) {
   });
 
   routes.get("/permissions", (context) => {
+    const permissions = services.listPermissions({
+      action: context.req.query("action"),
+      keyword: context.req.query("keyword"),
+      module: context.req.query("module"),
+      permissionType: context.req.query("type") as PermissionListFilters["permissionType"] | undefined,
+      resource: context.req.query("resource"),
+      source: context.req.query("source"),
+      status: context.req.query("status") as PermissionListFilters["status"] | undefined
+    });
     return context.json({
-      data: services.listPermissions({
-        action: context.req.query("action"),
-        keyword: context.req.query("keyword"),
-        module: context.req.query("module"),
-        permissionType: context.req.query("type") as PermissionListFilters["permissionType"] | undefined,
-        resource: context.req.query("resource"),
-        source: context.req.query("source"),
-        status: context.req.query("status") as PermissionListFilters["status"] | undefined
-      })
+      data: hasPaginationQuery(context)
+        ? pageItems(permissions, {
+            page: context.req.query("page"),
+            pageSize: context.req.query("pageSize")
+          })
+        : permissions
     });
   });
 
@@ -112,15 +118,21 @@ export function createRoleRoutes(services: BackendCoreServices) {
   });
 
   routes.get("/permissions/api", (context) => {
+    const apiPermissions = services.listApiPermissions({
+      keyword: context.req.query("keyword"),
+      logLevel: context.req.query("logLevel") as ApiPermissionListFilters["logLevel"] | undefined,
+      method: context.req.query("method"),
+      module: context.req.query("module"),
+      public: parseOptionalBoolean(context.req.query("public")),
+      status: context.req.query("status") as ApiPermissionListFilters["status"] | undefined
+    });
     return context.json({
-      data: services.listApiPermissions({
-        keyword: context.req.query("keyword"),
-        logLevel: context.req.query("logLevel") as ApiPermissionListFilters["logLevel"] | undefined,
-        method: context.req.query("method"),
-        module: context.req.query("module"),
-        public: parseOptionalBoolean(context.req.query("public")),
-        status: context.req.query("status") as ApiPermissionListFilters["status"] | undefined
-      })
+      data: hasPaginationQuery(context)
+        ? pageItems(apiPermissions, {
+            page: context.req.query("page"),
+            pageSize: context.req.query("pageSize")
+          })
+        : apiPermissions
     });
   });
 
@@ -130,6 +142,10 @@ export function createRoleRoutes(services: BackendCoreServices) {
   });
 
   return routes;
+}
+
+function hasPaginationQuery(context: { req: { query: (name: string) => string | undefined } }): boolean {
+  return context.req.query("page") !== undefined || context.req.query("pageSize") !== undefined;
 }
 
 function parseOptionalBoolean(value: string | undefined): boolean | undefined {
