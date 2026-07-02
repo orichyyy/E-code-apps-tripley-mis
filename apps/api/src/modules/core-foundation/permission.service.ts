@@ -23,6 +23,16 @@ export type ApiPermissionListFilters = {
   status?: ApiPermissionRecord["status"];
 };
 
+export type PermissionListFilters = {
+  action?: string;
+  keyword?: string;
+  module?: string;
+  permissionType?: PermissionRecord["permissionType"];
+  resource?: string;
+  source?: string;
+  status?: PermissionRecord["status"];
+};
+
 export class PermissionService {
   constructor(
     private readonly context: BackendCoreContext,
@@ -110,8 +120,33 @@ export class PermissionService {
     };
   }
 
-  listPermissions(): PermissionRecord[] {
-    return [...this.context.store.permissions.values()];
+  listPermissions(filters: PermissionListFilters = {}): PermissionRecord[] {
+    if (filters.status !== undefined && !isEntityStatus(filters.status)) {
+      throw createKnownError("VALIDATION_INVALID_REQUEST");
+    }
+    if (filters.permissionType !== undefined && !isPermissionType(filters.permissionType)) {
+      throw createKnownError("VALIDATION_INVALID_REQUEST");
+    }
+
+    const action = filters.action?.trim().toLocaleLowerCase();
+    const keyword = filters.keyword?.trim().toLocaleLowerCase();
+    const module = filters.module?.trim().toLocaleLowerCase();
+    const permissionType = filters.permissionType?.trim();
+    const resource = filters.resource?.trim().toLocaleLowerCase();
+    const source = filters.source?.trim().toLocaleLowerCase();
+
+    return [...this.context.store.permissions.values()]
+      .filter((permission) => filters.status === undefined || permission.status === filters.status)
+      .filter((permission) => action === undefined || permission.action.toLocaleLowerCase() === action)
+      .filter((permission) => module === undefined || permission.module.toLocaleLowerCase() === module)
+      .filter(
+        (permission) => permissionType === undefined || permission.permissionType === permissionType
+      )
+      .filter(
+        (permission) => resource === undefined || permission.resource.toLocaleLowerCase() === resource
+      )
+      .filter((permission) => source === undefined || permission.source.toLocaleLowerCase() === source)
+      .filter((permission) => keyword === undefined || matchesPermissionKeyword(permission, keyword));
   }
 
   listApiPermissions(filters: ApiPermissionListFilters = {}): ApiPermissionRecord[] {
@@ -350,6 +385,20 @@ function isApiPermissionMethod(method: string): boolean {
 
 function isApiPermissionLogLevel(logLevel: string): logLevel is ApiPermissionRecord["logLevel"] {
   return ["none", "basic", "request", "request_response"].includes(logLevel);
+}
+
+function isPermissionType(permissionType: string): permissionType is PermissionRecord["permissionType"] {
+  return ["menu", "page", "action", "api", "data", "field"].includes(permissionType);
+}
+
+function matchesPermissionKeyword(permission: PermissionRecord, keyword: string): boolean {
+  return [
+    permission.code,
+    permission.name,
+    permission.description ?? "",
+    permission.resource,
+    permission.action
+  ].some((value) => value.toLocaleLowerCase().includes(keyword));
 }
 
 function matchesApiPermissionKeyword(

@@ -2455,6 +2455,49 @@ describe("backend core foundation routes", () => {
     );
   });
 
+  it("filters initialized permission records by confirmed metadata fields", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const response = await app.request(
+      "/api/permissions?keyword=users&module=users&resource=user&action=view&type=action&source=base_manifest&status=enabled",
+      { headers: authHeaders }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toEqual([
+      expect.objectContaining({
+        code: "user:view",
+        module: "users",
+        resource: "user",
+        action: "view",
+        permissionType: "action",
+        source: "base_manifest",
+        status: "enabled"
+      })
+    ]);
+  });
+
+  it("rejects invalid initialized permission record filters", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const statusResponse = await app.request("/api/permissions?status=archived", {
+      headers: authHeaders
+    });
+    const statusBody = await statusResponse.json();
+    const typeResponse = await app.request("/api/permissions?type=button", {
+      headers: authHeaders
+    });
+    const typeBody = await typeResponse.json();
+
+    expect(statusResponse.status).toBe(400);
+    expect(statusBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(typeResponse.status).toBe(400);
+    expect(typeBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+  });
+
   it("reads role permission codes", async () => {
     const services = createInMemoryBackendCoreServices();
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));

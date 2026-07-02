@@ -8,7 +8,7 @@ import { Hono } from "hono";
 import type { AuthContextVariables } from "../../core/auth-context/auth-context";
 import { createKnownError } from "../../core/errors/error-codes";
 import { pageItems } from "./pagination";
-import type { ApiPermissionListFilters } from "./permission.service";
+import type { ApiPermissionListFilters, PermissionListFilters } from "./permission.service";
 import type { RoleListFilters } from "./role.service";
 import type { BackendCoreServices } from "./services";
 
@@ -94,7 +94,17 @@ export function createRoleRoutes(services: BackendCoreServices) {
   });
 
   routes.get("/permissions", (context) => {
-    return context.json({ data: services.listPermissions() });
+    return context.json({
+      data: services.listPermissions({
+        action: context.req.query("action"),
+        keyword: context.req.query("keyword"),
+        module: context.req.query("module"),
+        permissionType: context.req.query("type") as PermissionListFilters["permissionType"] | undefined,
+        resource: context.req.query("resource"),
+        source: context.req.query("source"),
+        status: context.req.query("status") as PermissionListFilters["status"] | undefined
+      })
+    });
   });
 
   routes.post("/permissions/sync", async (context) => {
