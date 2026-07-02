@@ -1,4 +1,5 @@
-import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
+import { check, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 const timestamps = {
   createdAt: text("created_at").notNull(),
@@ -42,7 +43,11 @@ export const organizations = sqliteTable(
   },
   (table) => ({
     codeUnique: uniqueIndex("organizations_code_unique").on(table.code),
-    pathUnique: uniqueIndex("organizations_path_unique").on(table.path)
+    pathUnique: uniqueIndex("organizations_path_unique").on(table.path),
+    rootSegmentCheck: check(
+      "organizations_root_segment_check",
+      sql`${table.level} <> 1 OR ${table.segment} BETWEEN 1 AND 127`
+    )
   })
 );
 

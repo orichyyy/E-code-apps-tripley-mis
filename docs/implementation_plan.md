@@ -51,6 +51,7 @@ The backend core goal has partial implementation progress:
 - Aligned permission and API-permission Drizzle schemas/migrations with the manifest-backed metadata records, including module, required permission, and public/private API metadata.
 - Added organization materialized path helpers for the confirmed int64 design: `encodeOrgPath`, `decodeOrgPath`, `getOrgPathRange`, `isDescendantPath`, and sibling segment allocation.
 - Tightened organization segment allocation so exhausted root/child sibling ranges translate to a stable business error instead of an internal error.
+- Tightened SQLite/PostgreSQL organization schema constraints so root organization segments are restricted to 1-127 at the database layer, matching the confirmed materialized-path design.
 - Added organization maximum-depth configuration with `GET /api/organizations/config/depth` and `PATCH /api/organizations/config/depth`. The configurable limit defaults to 8 and is bounded by the confirmed 8-level materialized-path capacity.
 - Added backend security utilities for API ID string serialization, UTC time helpers, configurable password complexity, scrypt password hashing, refresh-token generation/hash support, and HS256 JWT access tokens.
 - Wired backend-core security settings into typed API configuration and `.env.example`, including JWT settings, access/refresh token TTLs, failed-login lock settings, password complexity, and periodic password-change days.

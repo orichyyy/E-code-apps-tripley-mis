@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 
 import { postgresql, sqlite } from "../src";
 
@@ -79,5 +80,19 @@ describe("backend core schema", () => {
     expect(sqlite.authSessions.status.name).toBe("status");
     expect(postgresql.authSessions.tokenVersion.name).toBe("token_version");
     expect(postgresql.authSessions.status.name).toBe("status");
+  });
+
+  it("keeps the root organization segment constraint in both migrations", () => {
+    const sqliteMigration = readFileSync(
+      new URL("../src/migrations/sqlite/0001_backend_core_foundation.sql", import.meta.url),
+      "utf8"
+    );
+    const postgresqlMigration = readFileSync(
+      new URL("../src/migrations/postgresql/0001_backend_core_foundation.sql", import.meta.url),
+      "utf8"
+    );
+
+    expect(sqliteMigration).toContain("CHECK (level <> 1 OR segment BETWEEN 1 AND 127)");
+    expect(postgresqlMigration).toContain("CHECK (level <> 1 OR segment BETWEEN 1 AND 127)");
   });
 });

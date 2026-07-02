@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS organizations (
   updated_by INTEGER,
   CHECK (level BETWEEN 1 AND 8),
   CHECK (segment BETWEEN 1 AND 255),
+  CHECK (level <> 1 OR segment BETWEEN 1 AND 127),
   CHECK (status IN ('enabled', 'disabled'))
 );
 

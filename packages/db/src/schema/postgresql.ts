@@ -1,6 +1,8 @@
+import { sql } from "drizzle-orm";
 import {
   bigint,
   boolean,
+  check,
   integer,
   jsonb,
   pgTable,
@@ -52,7 +54,11 @@ export const organizations = pgTable(
   },
   (table) => ({
     codeUnique: uniqueIndex("organizations_code_unique").on(table.code),
-    pathUnique: uniqueIndex("organizations_path_unique").on(table.path)
+    pathUnique: uniqueIndex("organizations_path_unique").on(table.path),
+    rootSegmentCheck: check(
+      "organizations_root_segment_check",
+      sql`${table.level} <> 1 OR ${table.segment} BETWEEN 1 AND 127`
+    )
   })
 );
 
