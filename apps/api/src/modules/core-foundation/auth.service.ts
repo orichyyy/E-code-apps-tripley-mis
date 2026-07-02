@@ -36,6 +36,15 @@ export class AuthService {
     return this.context.config.refreshTokenCookiePath;
   }
 
+  getRefreshTokenCookieOptions() {
+    return {
+      path: this.context.config.refreshTokenCookiePath,
+      sameSite: this.context.config.refreshTokenCookieSameSite,
+      secure: this.context.config.refreshTokenCookieSecure,
+      domain: this.context.config.refreshTokenCookieDomain
+    };
+  }
+
   async login(input: LoginRequest, request: { ipAddress?: string | null; userAgent?: string | null }) {
     const user = [...this.context.store.users.values()].find(
       (candidate) => candidate.username === input.username && !candidate.isDeleted
@@ -99,7 +108,9 @@ export class AuthService {
       refreshTokenCookie: {
         name: "refresh_token",
         httpOnly: true,
-        sameSite: "Strict" as const,
+        sameSite: this.context.config.refreshTokenCookieSameSite,
+        secure: this.context.config.refreshTokenCookieSecure,
+        domain: this.context.config.refreshTokenCookieDomain,
         path: this.context.config.refreshTokenCookiePath,
         maxAgeSeconds: this.context.config.refreshTokenTtlDays * 24 * 60 * 60
       },

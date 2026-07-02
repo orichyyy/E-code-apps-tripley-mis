@@ -13,6 +13,9 @@ export type BackendCoreConfig = {
   accessTokenTtlSeconds: number;
   refreshTokenTtlDays: number;
   refreshTokenCookiePath: string;
+  refreshTokenCookieSameSite: "Strict" | "Lax" | "None";
+  refreshTokenCookieSecure: boolean;
+  refreshTokenCookieDomain: string | null;
   failedLoginMaxAttempts: number;
   failedLoginLockMinutes: number;
   maxOrganizationDepth: number;
@@ -25,6 +28,9 @@ export const defaultBackendCoreConfig: BackendCoreConfig = {
   accessTokenTtlSeconds: 900,
   refreshTokenTtlDays: 30,
   refreshTokenCookiePath: "/api/auth/refresh",
+  refreshTokenCookieSameSite: "Strict",
+  refreshTokenCookieSecure: false,
+  refreshTokenCookieDomain: null,
   failedLoginMaxAttempts: 5,
   failedLoginLockMinutes: 30,
   maxOrganizationDepth: 8,

@@ -9,6 +9,11 @@ const booleanStringSchema = z
   .enum(["true", "false", "1", "0"])
   .transform((value) => value === "true" || value === "1");
 
+const optionalNonEmptyStringSchema = z.preprocess(
+  (value) => (typeof value === "string" && value.trim().length === 0 ? null : value),
+  z.string().min(1).nullable().default(null)
+);
+
 const apiConfigSchema = z.object({
   nodeEnv: z.enum(["development", "test", "demo", "production"]).default("development"),
   port: z.coerce.number().int().positive().default(3000),
@@ -26,6 +31,15 @@ const apiConfigSchema = z.object({
       .positive()
       .default(defaultBackendCoreConfig.refreshTokenTtlDays),
     refreshTokenCookiePath: z.string().min(1).default(defaultBackendCoreConfig.refreshTokenCookiePath),
+    refreshTokenCookieSameSite: z
+      .enum(["Strict", "Lax", "None"])
+      .default(defaultBackendCoreConfig.refreshTokenCookieSameSite),
+    refreshTokenCookieSecure: booleanStringSchema.default(
+      defaultBackendCoreConfig.refreshTokenCookieSecure ? "true" : "false"
+    ),
+    refreshTokenCookieDomain: optionalNonEmptyStringSchema.default(
+      defaultBackendCoreConfig.refreshTokenCookieDomain
+    ),
     failedLoginMaxAttempts: z.coerce
       .number()
       .int()
@@ -77,6 +91,9 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       accessTokenTtlSeconds: env.ACCESS_TOKEN_TTL_SECONDS,
       refreshTokenTtlDays: env.REFRESH_TOKEN_TTL_DAYS,
       refreshTokenCookiePath: env.AUTH_REFRESH_COOKIE_PATH,
+      refreshTokenCookieSameSite: env.AUTH_REFRESH_COOKIE_SAMESITE,
+      refreshTokenCookieSecure: env.AUTH_REFRESH_COOKIE_SECURE,
+      refreshTokenCookieDomain: env.AUTH_REFRESH_COOKIE_DOMAIN,
       failedLoginMaxAttempts: env.FAILED_LOGIN_MAX_ATTEMPTS,
       failedLoginLockMinutes: env.FAILED_LOGIN_LOCK_MINUTES,
       maxOrganizationDepth: env.ORGANIZATION_MAX_DEPTH,

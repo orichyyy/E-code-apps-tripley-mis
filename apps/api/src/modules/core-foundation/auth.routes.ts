@@ -30,6 +30,9 @@ export function createAuthRoutes(services: BackendCoreServices) {
       "set-cookie",
       formatRefreshTokenCookie(result.refreshToken, {
         path: result.refreshTokenCookie.path,
+        sameSite: result.refreshTokenCookie.sameSite,
+        secure: result.refreshTokenCookie.secure,
+        domain: result.refreshTokenCookie.domain,
         maxAgeSeconds: result.refreshTokenCookie.maxAgeSeconds
       })
     );
@@ -66,7 +69,7 @@ export function createAuthRoutes(services: BackendCoreServices) {
     context.header(
       "set-cookie",
       formatRefreshTokenCookie("", {
-        path: services.getRefreshTokenCookiePath(),
+        ...services.getRefreshTokenCookieOptions(),
         maxAgeSeconds: 0
       })
     );
@@ -153,15 +156,24 @@ function readCookie(cookieHeader: string, name: string): string | null {
 
 function formatRefreshTokenCookie(
   value: string,
-  options: { path: string; maxAgeSeconds: number }
+  options: {
+    path: string;
+    sameSite: "Strict" | "Lax" | "None";
+    secure: boolean;
+    domain: string | null;
+    maxAgeSeconds: number;
+  }
 ): string {
-  return [
+  const parts = [
     `refresh_token=${encodeURIComponent(value)}`,
     "HttpOnly",
-    "SameSite=Strict",
+    `SameSite=${options.sameSite}`,
     `Path=${options.path}`,
     `Max-Age=${options.maxAgeSeconds}`
-  ].join("; ");
+  ];
+  if (options.secure) parts.push("Secure");
+  if (options.domain) parts.push(`Domain=${options.domain}`);
+  return parts.join("; ");
 }
 
 function hasPaginationQuery(context: { req: { query: (name: string) => string | undefined } }): boolean {

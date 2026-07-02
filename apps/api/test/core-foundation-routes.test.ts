@@ -732,7 +732,13 @@ describe("backend core foundation routes", () => {
   });
 
   it("uses the configured refresh token TTL for the HttpOnly cookie lifetime", async () => {
-    const services = createInMemoryBackendCoreServices({ refreshTokenTtlDays: 2 });
+    const services = createInMemoryBackendCoreServices({
+      refreshTokenTtlDays: 2,
+      refreshTokenCookiePath: "/api/custom-refresh",
+      refreshTokenCookieSameSite: "None",
+      refreshTokenCookieSecure: true,
+      refreshTokenCookieDomain: "admin.example.com"
+    });
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
@@ -742,14 +748,18 @@ describe("backend core foundation routes", () => {
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
 
     expect(cookie).toContain("HttpOnly");
-    expect(cookie).toContain("SameSite=Strict");
-    expect(cookie).toContain("Path=/api/auth/refresh");
+    expect(cookie).toContain("SameSite=None");
+    expect(cookie).toContain("Secure");
+    expect(cookie).toContain("Domain=admin.example.com");
+    expect(cookie).toContain("Path=/api/custom-refresh");
     expect(cookie).toContain("Max-Age=172800");
     expect(login.data.refreshTokenCookie).toMatchObject({
       name: "refresh_token",
       httpOnly: true,
-      sameSite: "Strict",
-      path: "/api/auth/refresh",
+      sameSite: "None",
+      secure: true,
+      domain: "admin.example.com",
+      path: "/api/custom-refresh",
       maxAgeSeconds: 172800
     });
   });
