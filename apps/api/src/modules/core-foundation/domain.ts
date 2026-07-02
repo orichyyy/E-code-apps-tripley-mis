@@ -217,4 +217,4 @@ export type PublicMenuTreeNode = PublicMenu & {
   children: PublicMenuTreeNode[];
 };
 
-export type PublicSession = Omit<AuthSessionRecord, "refreshTokenHash">;
+export type PublicSession = Omit<AuthSessionRecord, "refreshTokenHash" | "tokenVersion">;

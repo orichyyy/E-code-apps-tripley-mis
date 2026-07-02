@@ -158,8 +158,8 @@ describe("backend core foundation routes", () => {
     expect(login.data.accessToken).toEqual(expect.any(String));
     expect(login.data.session.id).toBe("1");
     expect(login.data.session.status).toBe("active");
-    expect(login.data.session.tokenVersion).toBe(0);
     expect(login.data.session).not.toHaveProperty("refreshTokenHash");
+    expect(login.data.session).not.toHaveProperty("tokenVersion");
     expect(login.data.currentOrganization).toMatchObject({ id: "1", code: "default" });
     expect(login.data.organizations).toEqual(
       expect.arrayContaining([expect.objectContaining({ id: "1", code: "default" })])
@@ -171,8 +171,8 @@ describe("backend core foundation routes", () => {
     expect(login.data.passwordChangeRequired).toBe(false);
     expect(onlineUsers.data).toHaveLength(1);
     expect(onlineUsers.data[0].status).toBe("active");
-    expect(onlineUsers.data[0].tokenVersion).toBe(0);
     expect(onlineUsers.data[0]).not.toHaveProperty("refreshTokenHash");
+    expect(onlineUsers.data[0]).not.toHaveProperty("tokenVersion");
   });
 
   it("filters and pages the online-user session data source", async () => {
@@ -304,7 +304,7 @@ describe("backend core foundation routes", () => {
     });
     const onlineUsers = await onlineUsersResponse.json();
 
-    expect(login.data.session.tokenVersion).toBe(1);
+    expect(login.data.session).not.toHaveProperty("tokenVersion");
     expect(oldAccessResponse.status).toBe(401);
     expect(oldAccess.error.code).toBe("AUTH_TOKEN_INVALIDATED");
     expect(oldRefreshResponse.status).toBe(401);

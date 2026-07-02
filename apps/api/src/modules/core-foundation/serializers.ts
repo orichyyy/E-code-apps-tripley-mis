@@ -21,7 +21,8 @@ export function toPublicUser(user: UserRecord): PublicUser {
 }
 
 export function toPublicSession(session: AuthSessionRecord): PublicSession {
-  const { refreshTokenHash, ...publicSession } = session;
+  const { refreshTokenHash, tokenVersion, ...publicSession } = session;
   void refreshTokenHash;
+  void tokenVersion;
   return publicSession;
 }
