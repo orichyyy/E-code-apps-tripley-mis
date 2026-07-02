@@ -24,6 +24,27 @@ describe("baseApiPermissionManifest", () => {
     ).toBe(true);
   });
 
+  it("requires private management routes to declare RBAC permission codes", () => {
+    const authenticatedContextRouteCodes = new Set([
+      "api.auth.me",
+      "api.auth.logout",
+      "api.auth.change-password",
+      "api.context.current-organization.switch",
+      "api.auth.current-organization.switch",
+      "api.context.organizations.list",
+      "api.context.permissions",
+      "api.permissions.effective"
+    ]);
+    const privateRoutesWithoutRequiredPermission = baseApiPermissionManifest
+      .filter((entry) => !entry.public && !entry.requiredPermission)
+      .map((entry) => entry.code)
+      .sort();
+
+    expect(privateRoutesWithoutRequiredPermission).toEqual(
+      [...authenticatedContextRouteCodes].sort()
+    );
+  });
+
   it("declares metadata for backend-core route surfaces", () => {
     expect(baseApiPermissionManifest).toEqual(
       expect.arrayContaining([
