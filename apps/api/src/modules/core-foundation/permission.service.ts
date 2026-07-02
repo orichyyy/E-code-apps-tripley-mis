@@ -11,6 +11,8 @@ import { PermissionCache } from "../permissions/permission-cache";
 import type { ApiPermissionRecord, PermissionRecord } from "./domain";
 import type { BackendCoreContext } from "./service-context";
 
+const superAdminRoleCode = "super_admin";
+
 export class PermissionService {
   constructor(
     private readonly context: BackendCoreContext,
@@ -38,8 +40,17 @@ export class PermissionService {
   }
 
   async invalidateRole(roleId: string) {
+    const userIds = new Set(
+      [...this.context.store.userOrganizationRoles.values()]
+        .filter((binding) => binding.roleId === roleId && !binding.isDeleted)
+        .map((binding) => binding.userId)
+    );
+    await Promise.all([...userIds].map((userId) => this.invalidateUser(userId)));
+  }
+
+  async invalidateUser(userId: string) {
     const bindings = [...this.context.store.userOrganizationRoles.values()].filter(
-      (binding) => binding.roleId === roleId && !binding.isDeleted
+      (binding) => binding.userId === userId && !binding.isDeleted
     );
     await Promise.all(
       bindings.map((binding) => this.cache.invalidate(binding.userId, binding.organizationId))
@@ -151,6 +162,7 @@ export class PermissionService {
     const cached = await this.cache.get(userId, organizationId);
     if (cached) return cached;
 
+    const isSuperAdmin = this.hasActiveSuperAdminBinding(userId);
     const binding = [...this.context.store.userOrganizationRoles.values()].find(
       (candidate) =>
         candidate.userId === userId &&
@@ -158,14 +170,36 @@ export class PermissionService {
         !candidate.isDeleted
     );
     const role = binding ? this.context.store.roles.get(binding.roleId) : null;
-    const permissionCodes = binding && role?.status === "enabled" && !role.isDeleted
-      ? this.context.store.rolePermissions
-          .filter((permission) => permission.roleId === binding.roleId)
-          .map((permission) => permission.permissionCode)
-      : [];
+    const permissionCodes = isSuperAdmin
+      ? this.listEnabledPermissionCodes()
+      : this.listRolePermissionCodes(binding?.roleId, role ?? null);
     const context = { userId, organizationId, permissionCodes };
     await this.cache.set(context);
     return context;
+  }
+
+  private hasActiveSuperAdminBinding(userId: string): boolean {
+    return [...this.context.store.userOrganizationRoles.values()].some((binding) => {
+      if (binding.userId !== userId || binding.isDeleted) return false;
+      const role = this.context.store.roles.get(binding.roleId);
+      return role?.code === superAdminRoleCode && role.status === "enabled" && !role.isDeleted;
+    });
+  }
+
+  private listEnabledPermissionCodes(): string[] {
+    return [...this.context.store.permissions.values()]
+      .filter((permission) => permission.status === "enabled")
+      .map((permission) => permission.code);
+  }
+
+  private listRolePermissionCodes(
+    roleId: string | undefined,
+    role: { status: "enabled" | "disabled"; isDeleted: boolean } | null
+  ): string[] {
+    if (!roleId || role?.status !== "enabled" || role.isDeleted) return [];
+    return this.context.store.rolePermissions
+      .filter((permission) => permission.roleId === roleId)
+      .map((permission) => permission.permissionCode);
   }
 }
 

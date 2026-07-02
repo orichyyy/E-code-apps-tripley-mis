@@ -213,7 +213,7 @@ export class BackendCoreServices {
 
   async assignUserOrganizationRole(userId: string, input: AssignUserOrganizationRoleRequest) {
     const binding = this.users.assignOrganizationRole(userId, input);
-    await this.permissions.invalidateUserOrganization(userId, input.organizationId);
+    await this.permissions.invalidateUser(userId);
     return binding;
   }
 
@@ -227,7 +227,7 @@ export class BackendCoreServices {
     deletedBy: string | null = null
   ) {
     const result = this.users.removeOrganizationRole(userId, organizationId, deletedBy);
-    await this.permissions.invalidateUserOrganization(userId, organizationId);
+    await this.permissions.invalidateUser(userId);
     return result;
   }
 
