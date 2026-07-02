@@ -332,8 +332,12 @@ export class BackendCoreServices {
     return this.roles.copy(id, actorId);
   }
 
-  async updateRolePermissions(id: string, input: UpdateRolePermissionsRequest) {
-    const role = this.roles.updatePermissions(id, input);
+  async updateRolePermissions(
+    id: string,
+    input: UpdateRolePermissionsRequest,
+    actorId: string | null = null
+  ) {
+    const role = this.roles.updatePermissions(id, input, actorId);
     await this.permissions.invalidateRole(id);
     return role;
   }

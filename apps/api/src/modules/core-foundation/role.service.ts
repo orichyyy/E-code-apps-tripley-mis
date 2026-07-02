@@ -103,7 +103,11 @@ export class RoleService {
     return copy;
   }
 
-  updatePermissions(id: string, input: UpdateRolePermissionsRequest): RoleRecord {
+  updatePermissions(
+    id: string,
+    input: UpdateRolePermissionsRequest,
+    actorId: string | null = null
+  ): RoleRecord {
     const role = requireRole(this.context.store, id);
     const knownPermissions = new Set(basePermissionManifest.map((permission) => permission.code));
     const permissionCodes = [...new Set(input.permissionCodes)];
@@ -124,6 +128,7 @@ export class RoleService {
       });
     });
     role.updatedAt = now;
+    role.updatedBy = actorId;
     return role;
   }
 

@@ -70,8 +70,15 @@ export function createRoleRoutes(services: BackendCoreServices) {
   });
 
   routes.put("/roles/:id/permissions", async (context) => {
+    const authContext = context.get("authContext");
     const input = updateRolePermissionsRequestSchema.parse(await context.req.json());
-    return context.json({ data: await services.updateRolePermissions(context.req.param("id"), input) });
+    return context.json({
+      data: await services.updateRolePermissions(
+        context.req.param("id"),
+        input,
+        authContext?.userId ?? null
+      )
+    });
   });
 
   routes.get("/permissions", (context) => {

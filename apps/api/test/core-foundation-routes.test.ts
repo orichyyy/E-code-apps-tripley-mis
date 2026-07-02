@@ -1372,8 +1372,14 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({ permissionCodes: ["user:view", "role:view"] })
     });
     const role = await response.json();
+    const permissionsResponse = await app.request("/api/roles/1/permissions", {
+      headers: authHeaders
+    });
+    const permissions = await permissionsResponse.json();
 
     expect(role.data.id).toBe("1");
+    expect(role.data.updatedBy).toBe("1");
+    expect(permissions.data).toEqual(["user:view", "role:view"]);
   });
 
   it("syncs permission and API permission manifests", async () => {

@@ -135,6 +135,7 @@ The backend core goal has partial implementation progress:
 - Tightened account lock transitions so administrator locks and configured failed-login locks advance user token version, keeping pre-lock access and refresh tokens invalid after unlock or timed lock expiry.
 - Tightened user-organization-role binding audit updates so primary-organization changes and binding removals retain the authenticated administrator actor in the binding lifecycle fields.
 - Tightened managed menu tree validation so administrators cannot reparent a menu under one of its descendants and create a cycle in the permission-controlled menu tree.
+- Tightened role permission updates so changing a role's permission set records the authenticated administrator actor on the role audit fields.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 
