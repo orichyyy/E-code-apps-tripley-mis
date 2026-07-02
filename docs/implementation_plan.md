@@ -68,6 +68,7 @@ The backend core goal has partial implementation progress:
 - Tightened user update validation so administrator edits preserve unique username, email, and phone values and cannot set a disabled organization as the user's primary organization.
 - Tightened organization and role update validation so administrator edits cannot duplicate existing organization codes or role codes.
 - Tightened role-change permission behavior so disabled/deleted assigned roles no longer grant permissions, and role update/delete operations invalidate affected user permission-cache entries.
+- Added route coverage proving role copy creates a new role and preserves the copied permission configuration.
 - Added `GET /api/roles/:id/permissions` to read a role's configured permission codes, with API permission metadata and route coverage.
 - Added `GET /api/users/:id/organizations` to read a user's organization-role bindings, with API permission metadata and route coverage.
 - Added managed menu records seeded during initialization, moved `/api/menus/tree` to the backend core service, and added `POST /api/menus`, `PATCH /api/menus/:id`, and `DELETE /api/menus/:id` with API permission metadata and route coverage.

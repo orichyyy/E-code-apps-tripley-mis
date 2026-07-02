@@ -683,6 +683,31 @@ describe("backend core foundation routes", () => {
     expect(body.data).toMatchObject({ id: "2", status: "enabled" });
   });
 
+  it("copies a role with its permission configuration", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    await app.request("/api/roles/2/permissions", {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({ permissionCodes: ["user:view", "role:view"] })
+    });
+    const copyResponse = await app.request("/api/roles/2/copy", {
+      method: "POST",
+      headers: authHeaders
+    });
+    const copy = await copyResponse.json();
+    const permissionsResponse = await app.request(`/api/roles/${copy.data.id}/permissions`, {
+      headers: authHeaders
+    });
+    const permissions = await permissionsResponse.json();
+
+    expect(copyResponse.status).toBe(201);
+    expect(copy.data.id).not.toBe("2");
+    expect(copy.data).toMatchObject({ id: expect.any(String), status: "enabled" });
+    expect(permissions.data).toEqual(expect.arrayContaining(["user:view", "role:view"]));
+  });
+
   it("invalidates permission cache and removes grants when an assigned role is disabled", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
