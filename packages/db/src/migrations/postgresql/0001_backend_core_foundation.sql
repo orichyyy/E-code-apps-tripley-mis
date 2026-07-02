@@ -121,6 +121,8 @@ CREATE TABLE IF NOT EXISTS permissions (
   code TEXT NOT NULL,
   name TEXT NOT NULL,
   permission_type TEXT NOT NULL,
+  resource TEXT NOT NULL,
+  action TEXT NOT NULL,
   description TEXT,
   module TEXT NOT NULL,
   source TEXT NOT NULL DEFAULT 'base_manifest',

@@ -140,6 +140,8 @@ export const permissions = sqliteTable(
     permissionType: text("permission_type", {
       enum: ["menu", "page", "action", "api", "data", "field"]
     }).notNull(),
+    resource: text("resource").notNull(),
+    action: text("action").notNull(),
     description: text("description"),
     module: text("module").notNull(),
     source: text("source").notNull().default("base_manifest"),

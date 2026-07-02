@@ -146,6 +146,8 @@ export const permissions = pgTable(
     code: text("code").notNull(),
     name: text("name").notNull(),
     permissionType: text("permission_type").notNull(),
+    resource: text("resource").notNull(),
+    action: text("action").notNull(),
     description: text("description"),
     module: text("module").notNull(),
     source: text("source").notNull().default("base_manifest"),

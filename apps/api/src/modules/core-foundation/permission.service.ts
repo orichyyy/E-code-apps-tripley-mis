@@ -91,11 +91,14 @@ export class PermissionService {
     const now = toUtcIso(nowUtc());
     return basePermissionManifest.map((entry) => {
       const manifestHash = hashBasePermissionManifestEntry(entry);
+      const { resource, action } = parsePermissionCode(entry.code);
       const existing = [...this.context.store.permissions.values()].find(
         (permission) => permission.code === entry.code
       );
       if (existing) {
         existing.name = entry.code;
+        existing.resource = resource;
+        existing.action = action;
         existing.description = entry.description;
         existing.module = entry.module;
         existing.source = "base_manifest";
@@ -111,6 +114,8 @@ export class PermissionService {
         code: entry.code,
         name: entry.code,
         permissionType: "action",
+        resource,
+        action,
         description: entry.description,
         module: entry.module,
         source: "base_manifest",
@@ -228,4 +233,13 @@ function hashBasePermissionManifestEntry(entry: PermissionManifestEntry): string
       module: entry.module
     }))
     .digest("hex");
+}
+
+function parsePermissionCode(code: string): { resource: string; action: string } {
+  const separatorIndex = code.indexOf(":");
+  if (separatorIndex === -1) return { resource: code, action: "" };
+  return {
+    resource: code.slice(0, separatorIndex),
+    action: code.slice(separatorIndex + 1)
+  };
 }

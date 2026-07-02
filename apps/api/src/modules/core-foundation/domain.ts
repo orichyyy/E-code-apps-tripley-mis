@@ -123,6 +123,8 @@ export type PermissionRecord = AuditFields & {
   code: string;
   name: string;
   permissionType: "menu" | "page" | "action" | "api" | "data" | "field";
+  resource: string;
+  action: string;
   description: string | null;
   module: string;
   source: string;

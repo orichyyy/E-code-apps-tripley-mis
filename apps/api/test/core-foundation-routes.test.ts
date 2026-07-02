@@ -51,6 +51,8 @@ describe("backend core foundation routes", () => {
         expect.objectContaining({
           id: expect.any(String),
           code: "user:view",
+          resource: "user",
+          action: "view",
           source: "base_manifest",
           manifestHash: expect.stringMatching(/^[a-f0-9]{64}$/)
         })
@@ -852,6 +854,8 @@ describe("backend core foundation routes", () => {
           id: expect.any(String),
           code: "user:view",
           permissionType: "action",
+          resource: "user",
+          action: "view",
           source: "base_manifest",
           manifestHash: expect.stringMatching(/^[a-f0-9]{64}$/),
           status: "enabled"
