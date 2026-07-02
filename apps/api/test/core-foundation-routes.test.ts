@@ -2803,7 +2803,7 @@ describe("backend core foundation routes", () => {
 
     expect(beforeDeleteResponse.status).toBe(200);
     expect(afterDeleteResponse.status).toBe(403);
-    expect(afterDelete.error.code).toBe("PERMISSION_API_DENIED");
+    expect(afterDelete.error.code).toBe("PERMISSION_DENIED");
   });
 
   it("soft deletes role bindings and prevents login when the assigned role is deleted", async () => {
@@ -3176,6 +3176,90 @@ describe("backend core foundation routes", () => {
     expect(users.error.code).toBe("PERMISSION_API_DENIED");
   });
 
+  it("rejects stale current-organization sessions after a role binding is removed", async () => {
+    const { app, setup } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Removed Binding Child",
+        code: "removed-binding-child"
+      })
+    });
+    const child = await childResponse.json();
+    const userResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "removed-binding-user",
+        displayName: "Removed Binding User",
+        email: "removed-binding-user@example.com",
+        phone: "10000000045",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const user = await userResponse.json();
+    await app.request(`/api/users/${user.data.id}/organizations`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+    });
+    const firstLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "removed-binding-user", password: "password1" })
+    });
+    const firstLogin = await firstLoginResponse.json();
+    await app.request("/api/auth/change-password", {
+      method: "POST",
+      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+    });
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "removed-binding-user", password: "password2" })
+    });
+    const login = await loginResponse.json();
+    const switchResponse = await app.request("/api/context/current-organization", {
+      method: "POST",
+      headers: { authorization: `Bearer ${login.data.accessToken}` },
+      body: JSON.stringify({ organizationId: child.data.id })
+    });
+    const switched = await switchResponse.json();
+    const childHeaders = { authorization: `Bearer ${switched.data.accessToken}` };
+    const beforeRemoveResponse = await app.request("/api/online-users", { headers: authHeaders });
+    const beforeRemove = await beforeRemoveResponse.json();
+
+    await app.request(`/api/users/${user.data.id}/organizations/${child.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const staleAccessResponse = await app.request("/api/auth/me", { headers: childHeaders });
+    const staleAccess = await staleAccessResponse.json();
+    const staleRefreshResponse = await app.request("/api/auth/refresh", {
+      method: "POST",
+      headers: { cookie: loginResponse.headers.get("set-cookie") ?? "" }
+    });
+    const staleRefresh = await staleRefreshResponse.json();
+    const afterRemoveResponse = await app.request("/api/online-users", { headers: authHeaders });
+    const afterRemove = await afterRemoveResponse.json();
+
+    expect(setup.data.admin.id).toBe("1");
+    expect(beforeRemove.data).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: switched.data.session.id })])
+    );
+    expect(staleAccessResponse.status).toBe(403);
+    expect(staleAccess.error.code).toBe("PERMISSION_DENIED");
+    expect(staleRefreshResponse.status).toBe(403);
+    expect(staleRefresh.error.code).toBe("PERMISSION_DENIED");
+    expect(afterRemove.data).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: switched.data.session.id })])
+    );
+  });
+
   it("keeps super administrator permissions across organization context", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
@@ -3245,7 +3329,7 @@ describe("backend core foundation routes", () => {
     expect(beforeDisableResponse.status).toBe(200);
     expect(disableResponse.status).toBe(200);
     expect(afterDisableResponse.status).toBe(403);
-    expect(afterDisable.error.code).toBe("PERMISSION_API_DENIED");
+    expect(afterDisable.error.code).toBe("PERMISSION_DENIED");
   });
 
   it("invalidates all cached super administrator contexts when permission manifests sync", async () => {

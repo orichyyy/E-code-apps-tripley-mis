@@ -126,6 +126,9 @@ export class AuthService {
     if (!organization || organization.status !== "enabled" || organization.isDeleted) {
       throw createKnownError("BUSINESS_ORG_DISABLED");
     }
+    if (!this.hasCurrentOrganizationAccess(user.id, organization.id)) {
+      throw createKnownError("PERMISSION_DENIED");
+    }
 
     session.lastSeenAt = toUtcIso(nowUtc());
     session.tokenVersion = user.tokenVersion;
@@ -262,6 +265,9 @@ export class AuthService {
       if (!organization || organization.status !== "enabled" || organization.isDeleted) {
         throw createKnownError("BUSINESS_ORG_DISABLED");
       }
+      if (!this.hasCurrentOrganizationAccess(user.id, organization.id)) {
+        throw createKnownError("PERMISSION_DENIED");
+      }
 
       session.lastSeenAt = toUtcIso(nowUtc());
 
@@ -311,7 +317,8 @@ export class AuthService {
           !user.isDeleted &&
           user.tokenVersion === session.tokenVersion &&
           organization?.status === "enabled" &&
-          !organization.isDeleted
+          !organization.isDeleted &&
+          this.hasCurrentOrganizationAccess(user.id, organization.id)
         );
       })
       .map(toPublicSession);
@@ -426,6 +433,13 @@ export class AuthService {
         binding.userId === userId &&
         binding.organizationId === organizationId &&
         isActiveBinding(binding)
+    );
+  }
+
+  private hasCurrentOrganizationAccess(userId: string, organizationId: string): boolean {
+    return (
+      this.hasActiveOrganizationBinding(userId, organizationId) ||
+      this.hasActiveSuperAdminBinding(userId)
     );
   }
 

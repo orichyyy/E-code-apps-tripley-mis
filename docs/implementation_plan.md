@@ -169,6 +169,7 @@ The backend core goal has partial implementation progress:
 - Tightened organization soft deletion so user-organization-role bindings under the deleted organization subtree are soft deleted, disabled, marked non-primary, and audited while bindings outside the deleted subtree remain active.
 - Tightened role soft deletion so user-organization-role bindings that reference the deleted role are soft deleted, disabled, marked non-primary, and audited; login now requires an active organization binding before selecting the user's primary organization unless the user still has an active super-administrator binding.
 - Tightened repeated seed synchronization so the initialized administrator's active super-administrator binding is restored after built-in role recovery, keeping seed reruns idempotent after role lifecycle changes.
+- Tightened session authorization so access-token validation, refresh-token exchange, and online-user listing require the session's current organization to remain reachable through an active user-organization-role binding or an active super-administrator binding.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 
