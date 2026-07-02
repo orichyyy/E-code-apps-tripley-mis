@@ -2742,7 +2742,7 @@ describe("backend core foundation routes", () => {
 
     expect(beforeDisableResponse.status).toBe(200);
     expect(afterDisableResponse.status).toBe(403);
-    expect(afterDisable.error.code).toBe("PERMISSION_API_DENIED");
+    expect(afterDisable.error.code).toBe("PERMISSION_DENIED");
   });
 
   it("invalidates permission cache and removes grants when an assigned role is soft deleted", async () => {

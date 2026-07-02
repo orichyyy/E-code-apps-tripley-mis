@@ -179,7 +179,7 @@ export class AuthService {
       (candidate) =>
         candidate.userId === user.id &&
         candidate.organizationId === input.organizationId &&
-        isActiveBinding(candidate)
+        this.isUsableOrganizationBinding(candidate)
     );
     if (!binding && !this.hasActiveSuperAdminBinding(user.id)) {
       throw createKnownError("PERMISSION_DENIED");
@@ -413,7 +413,7 @@ export class AuthService {
     }
 
     const enabledBinding = [...this.context.store.userOrganizationRoles.values()].find((binding) => {
-      if (binding.userId !== user.id || !isActiveBinding(binding)) return false;
+      if (binding.userId !== user.id || !this.isUsableOrganizationBinding(binding)) return false;
       const organization = this.context.store.organizations.get(binding.organizationId);
       return organization?.status === "enabled" && !organization.isDeleted;
     });
@@ -432,7 +432,7 @@ export class AuthService {
       (binding) =>
         binding.userId === userId &&
         binding.organizationId === organizationId &&
-        isActiveBinding(binding)
+        this.isUsableOrganizationBinding(binding)
     );
   }
 
@@ -452,7 +452,7 @@ export class AuthService {
 
     const organizationIds = new Set<string>();
     return [...this.context.store.userOrganizationRoles.values()]
-      .filter((binding) => binding.userId === userId && isActiveBinding(binding))
+      .filter((binding) => binding.userId === userId && this.isUsableOrganizationBinding(binding))
       .map((binding) => this.context.store.organizations.get(binding.organizationId))
       .filter(isEnabledOrganization)
       .filter((organization) => {
@@ -469,6 +469,14 @@ export class AuthService {
       const role = this.context.store.roles.get(binding.roleId);
       return role?.code === builtInRoleCodes.superAdmin && role.status === "enabled" && !role.isDeleted;
     });
+  }
+
+  private isUsableOrganizationBinding(
+    binding: { isDeleted: boolean; status: "enabled" | "disabled"; roleId: string }
+  ): boolean {
+    if (!isActiveBinding(binding)) return false;
+    const role = this.context.store.roles.get(binding.roleId);
+    return role?.status === "enabled" && !role.isDeleted;
   }
 
   private isPasswordChangeRequired(user: UserRecord): boolean {
