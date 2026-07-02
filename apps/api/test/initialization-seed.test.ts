@@ -35,7 +35,9 @@ describe("initialization seed", () => {
     });
     expect(summary.roleCount).toBe(3);
     expect(summary.permissionCount).toBeGreaterThan(0);
+    expect(summary.apiPermissionCount).toBeGreaterThan(0);
     expect(summary.menuCount).toBeGreaterThan(0);
+    expect(summary.routeCount).toBeGreaterThan(0);
   });
 
   it("keeps repeated seed runs idempotent on an initialized service", async () => {
