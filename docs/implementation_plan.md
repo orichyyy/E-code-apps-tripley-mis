@@ -176,6 +176,7 @@ The backend core goal has partial implementation progress:
 - Tightened managed menu soft deletion so deleted menu records and descendants are marked disabled while retaining `is_deleted`, `deleted_at`, and `deleted_by` audit fields.
 - Tightened permission manifest synchronization so stale base permission/API metadata is disabled, and role permission updates only accept currently enabled permission metadata.
 - Tightened stale role-permission lifecycle so disabled or missing permission metadata is pruned during manifest sync and excluded from role permission reads/copies.
+- Tightened managed menu validation so menu bindings can only reference currently enabled permission metadata.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

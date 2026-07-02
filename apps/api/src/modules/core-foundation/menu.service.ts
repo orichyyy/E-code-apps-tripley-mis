@@ -205,7 +205,7 @@ export class MenuService {
   private ensureKnownPermission(permissionCode: string | null): void {
     if (permissionCode === null) return;
     const permission = [...this.context.store.permissions.values()].find(
-      (candidate) => candidate.code === permissionCode
+      (candidate) => candidate.code === permissionCode && candidate.status === "enabled"
     );
     if (!permission) throw createKnownError("PERMISSION_UNKNOWN_CODE");
   }

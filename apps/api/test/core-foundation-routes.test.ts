@@ -2093,6 +2093,41 @@ describe("backend core foundation routes", () => {
     expect(update.error.code).toBe("VALIDATION_INVALID_REQUEST");
   });
 
+  it("rejects managed menus that reference disabled permission metadata", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const { authHeaders } = await loginAsAdmin(app);
+    const menuViewPermission = [...services["context"].store.permissions.values()].find(
+      (permission) => permission.code === "menu:view"
+    );
+    if (!menuViewPermission) throw new Error("Expected seeded menu:view permission");
+    menuViewPermission.status = "disabled";
+
+    const createResponse = await app.request("/api/menus", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentMenuId: "2",
+        code: "system.disabled-permission",
+        titleI18nKey: "routes.system.disabledPermission",
+        path: "/system/disabled-permission",
+        requiredPermission: "menu:view"
+      })
+    });
+    const create = await createResponse.json();
+    const updateResponse = await app.request("/api/menus/2", {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ requiredPermission: "menu:view" })
+    });
+    const update = await updateResponse.json();
+
+    expect(createResponse.status).toBe(400);
+    expect(create.error.code).toBe("PERMISSION_UNKNOWN_CODE");
+    expect(updateResponse.status).toBe(400);
+    expect(update.error.code).toBe("PERMISSION_UNKNOWN_CODE");
+  });
+
   it("soft deletes managed menu descendants with their parent", async () => {
     const services = createInMemoryBackendCoreServices();
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
