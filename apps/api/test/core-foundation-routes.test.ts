@@ -969,7 +969,9 @@ describe("backend core foundation routes", () => {
       failedLoginLockMinutes: 30
     });
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const originalAdmin = services.getUser("1");
 
+    await new Promise((resolve) => setTimeout(resolve, 5));
     await app.request("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ username: "admin", password: "wrong-password" })
@@ -983,9 +985,16 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({ username: "admin", password: "password1" })
     });
     const lockedLogin = await lockedLoginResponse.json();
+    const lockedAdmin = services.getUser("1");
 
     expect(lockedLoginResponse.status).toBe(423);
     expect(lockedLogin.error.code).toBe("AUTH_ACCOUNT_LOCKED");
+    expect(lockedAdmin.failedLoginAttempts).toBe(2);
+    expect(lockedAdmin.status).toBe("locked");
+    expect(lockedAdmin.lockedUntil).toEqual(expect.any(String));
+    expect(new Date(lockedAdmin.updatedAt).getTime()).toBeGreaterThan(
+      new Date(originalAdmin.updatedAt).getTime()
+    );
   });
 
   it("updates role permissions from the base permission manifest", async () => {

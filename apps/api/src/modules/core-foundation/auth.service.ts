@@ -360,13 +360,15 @@ export class AuthService {
   }
 
   private recordFailedLogin(user: UserRecord) {
+    const now = nowUtc();
     user.failedLoginAttempts += 1;
     if (user.failedLoginAttempts >= this.context.config.failedLoginMaxAttempts) {
       user.status = "locked";
       user.lockedUntil = toUtcIso(
-        addSecondsUtc(nowUtc(), this.context.config.failedLoginLockMinutes * 60)
+        addSecondsUtc(now, this.context.config.failedLoginLockMinutes * 60)
       );
     }
+    user.updatedAt = toUtcIso(now);
   }
 
   private resolveEnabledLoginOrganization(user: UserRecord): string {
