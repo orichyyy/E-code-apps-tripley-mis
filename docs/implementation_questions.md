@@ -25,3 +25,11 @@
 6. **Canonical login session table shape**
 
    The PRD entity list names `auth_sessions` with `id`, `current_organization_id`, `created_at`, and `last_seen_at`. The design spec table summary names `login_sessions` with `session_id`, `organization_id`, `login_at`, `last_activity_at`, `created_at`, and `updated_at`. The current foundation follows the PRD `auth_sessions` naming and fields, plus confirmed token-version/status fields. Please confirm whether v1 should keep the PRD table shape, rename to `login_sessions`, add alias fields, or add `updated_at`/`login_at`/`last_activity_at` columns before further DB-backed session work.
+
+7. **Permission tree hierarchy model**
+
+   The PRD requires `GET /api/permissions/tree` and describes `permission_resources.parent_id` for hierarchical permission resources. The v2 design spec replaces that with a flat `permissions` table containing `id`, `code`, `name`, `type`, `resource`, `action`, `description`, `source`, `status`, `manifest_hash`, `created_at`, and `updated_at`, with no `parent_id` or hierarchy fields. Please confirm whether v1 should add hierarchy fields, derive a virtual tree from permission `resource`/`action`/manifest metadata, or expose a flat permission list through this endpoint.
+
+8. **User permission override persistence and endpoint contract**
+
+   The PRD requires `PUT /api/permissions/user-overrides/{userId}` and lists `user_permission_overrides.permission_resource_id`. The v2 design spec lists `user_permission_overrides.permission_id`, matching the v2 flat `permissions` table. The backend core deliverables explicitly call out RBAC through user-organization-role bindings but do not otherwise define override behavior, conflict resolution, or cache invalidation rules. Please confirm whether user-level overrides are in v1 scope, which foreign key shape to use, and how overrides should combine with role permissions.
