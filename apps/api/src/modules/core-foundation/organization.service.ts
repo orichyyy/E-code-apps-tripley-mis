@@ -135,6 +135,9 @@ export class OrganizationService {
 
   enable(id: string, actorId: string | null = null): PublicOrganization {
     const organization = requireOrganization(this.context.store, id);
+    if (this.hasDisabledAncestor(organization)) {
+      throw createKnownError("BUSINESS_ORG_DISABLED");
+    }
     organization.status = "enabled";
     organization.updatedAt = toUtcIso(nowUtc());
     organization.updatedBy = actorId;
@@ -174,6 +177,15 @@ export class OrganizationService {
       }
       throw error;
     }
+  }
+
+  private hasDisabledAncestor(organization: OrganizationRecord): boolean {
+    return [...this.context.store.organizations.values()].some(
+      (candidate) =>
+        !candidate.isDeleted &&
+        candidate.status === "disabled" &&
+        isDescendantPath(organization.path, candidate.path, candidate.level)
+    );
   }
 
   private ensureUniqueOrganizationCode(code: string, currentOrganizationId?: string): void {

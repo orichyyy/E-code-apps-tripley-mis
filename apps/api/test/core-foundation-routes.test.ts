@@ -471,6 +471,11 @@ describe("backend core foundation routes", () => {
       headers: alternateHeaders
     });
     const detail = await detailResponse.json();
+    const enableChildResponse = await app.request(`/api/organizations/${child.data.id}/enable`, {
+      method: "POST",
+      headers: alternateHeaders
+    });
+    const enableChild = await enableChildResponse.json();
 
     expect(child.data.level).toBe(2);
     expect(child.data.path).toEqual(expect.any(String));
@@ -489,6 +494,8 @@ describe("backend core foundation routes", () => {
     );
     expect(detailResponse.status).toBe(200);
     expect(detail.data).toMatchObject({ id: child.data.id, status: "disabled" });
+    expect(enableChildResponse.status).toBe(409);
+    expect(enableChild.error.code).toBe("BUSINESS_ORG_DISABLED");
   });
 
   it("creates and updates organization contact fields", async () => {
