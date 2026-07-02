@@ -1265,6 +1265,41 @@ describe("backend core foundation routes", () => {
     expect(roles.data.items[0].id).toBe("2");
   });
 
+  it("returns default paged envelopes for user and role lists without pagination parameters", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const usersResponse = await app.request("/api/users", { headers: authHeaders });
+    const users = await usersResponse.json();
+    const rolesResponse = await app.request("/api/roles", { headers: authHeaders });
+    const roles = await rolesResponse.json();
+
+    expect(usersResponse.status).toBe(200);
+    expect(users.data).toMatchObject({
+      page: 1,
+      pageSize: 20,
+      total: 1,
+      totalPages: 1
+    });
+    expect(users.data.items).toEqual([
+      expect.objectContaining({ id: "1", username: "admin" })
+    ]);
+    expect(rolesResponse.status).toBe(200);
+    expect(roles.data).toMatchObject({
+      page: 1,
+      pageSize: 20,
+      total: 3,
+      totalPages: 1
+    });
+    expect(roles.data.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "1", code: "super_admin" }),
+        expect.objectContaining({ id: "2", code: "organization_admin" }),
+        expect.objectContaining({ id: "3", code: "normal_user" })
+      ])
+    );
+  });
+
   it("filters the user list by keyword, status, and organization", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

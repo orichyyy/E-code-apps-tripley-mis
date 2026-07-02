@@ -11,9 +11,7 @@ export type PageResult<T> = {
 export function pageItems<T>(
   items: T[],
   query: { page?: string; pageSize?: string }
-): T[] | PageResult<T> {
-  if (query.page === undefined && query.pageSize === undefined) return items;
-
+): PageResult<T> {
   const page = parsePositiveInteger(query.page ?? "1");
   const pageSize = parsePositiveInteger(query.pageSize ?? "20");
   const offset = (page - 1) * pageSize;
