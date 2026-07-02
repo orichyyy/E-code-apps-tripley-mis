@@ -177,11 +177,14 @@ export class OrganizationService {
   delete(id: string, deletedBy: string | null = null): PublicOrganization {
     const organization = requireOrganization(this.context.store, id);
     const now = toUtcIso(nowUtc());
-    organization.isDeleted = true;
-    organization.deletedAt = now;
-    organization.deletedBy = deletedBy;
-    organization.updatedAt = now;
-    organization.updatedBy = deletedBy;
+    const affectedOrganizations = [organization, ...this.findDescendantOrganizations(organization)];
+    for (const affectedOrganization of affectedOrganizations) {
+      affectedOrganization.isDeleted = true;
+      affectedOrganization.deletedAt = now;
+      affectedOrganization.deletedBy = deletedBy;
+      affectedOrganization.updatedAt = now;
+      affectedOrganization.updatedBy = deletedBy;
+    }
     return toPublicOrganization(organization);
   }
 
@@ -195,6 +198,15 @@ export class OrganizationService {
         );
       })
       .map((organization) => organization.segment);
+  }
+
+  private findDescendantOrganizations(organization: OrganizationRecord): OrganizationRecord[] {
+    return [...this.context.store.organizations.values()].filter(
+      (candidate) =>
+        !candidate.isDeleted &&
+        candidate.id !== organization.id &&
+        isDescendantPath(candidate.path, organization.path, organization.level)
+    );
   }
 
   private allocateSegment(parent: OrganizationRecord | undefined, level: number): number {

@@ -2209,6 +2209,60 @@ describe("backend core foundation routes", () => {
     expect(secondChild.data.path).not.toBe(firstChild.data.path);
   });
 
+  it("soft deletes organization descendants with their parent", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const parentResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Delete Parent Organization",
+        code: "delete-parent-org"
+      })
+    });
+    const parent = await parentResponse.json();
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: parent.data.id,
+        name: "Delete Child Organization",
+        code: "delete-child-org"
+      })
+    });
+    const child = await childResponse.json();
+    const deleteResponse = await app.request(`/api/organizations/${parent.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const deleted = await deleteResponse.json();
+    const treeResponse = await app.request("/api/organizations/tree", { headers: authHeaders });
+    const tree = await treeResponse.json();
+    const childDetailResponse = await app.request(`/api/organizations/${child.data.id}`, {
+      headers: authHeaders
+    });
+    const childDetail = await childDetailResponse.json();
+
+    expect(parentResponse.status).toBe(201);
+    expect(childResponse.status).toBe(201);
+    expect(deleteResponse.status).toBe(200);
+    expect(deleted.data).toMatchObject({
+      id: parent.data.id,
+      isDeleted: true,
+      deletedBy: "1"
+    });
+    expect(tree.data).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: parent.data.id }),
+        expect.objectContaining({ id: child.data.id })
+      ])
+    );
+    expect(JSON.stringify(tree.data)).not.toContain("delete-child-org");
+    expect(childDetailResponse.status).toBe(404);
+    expect(childDetail.error.code).toBe("ORGANIZATION_NOT_FOUND");
+  });
+
   it("records authenticated user audit fields on user and organization changes", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
