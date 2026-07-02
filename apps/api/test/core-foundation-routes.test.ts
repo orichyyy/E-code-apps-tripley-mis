@@ -1890,6 +1890,26 @@ describe("backend core foundation routes", () => {
       createdAt: now,
       updatedAt: now
     });
+    const canonicalUsersApiPermission = services
+      .listApiPermissions()
+      .find((permission) => permission.code === "api.users.list");
+    if (!canonicalUsersApiPermission) throw new Error("Expected api.users.list permission");
+    store.apiPermissions.delete(canonicalUsersApiPermission.id);
+    store.apiPermissions.set("1000", {
+      id: "1000",
+      tenantId: null,
+      method: "GET",
+      path: "/api/users",
+      code: "api.users.list.legacy",
+      description: "Legacy users list API permission",
+      module: "users",
+      requiredPermission: "user:view",
+      logLevel: "basic",
+      public: false,
+      status: "enabled",
+      createdAt: now,
+      updatedAt: now
+    });
     store.rolePermissions.push({
       roleId: "2",
       permissionCode: "obsolete:view",
@@ -1908,6 +1928,9 @@ describe("backend core foundation routes", () => {
     const staleApiPermission = services
       .listApiPermissions()
       .find((permission) => permission.code === "api.obsolete.view");
+    const reconciledUsersApiPermissions = services
+      .listApiPermissions()
+      .filter((permission) => permission.method === "GET" && permission.path === "/api/users");
     const roleUpdateResponse = await app.request("/api/roles/1/permissions", {
       method: "PUT",
       headers: authHeaders,
@@ -1922,6 +1945,13 @@ describe("backend core foundation routes", () => {
     expect(syncResponse.status).toBe(200);
     expect(stalePermission).toMatchObject({ status: "disabled" });
     expect(staleApiPermission).toMatchObject({ status: "disabled" });
+    expect(reconciledUsersApiPermissions).toEqual([
+      expect.objectContaining({
+        id: "1000",
+        code: "api.users.list",
+        status: "enabled"
+      })
+    ]);
     expect(roleUpdateResponse.status).toBe(400);
     expect(roleUpdate.error.code).toBe("PERMISSION_UNKNOWN_CODE");
     expect(configured.data).not.toContain("obsolete:view");

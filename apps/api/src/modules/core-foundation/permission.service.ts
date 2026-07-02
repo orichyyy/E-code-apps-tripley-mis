@@ -167,12 +167,11 @@ export class PermissionService {
       }
     }
     return baseApiPermissionManifest.map((entry) => {
-      const existing = [...this.context.store.apiPermissions.values()].find(
-        (permission) => permission.code === entry.code
-      );
+      const existing = this.findExistingApiPermissionForManifestEntry(entry);
       if (existing) {
         existing.method = entry.method;
         existing.path = entry.path;
+        existing.code = entry.code;
         existing.description = entry.description;
         existing.module = entry.module;
         existing.requiredPermission = entry.requiredPermission ?? null;
@@ -201,6 +200,19 @@ export class PermissionService {
       this.context.store.apiPermissions.set(apiPermission.id, apiPermission);
       return apiPermission;
     });
+  }
+
+  private findExistingApiPermissionForManifestEntry(
+    entry: BaseApiPermissionManifestEntry
+  ): ApiPermissionRecord | undefined {
+    return (
+      [...this.context.store.apiPermissions.values()].find(
+        (permission) => permission.code === entry.code
+      ) ??
+      [...this.context.store.apiPermissions.values()].find(
+        (permission) => permission.method === entry.method && permission.path === entry.path
+      )
+    );
   }
 
   async getPermissionContext(userId: string, organizationId: string) {

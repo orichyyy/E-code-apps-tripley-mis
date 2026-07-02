@@ -176,6 +176,7 @@ The backend core goal has partial implementation progress:
 - Aligned refresh-token cookie configuration with the design-spec `AUTH_REFRESH_COOKIE_PATH` setting; login and logout now set or clear the HttpOnly refresh cookie on the configured path, defaulting to `/api/auth/refresh`.
 - Tightened managed menu soft deletion so deleted menu records and descendants are marked disabled while retaining `is_deleted`, `deleted_at`, and `deleted_by` audit fields.
 - Tightened permission manifest synchronization so stale base permission/API metadata is disabled, and role permission updates only accept currently enabled permission metadata.
+- Tightened API permission manifest synchronization so legacy metadata records are reconciled by method/path when the canonical API permission code record is missing, matching the database unique constraints.
 - Tightened stale role-permission lifecycle so disabled or missing permission metadata is pruned during manifest sync and excluded from role permission reads/copies.
 - Tightened managed menu validation so menu bindings can only reference currently enabled permission metadata.
 - Tightened route metadata lifecycle so route manifest sync disables stale route records, and managed menus can only reference enabled route metadata.
