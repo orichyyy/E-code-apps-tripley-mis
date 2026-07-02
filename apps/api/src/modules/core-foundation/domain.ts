@@ -45,6 +45,9 @@ export type UserRecord = AuditFields &
     displayName: string;
     email: string;
     phone: string;
+    avatarFileId: string | null;
+    gender: string | null;
+    employeeNumber: string | null;
     passwordHash: string;
     primaryOrganizationId: string;
     status: UserStatus;

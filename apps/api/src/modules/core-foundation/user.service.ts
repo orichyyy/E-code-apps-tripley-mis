@@ -58,6 +58,9 @@ export class UserService {
       displayName: input.displayName,
       email: input.email,
       phone: input.phone,
+      avatarFileId: input.avatarFileId ?? null,
+      gender: input.gender ?? null,
+      employeeNumber: input.employeeNumber ?? null,
       passwordHash: await hashPassword(input.password),
       primaryOrganizationId: input.primaryOrganizationId,
       status: "enabled",
@@ -97,6 +100,9 @@ export class UserService {
     if (input.displayName !== undefined) user.displayName = input.displayName;
     if (input.email !== undefined) user.email = input.email;
     if (input.phone !== undefined) user.phone = input.phone;
+    if (input.avatarFileId !== undefined) user.avatarFileId = input.avatarFileId;
+    if (input.gender !== undefined) user.gender = input.gender;
+    if (input.employeeNumber !== undefined) user.employeeNumber = input.employeeNumber;
     if (input.primaryOrganizationId !== undefined) user.primaryOrganizationId = input.primaryOrganizationId;
     if (input.remark !== undefined) user.remark = input.remark;
     user.updatedAt = toUtcIso(nowUtc());

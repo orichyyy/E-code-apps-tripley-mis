@@ -434,6 +434,52 @@ describe("backend core foundation routes", () => {
     expect(reset.data.firstLoginPasswordChangeRequired).toBe(true);
   });
 
+  it("creates and updates optional user profile fields", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const createResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "profile-user",
+        displayName: "Profile User",
+        email: "profile-user@example.com",
+        phone: "10000000013",
+        avatarFileId: "99",
+        gender: "unspecified",
+        employeeNumber: "EMP-001",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const created = await createResponse.json();
+
+    const updateResponse = await app.request(`/api/users/${created.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({
+        avatarFileId: null,
+        gender: null,
+        employeeNumber: "EMP-002"
+      })
+    });
+    const updated = await updateResponse.json();
+
+    expect(createResponse.status).toBe(201);
+    expect(created.data).toMatchObject({
+      avatarFileId: "99",
+      gender: "unspecified",
+      employeeNumber: "EMP-001"
+    });
+    expect(updateResponse.status).toBe(200);
+    expect(updated.data).toMatchObject({
+      avatarFileId: null,
+      gender: null,
+      employeeNumber: "EMP-002"
+    });
+  });
+
   it("prevents login for administrator-locked users until unlocked", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

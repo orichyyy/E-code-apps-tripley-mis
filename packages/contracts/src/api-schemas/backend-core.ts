@@ -54,6 +54,9 @@ export const createUserRequestSchema = z.object({
   displayName: z.string().min(1),
   email: z.string().email(),
   phone: z.string().min(1),
+  avatarFileId: integerIdStringSchema.optional(),
+  gender: z.string().min(1).optional(),
+  employeeNumber: z.string().min(1).optional(),
   password: z.string().min(1),
   primaryOrganizationId: integerIdStringSchema,
   roleId: integerIdStringSchema
@@ -64,6 +67,9 @@ export const updateUserRequestSchema = z.object({
   displayName: z.string().min(1).optional(),
   email: z.string().email().optional(),
   phone: z.string().min(1).optional(),
+  avatarFileId: integerIdStringSchema.nullable().optional(),
+  gender: z.string().min(1).nullable().optional(),
+  employeeNumber: z.string().min(1).nullable().optional(),
   primaryOrganizationId: integerIdStringSchema.optional(),
   remark: z.string().nullable().optional()
 });
