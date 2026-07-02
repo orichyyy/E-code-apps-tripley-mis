@@ -67,9 +67,25 @@ export class PermissionService {
   }
 
   async invalidateAllPermissionContexts() {
+    const userIds = new Set<string>();
+    const organizationIds = new Set<string>();
+
+    for (const user of this.context.store.users.values()) {
+      if (!user.isDeleted) userIds.add(user.id);
+    }
+    for (const organization of this.context.store.organizations.values()) {
+      if (!organization.isDeleted) organizationIds.add(organization.id);
+    }
+    for (const binding of this.context.store.userOrganizationRoles.values()) {
+      if (binding.isDeleted) continue;
+      userIds.add(binding.userId);
+      organizationIds.add(binding.organizationId);
+    }
+
     await Promise.all(
-      [...this.context.store.userOrganizationRoles.values()]
-        .map((binding) => this.cache.invalidate(binding.userId, binding.organizationId))
+      [...userIds].flatMap((userId) =>
+        [...organizationIds].map((organizationId) => this.cache.invalidate(userId, organizationId))
+      )
     );
   }
 

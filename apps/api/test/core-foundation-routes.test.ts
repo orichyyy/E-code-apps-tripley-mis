@@ -2271,6 +2271,50 @@ describe("backend core foundation routes", () => {
     expect(afterDisable.error.code).toBe("PERMISSION_API_DENIED");
   });
 
+  it("invalidates all cached super administrator contexts when permission manifests sync", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Manifest Sync Child",
+        code: "manifest-sync-child"
+      })
+    });
+    const child = await childResponse.json();
+    const userViewPermission = services
+      .listPermissions()
+      .find((permission) => permission.code === "user:view");
+    if (!userViewPermission) throw new Error("Expected user:view permission to exist");
+    userViewPermission.status = "disabled";
+
+    const switchResponse = await app.request("/api/context/current-organization", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: child.data.id })
+    });
+    const switched = await switchResponse.json();
+    const childHeaders = { authorization: `Bearer ${switched.data.accessToken}` };
+    const cachedResponse = await app.request("/api/context/permissions", { headers: childHeaders });
+    const cached = await cachedResponse.json();
+    const syncResponse = await app.request("/api/permissions/sync", {
+      method: "POST",
+      headers: childHeaders
+    });
+    const refreshedResponse = await app.request("/api/context/permissions", {
+      headers: childHeaders
+    });
+    const refreshed = await refreshedResponse.json();
+
+    expect(switchResponse.status).toBe(200);
+    expect(cached.data.permissionCodes).not.toEqual(expect.arrayContaining(["user:view"]));
+    expect(syncResponse.status).toBe(200);
+    expect(refreshed.data.permissionCodes).toEqual(expect.arrayContaining(["user:view"]));
+  });
+
   it("supports the PRD auth current-organization alias", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
