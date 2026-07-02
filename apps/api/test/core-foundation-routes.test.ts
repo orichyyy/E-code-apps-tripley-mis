@@ -921,8 +921,13 @@ describe("backend core foundation routes", () => {
     expect(treeResponse.status).toBe(200);
     expect(tree.data).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: "1", status: "disabled" }),
-        expect.objectContaining({ id: child.data.id, status: "disabled" })
+        expect.objectContaining({
+          id: "1",
+          status: "disabled",
+          children: expect.arrayContaining([
+            expect.objectContaining({ id: child.data.id, status: "disabled", children: [] })
+          ])
+        })
       ])
     );
     expect(detailResponse.status).toBe(200);
@@ -1777,6 +1782,8 @@ describe("backend core foundation routes", () => {
     const created = await createResponse.json();
     const hiddenContextResponse = await app.request("/api/auth/me", { headers: authHeaders });
     const hiddenContext = await hiddenContextResponse.json();
+    const treeResponse = await app.request("/api/menus/tree", { headers: authHeaders });
+    const tree = await treeResponse.json();
 
     const updateResponse = await app.request(`/api/menus/${created.data.id}`, {
       method: "PATCH",
@@ -1805,6 +1812,17 @@ describe("backend core foundation routes", () => {
     });
     expect(hiddenContext.data.menus).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ code: "system.audit" })])
+    );
+    expect(treeResponse.status).toBe(200);
+    expect(tree.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "system",
+          children: expect.arrayContaining([
+            expect.objectContaining({ code: "system.audit", children: [] })
+          ])
+        })
+      ])
     );
     expect(updated.data).toMatchObject({
       titleI18nKey: "routes.system.auditLogs",

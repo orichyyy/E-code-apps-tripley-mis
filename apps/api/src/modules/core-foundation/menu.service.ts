@@ -6,7 +6,7 @@ import type {
 
 import { createKnownError } from "../../core/errors/error-codes";
 import { nowUtc, toUtcIso } from "../../core/time/utc";
-import type { MenuRecord } from "./domain";
+import type { MenuRecord, PublicMenuTreeNode } from "./domain";
 import type { BackendCoreContext } from "./service-context";
 import { requireMenu } from "./store-guards";
 
@@ -17,6 +17,29 @@ export class MenuService {
     return [...this.context.store.menus.values()]
       .filter((menu) => !menu.isDeleted)
       .sort((left, right) => left.sortOrder - right.sortOrder || left.id.localeCompare(right.id));
+  }
+
+  listTree(): PublicMenuTreeNode[] {
+    const menus = this.list();
+    const nodesById = new Map<string, PublicMenuTreeNode>();
+    const roots: PublicMenuTreeNode[] = [];
+
+    for (const menu of menus) {
+      nodesById.set(menu.id, { ...menu, children: [] });
+    }
+
+    for (const menu of menus) {
+      const node = nodesById.get(menu.id);
+      if (!node) continue;
+      const parent = menu.parentMenuId ? nodesById.get(menu.parentMenuId) : undefined;
+      if (parent) {
+        parent.children.push(node);
+      } else {
+        roots.push(node);
+      }
+    }
+
+    return roots;
   }
 
   create(input: CreateMenuRequest): MenuRecord {

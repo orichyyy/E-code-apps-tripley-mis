@@ -13,7 +13,11 @@ import {
 
 import { createKnownError } from "../../core/errors/error-codes";
 import { nowUtc, toUtcIso } from "../../core/time/utc";
-import type { OrganizationRecord, PublicOrganization } from "./domain";
+import type {
+  OrganizationRecord,
+  PublicOrganization,
+  PublicOrganizationTreeNode
+} from "./domain";
 import type { BackendCoreContext } from "./service-context";
 import { requireOrganization } from "./store-guards";
 import { toPublicOrganization } from "./serializers";
@@ -38,6 +42,32 @@ export class OrganizationService {
       .filter((organization) => !organization.isDeleted)
       .sort((a, b) => (a.path < b.path ? -1 : 1))
       .map(toPublicOrganization);
+  }
+
+  listTree(): PublicOrganizationTreeNode[] {
+    const organizations = [...this.context.store.organizations.values()]
+      .filter((organization) => !organization.isDeleted)
+      .sort(compareOrganizationsForTree);
+    const nodesByPath = new Map<string, PublicOrganizationTreeNode>();
+    const roots: PublicOrganizationTreeNode[] = [];
+
+    for (const organization of organizations) {
+      const node = {
+        ...toPublicOrganization(organization),
+        children: []
+      };
+      nodesByPath.set(organization.path.toString(), node);
+
+      const parentPath = this.getParentPath(organization);
+      const parent = parentPath ? nodesByPath.get(parentPath.toString()) : undefined;
+      if (parent) {
+        parent.children.push(node);
+      } else {
+        roots.push(node);
+      }
+    }
+
+    return sortOrganizationTree(roots);
   }
 
   get(id: string): PublicOrganization {
@@ -197,4 +227,29 @@ export class OrganizationService {
     );
     if (duplicate) throw createKnownError("VALIDATION_DUPLICATE_ORGANIZATION_CODE");
   }
+
+  private getParentPath(organization: OrganizationRecord): bigint | null {
+    if (organization.level <= 1) return null;
+    return encodeOrgPath(decodeOrgPath(organization.path).slice(0, -1));
+  }
+}
+
+function compareOrganizationsForTree(left: OrganizationRecord, right: OrganizationRecord): number {
+  if (left.level !== right.level) return left.level - right.level;
+  if (left.path < right.path) return -1;
+  if (left.path > right.path) return 1;
+  return left.id.localeCompare(right.id);
+}
+
+function sortOrganizationTree(
+  nodes: PublicOrganizationTreeNode[]
+): PublicOrganizationTreeNode[] {
+  nodes.sort(
+    (left, right) =>
+      left.sortOrder - right.sortOrder ||
+      left.segment - right.segment ||
+      left.id.localeCompare(right.id)
+  );
+  nodes.forEach((node) => sortOrganizationTree(node.children));
+  return nodes;
 }

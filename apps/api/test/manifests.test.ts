@@ -51,7 +51,14 @@ describe("manifest routes", () => {
       data: expect.arrayContaining([expect.objectContaining({ routeCode: "system.users" })])
     });
     await expect(menus.json()).resolves.toMatchObject({
-      data: expect.arrayContaining([expect.objectContaining({ code: "system.users" })])
+      data: expect.arrayContaining([
+        expect.objectContaining({
+          code: "system",
+          children: expect.arrayContaining([
+            expect.objectContaining({ code: "system.users", children: [] })
+          ])
+        })
+      ])
     });
   });
 });

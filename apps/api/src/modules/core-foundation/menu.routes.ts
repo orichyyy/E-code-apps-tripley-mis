@@ -15,7 +15,7 @@ export function createMenuRoutes(services: BackendCoreServices) {
   const routes = new Hono<MenuRouteBindings>();
 
   routes.get("/menus/tree", (context) => {
-    return context.json({ data: services.listMenus() });
+    return context.json({ data: services.listMenuTree() });
   });
 
   routes.post("/menus", async (context) => {

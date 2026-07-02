@@ -16,7 +16,7 @@ export function createOrganizationRoutes(services: BackendCoreServices) {
   const routes = new Hono<OrganizationRouteBindings>();
 
   routes.get("/organizations/tree", (context) => {
-    return context.json({ data: services.listOrganizations() });
+    return context.json({ data: services.listOrganizationTree() });
   });
 
   routes.get("/organizations/config/depth", (context) => {

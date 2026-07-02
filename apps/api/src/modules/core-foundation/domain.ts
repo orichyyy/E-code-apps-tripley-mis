@@ -197,8 +197,16 @@ export type PublicOrganization = Omit<OrganizationRecord, "path"> & {
   path: string;
 };
 
+export type PublicOrganizationTreeNode = PublicOrganization & {
+  children: PublicOrganizationTreeNode[];
+};
+
 export type PublicUser = Omit<UserRecord, "passwordHash">;
 
 export type PublicMenu = MenuRecord;
+
+export type PublicMenuTreeNode = PublicMenu & {
+  children: PublicMenuTreeNode[];
+};
 
 export type PublicSession = Omit<AuthSessionRecord, "refreshTokenHash">;

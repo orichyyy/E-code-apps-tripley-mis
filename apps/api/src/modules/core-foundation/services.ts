@@ -186,6 +186,10 @@ export class BackendCoreServices {
     return this.organizations.list();
   }
 
+  listOrganizationTree() {
+    return this.organizations.listTree();
+  }
+
   getOrganizationDepthConfig() {
     return this.organizations.getDepthConfig();
   }
@@ -376,6 +380,10 @@ export class BackendCoreServices {
 
   listMenus() {
     return this.menus.list();
+  }
+
+  listMenuTree() {
+    return this.menus.listTree();
   }
 
   async createMenu(input: CreateMenuRequest) {
