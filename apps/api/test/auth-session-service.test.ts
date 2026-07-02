@@ -29,4 +29,23 @@ describe("Auth session service", () => {
     expect(onlineUsers).toEqual([]);
     expect(login.session).not.toHaveProperty("refreshTokenHash");
   });
+
+  it("marks the backing session expired when refresh-token exchange is expired", async () => {
+    const services = await createInitializedServices({ refreshTokenTtlDays: 0 });
+    const login = await services.auth.login(
+      { username: "admin", password: "password1" },
+      { ipAddress: "127.0.0.1", userAgent: "vitest" }
+    );
+
+    await expect(services.refreshAccessToken(login.refreshToken)).rejects.toMatchObject({
+      code: "AUTH_TOKEN_EXPIRED"
+    });
+
+    expect(services["context"].store.authSessions.get(login.session.id)).toMatchObject({
+      id: login.session.id,
+      status: "expired",
+      revokedAt: null
+    });
+    expect(services.listOnlineUsers()).toEqual([]);
+  });
 });
