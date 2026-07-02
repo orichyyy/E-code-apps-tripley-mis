@@ -6,6 +6,7 @@ export type BaseMenuManifestEntry = {
   requiredPermission?: string;
   routeCode?: string;
   sortOrder: number;
+  visible?: boolean;
 };
 
 export const baseMenuManifest: BaseMenuManifestEntry[] = [

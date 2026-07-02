@@ -188,6 +188,7 @@ export const menus = pgTable(
     path: text("path").notNull(),
     icon: text("icon"),
     sortOrder: integer("sort_order").notNull().default(0),
+    visible: boolean("visible").notNull().default(true),
     status: text("status").notNull().default("enabled"),
     ...softDelete,
     ...timestamps

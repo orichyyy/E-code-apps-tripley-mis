@@ -182,6 +182,7 @@ export const menus = sqliteTable(
     path: text("path").notNull(),
     icon: text("icon"),
     sortOrder: integer("sort_order").notNull().default(0),
+    visible: integer("visible", { mode: "boolean" }).notNull().default(true),
     status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
     ...softDelete,
     ...timestamps

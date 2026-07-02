@@ -883,15 +883,22 @@ describe("backend core foundation routes", () => {
         titleI18nKey: "routes.system.audit",
         path: "/system/audit",
         requiredPermission: "menu:view",
-        sortOrder: 150
+        sortOrder: 150,
+        visible: false
       })
     });
     const created = await createResponse.json();
+    const hiddenContextResponse = await app.request("/api/auth/me", { headers: authHeaders });
+    const hiddenContext = await hiddenContextResponse.json();
 
     const updateResponse = await app.request(`/api/menus/${created.data.id}`, {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ titleI18nKey: "routes.system.auditLogs", status: "disabled" })
+      body: JSON.stringify({
+        titleI18nKey: "routes.system.auditLogs",
+        visible: true,
+        status: "disabled"
+      })
     });
     const updated = await updateResponse.json();
     const contextResponse = await app.request("/api/auth/me", { headers: authHeaders });
@@ -906,10 +913,15 @@ describe("backend core foundation routes", () => {
     expect(created.data).toMatchObject({
       id: expect.any(String),
       parentMenuId: "2",
-      code: "system.audit"
+      code: "system.audit",
+      visible: false
     });
+    expect(hiddenContext.data.menus).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "system.audit" })])
+    );
     expect(updated.data).toMatchObject({
       titleI18nKey: "routes.system.auditLogs",
+      visible: true,
       status: "disabled"
     });
     expect(context.data.menus).not.toEqual(

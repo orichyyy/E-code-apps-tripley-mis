@@ -100,6 +100,7 @@ export type MenuRecord = AuditFields &
     routeCode: string | null;
     icon: string | null;
     sortOrder: number;
+    visible: boolean;
     status: EntityStatus;
   };
 

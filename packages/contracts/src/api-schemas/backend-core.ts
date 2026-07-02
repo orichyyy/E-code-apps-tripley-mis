@@ -110,6 +110,7 @@ export const createMenuRequestSchema = z.object({
   routeCode: z.string().min(1).optional(),
   icon: z.string().min(1).optional(),
   sortOrder: z.number().int().optional(),
+  visible: z.boolean().optional(),
   status: z.enum(["enabled", "disabled"]).optional()
 });
 
@@ -122,6 +123,7 @@ export const updateMenuRequestSchema = z.object({
   routeCode: z.string().min(1).nullable().optional(),
   icon: z.string().min(1).nullable().optional(),
   sortOrder: z.number().int().optional(),
+  visible: z.boolean().optional(),
   status: z.enum(["enabled", "disabled"]).optional()
 });
 

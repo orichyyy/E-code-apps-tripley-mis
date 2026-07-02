@@ -40,6 +40,7 @@ export class MenuService {
       routeCode: input.routeCode ?? null,
       icon: input.icon ?? null,
       sortOrder: input.sortOrder ?? 0,
+      visible: input.visible ?? true,
       status: input.status ?? "enabled",
       isDeleted: false,
       deletedAt: null,
@@ -65,6 +66,7 @@ export class MenuService {
     if (input.routeCode !== undefined) menu.routeCode = input.routeCode;
     if (input.icon !== undefined) menu.icon = input.icon;
     if (input.sortOrder !== undefined) menu.sortOrder = input.sortOrder;
+    if (input.visible !== undefined) menu.visible = input.visible;
     if (input.status !== undefined) menu.status = input.status;
     menu.updatedAt = toUtcIso(nowUtc());
     return menu;
@@ -102,7 +104,8 @@ export class MenuService {
         path: entry.path,
         requiredPermission: entry.requiredPermission,
         routeCode: entry.routeCode,
-        sortOrder: entry.sortOrder
+        sortOrder: entry.sortOrder,
+        visible: entry.visible
       });
       byCode.set(menu.code, menu);
       seeded.push(menu);

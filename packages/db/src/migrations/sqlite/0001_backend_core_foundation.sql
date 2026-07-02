@@ -157,6 +157,7 @@ CREATE TABLE IF NOT EXISTS menus (
   path TEXT NOT NULL,
   icon TEXT,
   sort_order INTEGER NOT NULL DEFAULT 0,
+  visible INTEGER NOT NULL DEFAULT 1,
   status TEXT NOT NULL DEFAULT 'enabled',
   is_deleted INTEGER NOT NULL DEFAULT 0,
   deleted_at TEXT,

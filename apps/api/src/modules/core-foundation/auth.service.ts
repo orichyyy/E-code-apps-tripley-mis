@@ -352,6 +352,7 @@ export class AuthService {
       (menu) =>
         !menu.isDeleted &&
         menu.status === "enabled" &&
+        menu.visible &&
         (!menu.requiredPermission || permissionCodes.includes(menu.requiredPermission))
     );
   }

@@ -54,6 +54,11 @@ describe("backend core schema", () => {
     expect(postgresql.apiPermissions.public.name).toBe("public");
   });
 
+  it("keeps menu visibility columns aligned across SQLite and PostgreSQL", () => {
+    expect(sqlite.menus.visible.name).toBe("visible");
+    expect(postgresql.menus.visible.name).toBe("visible");
+  });
+
   it("keeps login session token-version snapshot columns aligned across dialects", () => {
     expect(sqlite.authSessions.tokenVersion.name).toBe("token_version");
     expect(sqlite.authSessions.status.name).toBe("status");
