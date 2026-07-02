@@ -212,6 +212,7 @@ CREATE TABLE IF NOT EXISTS auth_sessions (
   user_id INTEGER NOT NULL,
   refresh_token_hash TEXT NOT NULL,
   current_organization_id INTEGER NOT NULL,
+  token_version INTEGER NOT NULL,
   ip_address TEXT,
   user_agent TEXT,
   expires_at TEXT NOT NULL,

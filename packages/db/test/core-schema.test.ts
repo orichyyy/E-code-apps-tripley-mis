@@ -25,4 +25,9 @@ describe("backend core schema", () => {
     expect(postgresql.apiPermissions.requiredPermission.name).toBe("required_permission");
     expect(postgresql.apiPermissions.public.name).toBe("public");
   });
+
+  it("keeps login session token-version snapshot columns aligned across dialects", () => {
+    expect(sqlite.authSessions.tokenVersion.name).toBe("token_version");
+    expect(postgresql.authSessions.tokenVersion.name).toBe("token_version");
+  });
 });

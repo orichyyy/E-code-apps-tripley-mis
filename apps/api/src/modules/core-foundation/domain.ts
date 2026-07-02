@@ -139,6 +139,7 @@ export type AuthSessionRecord = {
   userId: string;
   refreshTokenHash: string;
   currentOrganizationId: string;
+  tokenVersion: number;
   ipAddress: string | null;
   userAgent: string | null;
   expiresAt: string;

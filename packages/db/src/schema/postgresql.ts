@@ -249,6 +249,7 @@ export const authSessions = pgTable("auth_sessions", {
   userId: integer("user_id").notNull(),
   refreshTokenHash: text("refresh_token_hash").notNull(),
   currentOrganizationId: integer("current_organization_id").notNull(),
+  tokenVersion: integer("token_version").notNull(),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),

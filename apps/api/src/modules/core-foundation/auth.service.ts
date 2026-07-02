@@ -53,7 +53,13 @@ export class AuthService {
 
     const refreshToken = createRefreshToken();
     const refreshTokenHash = hashToken(refreshToken, this.context.config.jwtSecret);
-    const session = this.createSession(user.id, organizationId, refreshTokenHash, request);
+    const session = this.createSession(
+      user.id,
+      organizationId,
+      user.tokenVersion,
+      refreshTokenHash,
+      request
+    );
     const refreshTokenId = this.context.store.nextId("refreshToken");
     const refreshTokenRecord = {
       id: refreshTokenId,
@@ -94,15 +100,17 @@ export class AuthService {
     }
 
     const user = requireUser(this.context.store, storedToken.subjectId);
-    if (storedToken.tokenVersion !== user.tokenVersion) throw createKnownError("AUTH_TOKEN_INVALIDATED");
     if (user.status === "disabled") throw createKnownError("AUTH_ACCOUNT_DISABLED");
     if (user.status === "locked") throw createKnownError("AUTH_ACCOUNT_LOCKED");
+    if (storedToken.tokenVersion !== user.tokenVersion) throw createKnownError("AUTH_TOKEN_INVALIDATED");
 
     const session = this.context.store.authSessions.get(storedToken.sessionId);
     if (!session || session.revokedAt) throw createKnownError("AUTH_SESSION_NOT_FOUND");
+    if (session.tokenVersion !== user.tokenVersion) throw createKnownError("AUTH_TOKEN_INVALIDATED");
     requireEnabledOrganization(this.context.store, session.currentOrganizationId);
 
     session.lastSeenAt = toUtcIso(nowUtc());
+    session.tokenVersion = user.tokenVersion;
     return {
       accessToken: this.signAccessToken(user, session.currentOrganizationId, session.id),
       session
@@ -222,6 +230,10 @@ export class AuthService {
         throw createKnownError("AUTH_TOKEN_INVALIDATED");
       }
 
+      if (session.tokenVersion !== user.tokenVersion) {
+        throw createKnownError("AUTH_TOKEN_INVALIDATED");
+      }
+
       if (session.currentOrganizationId !== claims.currentOrganizationId) {
         throw createKnownError("AUTH_TOKEN_INVALIDATED");
       }
@@ -259,9 +271,15 @@ export class AuthService {
 
   listOnlineUsers(): PublicSession[] {
     const now = nowUtc();
-    return [...this.context.store.authSessions.values()].filter(
-      (session) => !session.revokedAt && new Date(session.expiresAt) > now
-    );
+    return [...this.context.store.authSessions.values()].filter((session) => {
+      if (session.revokedAt || new Date(session.expiresAt) <= now) return false;
+      const user = this.context.store.users.get(session.userId);
+      return (
+        user?.status === "enabled" &&
+        !user.isDeleted &&
+        user.tokenVersion === session.tokenVersion
+      );
+    });
   }
 
   private signAccessToken(user: UserRecord, organizationId: string, sessionId: string): string {
@@ -283,6 +301,7 @@ export class AuthService {
   private createSession(
     userId: string,
     organizationId: string,
+    tokenVersion: number,
     refreshTokenHash: string,
     request: { ipAddress?: string | null; userAgent?: string | null }
   ): AuthSessionRecord {
@@ -293,6 +312,7 @@ export class AuthService {
       userId,
       refreshTokenHash,
       currentOrganizationId: organizationId,
+      tokenVersion,
       ipAddress: request.ipAddress ?? null,
       userAgent: request.userAgent ?? null,
       expiresAt: toUtcIso(addDaysUtc(now, this.context.config.refreshTokenTtlDays)),

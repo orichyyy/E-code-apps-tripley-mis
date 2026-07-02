@@ -116,7 +116,11 @@ export class UserService {
     actorId: string | null = null
   ): PublicUser {
     const user = requireUser(this.context.store, id);
+    const previousStatus = user.status;
     user.status = status;
+    if (status === "disabled" && previousStatus !== "disabled") {
+      user.tokenVersion += 1;
+    }
     if (status === "enabled") {
       user.lockedUntil = null;
       user.failedLoginAttempts = 0;
