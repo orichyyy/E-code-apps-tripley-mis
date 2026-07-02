@@ -1993,6 +1993,16 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
     });
     const reassign = await reassignResponse.json();
+    const primaryUpdateResponse = await app.request(`/api/users/${setup.data.admin.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ primaryOrganizationId: child.data.id })
+    });
+    const listAfterPrimaryUpdateResponse = await app.request(
+      `/api/users/${setup.data.admin.id}/organizations`,
+      { headers: authHeaders }
+    );
+    const listAfterPrimaryUpdate = await listAfterPrimaryUpdateResponse.json();
 
     expect(assign.data).toMatchObject({
       userId: setup.data.admin.id,
@@ -2035,6 +2045,13 @@ describe("backend core foundation routes", () => {
       deletedAt: null,
       deletedBy: null
     });
+    expect(primaryUpdateResponse.status).toBe(200);
+    expect(listAfterPrimaryUpdate.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ organizationId: "1", isPrimary: false, updatedBy: "1" }),
+        expect.objectContaining({ organizationId: child.data.id, isPrimary: true, updatedBy: "1" })
+      ])
+    );
   });
 
   it("rejects removing a user's primary organization binding", async () => {

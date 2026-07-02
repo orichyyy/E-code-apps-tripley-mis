@@ -107,7 +107,7 @@ export class UserService {
     if (input.employeeNumber !== undefined) user.employeeNumber = input.employeeNumber;
     if (input.primaryOrganizationId !== undefined) {
       user.primaryOrganizationId = input.primaryOrganizationId;
-      this.markPrimaryOrganization(user.id, input.primaryOrganizationId);
+      this.markPrimaryOrganization(user.id, input.primaryOrganizationId, actorId);
     }
     if (input.remark !== undefined) user.remark = input.remark;
     user.updatedAt = toUtcIso(nowUtc());
@@ -223,6 +223,7 @@ export class UserService {
     binding.deletedAt = now;
     binding.deletedBy = deletedBy;
     binding.updatedAt = now;
+    binding.updatedBy = deletedBy;
     return { removed: true };
   }
 
@@ -245,7 +246,7 @@ export class UserService {
       existing.deletedBy = null;
       existing.updatedAt = toUtcIso(nowUtc());
       existing.updatedBy = actorId;
-      if (isPrimary) this.markPrimaryOrganization(userId, organizationId);
+      if (isPrimary) this.markPrimaryOrganization(userId, organizationId, actorId);
       return existing;
     }
 
@@ -267,16 +268,21 @@ export class UserService {
       updatedBy: actorId
     };
     this.context.store.userOrganizationRoles.set(binding.id, binding);
-    if (isPrimary) this.markPrimaryOrganization(userId, organizationId);
+    if (isPrimary) this.markPrimaryOrganization(userId, organizationId, actorId);
     return binding;
   }
 
-  private markPrimaryOrganization(userId: string, organizationId: string): void {
+  private markPrimaryOrganization(
+    userId: string,
+    organizationId: string,
+    actorId: string | null = null
+  ): void {
     const now = toUtcIso(nowUtc());
     for (const binding of this.context.store.userOrganizationRoles.values()) {
       if (binding.userId !== userId || binding.isDeleted || binding.status !== "enabled") continue;
       binding.isPrimary = binding.organizationId === organizationId;
       binding.updatedAt = now;
+      binding.updatedBy = actorId;
     }
   }
 
