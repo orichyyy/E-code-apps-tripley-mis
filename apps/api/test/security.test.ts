@@ -48,13 +48,17 @@ describe("backend security foundation", () => {
         secret: "test-secret"
       }
     );
+    const payload = decodeJwtPayload(token);
 
     expect(verifyAccessToken(token, { issuer: "web-admin-base", secret: "test-secret" })).toMatchObject({
       sub: "1",
       sid: "1",
       username: "admin",
-      currentOrganizationId: "1"
+      currentOrganizationId: "1",
+      tokenVersion: 0
     });
+    expect(payload).toMatchObject({ token_version: 0 });
+    expect(payload).not.toHaveProperty("tokenVersion");
   });
 
   it("rejects signed access tokens with invalid claim shapes", () => {
@@ -78,3 +82,9 @@ describe("backend security foundation", () => {
       .toThrow("Invalid JWT claims");
   });
 });
+
+function decodeJwtPayload(token: string): Record<string, unknown> {
+  const payload = token.split(".")[1];
+  if (!payload) throw new Error("Missing JWT payload");
+  return JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as Record<string, unknown>;
+}

@@ -26,7 +26,13 @@ export function hashToken(token: string, secret: string): string {
 export function signAccessToken(claims: AccessTokenClaims, config: JwtConfig): string {
   const header = encodeBase64Url({ alg: "HS256", typ: "JWT" });
   const payload = encodeBase64Url({
-    ...claims,
+    sub: claims.sub,
+    sid: claims.sid,
+    username: claims.username,
+    currentOrganizationId: claims.currentOrganizationId,
+    token_version: claims.tokenVersion,
+    exp: claims.exp,
+    iat: claims.iat,
     iss: config.issuer
   });
   const signature = sign(`${header}.${payload}`, config.secret);
@@ -49,7 +55,7 @@ export function verifyAccessToken(token: string, config: JwtConfig): AccessToken
     throw new Error("Invalid JWT signature");
   }
 
-  const decodedPayload = decodeBase64Url(payload) as AccessTokenClaims & { iss?: string };
+  const decodedPayload = decodeBase64Url(payload) as SerializedAccessTokenClaims & { iss?: string };
   if (decodedPayload.iss !== config.issuer) {
     throw new Error("Invalid JWT issuer");
   }
@@ -65,21 +71,25 @@ export function verifyAccessToken(token: string, config: JwtConfig): AccessToken
     sid: decodedPayload.sid,
     username: decodedPayload.username,
     currentOrganizationId: decodedPayload.currentOrganizationId,
-    tokenVersion: decodedPayload.tokenVersion,
+    tokenVersion: decodedPayload.token_version,
     exp: decodedPayload.exp,
     iat: decodedPayload.iat
   };
 }
 
+type SerializedAccessTokenClaims = Omit<AccessTokenClaims, "tokenVersion"> & {
+  token_version: number;
+};
+
 function assertAccessTokenClaims(
-  value: AccessTokenClaims & { iss?: string }
-): asserts value is AccessTokenClaims & { iss: string } {
+  value: SerializedAccessTokenClaims & { iss?: string }
+): asserts value is SerializedAccessTokenClaims & { iss: string } {
   if (
     !isNonEmptyString(value.sub) ||
     !isNonEmptyString(value.sid) ||
     !isNonEmptyString(value.username) ||
     !isNonEmptyString(value.currentOrganizationId) ||
-    !Number.isInteger(value.tokenVersion) ||
+    !Number.isInteger(value.token_version) ||
     !Number.isInteger(value.exp) ||
     !Number.isInteger(value.iat)
   ) {
