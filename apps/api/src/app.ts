@@ -1,4 +1,4 @@
-import { healthResponseSchema } from "@web-admin-base/contracts";
+import { createOpenApiDocument, healthResponseSchema } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
@@ -13,6 +13,11 @@ import {
   type BackendCoreServices
 } from "./modules/core-foundation/services";
 import { createManifestRoutes } from "./modules/manifests/manifest.routes";
+import {
+  createStructuredLoggingMiddleware,
+  noopStructuredLogSink,
+  type StructuredLogSink
+} from "./observability/structured-logging";
 
 type AppBindings = {
   Variables: RequestIdVariables & AuthContextVariables;
@@ -20,12 +25,15 @@ type AppBindings = {
 
 export type AppDependencies = {
   backendCoreServices: BackendCoreServices;
+  structuredLogSink?: StructuredLogSink;
 };
 
 export function createApp(dependencies: AppDependencies = createDefaultAppDependencies()) {
+  const structuredLogSink = dependencies.structuredLogSink ?? noopStructuredLogSink;
   const app = new Hono<AppBindings>().basePath("/api");
 
   app.use("*", requestIdMiddleware);
+  app.use("*", createStructuredLoggingMiddleware(structuredLogSink));
   app.use("*", createApiAuthorizationMiddleware(dependencies.backendCoreServices));
 
   app.get("/health", (context) => {
@@ -48,6 +56,10 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
         timestamp: new Date().toISOString()
       }
     });
+  });
+
+  app.get("/openapi.json", (context) => {
+    return context.json(createOpenApiDocument());
   });
 
   app.route("/", createCoreFoundationRoutes(dependencies.backendCoreServices));
@@ -81,6 +93,7 @@ export type ApiApp = ReturnType<typeof createApp>;
 
 export function createDefaultAppDependencies(config: ApiConfig = loadApiConfig()): AppDependencies {
   return {
-    backendCoreServices: createInMemoryBackendCoreServices(config.backendCore)
+    backendCoreServices: createInMemoryBackendCoreServices(config.backendCore),
+    structuredLogSink: noopStructuredLogSink
   };
 }

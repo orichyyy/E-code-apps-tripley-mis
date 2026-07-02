@@ -3,6 +3,7 @@ export type ErrorCategory =
   | "authorization"
   | "business"
   | "system"
+  | "third-party"
   | "validation";
 
 export type AppErrorOptions = {

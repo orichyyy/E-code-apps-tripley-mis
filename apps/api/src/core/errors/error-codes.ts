@@ -24,6 +24,8 @@ const errorDefinitions = {
   PERMISSION_DENIED: ["Permission denied", 403, "authorization"],
   PERMISSION_UNKNOWN_CODE: ["Permission code is unknown", 400, "validation"],
   ROLE_NOT_FOUND: ["Role was not found", 404, "business"],
+  SYSTEM_INTERNAL_ERROR: ["Unexpected internal error", 500, "system"],
+  THIRD_PARTY_INTEGRATION_FAILED: ["Third-party integration failed", 502, "third-party"],
   USER_NOT_FOUND: ["User was not found", 404, "business"],
   VALIDATION_DUPLICATE_EMAIL: ["Email already exists", 409, "validation"],
   VALIDATION_DUPLICATE_MENU_CODE: ["Menu code already exists", 409, "validation"],
@@ -42,6 +44,13 @@ const errorDefinitions = {
 
 export type KnownErrorCode = keyof typeof errorDefinitions;
 
+export type ErrorCodeDefinition = {
+  code: KnownErrorCode;
+  message: string;
+  status: number;
+  category: AppError["category"];
+};
+
 export function createKnownError(code: KnownErrorCode, details?: unknown): AppError {
   const [message, status, category] = errorDefinitions[code];
   return appError({
@@ -55,4 +64,13 @@ export function createKnownError(code: KnownErrorCode, details?: unknown): AppEr
 
 export function isKnownErrorCode(code: string): code is KnownErrorCode {
   return code in errorDefinitions;
+}
+
+export function listErrorCodeDefinitions(): ErrorCodeDefinition[] {
+  return Object.entries(errorDefinitions).map(([code, [message, status, category]]) => ({
+    code: code as KnownErrorCode,
+    message,
+    status,
+    category: category as AppError["category"]
+  }));
 }

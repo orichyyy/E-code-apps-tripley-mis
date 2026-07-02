@@ -32,6 +32,15 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
   },
   {
     method: "GET",
+    path: "/api/openapi.json",
+    code: "api.openapi.view",
+    description: "OpenAPI document for implemented APIs",
+    module: "documentation",
+    logLevel: "none",
+    public: true
+  },
+  {
+    method: "GET",
     path: "/api/initialization/status",
     code: "api.initialization.status",
     description: "Check initialization status",

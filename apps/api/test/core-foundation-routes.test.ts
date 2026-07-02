@@ -2613,6 +2613,10 @@ describe("backend core foundation routes", () => {
       expect.objectContaining({
         code: "api.metrics.view",
         logLevel: "none"
+      }),
+      expect.objectContaining({
+        code: "api.openapi.view",
+        logLevel: "none"
       })
     ]);
   });

@@ -12,7 +12,8 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "pnpm generate:manifests && tsc -p tsconfig.build.json",
+    "generate:manifests": "tsx src/manifests/generate-build-manifest.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --passWithNoTests"
   },

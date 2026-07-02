@@ -1,0 +1,22 @@
+export const requestSchemaByOperationCode: Record<string, string> = {
+  "api.initialization.setup": "InitializationSetupRequest",
+  "api.setup.initialize": "InitializationSetupRequest",
+  "api.auth.login": "LoginRequest",
+  "api.auth.logout": "LogoutRequest",
+  "api.auth.change-password": "ChangePasswordRequest",
+  "api.context.current-organization.switch": "SwitchCurrentOrganizationRequest",
+  "api.auth.current-organization.switch": "SwitchCurrentOrganizationRequest",
+  "api.organizations.depth.update": "UpdateOrganizationDepthConfigRequest",
+  "api.organizations.create": "CreateOrganizationRequest",
+  "api.organizations.update": "UpdateOrganizationRequest",
+  "api.users.create": "CreateUserRequest",
+  "api.users.update": "UpdateUserRequest",
+  "api.users.password.reset": "ResetPasswordRequest",
+  "api.users.organizations.assign": "AssignUserOrganizationRoleRequest",
+  "api.roles.create": "CreateRoleRequest",
+  "api.roles.update": "UpdateRoleRequest",
+  "api.roles.permissions.update": "UpdateRolePermissionsRequest",
+  "api.menus.create": "CreateMenuRequest",
+  "api.menus.update": "UpdateMenuRequest",
+  "api.menus.api-bindings.update": "UpdateMenuApiBindingsRequest"
+};

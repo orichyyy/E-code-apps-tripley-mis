@@ -264,3 +264,28 @@ The frontend admin UI foundation has been implemented in `apps/web`:
 - Added Vitest + React Testing Library coverage for login rendering, the authenticated shell, organization selector, and personal settings controls.
 
 The infrastructure-management pages intentionally do not claim durable backend integration yet because the backend infrastructure goal is paused on the unresolved implementation questions in `docs/implementation_questions.md`.
+
+## Integration Hardening Progress
+
+The integration hardening goal has added the following coherent, tested pieces:
+
+- Added `createOpenApiDocument()` in `packages/contracts`, generated from the implemented API permission manifest and aligned with the existing Zod-backed request contracts.
+- Added public `GET /api/openapi.json` API documentation for implemented APIs only.
+- Added API permission metadata for the OpenAPI document endpoint so the route remains covered by manifest consistency checks.
+- Added build-time manifest artifact generation through `packages/contracts` with `pnpm generate:manifests`, producing `packages/contracts/generated/base-system-manifests.json`.
+- Added OpenAPI contract tests proving every implemented API permission manifest entry is documented and private routes carry bearer-security metadata.
+- Added structured access-log middleware with a no-op default sink and request ID propagation into log entries.
+- Added an alert integration placeholder boundary for future production alert integrations.
+- Added error-code catalog coverage for authentication, authorization, validation, business, system, and third-party categories.
+- Added documentation: `README.md`, local development guide, deployment guide, database migration guide, adapter extension guide, business module extension guide, permission extension guide, troubleshooting guide, and `docs/known_gaps.md`.
+
+The following validation gates are expected to pass after this hardening slice:
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+`pnpm db:migrate` remains intentionally blocked until the database driver/provisioning questions in `docs/implementation_questions.md` are answered. The gap is explicitly listed in `docs/known_gaps.md`.
