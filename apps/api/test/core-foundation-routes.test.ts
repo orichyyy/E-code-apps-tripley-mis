@@ -420,11 +420,30 @@ describe("backend core foundation routes", () => {
       })
     });
     const child = await childResponse.json();
+    const alternateResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ name: "Alternate Root", code: "alternate-root" })
+    });
+    const alternate = await alternateResponse.json();
+    const switchResponse = await app.request("/api/context/current-organization", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: alternate.data.id })
+    });
+    const switched = await switchResponse.json();
+    const alternateHeaders = { authorization: `Bearer ${switched.data.accessToken}` };
     const disabledResponse = await app.request("/api/organizations/1/disable", {
       method: "POST",
-      headers: authHeaders
+      headers: alternateHeaders
     });
     const disabled = await disabledResponse.json();
+    const treeResponse = await app.request("/api/organizations/tree", { headers: alternateHeaders });
+    const tree = await treeResponse.json();
+    const detailResponse = await app.request(`/api/organizations/${child.data.id}`, {
+      headers: alternateHeaders
+    });
+    const detail = await detailResponse.json();
 
     expect(child.data.level).toBe(2);
     expect(child.data.path).toEqual(expect.any(String));
@@ -434,6 +453,15 @@ describe("backend core foundation routes", () => {
         expect.objectContaining({ id: "2", status: "disabled" })
       ])
     );
+    expect(treeResponse.status).toBe(200);
+    expect(tree.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "1", status: "disabled" }),
+        expect.objectContaining({ id: child.data.id, status: "disabled" })
+      ])
+    );
+    expect(detailResponse.status).toBe(200);
+    expect(detail.data).toMatchObject({ id: child.data.id, status: "disabled" });
   });
 
   it("creates and updates organization contact fields", async () => {
@@ -756,6 +784,47 @@ describe("backend core foundation routes", () => {
 
     expect(response.status).toBe(409);
     expect(body.error.code).toBe("BUSINESS_ORG_DISABLED");
+  });
+
+  it("rejects creating users and role bindings under a disabled organization", async () => {
+    const { app, setup } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Disabled Child", code: "disabled-child" })
+    });
+    const child = await childResponse.json();
+    await app.request(`/api/organizations/${child.data.id}/disable`, {
+      method: "POST",
+      headers: authHeaders
+    });
+
+    const createUserResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "disabled-org-user",
+        displayName: "Disabled Org User",
+        email: "disabled-org-user@example.com",
+        phone: "10000000123",
+        password: "password1",
+        primaryOrganizationId: child.data.id,
+        roleId: "3"
+      })
+    });
+    const createUser = await createUserResponse.json();
+    const assignResponse = await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+    });
+    const assign = await assignResponse.json();
+
+    expect(createUserResponse.status).toBe(409);
+    expect(createUser.error.code).toBe("BUSINESS_ORG_DISABLED");
+    expect(assignResponse.status).toBe(409);
+    expect(assign.error.code).toBe("BUSINESS_ORG_DISABLED");
   });
 
   it("rejects updating a user's primary organization to an unbound organization", async () => {
