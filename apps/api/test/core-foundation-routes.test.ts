@@ -1752,6 +1752,70 @@ describe("backend core foundation routes", () => {
     });
   });
 
+  it("rejects unknown fields in core mutation payloads", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const organizationResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        name: "Strict Organization",
+        code: "strict-organization",
+        parentId: "1"
+      })
+    });
+    const organization = await organizationResponse.json();
+
+    const userResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "strict-create-user",
+        displayName: "Strict Create User",
+        email: "strict-create-user@example.com",
+        phone: "10000000026",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3",
+        status: "disabled"
+      })
+    });
+    const user = await userResponse.json();
+
+    const bindingResponse = await app.request("/api/users/1/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        organizationId: "1",
+        roleId: "2",
+        isPrimary: true
+      })
+    });
+    const binding = await bindingResponse.json();
+
+    const menuResponse = await app.request("/api/menus", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        code: "strict-menu",
+        titleI18nKey: "menu.strict",
+        path: "/strict",
+        permissionId: "1"
+      })
+    });
+    const menu = await menuResponse.json();
+
+    expect(organizationResponse.status).toBe(400);
+    expect(organization.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(userResponse.status).toBe(400);
+    expect(user.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(bindingResponse.status).toBe(400);
+    expect(binding.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(menuResponse.status).toBe(400);
+    expect(menu.error.code).toBe("VALIDATION_INVALID_REQUEST");
+  });
+
   it("prevents login for administrator-locked users until unlocked", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

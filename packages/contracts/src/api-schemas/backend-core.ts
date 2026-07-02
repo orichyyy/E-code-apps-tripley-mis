@@ -2,45 +2,57 @@ import { z } from "zod";
 
 export const integerIdStringSchema = z.string().regex(/^[1-9]\d*$/);
 
-export const initializationSetupRequestSchema = z.object({
-  organizationName: z.string().min(1),
-  organizationCode: z.string().min(1),
-  adminUsername: z.string().min(1),
-  adminDisplayName: z.string().min(1),
-  adminEmail: z.string().email(),
-  adminPhone: z.string().min(1),
-  adminPassword: z.string().min(1)
-});
+export const initializationSetupRequestSchema = z
+  .object({
+    organizationName: z.string().min(1),
+    organizationCode: z.string().min(1),
+    adminUsername: z.string().min(1),
+    adminDisplayName: z.string().min(1),
+    adminEmail: z.string().email(),
+    adminPhone: z.string().min(1),
+    adminPassword: z.string().min(1)
+  })
+  .strict();
 
-export const loginRequestSchema = z.object({
-  username: z.string().min(1),
-  password: z.string().min(1)
-});
+export const loginRequestSchema = z
+  .object({
+    username: z.string().min(1),
+    password: z.string().min(1)
+  })
+  .strict();
 
-export const logoutRequestSchema = z.object({
-  sessionId: integerIdStringSchema.optional()
-});
+export const logoutRequestSchema = z
+  .object({
+    sessionId: integerIdStringSchema.optional()
+  })
+  .strict();
 
-export const changePasswordRequestSchema = z.object({
-  oldPassword: z.string().min(1),
-  newPassword: z.string().min(1)
-});
+export const changePasswordRequestSchema = z
+  .object({
+    oldPassword: z.string().min(1),
+    newPassword: z.string().min(1)
+  })
+  .strict();
 
-export const switchCurrentOrganizationRequestSchema = z.object({
-  organizationId: integerIdStringSchema
-});
+export const switchCurrentOrganizationRequestSchema = z
+  .object({
+    organizationId: integerIdStringSchema
+  })
+  .strict();
 
-export const createOrganizationRequestSchema = z.object({
-  parentOrganizationId: integerIdStringSchema.optional(),
-  name: z.string().min(1),
-  code: z.string().min(1),
-  managerUserId: integerIdStringSchema.optional(),
-  phone: z.string().min(1).optional(),
-  email: z.string().email().optional(),
-  address: z.string().min(1).optional(),
-  sortOrder: z.number().int().optional(),
-  remark: z.string().optional()
-});
+export const createOrganizationRequestSchema = z
+  .object({
+    parentOrganizationId: integerIdStringSchema.optional(),
+    name: z.string().min(1),
+    code: z.string().min(1),
+    managerUserId: integerIdStringSchema.optional(),
+    phone: z.string().min(1).optional(),
+    email: z.string().email().optional(),
+    address: z.string().min(1).optional(),
+    sortOrder: z.number().int().optional(),
+    remark: z.string().optional()
+  })
+  .strict();
 
 export const updateOrganizationRequestSchema = z
   .object({
@@ -55,22 +67,26 @@ export const updateOrganizationRequestSchema = z
   })
   .strict();
 
-export const updateOrganizationDepthConfigRequestSchema = z.object({
-  maxDepth: z.number().int().min(1).max(8)
-});
+export const updateOrganizationDepthConfigRequestSchema = z
+  .object({
+    maxDepth: z.number().int().min(1).max(8)
+  })
+  .strict();
 
-export const createUserRequestSchema = z.object({
-  username: z.string().min(1),
-  displayName: z.string().min(1),
-  email: z.string().email(),
-  phone: z.string().min(1),
-  avatarFileId: integerIdStringSchema.optional(),
-  gender: z.string().min(1).optional(),
-  employeeNumber: z.string().min(1).optional(),
-  password: z.string().min(1),
-  primaryOrganizationId: integerIdStringSchema,
-  roleId: integerIdStringSchema
-});
+export const createUserRequestSchema = z
+  .object({
+    username: z.string().min(1),
+    displayName: z.string().min(1),
+    email: z.string().email(),
+    phone: z.string().min(1),
+    avatarFileId: integerIdStringSchema.optional(),
+    gender: z.string().min(1).optional(),
+    employeeNumber: z.string().min(1).optional(),
+    password: z.string().min(1),
+    primaryOrganizationId: integerIdStringSchema,
+    roleId: integerIdStringSchema
+  })
+  .strict();
 
 export const updateUserRequestSchema = z
   .object({
@@ -86,21 +102,27 @@ export const updateUserRequestSchema = z
   })
   .strict();
 
-export const resetPasswordRequestSchema = z.object({
-  password: z.string().min(1)
-});
+export const resetPasswordRequestSchema = z
+  .object({
+    password: z.string().min(1)
+  })
+  .strict();
 
-export const assignUserOrganizationRoleRequestSchema = z.object({
-  organizationId: integerIdStringSchema,
-  roleId: integerIdStringSchema
-});
+export const assignUserOrganizationRoleRequestSchema = z
+  .object({
+    organizationId: integerIdStringSchema,
+    roleId: integerIdStringSchema
+  })
+  .strict();
 
-export const createRoleRequestSchema = z.object({
-  name: z.string().min(1),
-  code: z.string().min(1),
-  description: z.string().optional(),
-  remark: z.string().optional()
-});
+export const createRoleRequestSchema = z
+  .object({
+    name: z.string().min(1),
+    code: z.string().min(1),
+    description: z.string().optional(),
+    remark: z.string().optional()
+  })
+  .strict();
 
 export const updateRoleRequestSchema = z
   .object({
@@ -111,39 +133,47 @@ export const updateRoleRequestSchema = z
   })
   .strict();
 
-export const updateRolePermissionsRequestSchema = z.object({
-  permissionCodes: z.array(z.string().min(1))
-});
+export const updateRolePermissionsRequestSchema = z
+  .object({
+    permissionCodes: z.array(z.string().min(1))
+  })
+  .strict();
 
-export const createMenuRequestSchema = z.object({
-  parentMenuId: integerIdStringSchema.optional(),
-  code: z.string().min(1),
-  titleI18nKey: z.string().min(1),
-  path: z.string().min(1),
-  requiredPermission: z.string().min(1).optional(),
-  routeCode: z.string().min(1).optional(),
-  icon: z.string().min(1).optional(),
-  sortOrder: z.number().int().optional(),
-  visible: z.boolean().optional(),
-  status: z.enum(["enabled", "disabled"]).optional()
-});
+export const createMenuRequestSchema = z
+  .object({
+    parentMenuId: integerIdStringSchema.optional(),
+    code: z.string().min(1),
+    titleI18nKey: z.string().min(1),
+    path: z.string().min(1),
+    requiredPermission: z.string().min(1).optional(),
+    routeCode: z.string().min(1).optional(),
+    icon: z.string().min(1).optional(),
+    sortOrder: z.number().int().optional(),
+    visible: z.boolean().optional(),
+    status: z.enum(["enabled", "disabled"]).optional()
+  })
+  .strict();
 
-export const updateMenuRequestSchema = z.object({
-  parentMenuId: integerIdStringSchema.nullable().optional(),
-  code: z.string().min(1).optional(),
-  titleI18nKey: z.string().min(1).optional(),
-  path: z.string().min(1).optional(),
-  requiredPermission: z.string().min(1).nullable().optional(),
-  routeCode: z.string().min(1).nullable().optional(),
-  icon: z.string().min(1).nullable().optional(),
-  sortOrder: z.number().int().optional(),
-  visible: z.boolean().optional(),
-  status: z.enum(["enabled", "disabled"]).optional()
-});
+export const updateMenuRequestSchema = z
+  .object({
+    parentMenuId: integerIdStringSchema.nullable().optional(),
+    code: z.string().min(1).optional(),
+    titleI18nKey: z.string().min(1).optional(),
+    path: z.string().min(1).optional(),
+    requiredPermission: z.string().min(1).nullable().optional(),
+    routeCode: z.string().min(1).nullable().optional(),
+    icon: z.string().min(1).nullable().optional(),
+    sortOrder: z.number().int().optional(),
+    visible: z.boolean().optional(),
+    status: z.enum(["enabled", "disabled"]).optional()
+  })
+  .strict();
 
-export const updateMenuApiBindingsRequestSchema = z.object({
-  apiPermissionIds: z.array(integerIdStringSchema)
-});
+export const updateMenuApiBindingsRequestSchema = z
+  .object({
+    apiPermissionIds: z.array(integerIdStringSchema)
+  })
+  .strict();
 
 export type InitializationSetupRequest = z.infer<typeof initializationSetupRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
