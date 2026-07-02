@@ -88,15 +88,27 @@ export class MenuService {
 
     for (const entry of manifest) {
       const existing = [...this.context.store.menus.values()].find(
-        (menu) => !menu.isDeleted && menu.code === entry.code
+        (menu) => menu.code === entry.code
       );
+      const parentMenuId = entry.parentCode ? byCode.get(entry.parentCode)?.id : undefined;
       if (existing) {
+        existing.parentMenuId = parentMenuId ?? null;
+        existing.titleI18nKey = entry.titleI18nKey;
+        existing.path = entry.path;
+        existing.requiredPermission = entry.requiredPermission ?? null;
+        existing.routeCode = entry.routeCode ?? null;
+        existing.sortOrder = entry.sortOrder;
+        existing.visible = entry.visible ?? true;
+        existing.status = "enabled";
+        existing.isDeleted = false;
+        existing.deletedAt = null;
+        existing.deletedBy = null;
+        existing.updatedAt = toUtcIso(nowUtc());
         byCode.set(existing.code, existing);
         seeded.push(existing);
         continue;
       }
 
-      const parentMenuId = entry.parentCode ? byCode.get(entry.parentCode)?.id : undefined;
       const menu = this.createRecord({
         parentMenuId,
         code: entry.code,

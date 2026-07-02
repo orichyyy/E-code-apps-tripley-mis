@@ -89,4 +89,27 @@ describe("initialization seed", () => {
       status: "enabled"
     });
   });
+
+  it("restores soft-deleted base menus during repeated seed sync", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const input = readInitializationSeedInput(seedEnv);
+
+    await services.seedInitialization(input);
+    const menu = services.listMenus().find((candidate) => candidate.code === "system.users");
+    if (!menu) throw new Error("Expected system.users base menu to exist");
+    await services.deleteMenu(menu.id);
+    const result = await services.seedInitialization(input);
+    const restoredMenu = services.listMenus().find((candidate) => candidate.code === "system.users");
+
+    expect(result.seeded).toBe(false);
+    expect(restoredMenu).toMatchObject({
+      id: menu.id,
+      code: "system.users",
+      isDeleted: false,
+      deletedAt: null,
+      deletedBy: null,
+      status: "enabled",
+      visible: true
+    });
+  });
 });
