@@ -78,6 +78,7 @@ The backend core goal has partial implementation progress:
 - Added `POST /api/roles/:id/enable` and `POST /api/roles/:id/disable` for explicit role status management guarded by `role:status:update`, with permission-cache invalidation and route coverage.
 - Tightened refresh-token exchange so disabled or locked accounts cannot receive new access tokens from an otherwise valid refresh token.
 - Tightened refresh-token exchange so sessions whose current organization has been disabled cannot receive new access tokens.
+- Added route coverage proving login falls back to another enabled organization when the user's primary organization is disabled, and denies login when no enabled organization is available.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, and finalized CSRF protection still depend on the unresolved implementation questions.
 

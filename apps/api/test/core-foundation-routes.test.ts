@@ -230,6 +230,53 @@ describe("backend core foundation routes", () => {
     );
   });
 
+  it("logs in through another enabled organization when the primary organization is disabled", async () => {
+    const { app, setup } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const alternateResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ name: "Alternate Root", code: "alternate-root" })
+    });
+    const alternate = await alternateResponse.json();
+    await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: alternate.data.id, roleId: "1" })
+    });
+    await app.request("/api/organizations/1/disable", {
+      method: "POST",
+      headers: authHeaders
+    });
+
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const login = await loginResponse.json();
+
+    expect(loginResponse.status).toBe(200);
+    expect(login.data.session.currentOrganizationId).toBe(alternate.data.id);
+  });
+
+  it("denies login when the user has no enabled organization", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    await app.request("/api/organizations/1/disable", {
+      method: "POST",
+      headers: authHeaders
+    });
+
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const login = await loginResponse.json();
+
+    expect(loginResponse.status).toBe(403);
+    expect(login.error.code).toBe("BUSINESS_NO_ENABLED_ORGANIZATION");
+  });
+
   it("rejects organization updates that would duplicate organization code", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
