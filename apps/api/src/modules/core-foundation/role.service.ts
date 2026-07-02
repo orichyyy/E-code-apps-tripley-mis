@@ -68,7 +68,7 @@ export class RoleService {
     const source = requireRole(this.context.store, id);
     const copy = this.createRecord({
       name: `${source.name} Copy`,
-      code: `${source.code}_copy_${Date.now()}`,
+      code: this.nextCopyCode(source.code),
       remark: source.remark ?? undefined
     });
     const now = toUtcIso(nowUtc());
@@ -119,9 +119,23 @@ export class RoleService {
   }
 
   private ensureUniqueRoleCode(code: string, currentRoleId?: string): void {
-    const duplicate = [...this.context.store.roles.values()].some(
+    const duplicate = this.roleCodeExists(code, currentRoleId);
+    if (duplicate) throw createKnownError("VALIDATION_DUPLICATE_ROLE_CODE");
+  }
+
+  private nextCopyCode(sourceCode: string): string {
+    let suffix = 1;
+    let candidate = `${sourceCode}_copy`;
+    while (this.roleCodeExists(candidate)) {
+      suffix += 1;
+      candidate = `${sourceCode}_copy_${suffix}`;
+    }
+    return candidate;
+  }
+
+  private roleCodeExists(code: string, currentRoleId?: string): boolean {
+    return [...this.context.store.roles.values()].some(
       (role) => !role.isDeleted && role.id !== currentRoleId && role.code === code
     );
-    if (duplicate) throw createKnownError("VALIDATION_DUPLICATE_ROLE_CODE");
   }
 }

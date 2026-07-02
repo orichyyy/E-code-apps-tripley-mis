@@ -697,14 +697,23 @@ describe("backend core foundation routes", () => {
       headers: authHeaders
     });
     const copy = await copyResponse.json();
+    const secondCopyResponse = await app.request("/api/roles/2/copy", {
+      method: "POST",
+      headers: authHeaders
+    });
+    const secondCopy = await secondCopyResponse.json();
     const permissionsResponse = await app.request(`/api/roles/${copy.data.id}/permissions`, {
       headers: authHeaders
     });
     const permissions = await permissionsResponse.json();
 
     expect(copyResponse.status).toBe(201);
+    expect(secondCopyResponse.status).toBe(201);
     expect(copy.data.id).not.toBe("2");
+    expect(secondCopy.data.id).not.toBe(copy.data.id);
     expect(copy.data).toMatchObject({ id: expect.any(String), status: "enabled" });
+    expect(copy.data.code).toBe("organization_admin_copy");
+    expect(secondCopy.data.code).toBe("organization_admin_copy_2");
     expect(permissions.data).toEqual(expect.arrayContaining(["user:view", "role:view"]));
   });
 
