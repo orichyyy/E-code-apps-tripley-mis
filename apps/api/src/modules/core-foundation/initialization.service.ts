@@ -60,8 +60,8 @@ export class InitializationService {
     this.grantAllPermissions(superAdminRole.id, permissions.map((permission) => permission.code));
     this.ensureBuiltInRole("Organization Administrator", builtInRoleCodes.organizationAdmin);
     this.ensureBuiltInRole("Normal User", builtInRoleCodes.normalUser);
-    const menus = this.menus.seedBaseMenus(baseMenuManifest);
     const routes = this.routes.syncBaseRoutes(baseRouteManifest);
+    const menus = this.menus.seedBaseMenus(baseMenuManifest);
     await this.permissions.invalidateAllPermissionContexts();
     const initializedBy = this.context.store.initializationState.initializedBy;
     const admin = initializedBy ? this.context.store.users.get(initializedBy) : undefined;
@@ -73,8 +73,8 @@ export class InitializationService {
       roles: this.roles.list(),
       permissions,
       apiPermissions,
-      menus,
       routes,
+      menus,
       seeded: false
     };
   }
@@ -115,8 +115,8 @@ export class InitializationService {
       description: "Built-in role",
       remark: "Built-in role"
     }, null, { isBuiltin: true });
-    const menus = this.menus.seedBaseMenus(baseMenuManifest);
     const routes = this.routes.syncBaseRoutes(baseRouteManifest);
+    const menus = this.menus.seedBaseMenus(baseMenuManifest);
 
     const admin = await this.users.createRecord({
       username: input.adminUsername,

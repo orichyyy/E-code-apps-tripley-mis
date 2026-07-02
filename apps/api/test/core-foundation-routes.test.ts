@@ -1880,6 +1880,62 @@ describe("backend core foundation routes", () => {
     expect(cycle.error.code).toBe("VALIDATION_INVALID_REQUEST");
   });
 
+  it("rejects managed menus with unknown permission or route references", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const unknownPermissionResponse = await app.request("/api/menus", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentMenuId: "2",
+        code: "system.unknown-permission",
+        titleI18nKey: "routes.system.unknownPermission",
+        path: "/system/unknown-permission",
+        requiredPermission: "unknown:view"
+      })
+    });
+    const unknownPermission = await unknownPermissionResponse.json();
+    const unknownRouteResponse = await app.request("/api/menus", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentMenuId: "2",
+        code: "system.unknown-route",
+        titleI18nKey: "routes.system.unknownRoute",
+        path: "/system/unknown-route",
+        routeCode: "system.unknownRoute"
+      })
+    });
+    const unknownRoute = await unknownRouteResponse.json();
+    const createResponse = await app.request("/api/menus", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentMenuId: "2",
+        code: "system.known-references",
+        titleI18nKey: "routes.system.knownReferences",
+        path: "/system/known-references",
+        requiredPermission: "menu:view",
+        routeCode: "system.menus"
+      })
+    });
+    const created = await createResponse.json();
+    const updateResponse = await app.request(`/api/menus/${created.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ routeCode: "system.missing" })
+    });
+    const update = await updateResponse.json();
+
+    expect(unknownPermissionResponse.status).toBe(400);
+    expect(unknownPermission.error.code).toBe("PERMISSION_UNKNOWN_CODE");
+    expect(unknownRouteResponse.status).toBe(400);
+    expect(unknownRoute.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(createResponse.status).toBe(201);
+    expect(updateResponse.status).toBe(400);
+    expect(update.error.code).toBe("VALIDATION_INVALID_REQUEST");
+  });
+
   it("records the authenticated user on core soft deletes", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

@@ -50,6 +50,8 @@ export class MenuService {
     this.ensureParentExists(input.parentMenuId ?? null);
     this.ensureUniqueMenuCode(input.code);
     this.ensureUniqueMenuPath(input.path);
+    this.ensureKnownPermission(input.requiredPermission ?? null);
+    this.ensureKnownRoute(input.routeCode ?? null);
 
     const now = toUtcIso(nowUtc());
     const menu: MenuRecord = {
@@ -80,6 +82,8 @@ export class MenuService {
     if (input.parentMenuId !== undefined) this.ensureParentUpdateIsValid(id, input.parentMenuId);
     if (input.code !== undefined) this.ensureUniqueMenuCode(input.code, id);
     if (input.path !== undefined) this.ensureUniqueMenuPath(input.path, id);
+    if (input.requiredPermission !== undefined) this.ensureKnownPermission(input.requiredPermission);
+    if (input.routeCode !== undefined) this.ensureKnownRoute(input.routeCode);
 
     if (input.parentMenuId !== undefined) menu.parentMenuId = input.parentMenuId;
     if (input.code !== undefined) menu.code = input.code;
@@ -186,5 +190,21 @@ export class MenuService {
       (menu) => !menu.isDeleted && menu.id !== currentMenuId && menu.path === path
     );
     if (duplicate) throw createKnownError("VALIDATION_DUPLICATE_MENU_PATH");
+  }
+
+  private ensureKnownPermission(permissionCode: string | null): void {
+    if (permissionCode === null) return;
+    const permission = [...this.context.store.permissions.values()].find(
+      (candidate) => candidate.code === permissionCode
+    );
+    if (!permission) throw createKnownError("PERMISSION_UNKNOWN_CODE");
+  }
+
+  private ensureKnownRoute(routeCode: string | null): void {
+    if (routeCode === null) return;
+    const route = [...this.context.store.routeMetadata.values()].find(
+      (candidate) => candidate.routeCode === routeCode
+    );
+    if (!route) throw createKnownError("VALIDATION_INVALID_REQUEST");
   }
 }
