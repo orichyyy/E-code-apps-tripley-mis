@@ -313,6 +313,10 @@ export class UserService {
         candidate.status === "enabled"
     );
     if (!binding) throw createKnownError("VALIDATION_INVALID_REQUEST");
+    const role = this.context.store.roles.get(binding.roleId);
+    if (!role || role.isDeleted || role.status !== "enabled") {
+      throw createKnownError("VALIDATION_INVALID_REQUEST");
+    }
   }
 
   private ensureUniqueUser(username: string, email: string, phone: string): void {

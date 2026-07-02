@@ -1496,6 +1496,50 @@ describe("backend core foundation routes", () => {
     expect(body.error.code).toBe("VALIDATION_INVALID_REQUEST");
   });
 
+  it("rejects updating a user's primary organization through a disabled role binding", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Disabled Primary Role", code: "disabled-primary-role" })
+    });
+    const child = await childResponse.json();
+    const userResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "disabled-primary-role-user",
+        displayName: "Disabled Primary Role User",
+        email: "disabled-primary-role-user@example.com",
+        phone: "10000000140",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const user = await userResponse.json();
+    await app.request(`/api/users/${user.data.id}/organizations`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+    });
+    await app.request("/api/roles/2/disable", {
+      method: "POST",
+      headers: authHeaders
+    });
+
+    const response = await app.request(`/api/users/${user.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ primaryOrganizationId: child.data.id })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("VALIDATION_INVALID_REQUEST");
+  });
+
   it("uses the updated primary organization on the next login", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
