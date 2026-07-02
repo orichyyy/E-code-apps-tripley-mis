@@ -1,8 +1,22 @@
 import { describe, expect, it } from "vitest";
+import { baseApiPermissionManifest } from "@web-admin-base/contracts";
 
 import { createApp } from "../src/app";
 
 describe("manifest routes", () => {
+  it("declares API permission metadata for every registered API route", () => {
+    const app = createApp();
+    const registeredRoutes = app.routes
+      .filter((route) => route.method !== "ALL")
+      .map((route) => `${route.method} ${route.path}`)
+      .sort();
+    const manifestRoutes = baseApiPermissionManifest
+      .map((entry) => `${entry.method} ${entry.path}`)
+      .sort();
+
+    expect(manifestRoutes).toEqual(registeredRoutes);
+  });
+
   it("exposes permission, route, and menu manifests", async () => {
     const app = createApp();
     await app.request("/api/initialization/setup", {
