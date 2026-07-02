@@ -153,6 +153,29 @@ describe("backend core foundation routes", () => {
     expect(refresh.error.code).toBe("AUTH_ACCOUNT_DISABLED");
   });
 
+  it("rejects refresh token exchange when the current organization is disabled", async () => {
+    const { app } = await setupInitializedApp();
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const login = await loginResponse.json();
+    const cookie = loginResponse.headers.get("set-cookie") ?? "";
+    await app.request("/api/organizations/1/disable", {
+      method: "POST",
+      headers: { authorization: `Bearer ${login.data.accessToken}` }
+    });
+
+    const refreshResponse = await app.request("/api/auth/refresh", {
+      method: "POST",
+      headers: { cookie: cookie.split(";")[0] }
+    });
+    const refresh = await refreshResponse.json();
+
+    expect(refreshResponse.status).toBe(409);
+    expect(refresh.error.code).toBe("BUSINESS_ORG_DISABLED");
+  });
+
   it("revokes refresh-token usage when logging out", async () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {

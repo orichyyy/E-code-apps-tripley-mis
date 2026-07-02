@@ -99,6 +99,7 @@ export class AuthService {
 
     const session = this.context.store.authSessions.get(storedToken.sessionId);
     if (!session || session.revokedAt) throw createKnownError("AUTH_SESSION_NOT_FOUND");
+    requireEnabledOrganization(this.context.store, session.currentOrganizationId);
 
     session.lastSeenAt = toUtcIso(nowUtc());
     return {

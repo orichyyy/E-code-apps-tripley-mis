@@ -77,6 +77,7 @@ The backend core goal has partial implementation progress:
 - Added `POST /api/permissions/sync` as the admin-confirmed permission/API-permission manifest synchronization placeholder for the in-memory foundation; it invalidates cached permission contexts and returns the confirmed manifests without claiming DB-backed persistence.
 - Added `POST /api/roles/:id/enable` and `POST /api/roles/:id/disable` for explicit role status management guarded by `role:status:update`, with permission-cache invalidation and route coverage.
 - Tightened refresh-token exchange so disabled or locked accounts cannot receive new access tokens from an otherwise valid refresh token.
+- Tightened refresh-token exchange so sessions whose current organization has been disabled cannot receive new access tokens.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, and finalized CSRF protection still depend on the unresolved implementation questions.
 
