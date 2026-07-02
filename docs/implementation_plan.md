@@ -51,6 +51,7 @@ The backend core goal has partial implementation progress:
 - Aligned permission and API-permission Drizzle schemas/migrations with the manifest-backed metadata records, including module, required permission, and public/private API metadata.
 - Added organization materialized path helpers for the confirmed int64 design: `encodeOrgPath`, `decodeOrgPath`, `getOrgPathRange`, `isDescendantPath`, and sibling segment allocation.
 - Added backend security utilities for API ID string serialization, UTC time helpers, configurable password complexity, scrypt password hashing, refresh-token generation/hash support, and HS256 JWT access tokens.
+- Wired backend-core security settings into typed API configuration and `.env.example`, including JWT settings, access/refresh token TTLs, failed-login lock settings, password complexity, and periodic password-change days.
 - Added an in-memory `CacheAdapter` implementation and a permission-cache boundary with invalidation tests.
 - Added base permission, route, and menu manifests for the current backend-core surface, plus API endpoints for `/api/permissions/manifest`, `/api/routes/manifest`, and `/api/menus/tree`.
 - Added typed API request schemas for initialization, auth, organization, user, user-organization-role, role, and permission mutation requests.

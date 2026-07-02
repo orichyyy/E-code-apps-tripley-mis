@@ -2,6 +2,7 @@ import { healthResponseSchema } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
+import { loadApiConfig, type ApiConfig } from "./config/load-config";
 import type { AuthContextVariables } from "./core/auth-context/auth-context";
 import { createErrorResponse, normalizeError } from "./core/errors/error-response";
 import { createApiAuthorizationMiddleware } from "./middleware/api-authorization";
@@ -67,8 +68,8 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
 
 export type ApiApp = ReturnType<typeof createApp>;
 
-export function createDefaultAppDependencies(): AppDependencies {
+export function createDefaultAppDependencies(config: ApiConfig = loadApiConfig()): AppDependencies {
   return {
-    backendCoreServices: createInMemoryBackendCoreServices()
+    backendCoreServices: createInMemoryBackendCoreServices(config.backendCore)
   };
 }
