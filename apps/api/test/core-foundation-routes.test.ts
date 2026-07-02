@@ -576,6 +576,28 @@ describe("backend core foundation routes", () => {
     expect(refresh.data.session).not.toHaveProperty("refreshTokenHash");
   });
 
+  it("updates session last seen time on refresh-token exchange", async () => {
+    const { app } = await setupInitializedApp();
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const login = await loginResponse.json();
+    const cookie = loginResponse.headers.get("set-cookie") ?? "";
+
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const refreshResponse = await app.request("/api/auth/refresh", {
+      method: "POST",
+      headers: { cookie: cookie.split(";")[0] }
+    });
+    const refresh = await refreshResponse.json();
+
+    expect(refreshResponse.status).toBe(200);
+    expect(new Date(refresh.data.session.lastSeenAt).getTime()).toBeGreaterThan(
+      new Date(login.data.session.lastSeenAt).getTime()
+    );
+  });
+
   it("does not require a bearer access token for public refresh-token exchange", async () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {
