@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { baseApiPermissionManifest } from "../src";
+import { baseApiPermissionManifest, basePermissionManifest } from "../src";
 
 describe("baseApiPermissionManifest", () => {
   it("uses unique API permission codes and method/path pairs", () => {
@@ -9,6 +9,19 @@ describe("baseApiPermissionManifest", () => {
 
     expect(new Set(codes).size).toBe(codes.length);
     expect(new Set(methodPaths).size).toBe(methodPaths.length);
+  });
+
+  it("only references declared base permissions", () => {
+    const declaredPermissionCodes = new Set(
+      basePermissionManifest.map((permission) => permission.code)
+    );
+    const requiredPermissionCodes = baseApiPermissionManifest
+      .map((entry) => entry.requiredPermission)
+      .filter((permissionCode): permissionCode is string => Boolean(permissionCode));
+
+    expect(
+      requiredPermissionCodes.every((permissionCode) => declaredPermissionCodes.has(permissionCode))
+    ).toBe(true);
   });
 
   it("declares metadata for backend-core route surfaces", () => {
