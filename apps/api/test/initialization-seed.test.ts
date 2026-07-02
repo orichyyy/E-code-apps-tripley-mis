@@ -4,6 +4,7 @@ import {
   readInitializationSeedInput,
   runInitializationSeed
 } from "../src/seed";
+import { createApp } from "../src/app";
 import { createInMemoryBackendCoreServices } from "../src/modules/core-foundation/services";
 
 const seedEnv = {
@@ -111,5 +112,35 @@ describe("initialization seed", () => {
       status: "enabled",
       visible: true
     });
+  });
+
+  it("invalidates cached permission contexts during repeated seed sync", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const app = createApp({ backendCoreServices: services });
+    const input = readInitializationSeedInput(seedEnv);
+
+    await services.seedInitialization(input);
+    const permission = services
+      .listPermissions()
+      .find((candidate) => candidate.code === "user:view");
+    if (!permission) throw new Error("Expected user:view base permission to exist");
+    permission.status = "disabled";
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "seed-admin", password: "password1" })
+    });
+    const login = await loginResponse.json();
+    const authHeaders = { authorization: `Bearer ${login.data.accessToken}` };
+
+    const staleResponse = await app.request("/api/context/permissions", { headers: authHeaders });
+    const stale = await staleResponse.json();
+    await services.seedInitialization(input);
+    const refreshedResponse = await app.request("/api/context/permissions", {
+      headers: authHeaders
+    });
+    const refreshed = await refreshedResponse.json();
+
+    expect(stale.data.permissionCodes).not.toEqual(expect.arrayContaining(["user:view"]));
+    expect(refreshed.data.permissionCodes).toEqual(expect.arrayContaining(["user:view"]));
   });
 });

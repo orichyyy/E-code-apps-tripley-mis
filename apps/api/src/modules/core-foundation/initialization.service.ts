@@ -62,6 +62,7 @@ export class InitializationService {
     this.ensureBuiltInRole("Normal User", builtInRoleCodes.normalUser);
     const menus = this.menus.seedBaseMenus(baseMenuManifest);
     const routes = this.routes.syncBaseRoutes(baseRouteManifest);
+    await this.permissions.invalidateAllPermissionContexts();
     const initializedBy = this.context.store.initializationState.initializedBy;
     const admin = initializedBy ? this.context.store.users.get(initializedBy) : undefined;
 
