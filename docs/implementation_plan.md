@@ -247,3 +247,20 @@ This is not yet the complete backend core foundation. DB-backed repositories, ex
 3. Implement DB-backed repositories for initialization, auth/session, users, organizations, roles, permissions, menus, and route/API permission metadata.
 4. Wire the existing initialization setup and seed CLI paths to the DB-backed repositories.
 5. Implement auth/session endpoints and core CRUD routes with PostgreSQL integration tests.
+
+## Frontend Admin UI Progress
+
+The frontend admin UI foundation has been implemented in `apps/web`:
+
+- Added a desktop-first admin shell with classic left sidebar, top bar, breadcrumb, persistent page tabs, organization selector, logout flow, fullscreen toggle, dark mode, and theme color controls.
+- Added authentication UI for username/password login, forced password change, ordinary password change, and logout state clearing.
+- Added Zustand-backed auth, current organization, layout, tab, language, dark-mode, and theme-color state.
+- Added TanStack Query-backed page data loading through a typed API boundary that references the Hono RPC contract placeholder. Existing backend-core pages are marked as available API boundaries; pages whose backend modules are not implemented yet use typed placeholder data.
+- Added route metadata for the required base management pages separately from route registration.
+- Added permission-aware menu visibility, page guard behavior, action-button filtering, and field hiding based on returned field metadata.
+- Added English and Chinese UI message dictionaries with personal-settings language override.
+- Added reusable management-page patterns for search/filter, table, action area, loading, empty, error, permission-denied, and integration-pending states.
+- Added base pages for users, organizations, roles, permissions, menus, system configuration, dictionaries, files, announcements, in-app notifications, online users, all required log pages, task scheduler, import/export tasks, personal center, password change, and personal settings.
+- Added Vitest + React Testing Library coverage for login rendering, the authenticated shell, organization selector, and personal settings controls.
+
+The infrastructure-management pages intentionally do not claim durable backend integration yet because the backend infrastructure goal is paused on the unresolved implementation questions in `docs/implementation_questions.md`.

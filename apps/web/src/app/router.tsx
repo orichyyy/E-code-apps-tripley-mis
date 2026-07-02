@@ -1,62 +1,49 @@
-import { createRootRoute, createRoute, createRouter, Link, Outlet } from "@tanstack/react-router";
+import { createRootRoute, createRoute, createRouter, Outlet, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import type { ReactNode } from "react";
 
-import { Button } from "@/components/ui/button";
+import { AdminShell, DashboardPage } from "@/components/admin/admin-shell";
+import { ManagementPage } from "@/components/admin/management-page";
+import { PasswordChangePage, ForcedPasswordChangePage, LoginPage } from "@/features/auth/auth-pages";
+import { PersonalSettingsPage } from "@/features/account/settings-page";
+import { ProfilePage } from "@/features/account/profile-page";
+import { adminRouteMetadata } from "@/route-metadata";
+import { hasPermission } from "@/features/permissions/permission-utils";
+import { useAuthStore } from "@/stores/auth.store";
 
 function RootLayout() {
   return <Outlet />;
 }
 
-function AdminHomePage() {
-  return (
-    <main className="flex min-h-screen bg-muted/40">
-      <aside className="flex w-64 flex-col border-r bg-background px-4 py-5">
-        <div className="text-lg font-semibold">Web Admin Base</div>
-        <nav className="mt-6 flex flex-col gap-2 text-sm">
-          <Link className="rounded-md bg-secondary px-3 py-2 text-secondary-foreground" to="/">
-            Dashboard
-          </Link>
-        </nav>
-      </aside>
-      <section className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between border-b bg-background px-6">
-          <div className="text-sm text-muted-foreground">Dashboard</div>
-          <Button variant="outline" size="sm">
-            Health
-          </Button>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-6">
-          <div>
-            <h1 className="text-2xl font-semibold">Admin Foundation</h1>
-            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              This shell is ready for future base-system modules without including example business
-              modules.
-            </p>
-          </div>
-        </div>
-      </section>
-    </main>
-  );
+function AdminGuard() {
+  const navigate = useNavigate();
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const user = useAuthStore((state) => state.user);
+
+  useEffect(() => {
+    if (!accessToken) {
+      void navigate({ to: "/login" });
+    } else if (user?.forcePasswordChange) {
+      void navigate({ to: "/forced-password-change" });
+    }
+  }, [accessToken, navigate, user?.forcePasswordChange]);
+
+  return accessToken ? <AdminShell /> : null;
 }
 
-function LoginPage() {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/40 p-6">
-      <section className="w-full max-w-sm rounded-lg border bg-background p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Sign in</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Authentication will be implemented later.</p>
-      </section>
-    </main>
+function RoutePermissionGuard({ children, requiredPermission }: { children: ReactNode; requiredPermission?: string }) {
+  const permissionCodes = useAuthStore((state) => state.permissionCodes);
+  return hasPermission(permissionCodes, requiredPermission) ? (
+    <>{children}</>
+  ) : (
+    <section className="rounded-lg border bg-card p-8 text-center text-sm text-muted-foreground">
+      You do not have permission to view this page.
+    </section>
   );
 }
 
 const rootRoute = createRootRoute({
   component: RootLayout
-});
-
-const indexRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/",
-  component: AdminHomePage
 });
 
 const loginRoute = createRoute({
@@ -65,7 +52,67 @@ const loginRoute = createRoute({
   component: LoginPage
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, loginRoute]);
+const forcedPasswordChangeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/forced-password-change",
+  component: ForcedPasswordChangePage
+});
+
+const adminLayoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: "admin",
+  component: AdminGuard
+});
+
+const dashboardRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: "/",
+  component: DashboardPage
+});
+
+const managementRoutes = adminRouteMetadata
+  .filter((route) => route.path !== "/" && route.routeCode !== "account.profile" && route.routeCode !== "account.password" && route.routeCode !== "account.settings")
+  .map((route) =>
+    createRoute({
+      getParentRoute: () => adminLayoutRoute,
+      path: route.path,
+      component: () => (
+        <RoutePermissionGuard requiredPermission={route.requiredPermission}>
+          <ManagementPage route={route} />
+        </RoutePermissionGuard>
+      )
+    })
+  );
+
+const profileRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: "/account/profile",
+  component: ProfilePage
+});
+
+const passwordRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: "/account/password",
+  component: PasswordChangePage
+});
+
+const settingsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: "/account/settings",
+  component: PersonalSettingsPage
+});
+
+const routeTree = rootRoute.addChildren([
+  loginRoute,
+  forcedPasswordChangeRoute,
+  adminLayoutRoute.addChildren([
+    dashboardRoute,
+    ...managementRoutes,
+    profileRoute,
+    passwordRoute,
+    settingsRoute
+  ])
+]);
 
 export const router = createRouter({ routeTree });
 

@@ -24,6 +24,21 @@
     --radius: 0.5rem;
   }
 
+  :root[data-theme-color="emerald"] {
+    --primary: 160 84% 32%;
+    --ring: 160 84% 32%;
+  }
+
+  :root[data-theme-color="violet"] {
+    --primary: 262 83% 58%;
+    --ring: 262 83% 58%;
+  }
+
+  :root[data-theme-color="slate"] {
+    --primary: 215 25% 27%;
+    --ring: 215 25% 27%;
+  }
+
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -52,5 +67,11 @@
     @apply bg-background text-foreground;
     margin: 0;
     min-width: 1024px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
   }
 }
