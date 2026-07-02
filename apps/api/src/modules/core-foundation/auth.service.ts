@@ -157,6 +157,7 @@ export class AuthService {
     user.firstLoginPasswordChangeRequired = false;
     user.tokenVersion += 1;
     user.updatedAt = toUtcIso(now);
+    user.updatedBy = authContext.userId;
     return toPublicUser(user);
   }
 

@@ -2489,6 +2489,7 @@ describe("backend core foundation routes", () => {
     expect(changePasswordResponse.status).toBe(200);
     expect(changedUser.data.firstLoginPasswordChangeRequired).toBe(false);
     expect(changedUser.data.tokenVersion).toBe(1);
+    expect(changedUser.data.updatedBy).toBe(firstLogin.data.user.id);
     expect(oldTokenResponse.status).toBe(401);
     expect(oldToken.error.code).toBe("AUTH_TOKEN_INVALIDATED");
     expect(oldPasswordLoginResponse.status).toBe(401);
