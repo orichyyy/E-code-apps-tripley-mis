@@ -300,10 +300,13 @@ export class AuthService {
         return false;
       }
       const user = this.context.store.users.get(session.userId);
+      const organization = this.context.store.organizations.get(session.currentOrganizationId);
       return (
         user?.status === "enabled" &&
         !user.isDeleted &&
-        user.tokenVersion === session.tokenVersion
+        user.tokenVersion === session.tokenVersion &&
+        organization?.status === "enabled" &&
+        !organization.isDeleted
       );
     });
   }

@@ -131,6 +131,7 @@ The backend core goal has partial implementation progress:
 - Tightened online-user session bookkeeping so active sessions whose expiration has passed are marked `expired` when the online-user data source is queried.
 - Tightened administrator user updates so successful profile or primary-organization changes clear the user's permission cache, and route coverage proves the updated primary organization drives the next login context.
 - Tightened per-user permission cache invalidation so super-administrator contexts cached in organizations without direct user-role bindings are cleared when that user's effective permissions change.
+- Tightened the online-user data source so sessions whose current organization becomes disabled or deleted are no longer listed as online.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

@@ -513,6 +513,60 @@ describe("backend core foundation routes", () => {
     expect(refresh.error.code).toBe("BUSINESS_ORG_DISABLED");
   });
 
+  it("excludes sessions from online users when their current organization is disabled", async () => {
+    const { app } = await setupInitializedApp();
+    const firstLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const firstLogin = await firstLoginResponse.json();
+    const firstHeaders = { authorization: `Bearer ${firstLogin.data.accessToken}` };
+    const alternateResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: firstHeaders,
+      body: JSON.stringify({ name: "Online Alternate", code: "online-alternate" })
+    });
+    const alternate = await alternateResponse.json();
+    const secondLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const secondLogin = await secondLoginResponse.json();
+    const secondSwitchResponse = await app.request("/api/context/current-organization", {
+      method: "POST",
+      headers: { authorization: `Bearer ${secondLogin.data.accessToken}` },
+      body: JSON.stringify({ organizationId: alternate.data.id })
+    });
+    const secondSwitch = await secondSwitchResponse.json();
+    const alternateHeaders = { authorization: `Bearer ${secondSwitch.data.accessToken}` };
+    const beforeDisableResponse = await app.request("/api/online-users", {
+      headers: alternateHeaders
+    });
+    const beforeDisable = await beforeDisableResponse.json();
+
+    await app.request("/api/organizations/1/disable", {
+      method: "POST",
+      headers: alternateHeaders
+    });
+    const afterDisableResponse = await app.request("/api/online-users", {
+      headers: alternateHeaders
+    });
+    const afterDisable = await afterDisableResponse.json();
+
+    expect(beforeDisable.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: firstLogin.data.session.id }),
+        expect.objectContaining({ id: secondSwitch.data.session.id })
+      ])
+    );
+    expect(afterDisable.data).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: firstLogin.data.session.id })])
+    );
+    expect(afterDisable.data).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: secondSwitch.data.session.id })])
+    );
+  });
+
   it("revokes refresh-token usage when logging out", async () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {
