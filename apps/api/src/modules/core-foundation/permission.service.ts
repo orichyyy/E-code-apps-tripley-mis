@@ -6,7 +6,9 @@ import {
 
 import type { AuthContext } from "../../core/auth-context/auth-context";
 import { createKnownError } from "../../core/errors/error-codes";
+import { nowUtc, toUtcIso } from "../../core/time/utc";
 import { PermissionCache } from "../permissions/permission-cache";
+import type { ApiPermissionRecord, PermissionRecord } from "./domain";
 import type { BackendCoreContext } from "./service-context";
 
 export class PermissionService {
@@ -57,11 +59,92 @@ export class PermissionService {
   }
 
   async syncPermissionManifests() {
+    const permissions = this.syncBasePermissions();
+    const apiPermissions = this.syncBaseApiPermissions();
     await this.invalidateAllPermissionContexts();
     return {
-      permissions: basePermissionManifest,
-      apiPermissions: baseApiPermissionManifest
+      permissions,
+      apiPermissions
     };
+  }
+
+  listPermissions(): PermissionRecord[] {
+    return [...this.context.store.permissions.values()];
+  }
+
+  listApiPermissions(): ApiPermissionRecord[] {
+    return [...this.context.store.apiPermissions.values()];
+  }
+
+  syncBasePermissions(): PermissionRecord[] {
+    const now = toUtcIso(nowUtc());
+    return basePermissionManifest.map((entry) => {
+      const existing = [...this.context.store.permissions.values()].find(
+        (permission) => permission.code === entry.code
+      );
+      if (existing) {
+        existing.name = entry.code;
+        existing.description = entry.description;
+        existing.module = entry.module;
+        existing.status = "enabled";
+        existing.updatedAt = now;
+        return existing;
+      }
+
+      const permission: PermissionRecord = {
+        id: this.context.store.nextId("permission"),
+        tenantId: null,
+        code: entry.code,
+        name: entry.code,
+        permissionType: "action",
+        description: entry.description,
+        module: entry.module,
+        status: "enabled",
+        createdAt: now,
+        updatedAt: now
+      };
+      this.context.store.permissions.set(permission.id, permission);
+      return permission;
+    });
+  }
+
+  syncBaseApiPermissions(): ApiPermissionRecord[] {
+    const now = toUtcIso(nowUtc());
+    return baseApiPermissionManifest.map((entry) => {
+      const existing = [...this.context.store.apiPermissions.values()].find(
+        (permission) => permission.code === entry.code
+      );
+      if (existing) {
+        existing.method = entry.method;
+        existing.path = entry.path;
+        existing.description = entry.description;
+        existing.module = entry.module;
+        existing.requiredPermission = entry.requiredPermission ?? null;
+        existing.logLevel = entry.logLevel;
+        existing.public = entry.public;
+        existing.status = "enabled";
+        existing.updatedAt = now;
+        return existing;
+      }
+
+      const apiPermission: ApiPermissionRecord = {
+        id: this.context.store.nextId("apiPermission"),
+        tenantId: null,
+        method: entry.method,
+        path: entry.path,
+        code: entry.code,
+        description: entry.description,
+        module: entry.module,
+        requiredPermission: entry.requiredPermission ?? null,
+        logLevel: entry.logLevel,
+        public: entry.public,
+        status: "enabled",
+        createdAt: now,
+        updatedAt: now
+      };
+      this.context.store.apiPermissions.set(apiPermission.id, apiPermission);
+      return apiPermission;
+    });
   }
 
   async getPermissionContext(userId: string, organizationId: string) {

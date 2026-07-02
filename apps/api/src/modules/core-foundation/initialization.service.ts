@@ -1,6 +1,5 @@
 import {
   baseMenuManifest,
-  basePermissionManifest,
   baseRouteManifest,
   type InitializationSetupRequest
 } from "@web-admin-base/contracts";
@@ -13,6 +12,7 @@ import {
 import type { BackendCoreContext } from "./service-context";
 import type { MenuService } from "./menu.service";
 import type { OrganizationService } from "./organization.service";
+import type { PermissionService } from "./permission.service";
 import type { RouteMetadataService } from "./route-metadata.service";
 import type { RoleService } from "./role.service";
 import type { UserService } from "./user.service";
@@ -27,6 +27,7 @@ export class InitializationService {
     private readonly context: BackendCoreContext,
     private readonly organizations: OrganizationService,
     private readonly menus: MenuService,
+    private readonly permissions: PermissionService,
     private readonly routes: RouteMetadataService,
     private readonly roles: RoleService,
     private readonly users: UserService
@@ -63,8 +64,10 @@ export class InitializationService {
       code: superAdminRoleCode,
       remark: "Built-in role"
     });
+    const permissions = this.permissions.syncBasePermissions();
+    const apiPermissions = this.permissions.syncBaseApiPermissions();
     this.context.store.rolePermissions.push(
-      ...basePermissionManifest.map((permission) => ({
+      ...permissions.map((permission) => ({
         roleId: superAdminRole.id,
         permissionCode: permission.code,
         createdAt: toUtcIso(nowUtc())
@@ -112,6 +115,8 @@ export class InitializationService {
       organization: toPublicOrganization(organization),
       admin: toPublicUser(admin),
       roles: this.roles.list(),
+      permissions,
+      apiPermissions,
       menus,
       routes
     };

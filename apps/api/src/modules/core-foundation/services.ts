@@ -3,7 +3,6 @@ import {
   createInMemoryTokenStoreAdapter
 } from "@web-admin-base/adapters";
 import {
-  basePermissionManifest,
   baseRouteManifest,
   type BaseApiPermissionManifestEntry
 } from "@web-admin-base/contracts";
@@ -65,6 +64,7 @@ export class BackendCoreServices {
       context,
       this.organizations,
       this.menus,
+      this.permissions,
       this.routeMetadata,
       this.roles,
       this.users
@@ -260,7 +260,11 @@ export class BackendCoreServices {
   }
 
   listPermissions() {
-    return basePermissionManifest;
+    return this.permissions.listPermissions();
+  }
+
+  listApiPermissions() {
+    return this.permissions.listApiPermissions();
   }
 
   syncPermissions() {

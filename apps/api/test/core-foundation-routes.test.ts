@@ -46,6 +46,20 @@ describe("backend core foundation routes", () => {
     expect(setupResponseStatus(setup)).toBe("initialized");
     expect(setup.data.organization.id).toBe("1");
     expect(setup.data.admin.id).toBe("1");
+    expect(setup.data.permissions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: expect.any(String), code: "user:view" })
+      ])
+    );
+    expect(setup.data.apiPermissions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: expect.any(String),
+          code: "api.auth.login",
+          path: "/api/auth/login"
+        })
+      ])
+    );
     expect(status.data.initialized).toBe(true);
   });
 
@@ -547,13 +561,44 @@ describe("backend core foundation routes", () => {
       headers: authHeaders
     });
     const body = await response.json();
+    const secondResponse = await app.request("/api/permissions/sync", {
+      method: "POST",
+      headers: authHeaders
+    });
+    const secondBody = await secondResponse.json();
 
     expect(response.status).toBe(200);
     expect(body.data.permissions).toEqual(
-      expect.arrayContaining([expect.objectContaining({ code: "permission:sync" })])
+      expect.arrayContaining([
+        expect.objectContaining({ id: expect.any(String), code: "permission:sync" })
+      ])
     );
     expect(body.data.apiPermissions).toEqual(
-      expect.arrayContaining([expect.objectContaining({ path: "/api/permissions/sync" })])
+      expect.arrayContaining([
+        expect.objectContaining({ id: expect.any(String), path: "/api/permissions/sync" })
+      ])
+    );
+    expect(secondBody.data.permissions[0].id).toBe(body.data.permissions[0].id);
+    expect(secondBody.data.apiPermissions[0].id).toBe(body.data.apiPermissions[0].id);
+  });
+
+  it("lists initialized permission records with API JSON string ids", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const response = await app.request("/api/permissions", { headers: authHeaders });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: expect.any(String),
+          code: "user:view",
+          permissionType: "action",
+          status: "enabled"
+        })
+      ])
     );
   });
 

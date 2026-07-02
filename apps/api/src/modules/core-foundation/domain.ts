@@ -93,6 +93,31 @@ export type RouteMetadataRecord = AuditFields & {
   status: EntityStatus;
 };
 
+export type PermissionRecord = AuditFields & {
+  id: string;
+  tenantId: string | null;
+  code: string;
+  name: string;
+  permissionType: "menu" | "page" | "action" | "api" | "data" | "field";
+  description: string | null;
+  module: string;
+  status: EntityStatus;
+};
+
+export type ApiPermissionRecord = AuditFields & {
+  id: string;
+  tenantId: string | null;
+  method: string;
+  path: string;
+  code: string;
+  description: string | null;
+  module: string;
+  requiredPermission: string | null;
+  logLevel: "none" | "basic" | "request" | "request_response";
+  status: EntityStatus;
+  public: boolean;
+};
+
 export type AuthSessionRecord = {
   id: string;
   tenantId: string | null;
