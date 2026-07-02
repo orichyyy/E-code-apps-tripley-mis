@@ -138,14 +138,21 @@ export class RoleService {
   listPermissionCodes(id: string): string[] {
     requireRole(this.context.store, id);
     const enabledPermissionCodes = this.listEnabledPermissionCodeSet();
-    return this.context.store.rolePermissions
+    const seenPermissionCodes = new Set<string>();
+    const permissionCodes: string[] = [];
+    this.context.store.rolePermissions
       .filter(
         (permission) =>
           permission.roleId === id &&
           permission.effect === "allow" &&
           enabledPermissionCodes.has(permission.permissionCode)
       )
-      .map((permission) => permission.permissionCode);
+      .forEach((permission) => {
+        if (seenPermissionCodes.has(permission.permissionCode)) return;
+        seenPermissionCodes.add(permission.permissionCode);
+        permissionCodes.push(permission.permissionCode);
+      });
+    return permissionCodes;
   }
 
   delete(id: string, deletedBy: string | null = null): RoleRecord {

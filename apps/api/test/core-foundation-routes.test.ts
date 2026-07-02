@@ -1903,13 +1903,32 @@ describe("backend core foundation routes", () => {
   });
 
   it("reads role permission codes", async () => {
-    const { app } = await setupInitializedApp();
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
     const { authHeaders } = await loginAsAdmin(app);
     await app.request("/api/roles/2/permissions", {
       method: "PUT",
       headers: authHeaders,
       body: JSON.stringify({ permissionCodes: ["user:view", "role:view", "user:view"] })
     });
+    const { store } = (services as unknown as {
+      context: {
+        store: {
+          rolePermissions: Array<{
+            roleId: string;
+            permissionCode: string;
+            effect: "allow" | "deny";
+            createdAt: string;
+            updatedAt: string;
+          }>;
+        };
+      };
+    }).context;
+    const duplicateGrant = store.rolePermissions.find(
+      (permission) => permission.roleId === "2" && permission.permissionCode === "user:view"
+    );
+    if (!duplicateGrant) throw new Error("Expected role grant to exist");
+    store.rolePermissions.push({ ...duplicateGrant });
 
     const response = await app.request("/api/roles/2/permissions", {
       headers: authHeaders
