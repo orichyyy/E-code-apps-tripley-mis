@@ -9,7 +9,7 @@ import { Hono } from "hono";
 import type { AuthContextVariables } from "../../core/auth-context/auth-context";
 import { createKnownError } from "../../core/errors/error-codes";
 import { pageItems } from "./pagination";
-import { readOptionalJson } from "./request-body";
+import { assertEmptyJsonBody, readOptionalJson } from "./request-body";
 import type { BackendCoreServices } from "./services";
 
 type AuthRouteBindings = {
@@ -113,6 +113,7 @@ export function createAuthRoutes(services: BackendCoreServices) {
   });
 
   routes.post("/auth/refresh", async (context) => {
+    await assertEmptyJsonBody(context.req.raw);
     const refreshToken = readCookie(context.req.header("cookie") ?? "", "refresh_token");
     if (!refreshToken) throw createKnownError("AUTH_TOKEN_EXPIRED");
     return context.json({ data: await services.refreshAccessToken(refreshToken) });

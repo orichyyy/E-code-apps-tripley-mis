@@ -700,6 +700,25 @@ describe("backend core foundation routes", () => {
     expect(refresh.data.session.id).toBe("1");
   });
 
+  it("rejects JSON request bodies on cookie-backed refresh-token exchange", async () => {
+    const { app } = await setupInitializedApp();
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "password1" })
+    });
+    const cookie = loginResponse.headers.get("set-cookie") ?? "";
+
+    const refreshResponse = await app.request("/api/auth/refresh", {
+      method: "POST",
+      headers: { cookie: cookie.split(";")[0] },
+      body: JSON.stringify({ refreshToken: "client-provided-token" })
+    });
+    const refresh = await refreshResponse.json();
+
+    expect(refreshResponse.status).toBe(400);
+    expect(refresh.error.code).toBe("VALIDATION_INVALID_REQUEST");
+  });
+
   it("returns a stable auth error for malformed refresh-token cookies", async () => {
     const { app } = await setupInitializedApp();
     const response = await app.request("/api/auth/refresh", {
