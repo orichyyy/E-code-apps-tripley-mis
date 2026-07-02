@@ -164,7 +164,7 @@ export class AuthService {
       (candidate) =>
         candidate.userId === user.id &&
         candidate.organizationId === input.organizationId &&
-        !candidate.isDeleted
+        isActiveBinding(candidate)
     );
     if (!binding && !this.hasActiveSuperAdminBinding(user.id)) {
       throw createKnownError("PERMISSION_DENIED");
@@ -371,7 +371,7 @@ export class AuthService {
     if (primary?.status === "enabled" && !primary.isDeleted) return primary.id;
 
     const enabledBinding = [...this.context.store.userOrganizationRoles.values()].find((binding) => {
-      if (binding.userId !== user.id || binding.isDeleted) return false;
+      if (binding.userId !== user.id || !isActiveBinding(binding)) return false;
       const organization = this.context.store.organizations.get(binding.organizationId);
       return organization?.status === "enabled" && !organization.isDeleted;
     });
@@ -394,7 +394,7 @@ export class AuthService {
 
     const organizationIds = new Set<string>();
     return [...this.context.store.userOrganizationRoles.values()]
-      .filter((binding) => binding.userId === userId && !binding.isDeleted)
+      .filter((binding) => binding.userId === userId && isActiveBinding(binding))
       .map((binding) => this.context.store.organizations.get(binding.organizationId))
       .filter(isEnabledOrganization)
       .filter((organization) => {
@@ -407,7 +407,7 @@ export class AuthService {
 
   private hasActiveSuperAdminBinding(userId: string): boolean {
     return [...this.context.store.userOrganizationRoles.values()].some((binding) => {
-      if (binding.userId !== userId || binding.isDeleted) return false;
+      if (binding.userId !== userId || !isActiveBinding(binding)) return false;
       const role = this.context.store.roles.get(binding.roleId);
       return role?.code === builtInRoleCodes.superAdmin && role.status === "enabled" && !role.isDeleted;
     });
@@ -428,4 +428,8 @@ function isEnabledOrganization(
   organization: OrganizationRecord | undefined
 ): organization is OrganizationRecord {
   return organization?.status === "enabled" && !organization.isDeleted;
+}
+
+function isActiveBinding(binding: { isDeleted: boolean; status: "enabled" | "disabled" }) {
+  return !binding.isDeleted && binding.status === "enabled";
 }

@@ -95,11 +95,14 @@ CREATE TABLE IF NOT EXISTS user_organization_roles (
   user_id INTEGER NOT NULL,
   organization_id INTEGER NOT NULL,
   role_id INTEGER NOT NULL,
+  is_primary INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'enabled',
   is_deleted INTEGER NOT NULL DEFAULT 0,
   deleted_at TEXT,
   deleted_by INTEGER,
   created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  updated_at TEXT NOT NULL,
+  CHECK (status IN ('enabled', 'disabled'))
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS user_organization_roles_user_org_unique

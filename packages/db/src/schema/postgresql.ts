@@ -118,6 +118,8 @@ export const userOrganizationRoles = pgTable(
     userId: integer("user_id").notNull(),
     organizationId: integer("organization_id").notNull(),
     roleId: integer("role_id").notNull(),
+    isPrimary: boolean("is_primary").notNull().default(false),
+    status: text("status").notNull().default("enabled"),
     ...softDelete,
     ...timestamps
   },

@@ -1270,6 +1270,9 @@ describe("backend core foundation routes", () => {
       headers: authHeaders
     });
     const list = await listResponse.json();
+    const primaryBinding = list.data.find(
+      (binding: { organizationId: string }) => binding.organizationId === "1"
+    );
     const removeResponse = await app.request(
       `/api/users/${setup.data.admin.id}/organizations/${child.data.id}`,
       { method: "DELETE", headers: authHeaders }
@@ -1289,15 +1292,24 @@ describe("backend core foundation routes", () => {
     expect(assign.data).toMatchObject({
       userId: setup.data.admin.id,
       organizationId: child.data.id,
-      roleId: "2"
+      roleId: "2",
+      isPrimary: false,
+      status: "enabled"
     });
     expect(listResponse.status).toBe(200);
+    expect(primaryBinding).toMatchObject({
+      organizationId: "1",
+      isPrimary: true,
+      status: "enabled"
+    });
     expect(list.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           userId: setup.data.admin.id,
           organizationId: child.data.id,
-          roleId: "2"
+          roleId: "2",
+          isPrimary: false,
+          status: "enabled"
         })
       ])
     );
@@ -1310,6 +1322,8 @@ describe("backend core foundation routes", () => {
       userId: setup.data.admin.id,
       organizationId: child.data.id,
       roleId: "2",
+      isPrimary: false,
+      status: "enabled",
       isDeleted: false,
       deletedAt: null,
       deletedBy: null

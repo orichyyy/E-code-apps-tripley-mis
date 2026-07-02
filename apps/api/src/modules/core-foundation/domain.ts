@@ -79,6 +79,8 @@ export type UserOrganizationRoleRecord = AuditFields &
     userId: string;
     organizationId: string;
     roleId: string;
+    isPrimary: boolean;
+    status: EntityStatus;
   };
 
 export type MenuRecord = AuditFields &

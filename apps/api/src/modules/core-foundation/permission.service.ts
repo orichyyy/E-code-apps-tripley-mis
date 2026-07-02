@@ -41,7 +41,7 @@ export class PermissionService {
   async invalidateRole(roleId: string) {
     const userIds = new Set(
       [...this.context.store.userOrganizationRoles.values()]
-        .filter((binding) => binding.roleId === roleId && !binding.isDeleted)
+        .filter((binding) => binding.roleId === roleId)
         .map((binding) => binding.userId)
     );
     await Promise.all([...userIds].map((userId) => this.invalidateUser(userId)));
@@ -49,7 +49,7 @@ export class PermissionService {
 
   async invalidateUser(userId: string) {
     const bindings = [...this.context.store.userOrganizationRoles.values()].filter(
-      (binding) => binding.userId === userId && !binding.isDeleted
+      (binding) => binding.userId === userId
     );
     await Promise.all(
       bindings.map((binding) => this.cache.invalidate(binding.userId, binding.organizationId))
@@ -63,7 +63,6 @@ export class PermissionService {
   async invalidateAllPermissionContexts() {
     await Promise.all(
       [...this.context.store.userOrganizationRoles.values()]
-        .filter((binding) => !binding.isDeleted)
         .map((binding) => this.cache.invalidate(binding.userId, binding.organizationId))
     );
   }
@@ -166,7 +165,7 @@ export class PermissionService {
       (candidate) =>
         candidate.userId === userId &&
         candidate.organizationId === organizationId &&
-        !candidate.isDeleted
+        isActiveBinding(candidate)
     );
     const role = binding ? this.context.store.roles.get(binding.roleId) : null;
     const permissionCodes = isSuperAdmin
@@ -179,7 +178,7 @@ export class PermissionService {
 
   private hasActiveSuperAdminBinding(userId: string): boolean {
     return [...this.context.store.userOrganizationRoles.values()].some((binding) => {
-      if (binding.userId !== userId || binding.isDeleted) return false;
+      if (binding.userId !== userId || !isActiveBinding(binding)) return false;
       const role = this.context.store.roles.get(binding.roleId);
       return role?.code === builtInRoleCodes.superAdmin && role.status === "enabled" && !role.isDeleted;
     });
@@ -200,6 +199,10 @@ export class PermissionService {
       .filter((permission) => permission.roleId === roleId)
       .map((permission) => permission.permissionCode);
   }
+}
+
+function isActiveBinding(binding: { isDeleted: boolean; status: "enabled" | "disabled" }) {
+  return !binding.isDeleted && binding.status === "enabled";
 }
 
 function isPasswordLifecycleRoute(apiPermissionCode: string): boolean {

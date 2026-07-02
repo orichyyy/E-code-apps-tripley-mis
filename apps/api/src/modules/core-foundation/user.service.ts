@@ -81,7 +81,7 @@ export class UserService {
       updatedBy: actorId
     };
     this.context.store.users.set(user.id, user);
-    this.bindToOrganization(user.id, input.primaryOrganizationId, input.roleId);
+    this.bindToOrganization(user.id, input.primaryOrganizationId, input.roleId, true);
     return user;
   }
 
@@ -103,7 +103,10 @@ export class UserService {
     if (input.avatarFileId !== undefined) user.avatarFileId = input.avatarFileId;
     if (input.gender !== undefined) user.gender = input.gender;
     if (input.employeeNumber !== undefined) user.employeeNumber = input.employeeNumber;
-    if (input.primaryOrganizationId !== undefined) user.primaryOrganizationId = input.primaryOrganizationId;
+    if (input.primaryOrganizationId !== undefined) {
+      user.primaryOrganizationId = input.primaryOrganizationId;
+      this.markPrimaryOrganization(user.id, input.primaryOrganizationId);
+    }
     if (input.remark !== undefined) user.remark = input.remark;
     user.updatedAt = toUtcIso(nowUtc());
     user.updatedBy = actorId;
@@ -170,10 +173,15 @@ export class UserService {
     userId: string,
     input: AssignUserOrganizationRoleRequest
   ): UserOrganizationRoleRecord {
-    requireUser(this.context.store, userId);
+    const user = requireUser(this.context.store, userId);
     requireEnabledOrganization(this.context.store, input.organizationId);
     requireEnabledRole(this.context.store, input.roleId);
-    return this.bindToOrganization(userId, input.organizationId, input.roleId);
+    return this.bindToOrganization(
+      userId,
+      input.organizationId,
+      input.roleId,
+      user.primaryOrganizationId === input.organizationId
+    );
   }
 
   listOrganizationRoles(userId: string): UserOrganizationRoleRecord[] {
@@ -197,6 +205,8 @@ export class UserService {
     if (!binding) return { removed: false };
     const now = toUtcIso(nowUtc());
     binding.isDeleted = true;
+    binding.isPrimary = false;
+    binding.status = "disabled";
     binding.deletedAt = now;
     binding.deletedBy = deletedBy;
     binding.updatedAt = now;
@@ -206,17 +216,21 @@ export class UserService {
   private bindToOrganization(
     userId: string,
     organizationId: string,
-    roleId: string
+    roleId: string,
+    isPrimary: boolean
   ): UserOrganizationRoleRecord {
     const existing = [...this.context.store.userOrganizationRoles.values()].find(
       (binding) => binding.userId === userId && binding.organizationId === organizationId
     );
     if (existing) {
       existing.roleId = roleId;
+      existing.isPrimary = isPrimary;
+      existing.status = "enabled";
       existing.isDeleted = false;
       existing.deletedAt = null;
       existing.deletedBy = null;
       existing.updatedAt = toUtcIso(nowUtc());
+      if (isPrimary) this.markPrimaryOrganization(userId, organizationId);
       return existing;
     }
 
@@ -227,6 +241,8 @@ export class UserService {
       userId,
       organizationId,
       roleId,
+      isPrimary,
+      status: "enabled",
       isDeleted: false,
       deletedAt: null,
       deletedBy: null,
@@ -234,7 +250,17 @@ export class UserService {
       updatedAt: now
     };
     this.context.store.userOrganizationRoles.set(binding.id, binding);
+    if (isPrimary) this.markPrimaryOrganization(userId, organizationId);
     return binding;
+  }
+
+  private markPrimaryOrganization(userId: string, organizationId: string): void {
+    const now = toUtcIso(nowUtc());
+    for (const binding of this.context.store.userOrganizationRoles.values()) {
+      if (binding.userId !== userId || binding.isDeleted || binding.status !== "enabled") continue;
+      binding.isPrimary = binding.organizationId === organizationId;
+      binding.updatedAt = now;
+    }
   }
 
   private ensureUniqueUser(username: string, email: string, phone: string): void {
