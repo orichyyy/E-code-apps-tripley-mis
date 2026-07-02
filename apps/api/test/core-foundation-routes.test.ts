@@ -3676,6 +3676,84 @@ describe("backend core foundation routes", () => {
     );
   });
 
+  it("preserves the primary organization marker when reassigning its role", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
+    const { authHeaders } = await loginAsAdmin(app);
+    const createResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "primary-binding-user",
+        password: "Password1",
+        displayName: "Primary Binding User",
+        email: "primary-binding-user@example.com",
+        phone: "555-3700",
+        primaryOrganizationId: "1",
+        roleId: "2"
+      })
+    });
+    const created = await createResponse.json();
+    const originalBindingResponse = await app.request(
+      `/api/users/${created.data.id}/organizations`,
+      { headers: authHeaders }
+    );
+    const originalBindings = await originalBindingResponse.json();
+    const originalPrimary = originalBindings.data.find(
+      (binding: { organizationId: string }) => binding.organizationId === "1"
+    );
+    const originalPrimaryRecord = services["context"].store.userOrganizationRoles.get(
+      originalPrimary.id
+    );
+    if (!originalPrimaryRecord) throw new Error("Expected original primary binding to exist");
+    const duplicateBindingId = services["context"].store.nextId("userOrganizationRole");
+    services["context"].store.userOrganizationRoles.set(duplicateBindingId, {
+      ...originalPrimaryRecord,
+      id: duplicateBindingId,
+      roleId: "3"
+    });
+
+    const reassignResponse = await app.request(`/api/users/${created.data.id}/organizations`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: "1", roleId: "3" })
+    });
+    const reassigned = await reassignResponse.json();
+    const listResponse = await app.request(`/api/users/${created.data.id}/organizations`, {
+      headers: authHeaders
+    });
+    const list = await listResponse.json();
+    const activePrimaryBindings = [...services["context"].store.userOrganizationRoles.values()].filter(
+      (binding) =>
+        binding.userId === created.data.id &&
+        binding.organizationId === "1" &&
+        binding.isPrimary &&
+        !binding.isDeleted
+    );
+
+    expect(createResponse.status).toBe(201);
+    expect(reassignResponse.status).toBe(200);
+    expect(reassigned.data).toMatchObject({
+      id: originalPrimary.id,
+      userId: created.data.id,
+      organizationId: "1",
+      roleId: "3",
+      isPrimary: true,
+      status: "enabled",
+      updatedBy: "1"
+    });
+    expect(list.data).toEqual([
+      expect.objectContaining({
+        id: originalPrimary.id,
+        organizationId: "1",
+        roleId: "3",
+        isPrimary: true,
+        isDeleted: false
+      })
+    ]);
+    expect(activePrimaryBindings.map((binding) => binding.id)).toEqual([originalPrimary.id]);
+  });
+
   it("rejects removing a user's primary organization binding", async () => {
     const { app, setup } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

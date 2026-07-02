@@ -200,6 +200,7 @@ The backend core goal has partial implementation progress:
 - Tightened effective RBAC permission resolution so ordinary user permission contexts also collapse duplicate backing role-permission rows to one permission code.
 - Tightened user-organization-role assignment so reassignment repairs duplicate active bindings and preserves the one-role-per-user-organization invariant.
 - Tightened user-organization-role removal so deleting an organization assignment soft-deletes all duplicate non-primary bindings for that user and organization.
+- Added route coverage proving primary organization role reassignment preserves the primary binding marker while repairing duplicate active bindings.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 
