@@ -217,6 +217,7 @@ The backend core goal has partial implementation progress:
 - Added route coverage proving first-start initialization rejects a weak super-administrator password under the configured password policy and leaves the system uninitialized.
 - Added seed-command coverage proving CLI initialization enforces the same configured super-administrator password policy as the first-start wizard path.
 - Added route coverage proving configured failed-login account locks invalidate existing access/refresh sessions and remove the user from the online-session data source.
+- Tightened access-token verification so signed JWTs with missing or malformed required auth/session claims are rejected before entering backend auth context logic.
 
 This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 

@@ -54,6 +54,8 @@ export function verifyAccessToken(token: string, config: JwtConfig): AccessToken
     throw new Error("Invalid JWT issuer");
   }
 
+  assertAccessTokenClaims(decodedPayload);
+
   if (decodedPayload.exp <= Math.floor(Date.now() / 1000)) {
     throw new Error("JWT is expired");
   }
@@ -67,6 +69,26 @@ export function verifyAccessToken(token: string, config: JwtConfig): AccessToken
     exp: decodedPayload.exp,
     iat: decodedPayload.iat
   };
+}
+
+function assertAccessTokenClaims(
+  value: AccessTokenClaims & { iss?: string }
+): asserts value is AccessTokenClaims & { iss: string } {
+  if (
+    !isNonEmptyString(value.sub) ||
+    !isNonEmptyString(value.sid) ||
+    !isNonEmptyString(value.username) ||
+    !isNonEmptyString(value.currentOrganizationId) ||
+    !Number.isInteger(value.tokenVersion) ||
+    !Number.isInteger(value.exp) ||
+    !Number.isInteger(value.iat)
+  ) {
+    throw new Error("Invalid JWT claims");
+  }
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
 }
 
 function sign(value: string, secret: string): string {

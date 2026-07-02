@@ -56,4 +56,25 @@ describe("backend security foundation", () => {
       currentOrganizationId: "1"
     });
   });
+
+  it("rejects signed access tokens with invalid claim shapes", () => {
+    const token = signAccessToken(
+      {
+        sub: "",
+        sid: "1",
+        username: "admin",
+        currentOrganizationId: "1",
+        tokenVersion: 0,
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 60
+      },
+      {
+        issuer: "web-admin-base",
+        secret: "test-secret"
+      }
+    );
+
+    expect(() => verifyAccessToken(token, { issuer: "web-admin-base", secret: "test-secret" }))
+      .toThrow("Invalid JWT claims");
+  });
 });
