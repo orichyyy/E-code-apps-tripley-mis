@@ -1119,6 +1119,69 @@ describe("backend core foundation routes", () => {
     expect(body.error.code).toBe("VALIDATION_INVALID_REQUEST");
   });
 
+  it("uses the updated primary organization on the next login", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Primary Child", code: "primary-child" })
+    });
+    const child = await childResponse.json();
+    await app.request("/api/roles/2/permissions", {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({ permissionCodes: ["organization:view"] })
+    });
+    const userResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "primary-update-user",
+        displayName: "Primary Update User",
+        email: "primary-update-user@example.com",
+        phone: "10000000125",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const user = await userResponse.json();
+    await app.request(`/api/users/${user.data.id}/organizations`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+    });
+
+    const updateResponse = await app.request(`/api/users/${user.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ primaryOrganizationId: child.data.id })
+    });
+    const update = await updateResponse.json();
+    const bindingsResponse = await app.request(`/api/users/${user.data.id}/organizations`, {
+      headers: authHeaders
+    });
+    const bindings = await bindingsResponse.json();
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "primary-update-user", password: "password1" })
+    });
+    const login = await loginResponse.json();
+
+    expect(updateResponse.status).toBe(200);
+    expect(update.data.primaryOrganizationId).toBe(child.data.id);
+    expect(bindings.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ organizationId: "1", isPrimary: false }),
+        expect.objectContaining({ organizationId: child.data.id, isPrimary: true })
+      ])
+    );
+    expect(loginResponse.status).toBe(200);
+    expect(login.data.currentOrganization.id).toBe(child.data.id);
+    expect(login.data.permissionCodes).toEqual(["organization:view"]);
+  });
+
   it("locks accounts according to the configured failed-login policy", async () => {
     const services = createInMemoryBackendCoreServices({
       failedLoginMaxAttempts: 2,

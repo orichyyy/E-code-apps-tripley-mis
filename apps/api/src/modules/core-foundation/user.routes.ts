@@ -36,7 +36,7 @@ export function createUserRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     const input = updateUserRequestSchema.parse(await context.req.json());
     return context.json({
-      data: services.updateUser(context.req.param("id"), input, authContext?.userId ?? null)
+      data: await services.updateUser(context.req.param("id"), input, authContext?.userId ?? null)
     });
   });
 

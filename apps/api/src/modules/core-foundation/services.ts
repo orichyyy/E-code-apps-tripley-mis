@@ -244,8 +244,10 @@ export class BackendCoreServices {
     return this.users.create(input, actorId);
   }
 
-  updateUser(id: string, input: UpdateUserRequest, actorId: string | null = null) {
-    return this.users.update(id, input, actorId);
+  async updateUser(id: string, input: UpdateUserRequest, actorId: string | null = null) {
+    const user = this.users.update(id, input, actorId);
+    await this.permissions.invalidateUser(id);
+    return user;
   }
 
   async setUserStatus(
