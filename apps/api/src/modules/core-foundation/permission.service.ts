@@ -39,7 +39,7 @@ export class PermissionService {
 
   async invalidateRole(roleId: string) {
     const bindings = [...this.context.store.userOrganizationRoles.values()].filter(
-      (binding) => binding.roleId === roleId
+      (binding) => binding.roleId === roleId && !binding.isDeleted
     );
     await Promise.all(
       bindings.map((binding) => this.cache.invalidate(binding.userId, binding.organizationId))
@@ -52,9 +52,9 @@ export class PermissionService {
 
   async invalidateAllPermissionContexts() {
     await Promise.all(
-      [...this.context.store.userOrganizationRoles.values()].map((binding) =>
-        this.cache.invalidate(binding.userId, binding.organizationId)
-      )
+      [...this.context.store.userOrganizationRoles.values()]
+        .filter((binding) => !binding.isDeleted)
+        .map((binding) => this.cache.invalidate(binding.userId, binding.organizationId))
     );
   }
 
@@ -152,7 +152,10 @@ export class PermissionService {
     if (cached) return cached;
 
     const binding = [...this.context.store.userOrganizationRoles.values()].find(
-      (candidate) => candidate.userId === userId && candidate.organizationId === organizationId
+      (candidate) =>
+        candidate.userId === userId &&
+        candidate.organizationId === organizationId &&
+        !candidate.isDeleted
     );
     const role = binding ? this.context.store.roles.get(binding.roleId) : null;
     const permissionCodes = binding && role?.status === "enabled" && !role.isDeleted

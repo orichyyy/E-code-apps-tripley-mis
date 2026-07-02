@@ -8,6 +8,15 @@ describe("backend core schema", () => {
     expect(postgresql.permissions.module.name).toBe("module");
   });
 
+  it("keeps user organization role binding soft-delete columns aligned across dialects", () => {
+    expect(sqlite.userOrganizationRoles.isDeleted.name).toBe("is_deleted");
+    expect(sqlite.userOrganizationRoles.deletedAt.name).toBe("deleted_at");
+    expect(sqlite.userOrganizationRoles.deletedBy.name).toBe("deleted_by");
+    expect(postgresql.userOrganizationRoles.isDeleted.name).toBe("is_deleted");
+    expect(postgresql.userOrganizationRoles.deletedAt.name).toBe("deleted_at");
+    expect(postgresql.userOrganizationRoles.deletedBy.name).toBe("deleted_by");
+  });
+
   it("keeps API permission metadata columns aligned across SQLite and PostgreSQL", () => {
     expect(sqlite.apiPermissions.module.name).toBe("module");
     expect(sqlite.apiPermissions.requiredPermission.name).toBe("required_permission");

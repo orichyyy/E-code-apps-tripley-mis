@@ -110,6 +110,7 @@ export const userOrganizationRoles = sqliteTable(
     userId: integer("user_id").notNull(),
     organizationId: integer("organization_id").notNull(),
     roleId: integer("role_id").notNull(),
+    ...softDelete,
     ...timestamps
   },
   (table) => ({

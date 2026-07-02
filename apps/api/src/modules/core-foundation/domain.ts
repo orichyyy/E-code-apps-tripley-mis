@@ -57,13 +57,14 @@ export type RoleRecord = AuditFields &
     remark: string | null;
   };
 
-export type UserOrganizationRoleRecord = AuditFields & {
-  id: string;
-  tenantId: string | null;
-  userId: string;
-  organizationId: string;
-  roleId: string;
-};
+export type UserOrganizationRoleRecord = AuditFields &
+  SoftDeleteFields & {
+    id: string;
+    tenantId: string | null;
+    userId: string;
+    organizationId: string;
+    roleId: string;
+  };
 
 export type MenuRecord = AuditFields &
   SoftDeleteFields & {

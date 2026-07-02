@@ -146,7 +146,9 @@ export class AuthService {
     const session = this.requireActiveSession(authContext.sessionId, user.id);
     const binding = [...this.context.store.userOrganizationRoles.values()].find(
       (candidate) =>
-        candidate.userId === user.id && candidate.organizationId === input.organizationId
+        candidate.userId === user.id &&
+        candidate.organizationId === input.organizationId &&
+        !candidate.isDeleted
     );
     if (!binding) throw createKnownError("PERMISSION_DENIED");
 
@@ -170,7 +172,7 @@ export class AuthService {
       authContext.currentOrganizationId
     );
     const organizations = [...this.context.store.userOrganizationRoles.values()]
-      .filter((binding) => binding.userId === user.id)
+      .filter((binding) => binding.userId === user.id && !binding.isDeleted)
       .map((binding) => this.context.store.organizations.get(binding.organizationId))
       .filter(isEnabledOrganization)
       .map((organization) => toPublicOrganization(organization));
@@ -330,7 +332,7 @@ export class AuthService {
     if (primary?.status === "enabled" && !primary.isDeleted) return primary.id;
 
     const enabledBinding = [...this.context.store.userOrganizationRoles.values()].find((binding) => {
-      if (binding.userId !== user.id) return false;
+      if (binding.userId !== user.id || binding.isDeleted) return false;
       const organization = this.context.store.organizations.get(binding.organizationId);
       return organization?.status === "enabled" && !organization.isDeleted;
     });

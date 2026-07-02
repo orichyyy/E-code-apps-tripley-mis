@@ -95,6 +95,9 @@ CREATE TABLE IF NOT EXISTS user_organization_roles (
   user_id INTEGER NOT NULL,
   organization_id INTEGER NOT NULL,
   role_id INTEGER NOT NULL,
+  is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+  deleted_at TIMESTAMPTZ,
+  deleted_by INTEGER,
   created_at TIMESTAMPTZ NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL
 );

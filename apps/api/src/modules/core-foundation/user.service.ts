@@ -145,16 +145,23 @@ export class UserService {
   listOrganizationRoles(userId: string): UserOrganizationRoleRecord[] {
     requireUser(this.context.store, userId);
     return [...this.context.store.userOrganizationRoles.values()].filter(
-      (binding) => binding.userId === userId
+      (binding) => binding.userId === userId && !binding.isDeleted
     );
   }
 
   removeOrganizationRole(userId: string, organizationId: string): { removed: boolean } {
-    const binding = [...this.context.store.userOrganizationRoles.entries()].find(
-      ([, candidate]) => candidate.userId === userId && candidate.organizationId === organizationId
+    const binding = [...this.context.store.userOrganizationRoles.values()].find(
+      (candidate) =>
+        candidate.userId === userId &&
+        candidate.organizationId === organizationId &&
+        !candidate.isDeleted
     );
     if (!binding) return { removed: false };
-    this.context.store.userOrganizationRoles.delete(binding[0]);
+    const now = toUtcIso(nowUtc());
+    binding.isDeleted = true;
+    binding.deletedAt = now;
+    binding.deletedBy = null;
+    binding.updatedAt = now;
     return { removed: true };
   }
 
@@ -168,6 +175,9 @@ export class UserService {
     );
     if (existing) {
       existing.roleId = roleId;
+      existing.isDeleted = false;
+      existing.deletedAt = null;
+      existing.deletedBy = null;
       existing.updatedAt = toUtcIso(nowUtc());
       return existing;
     }
@@ -179,6 +189,9 @@ export class UserService {
       userId,
       organizationId,
       roleId,
+      isDeleted: false,
+      deletedAt: null,
+      deletedBy: null,
       createdAt: now,
       updatedAt: now
     };

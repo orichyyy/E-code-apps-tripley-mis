@@ -901,6 +901,16 @@ describe("backend core foundation routes", () => {
       { method: "DELETE", headers: authHeaders }
     );
     const remove = await removeResponse.json();
+    const listAfterRemoveResponse = await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
+      headers: authHeaders
+    });
+    const listAfterRemove = await listAfterRemoveResponse.json();
+    const reassignResponse = await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+    });
+    const reassign = await reassignResponse.json();
 
     expect(assign.data).toMatchObject({
       userId: setup.data.admin.id,
@@ -918,6 +928,18 @@ describe("backend core foundation routes", () => {
       ])
     );
     expect(remove.data.removed).toBe(true);
+    expect(listAfterRemove.data).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ organizationId: child.data.id })])
+    );
+    expect(reassign.data).toMatchObject({
+      id: assign.data.id,
+      userId: setup.data.admin.id,
+      organizationId: child.data.id,
+      roleId: "2",
+      isDeleted: false,
+      deletedAt: null,
+      deletedBy: null
+    });
   });
 
   it("switches current organization and refreshes permission context", async () => {
