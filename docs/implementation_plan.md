@@ -48,6 +48,7 @@ The backend core goal has partial implementation progress:
 
 - Added Drizzle schema definitions for SQLite and PostgreSQL covering users, organizations, roles, user-organization-role bindings, permissions, role permissions, menus, route metadata, API permission metadata, menu/API bindings, auth sessions, refresh tokens, and system initialization state.
 - Added dialect-specific SQL migration files for SQLite and PostgreSQL for the backend core foundation. No SQL Server schema or migrations were added.
+- Aligned permission and API-permission Drizzle schemas/migrations with the manifest-backed metadata records, including module, required permission, and public/private API metadata.
 - Added organization materialized path helpers for the confirmed int64 design: `encodeOrgPath`, `decodeOrgPath`, `getOrgPathRange`, `isDescendantPath`, and sibling segment allocation.
 - Added backend security utilities for API ID string serialization, UTC time helpers, configurable password complexity, scrypt password hashing, refresh-token generation/hash support, and HS256 JWT access tokens.
 - Added an in-memory `CacheAdapter` implementation and a permission-cache boundary with invalidation tests.

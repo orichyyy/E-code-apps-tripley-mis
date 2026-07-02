@@ -131,6 +131,7 @@ export const permissions = sqliteTable(
       enum: ["menu", "page", "action", "api", "data", "field"]
     }).notNull(),
     description: text("description"),
+    module: text("module").notNull(),
     status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
     ...timestamps
   },
@@ -208,9 +209,12 @@ export const apiPermissions = sqliteTable(
     path: text("path").notNull(),
     code: text("code").notNull(),
     description: text("description"),
+    module: text("module").notNull(),
+    requiredPermission: text("required_permission"),
     logLevel: text("log_level", { enum: ["none", "basic", "request", "request_response"] })
       .notNull()
       .default("basic"),
+    public: integer("public", { mode: "boolean" }).notNull().default(false),
     status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
     ...timestamps
   },

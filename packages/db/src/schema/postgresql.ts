@@ -137,6 +137,7 @@ export const permissions = pgTable(
     name: text("name").notNull(),
     permissionType: text("permission_type").notNull(),
     description: text("description"),
+    module: text("module").notNull(),
     status: text("status").notNull().default("enabled"),
     ...timestamps
   },
@@ -214,7 +215,10 @@ export const apiPermissions = pgTable(
     path: text("path").notNull(),
     code: text("code").notNull(),
     description: text("description"),
+    module: text("module").notNull(),
+    requiredPermission: text("required_permission"),
     logLevel: text("log_level").notNull().default("basic"),
+    public: boolean("public").notNull().default(false),
     status: text("status").notNull().default("enabled"),
     ...timestamps
   },
