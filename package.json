@@ -16,6 +16,7 @@
     "test": "pnpm -r --sort --if-present test",
     "test:api": "pnpm --filter @web-admin-base/api test",
     "test:web": "pnpm --filter @web-admin-base/web test",
+    "seed": "pnpm --filter @web-admin-base/api seed",
     "db:generate": "pnpm --filter @web-admin-base/db db:generate",
     "db:migrate": "pnpm --filter @web-admin-base/db db:migrate",
     "db:migrate:sqlite": "pnpm --filter @web-admin-base/db db:migrate:sqlite",

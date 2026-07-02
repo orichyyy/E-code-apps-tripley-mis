@@ -60,6 +60,7 @@ The backend core goal has partial implementation progress:
 - Aligned user create/update contracts and in-memory records with the confirmed optional avatar file, gender, and employee number fields already present in the SQLite/PostgreSQL schemas.
 - Added a replaceable in-memory backend-core service layer for the foundation API surface. It supports first-start initialization, default organization/admin/roles/menu seed data, username/password login, refresh-token-cookie access-token refresh, logout/session revocation, online user listing, organization CRUD and disable cascade, user CRUD/status/password reset, one-role-per-user-organization assignment/removal, role CRUD/copy, and role permission updates.
 - Split the in-memory backend foundation into focused auth, initialization, organization, user, and role services/routes so DB-backed repositories can replace the storage boundary later without growing a large mixed-responsibility module.
+- Added `pnpm seed` / API workspace seed command support for command-line initialization through the backend-core initialization service. The seed command reads `WEB_ADMIN_SEED_*` environment variables, requires the admin password from the environment, creates the same default organization/admin/roles/permissions/menus/routes as the wizard path on a fresh service, and treats reruns against an initialized service as an idempotent manifest/built-in-role sync.
 - Added stable backend API error handling for known authentication, validation, business, and system errors. Zod request failures now return `VALIDATION_INVALID_REQUEST`, and business/auth failures return their stable error codes instead of leaking raw internal errors.
 - Added a base API permission metadata manifest for the implemented backend-core routes. It declares method, path, API permission code, module, log level, public/private status, and required permission where applicable. The existing `/api/permissions/manifest` endpoint now exposes this API metadata alongside the permission manifest so a later DB-backed permission sync can persist it to `api_permissions`.
 - Added contract coverage ensuring API permission metadata only references declared base permission codes.
@@ -96,12 +97,12 @@ The backend core goal has partial implementation progress:
 - Added route coverage proving login falls back to another enabled organization when the user's primary organization is disabled, and denies login when no enabled organization is available.
 - Tightened logout so the ordinary logout endpoint revokes the current authenticated session and rejects attempts to revoke a different session id.
 
-This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, and finalized CSRF protection still depend on the unresolved implementation questions.
+This is not yet the complete backend core foundation. DB-backed repositories, executable migrations, PostgreSQL integration tests, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection still depend on the unresolved implementation questions.
 
 ## Recommended Next Goals
 
 1. Confirm the concrete SQLite driver and PostgreSQL test provisioning approach.
 2. Wire real SQLite and PostgreSQL Drizzle connections plus executable migrations.
 3. Implement DB-backed repositories for initialization, auth/session, users, organizations, roles, permissions, menus, and route/API permission metadata.
-4. Implement initialization setup and seed CLI using the DB-backed repositories.
+4. Wire the existing initialization setup and seed CLI paths to the DB-backed repositories.
 5. Implement auth/session endpoints and core CRUD routes with PostgreSQL integration tests.

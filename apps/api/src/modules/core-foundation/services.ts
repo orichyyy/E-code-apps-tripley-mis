@@ -79,6 +79,10 @@ export class BackendCoreServices {
     return this.initialization.setup(input);
   }
 
+  seedInitialization(input: InitializationSetupRequest) {
+    return this.initialization.seed(input);
+  }
+
   login(input: LoginRequest, request: { ipAddress?: string | null; userAgent?: string | null }) {
     return this.auth.login(input, request);
   }
