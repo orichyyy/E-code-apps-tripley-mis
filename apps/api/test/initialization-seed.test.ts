@@ -219,4 +219,44 @@ describe("initialization seed", () => {
     expect(stale.data.permissionCodes).not.toEqual(expect.arrayContaining(["user:view"]));
     expect(refreshed.data.permissionCodes).toEqual(expect.arrayContaining(["user:view"]));
   });
+
+  it("prunes stale role permissions during repeated seed sync", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const input = readInitializationSeedInput(seedEnv);
+
+    await services.seedInitialization(input);
+    const store = services["context"].store;
+    const now = "2026-01-01T00:00:00.000Z";
+    store.permissions.set("999", {
+      id: "999",
+      tenantId: null,
+      code: "obsolete:view",
+      name: "obsolete:view",
+      permissionType: "action",
+      resource: "obsolete",
+      action: "view",
+      description: "Obsolete permission",
+      module: "obsolete",
+      source: "base_manifest",
+      manifestHash: "obsolete",
+      status: "enabled",
+      createdAt: now,
+      updatedAt: now
+    });
+    store.rolePermissions.push({
+      roleId: "1",
+      permissionCode: "obsolete:view",
+      effect: "allow",
+      createdAt: now,
+      updatedAt: now
+    });
+
+    await services.seedInitialization(input);
+    const stalePermission = store.permissions.get("999");
+
+    expect(stalePermission).toMatchObject({ status: "disabled" });
+    expect(store.rolePermissions).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ permissionCode: "obsolete:view" })])
+    );
+  });
 });

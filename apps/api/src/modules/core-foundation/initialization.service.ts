@@ -54,8 +54,7 @@ export class InitializationService {
       return { ...initialized, seeded: true };
     }
 
-    const permissions = this.permissions.syncBasePermissions();
-    const apiPermissions = this.permissions.syncBaseApiPermissions();
+    const { permissions, apiPermissions } = await this.permissions.syncPermissionManifests();
     const superAdminRole = this.ensureBuiltInRole("Super Administrator", builtInRoleCodes.superAdmin);
     this.grantAllPermissions(superAdminRole.id, permissions.map((permission) => permission.code));
     this.ensureBuiltInRole("Organization Administrator", builtInRoleCodes.organizationAdmin);
