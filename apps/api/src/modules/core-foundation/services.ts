@@ -193,28 +193,38 @@ export class BackendCoreServices {
     return this.organizations.get(id);
   }
 
-  createOrganization(input: CreateOrganizationRequest, actorId: string | null = null) {
-    return this.organizations.create(input, actorId);
+  async createOrganization(input: CreateOrganizationRequest, actorId: string | null = null) {
+    const organization = this.organizations.create(input, actorId);
+    await this.permissions.invalidateAllPermissionContexts();
+    return organization;
   }
 
-  updateOrganization(
+  async updateOrganization(
     id: string,
     input: UpdateOrganizationRequest,
     actorId: string | null = null
   ) {
-    return this.organizations.update(id, input, actorId);
+    const organization = this.organizations.update(id, input, actorId);
+    await this.permissions.invalidateAllPermissionContexts();
+    return organization;
   }
 
-  disableOrganization(id: string, actorId: string | null = null) {
-    return this.organizations.disable(id, actorId);
+  async disableOrganization(id: string, actorId: string | null = null) {
+    const organizations = this.organizations.disable(id, actorId);
+    await this.permissions.invalidateAllPermissionContexts();
+    return organizations;
   }
 
-  enableOrganization(id: string, actorId: string | null = null) {
-    return this.organizations.enable(id, actorId);
+  async enableOrganization(id: string, actorId: string | null = null) {
+    const organization = this.organizations.enable(id, actorId);
+    await this.permissions.invalidateAllPermissionContexts();
+    return organization;
   }
 
-  deleteOrganization(id: string, deletedBy: string | null = null) {
-    return this.organizations.delete(id, deletedBy);
+  async deleteOrganization(id: string, deletedBy: string | null = null) {
+    const organization = this.organizations.delete(id, deletedBy);
+    await this.permissions.invalidateAllPermissionContexts();
+    return organization;
   }
 
   listUsers() {

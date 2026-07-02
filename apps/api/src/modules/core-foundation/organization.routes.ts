@@ -32,7 +32,7 @@ export function createOrganizationRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     const input = createOrganizationRequestSchema.parse(await context.req.json());
     return context.json({
-      data: services.createOrganization(input, authContext?.userId ?? null)
+      data: await services.createOrganization(input, authContext?.userId ?? null)
     }, 201);
   });
 
@@ -44,28 +44,28 @@ export function createOrganizationRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     const input = updateOrganizationRequestSchema.parse(await context.req.json());
     return context.json({
-      data: services.updateOrganization(context.req.param("id"), input, authContext?.userId ?? null)
+      data: await services.updateOrganization(context.req.param("id"), input, authContext?.userId ?? null)
     });
   });
 
-  routes.post("/organizations/:id/disable", (context) => {
+  routes.post("/organizations/:id/disable", async (context) => {
     const authContext = context.get("authContext");
     return context.json({
-      data: services.disableOrganization(context.req.param("id"), authContext?.userId ?? null)
+      data: await services.disableOrganization(context.req.param("id"), authContext?.userId ?? null)
     });
   });
 
-  routes.post("/organizations/:id/enable", (context) => {
+  routes.post("/organizations/:id/enable", async (context) => {
     const authContext = context.get("authContext");
     return context.json({
-      data: services.enableOrganization(context.req.param("id"), authContext?.userId ?? null)
+      data: await services.enableOrganization(context.req.param("id"), authContext?.userId ?? null)
     });
   });
 
-  routes.delete("/organizations/:id", (context) => {
+  routes.delete("/organizations/:id", async (context) => {
     const authContext = context.get("authContext");
     return context.json({
-      data: services.deleteOrganization(context.req.param("id"), authContext?.userId ?? null)
+      data: await services.deleteOrganization(context.req.param("id"), authContext?.userId ?? null)
     });
   });
 

@@ -17,7 +17,7 @@ describe("OrganizationService", () => {
     });
 
     for (let index = 2; index <= 127; index += 1) {
-      services.createOrganization({
+      await services.createOrganization({
         name: `Root ${index}`,
         code: `root-${index}`
       });
@@ -25,7 +25,7 @@ describe("OrganizationService", () => {
 
     let caught: unknown;
     try {
-      services.createOrganization({
+      await services.createOrganization({
         name: "Overflow Root",
         code: "overflow-root"
       });
