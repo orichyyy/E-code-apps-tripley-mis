@@ -50,4 +50,22 @@ describe("initialization seed", () => {
     expect(second.roles).toHaveLength(3);
     expect(new Set(superAdminPermissions).size).toBe(superAdminPermissions.length);
   });
+
+  it("restores existing built-in roles during repeated seed sync", async () => {
+    const services = createInMemoryBackendCoreServices();
+    const input = readInitializationSeedInput(seedEnv);
+
+    await services.seedInitialization(input);
+    await services.setRoleStatus("1", "disabled");
+    const result = await services.seedInitialization(input);
+    const superAdmin = services.getRole("1");
+
+    expect(result.seeded).toBe(false);
+    expect(superAdmin).toMatchObject({
+      code: "super_admin",
+      description: "Built-in role",
+      isBuiltin: true,
+      status: "enabled"
+    });
+  });
 });

@@ -155,7 +155,15 @@ export class InitializationService {
 
   private ensureBuiltInRole(name: string, code: string) {
     const existing = this.roles.list().find((role) => role.code === code);
-    if (existing) return existing;
+    if (existing) {
+      existing.name = name;
+      existing.description = "Built-in role";
+      existing.remark = "Built-in role";
+      existing.isBuiltin = true;
+      existing.status = "enabled";
+      existing.updatedAt = toUtcIso(nowUtc());
+      return existing;
+    }
     return this.roles.createRecord({
       name,
       code,
