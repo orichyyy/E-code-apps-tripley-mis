@@ -183,6 +183,21 @@ export class AuthService {
     };
   }
 
+  getCurrentPermissionContext(authContext: AuthContext, permissionCodes: string[]) {
+    const user = requireUser(this.context.store, authContext.userId);
+    this.requireActiveSession(authContext.sessionId, user.id);
+    const currentOrganization = requireEnabledOrganization(
+      this.context.store,
+      authContext.currentOrganizationId
+    );
+
+    return {
+      currentOrganization: toPublicOrganization(currentOrganization),
+      permissionCodes,
+      menus: this.filterMenus(permissionCodes)
+    };
+  }
+
   authenticateAccessToken(accessToken: string): AuthContext {
     try {
       const claims = verifyAccessToken(accessToken, {

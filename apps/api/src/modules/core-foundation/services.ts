@@ -110,6 +110,16 @@ export class BackendCoreServices {
     return this.auth.getCurrentUserContext(authContext, permissionContext.permissionCodes);
   }
 
+  async getCurrentPermissionContext(
+    authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>
+  ) {
+    const permissionContext = await this.permissions.getPermissionContext(
+      authContext.userId,
+      authContext.currentOrganizationId
+    );
+    return this.auth.getCurrentPermissionContext(authContext, permissionContext.permissionCodes);
+  }
+
   findAuthContext(authorizationHeader?: string | null) {
     return this.auth.findAuthContext(authorizationHeader);
   }
@@ -251,16 +261,22 @@ export class BackendCoreServices {
     return this.menus.list();
   }
 
-  createMenu(input: CreateMenuRequest) {
-    return this.menus.create(input);
+  async createMenu(input: CreateMenuRequest) {
+    const menu = this.menus.create(input);
+    await this.permissions.invalidateAllPermissionContexts();
+    return menu;
   }
 
-  updateMenu(id: string, input: UpdateMenuRequest) {
-    return this.menus.update(id, input);
+  async updateMenu(id: string, input: UpdateMenuRequest) {
+    const menu = this.menus.update(id, input);
+    await this.permissions.invalidateAllPermissionContexts();
+    return menu;
   }
 
-  deleteMenu(id: string) {
-    return this.menus.delete(id);
+  async deleteMenu(id: string) {
+    const menu = this.menus.delete(id);
+    await this.permissions.invalidateAllPermissionContexts();
+    return menu;
   }
 }
 

@@ -44,6 +44,14 @@ export class PermissionService {
     await this.cache.invalidate(userId, organizationId);
   }
 
+  async invalidateAllPermissionContexts() {
+    await Promise.all(
+      [...this.context.store.userOrganizationRoles.values()].map((binding) =>
+        this.cache.invalidate(binding.userId, binding.organizationId)
+      )
+    );
+  }
+
   async getPermissionContext(userId: string, organizationId: string) {
     const cached = await this.cache.get(userId, organizationId);
     if (cached) return cached;

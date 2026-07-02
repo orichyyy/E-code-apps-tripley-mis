@@ -83,6 +83,20 @@ describe("backend core foundation routes", () => {
     expect(body.data.passwordChangeRequired).toBe(false);
   });
 
+  it("returns the current permission context", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const response = await app.request("/api/context/permissions", { headers: authHeaders });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data.currentOrganization.id).toBe("1");
+    expect(body.data.permissionCodes).toEqual(expect.arrayContaining(["menu:view", "user:view"]));
+    expect(body.data.menus).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "system.users" })])
+    );
+  });
+
   it("refreshes an access token from the HttpOnly refresh-token cookie design", async () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {

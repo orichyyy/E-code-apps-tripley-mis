@@ -95,6 +95,15 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
   },
   {
     method: "GET",
+    path: "/api/context/permissions",
+    code: "api.context.permissions",
+    description: "Get current permission and menu context",
+    module: "auth",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "GET",
     path: "/api/online-users",
     code: "api.online-users.view",
     description: "View online users",

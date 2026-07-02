@@ -64,6 +64,12 @@ export function createAuthRoutes(services: BackendCoreServices) {
     return context.json({ data: await services.switchCurrentOrganization(authContext, input) });
   });
 
+  routes.get("/context/permissions", async (context) => {
+    const authContext = context.get("authContext");
+    if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
+    return context.json({ data: await services.getCurrentPermissionContext(authContext) });
+  });
+
   routes.post("/auth/refresh", async (context) => {
     const refreshToken = readCookie(context.req.header("cookie") ?? "", "refresh_token");
     if (!refreshToken) throw createKnownError("AUTH_TOKEN_EXPIRED");
