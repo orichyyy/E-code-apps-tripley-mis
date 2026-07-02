@@ -94,6 +94,15 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     public: false
   },
   {
+    method: "POST",
+    path: "/api/auth/current-organization",
+    code: "api.auth.current-organization.switch",
+    description: "Switch current organization and refresh permission context",
+    module: "auth",
+    logLevel: "request",
+    public: false
+  },
+  {
     method: "GET",
     path: "/api/context/organizations",
     code: "api.context.organizations.list",
@@ -107,6 +116,15 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     path: "/api/context/permissions",
     code: "api.context.permissions",
     description: "Get current permission and menu context",
+    module: "auth",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/permissions/effective",
+    code: "api.permissions.effective",
+    description: "Get effective permissions for the current user context",
     module: "auth",
     logLevel: "basic",
     public: false

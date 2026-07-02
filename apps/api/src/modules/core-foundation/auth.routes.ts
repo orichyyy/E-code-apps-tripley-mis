@@ -68,6 +68,13 @@ export function createAuthRoutes(services: BackendCoreServices) {
     return context.json({ data: await services.switchCurrentOrganization(authContext, input) });
   });
 
+  routes.post("/auth/current-organization", async (context) => {
+    const authContext = context.get("authContext");
+    if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
+    const input = switchCurrentOrganizationRequestSchema.parse(await context.req.json());
+    return context.json({ data: await services.switchCurrentOrganization(authContext, input) });
+  });
+
   routes.get("/context/organizations", (context) => {
     const authContext = context.get("authContext");
     if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
@@ -75,6 +82,12 @@ export function createAuthRoutes(services: BackendCoreServices) {
   });
 
   routes.get("/context/permissions", async (context) => {
+    const authContext = context.get("authContext");
+    if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
+    return context.json({ data: await services.getCurrentPermissionContext(authContext) });
+  });
+
+  routes.get("/permissions/effective", async (context) => {
     const authContext = context.get("authContext");
     if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
     return context.json({ data: await services.getCurrentPermissionContext(authContext) });

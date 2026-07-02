@@ -245,6 +245,10 @@ describe("backend core foundation routes", () => {
     const { authHeaders } = await loginAsAdmin(app);
     const response = await app.request("/api/context/permissions", { headers: authHeaders });
     const body = await response.json();
+    const effectiveResponse = await app.request("/api/permissions/effective", {
+      headers: authHeaders
+    });
+    const effective = await effectiveResponse.json();
 
     expect(response.status).toBe(200);
     expect(body.data.currentOrganization.id).toBe("1");
@@ -252,6 +256,8 @@ describe("backend core foundation routes", () => {
     expect(body.data.menus).toEqual(
       expect.arrayContaining([expect.objectContaining({ code: "system.users" })])
     );
+    expect(effectiveResponse.status).toBe(200);
+    expect(effective.data.permissionCodes).toEqual(expect.arrayContaining(["menu:view", "user:view"]));
   });
 
   it("refreshes an access token from the HttpOnly refresh-token cookie design", async () => {
@@ -1607,6 +1613,28 @@ describe("backend core foundation routes", () => {
       expect.arrayContaining([expect.objectContaining({ code: "system.users" })])
     );
     expect(usersResponse.status).toBe(200);
+  });
+
+  it("supports the PRD auth current-organization alias", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const childResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
+    });
+    const child = await childResponse.json();
+
+    const switchResponse = await app.request("/api/auth/current-organization", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ organizationId: child.data.id })
+    });
+    const switched = await switchResponse.json();
+
+    expect(switchResponse.status).toBe(200);
+    expect(switched.data.currentOrganization.id).toBe(child.data.id);
+    expect(switched.data.accessToken).toEqual(expect.any(String));
   });
 
   it("prevents switching to a disabled organization", async () => {

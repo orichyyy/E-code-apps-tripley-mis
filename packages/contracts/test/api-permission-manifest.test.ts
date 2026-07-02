@@ -44,8 +44,18 @@ describe("baseApiPermissionManifest", () => {
           public: false
         }),
         expect.objectContaining({
+          method: "POST",
+          path: "/api/auth/current-organization",
+          public: false
+        }),
+        expect.objectContaining({
           method: "GET",
           path: "/api/context/permissions",
+          public: false
+        }),
+        expect.objectContaining({
+          method: "GET",
+          path: "/api/permissions/effective",
           public: false
         }),
         expect.objectContaining({
