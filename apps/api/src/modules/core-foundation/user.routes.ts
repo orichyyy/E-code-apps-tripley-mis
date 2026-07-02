@@ -6,10 +6,15 @@ import {
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
+import type { AuthContextVariables } from "../../core/auth-context/auth-context";
 import type { BackendCoreServices } from "./services";
 
+type UserRouteBindings = {
+  Variables: AuthContextVariables;
+};
+
 export function createUserRoutes(services: BackendCoreServices) {
-  const routes = new Hono();
+  const routes = new Hono<UserRouteBindings>();
 
   routes.get("/users", (context) => {
     return context.json({ data: services.listUsers() });
@@ -51,7 +56,10 @@ export function createUserRoutes(services: BackendCoreServices) {
   });
 
   routes.delete("/users/:id", (context) => {
-    return context.json({ data: services.deleteUser(context.req.param("id")) });
+    const authContext = context.get("authContext");
+    return context.json({
+      data: services.deleteUser(context.req.param("id"), authContext?.userId ?? null)
+    });
   });
 
   routes.get("/users/:id/organizations", (context) => {
@@ -64,10 +72,12 @@ export function createUserRoutes(services: BackendCoreServices) {
   });
 
   routes.delete("/users/:id/organizations/:organizationId", async (context) => {
+    const authContext = context.get("authContext");
     return context.json({
       data: await services.removeUserOrganizationRole(
         context.req.param("id"),
-        context.req.param("organizationId")
+        context.req.param("organizationId"),
+        authContext?.userId ?? null
       )
     });
   });

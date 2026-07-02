@@ -4,10 +4,15 @@ import {
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
+import type { AuthContextVariables } from "../../core/auth-context/auth-context";
 import type { BackendCoreServices } from "./services";
 
+type OrganizationRouteBindings = {
+  Variables: AuthContextVariables;
+};
+
 export function createOrganizationRoutes(services: BackendCoreServices) {
-  const routes = new Hono();
+  const routes = new Hono<OrganizationRouteBindings>();
 
   routes.get("/organizations/tree", (context) => {
     return context.json({ data: services.listOrganizations() });
@@ -36,7 +41,10 @@ export function createOrganizationRoutes(services: BackendCoreServices) {
   });
 
   routes.delete("/organizations/:id", (context) => {
-    return context.json({ data: services.deleteOrganization(context.req.param("id")) });
+    const authContext = context.get("authContext");
+    return context.json({
+      data: services.deleteOrganization(context.req.param("id"), authContext?.userId ?? null)
+    });
   });
 
   return routes;

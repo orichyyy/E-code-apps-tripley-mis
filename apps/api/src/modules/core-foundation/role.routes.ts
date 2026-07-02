@@ -5,10 +5,15 @@ import {
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
+import type { AuthContextVariables } from "../../core/auth-context/auth-context";
 import type { BackendCoreServices } from "./services";
 
+type RoleRouteBindings = {
+  Variables: AuthContextVariables;
+};
+
 export function createRoleRoutes(services: BackendCoreServices) {
-  const routes = new Hono();
+  const routes = new Hono<RoleRouteBindings>();
 
   routes.get("/roles", (context) => {
     return context.json({ data: services.listRoles() });
@@ -37,7 +42,10 @@ export function createRoleRoutes(services: BackendCoreServices) {
   });
 
   routes.delete("/roles/:id", async (context) => {
-    return context.json({ data: await services.deleteRole(context.req.param("id")) });
+    const authContext = context.get("authContext");
+    return context.json({
+      data: await services.deleteRole(context.req.param("id"), authContext?.userId ?? null)
+    });
   });
 
   routes.post("/roles/:id/copy", (context) => {

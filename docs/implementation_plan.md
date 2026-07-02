@@ -69,6 +69,7 @@ The backend core goal has partial implementation progress:
 - Tightened account lock behavior so administrator locks without an expiration deny login until administrator unlock, while configured failed-login locks still use `lockedUntil` for timed release. Unlocking clears failed-login counters and lock expiration.
 - Tightened user update validation so administrator edits preserve unique username, email, and phone values and cannot set a disabled organization as the user's primary organization.
 - Tightened user-organization-role binding removal to soft delete bindings with `is_deleted`, `deleted_at`, and `deleted_by`, and aligned the SQLite/PostgreSQL schemas and migrations with that lifecycle.
+- Tightened core soft-delete endpoints so organization, user, role, menu, and user-organization-role binding removals record the authenticated actor in `deleted_by`.
 - Tightened organization and role update validation so administrator edits cannot duplicate existing organization codes or role codes.
 - Tightened role-change permission behavior so disabled/deleted assigned roles no longer grant permissions, and role update/delete operations invalidate affected user permission-cache entries.
 - Tightened role copy code generation to allocate deterministic next-available copy codes instead of timestamp-derived codes.

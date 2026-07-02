@@ -149,7 +149,11 @@ export class UserService {
     );
   }
 
-  removeOrganizationRole(userId: string, organizationId: string): { removed: boolean } {
+  removeOrganizationRole(
+    userId: string,
+    organizationId: string,
+    deletedBy: string | null = null
+  ): { removed: boolean } {
     const binding = [...this.context.store.userOrganizationRoles.values()].find(
       (candidate) =>
         candidate.userId === userId &&
@@ -160,7 +164,7 @@ export class UserService {
     const now = toUtcIso(nowUtc());
     binding.isDeleted = true;
     binding.deletedAt = now;
-    binding.deletedBy = null;
+    binding.deletedBy = deletedBy;
     binding.updatedAt = now;
     return { removed: true };
   }

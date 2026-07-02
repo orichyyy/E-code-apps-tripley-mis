@@ -167,8 +167,8 @@ export class BackendCoreServices {
     return this.organizations.enable(id);
   }
 
-  deleteOrganization(id: string) {
-    return this.organizations.delete(id);
+  deleteOrganization(id: string, deletedBy: string | null = null) {
+    return this.organizations.delete(id, deletedBy);
   }
 
   listUsers() {
@@ -195,8 +195,8 @@ export class BackendCoreServices {
     return this.users.resetPassword(id, input);
   }
 
-  deleteUser(id: string) {
-    return this.users.delete(id);
+  deleteUser(id: string, deletedBy: string | null = null) {
+    return this.users.delete(id, deletedBy);
   }
 
   async assignUserOrganizationRole(userId: string, input: AssignUserOrganizationRoleRequest) {
@@ -209,8 +209,12 @@ export class BackendCoreServices {
     return this.users.listOrganizationRoles(userId);
   }
 
-  async removeUserOrganizationRole(userId: string, organizationId: string) {
-    const result = this.users.removeOrganizationRole(userId, organizationId);
+  async removeUserOrganizationRole(
+    userId: string,
+    organizationId: string,
+    deletedBy: string | null = null
+  ) {
+    const result = this.users.removeOrganizationRole(userId, organizationId, deletedBy);
     await this.permissions.invalidateUserOrganization(userId, organizationId);
     return result;
   }
@@ -253,8 +257,8 @@ export class BackendCoreServices {
     return this.roles.listPermissionCodes(id);
   }
 
-  async deleteRole(id: string) {
-    const role = this.roles.delete(id);
+  async deleteRole(id: string, deletedBy: string | null = null) {
+    const role = this.roles.delete(id, deletedBy);
     await this.permissions.invalidateRole(id);
     return role;
   }
@@ -297,8 +301,8 @@ export class BackendCoreServices {
     return menu;
   }
 
-  async deleteMenu(id: string) {
-    const menu = this.menus.delete(id);
+  async deleteMenu(id: string, deletedBy: string | null = null) {
+    const menu = this.menus.delete(id, deletedBy);
     await this.permissions.invalidateAllPermissionContexts();
     return menu;
   }

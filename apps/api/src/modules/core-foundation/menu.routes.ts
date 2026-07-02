@@ -4,10 +4,15 @@ import {
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
+import type { AuthContextVariables } from "../../core/auth-context/auth-context";
 import type { BackendCoreServices } from "./services";
 
+type MenuRouteBindings = {
+  Variables: AuthContextVariables;
+};
+
 export function createMenuRoutes(services: BackendCoreServices) {
-  const routes = new Hono();
+  const routes = new Hono<MenuRouteBindings>();
 
   routes.get("/menus/tree", (context) => {
     return context.json({ data: services.listMenus() });
@@ -24,7 +29,10 @@ export function createMenuRoutes(services: BackendCoreServices) {
   });
 
   routes.delete("/menus/:id", async (context) => {
-    return context.json({ data: await services.deleteMenu(context.req.param("id")) });
+    const authContext = context.get("authContext");
+    return context.json({
+      data: await services.deleteMenu(context.req.param("id"), authContext?.userId ?? null)
+    });
   });
 
   return routes;

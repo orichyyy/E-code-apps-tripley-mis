@@ -667,7 +667,89 @@ describe("backend core foundation routes", () => {
     expect(deleted.data).toMatchObject({
       id: created.data.id,
       isDeleted: true,
-      deletedAt: expect.any(String)
+      deletedAt: expect.any(String),
+      deletedBy: "1"
+    });
+  });
+
+  it("records the authenticated user on core soft deletes", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const organizationResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Delete Target Organization",
+        code: "delete-target-org"
+      })
+    });
+    const organization = await organizationResponse.json();
+    const userResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "delete-target-user",
+        displayName: "Delete Target User",
+        email: "delete-target-user@example.com",
+        phone: "10000000011",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const user = await userResponse.json();
+    const roleResponse = await app.request("/api/roles", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        name: "Delete Target Role",
+        code: "delete_target_role"
+      })
+    });
+    const role = await roleResponse.json();
+    const menuResponse = await app.request("/api/menus", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentMenuId: "2",
+        code: "system.deleteTarget",
+        titleI18nKey: "routes.system.deleteTarget",
+        path: "/system/delete-target",
+        requiredPermission: "menu:view"
+      })
+    });
+    const menu = await menuResponse.json();
+
+    const deletedOrganizationResponse = await app.request(`/api/organizations/${organization.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const deletedUserResponse = await app.request(`/api/users/${user.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const deletedRoleResponse = await app.request(`/api/roles/${role.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const deletedMenuResponse = await app.request(`/api/menus/${menu.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+
+    await expect(deletedOrganizationResponse.json()).resolves.toMatchObject({
+      data: { id: organization.data.id, isDeleted: true, deletedBy: "1" }
+    });
+    await expect(deletedUserResponse.json()).resolves.toMatchObject({
+      data: { id: user.data.id, isDeleted: true, deletedBy: "1" }
+    });
+    await expect(deletedRoleResponse.json()).resolves.toMatchObject({
+      data: { id: role.data.id, isDeleted: true, deletedBy: "1" }
+    });
+    await expect(deletedMenuResponse.json()).resolves.toMatchObject({
+      data: { id: menu.data.id, isDeleted: true, deletedBy: "1" }
     });
   });
 
