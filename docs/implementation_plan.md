@@ -96,6 +96,7 @@ The backend core goal has partial implementation progress:
 - Wired the confirmed role `description` field through role create/update/copy contracts, in-memory records, initialization seed data, and route coverage while retaining existing `remark` compatibility.
 - Aligned role-permission records with the confirmed `effect` and `updated_at` fields. Existing role permission APIs write allow-effect records, copy preserves the effect metadata, and permission resolution only grants allow-effect records.
 - Tightened role-change permission behavior so disabled/deleted assigned roles no longer grant permissions, and role update/delete operations invalidate affected user permission-cache entries.
+- Added route coverage proving soft-deleted assigned roles lose API grants after role deletion and cache invalidation.
 - Tightened role copy code generation to allocate deterministic next-available copy codes instead of timestamp-derived codes.
 - Added route coverage proving role copy creates a new role and preserves the copied permission configuration.
 - Added `GET /api/roles/:id/permissions` to read a role's configured permission codes, with API permission metadata and route coverage.

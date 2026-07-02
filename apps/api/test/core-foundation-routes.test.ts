@@ -2053,6 +2053,67 @@ describe("backend core foundation routes", () => {
     expect(afterDisable.error.code).toBe("PERMISSION_API_DENIED");
   });
 
+  it("invalidates permission cache and removes grants when an assigned role is soft deleted", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const roleResponse = await app.request("/api/roles", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        name: "Deleted Assigned Role",
+        code: "deleted_assigned_role"
+      })
+    });
+    const role = await roleResponse.json();
+    await app.request(`/api/roles/${role.data.id}/permissions`, {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({ permissionCodes: ["user:view"] })
+    });
+    await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "deleted-role-user",
+        displayName: "Deleted Role User",
+        email: "deleted-role-user@example.com",
+        phone: "10000000020",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: role.data.id
+      })
+    });
+    const firstLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "deleted-role-user", password: "password1" })
+    });
+    const firstLogin = await firstLoginResponse.json();
+    await app.request("/api/auth/change-password", {
+      method: "POST",
+      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+    });
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "deleted-role-user", password: "password2" })
+    });
+    const login = await loginResponse.json();
+    const userHeaders = { authorization: `Bearer ${login.data.accessToken}` };
+    const beforeDeleteResponse = await app.request("/api/users", { headers: userHeaders });
+
+    await app.request(`/api/roles/${role.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const afterDeleteResponse = await app.request("/api/users", { headers: userHeaders });
+    const afterDelete = await afterDeleteResponse.json();
+
+    expect(beforeDeleteResponse.status).toBe(200);
+    expect(afterDeleteResponse.status).toBe(403);
+    expect(afterDelete.error.code).toBe("PERMISSION_API_DENIED");
+  });
+
   it("does not grant disabled permission metadata through role permissions", async () => {
     const services = createInMemoryBackendCoreServices();
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
