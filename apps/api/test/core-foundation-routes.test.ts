@@ -2835,6 +2835,17 @@ describe("backend core foundation routes", () => {
     expect(body.error.code).toBe("BUSINESS_SYSTEM_ALREADY_INITIALIZED");
   });
 
+  it("returns stable not-found errors without parsing stale bearer tokens", async () => {
+    const app = createApp();
+    const response = await app.request("/api/not-a-route", {
+      headers: { authorization: "Bearer not-a-valid-access-token" }
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(body.error.code).toBe("SYSTEM_NOT_FOUND");
+  });
+
   it("requires a bearer access token for private API permissions", async () => {
     const { app } = await setupInitializedApp();
     const response = await app.request("/api/users");
