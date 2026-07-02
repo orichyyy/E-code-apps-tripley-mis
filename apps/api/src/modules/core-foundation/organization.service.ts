@@ -19,7 +19,7 @@ import type {
   PublicOrganizationTreeNode
 } from "./domain";
 import type { BackendCoreContext } from "./service-context";
-import { requireOrganization } from "./store-guards";
+import { requireOrganization, requireUser } from "./store-guards";
 import { toPublicOrganization } from "./serializers";
 
 export class OrganizationService {
@@ -92,6 +92,7 @@ export class OrganizationService {
       ? requireOrganization(store, input.parentOrganizationId)
       : undefined;
     if (parent?.status === "disabled") throw createKnownError("BUSINESS_ORG_DISABLED");
+    if (input.managerUserId !== undefined) requireUser(store, input.managerUserId);
 
     const level = parent ? parent.level + 1 : 1;
     if (level > this.context.config.maxOrganizationDepth || level > 8) {
@@ -135,6 +136,9 @@ export class OrganizationService {
   ): PublicOrganization {
     const organization = requireOrganization(this.context.store, id);
     if (input.code !== undefined) this.ensureUniqueOrganizationCode(input.code, organization.id);
+    if (input.managerUserId !== undefined && input.managerUserId !== null) {
+      requireUser(this.context.store, input.managerUserId);
+    }
     if (input.name !== undefined) organization.name = input.name;
     if (input.code !== undefined) organization.code = input.code;
     if (input.managerUserId !== undefined) organization.managerUserId = input.managerUserId;

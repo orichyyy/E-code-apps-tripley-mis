@@ -1055,6 +1055,62 @@ describe("backend core foundation routes", () => {
     });
   });
 
+  it("rejects organization manager references to missing or soft-deleted users", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const organizationResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Manager Guard",
+        code: "manager-guard"
+      })
+    });
+    const organization = await organizationResponse.json();
+    const userResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "deleted-manager",
+        displayName: "Deleted Manager",
+        email: "deleted-manager@example.com",
+        phone: "10000000024",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "3"
+      })
+    });
+    const user = await userResponse.json();
+    await app.request(`/api/users/${user.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+
+    const missingCreateResponse = await app.request("/api/organizations", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Missing Manager",
+        code: "missing-manager",
+        managerUserId: "999"
+      })
+    });
+    const missingCreate = await missingCreateResponse.json();
+    const deletedUpdateResponse = await app.request(`/api/organizations/${organization.data.id}`, {
+      method: "PATCH",
+      headers: authHeaders,
+      body: JSON.stringify({ managerUserId: user.data.id })
+    });
+    const deletedUpdate = await deletedUpdateResponse.json();
+
+    expect(missingCreateResponse.status).toBe(404);
+    expect(missingCreate.error.code).toBe("USER_NOT_FOUND");
+    expect(deletedUpdateResponse.status).toBe(404);
+    expect(deletedUpdate.error.code).toBe("USER_NOT_FOUND");
+  });
+
   it("configures organization maximum depth within the supported 8-level path limit", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
