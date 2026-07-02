@@ -8,6 +8,7 @@ import { Hono } from "hono";
 
 import type { AuthContextVariables } from "../../core/auth-context/auth-context";
 import { createKnownError } from "../../core/errors/error-codes";
+import { pageItems } from "./pagination";
 import type { BackendCoreServices } from "./services";
 
 type AuthRouteBindings = {
@@ -119,7 +120,18 @@ export function createAuthRoutes(services: BackendCoreServices) {
   routes.get("/online-users", (context) => {
     const authContext = context.get("authContext");
     if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
-    return context.json({ data: services.listOnlineUsers() });
+    const onlineUsers = services.listOnlineUsers({
+      currentOrganizationId: context.req.query("organizationId"),
+      userId: context.req.query("userId")
+    });
+    return context.json({
+      data: hasPaginationQuery(context)
+        ? pageItems(onlineUsers, {
+            page: context.req.query("page"),
+            pageSize: context.req.query("pageSize")
+          })
+        : onlineUsers
+    });
   });
 
   return routes;
@@ -155,4 +167,8 @@ async function readOptionalJson<T>(request: Request): Promise<T | null> {
   const text = await request.text();
   if (!text.trim()) return null;
   return JSON.parse(text) as T;
+}
+
+function hasPaginationQuery(context: { req: { query: (name: string) => string | undefined } }): boolean {
+  return context.req.query("page") !== undefined || context.req.query("pageSize") !== undefined;
 }

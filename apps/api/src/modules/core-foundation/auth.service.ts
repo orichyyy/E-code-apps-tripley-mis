@@ -24,6 +24,11 @@ import { requireEnabledOrganization, requireUser } from "./store-guards";
 import { toPublicOrganization, toPublicSession, toPublicUser } from "./serializers";
 import type { KnownErrorCode } from "../../core/errors/error-codes";
 
+export type OnlineUserListFilters = {
+  currentOrganizationId?: string;
+  userId?: string;
+};
+
 export class AuthService {
   constructor(private readonly context: BackendCoreContext) {}
 
@@ -304,7 +309,14 @@ export class AuthService {
     return toPublicSession(session);
   }
 
-  listOnlineUsers(): PublicSession[] {
+  listOnlineUsers(filters: OnlineUserListFilters = {}): PublicSession[] {
+    if (filters.currentOrganizationId !== undefined && !isIntegerIdString(filters.currentOrganizationId)) {
+      throw createKnownError("VALIDATION_INVALID_REQUEST");
+    }
+    if (filters.userId !== undefined && !isIntegerIdString(filters.userId)) {
+      throw createKnownError("VALIDATION_INVALID_REQUEST");
+    }
+
     const now = nowUtc();
     return [...this.context.store.authSessions.values()]
       .filter((session) => {
@@ -326,6 +338,12 @@ export class AuthService {
           this.hasCurrentOrganizationAccess(user.id, organization.id)
         );
       })
+      .filter(
+        (session) =>
+          filters.currentOrganizationId === undefined ||
+          session.currentOrganizationId === filters.currentOrganizationId
+      )
+      .filter((session) => filters.userId === undefined || session.userId === filters.userId)
       .map(toPublicSession);
   }
 
@@ -519,4 +537,8 @@ function isEnabledOrganization(
 
 function isActiveBinding(binding: { isDeleted: boolean; status: "enabled" | "disabled" }) {
   return !binding.isDeleted && binding.status === "enabled";
+}
+
+function isIntegerIdString(value: string): boolean {
+  return /^[1-9]\d*$/.test(value);
 }

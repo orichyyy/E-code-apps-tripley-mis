@@ -175,6 +175,63 @@ describe("backend core foundation routes", () => {
     expect(onlineUsers.data[0]).not.toHaveProperty("refreshTokenHash");
   });
 
+  it("filters and pages the online-user session data source", async () => {
+    const { app } = await setupInitializedApp();
+    const firstLogin = await loginAsAdmin(app);
+    await loginAsAdmin(app);
+
+    const filteredResponse = await app.request("/api/online-users?userId=1&organizationId=1", {
+      headers: firstLogin.authHeaders
+    });
+    const filtered = await filteredResponse.json();
+    const pagedResponse = await app.request("/api/online-users?userId=1&page=1&pageSize=1", {
+      headers: firstLogin.authHeaders
+    });
+    const paged = await pagedResponse.json();
+
+    expect(filteredResponse.status).toBe(200);
+    expect(filtered.data).toHaveLength(2);
+    expect(filtered.data).toEqual([
+      expect.objectContaining({ userId: "1", currentOrganizationId: "1" }),
+      expect.objectContaining({ userId: "1", currentOrganizationId: "1" })
+    ]);
+    expect(pagedResponse.status).toBe(200);
+    expect(paged.data).toMatchObject({
+      page: 1,
+      pageSize: 1,
+      total: 2,
+      totalPages: 2
+    });
+    expect(paged.data.items).toEqual([
+      expect.objectContaining({ userId: "1", currentOrganizationId: "1" })
+    ]);
+  });
+
+  it("rejects invalid online-user query parameters", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const userResponse = await app.request("/api/online-users?userId=not-an-id", {
+      headers: authHeaders
+    });
+    const userBody = await userResponse.json();
+    const organizationResponse = await app.request("/api/online-users?organizationId=0", {
+      headers: authHeaders
+    });
+    const organizationBody = await organizationResponse.json();
+    const pageResponse = await app.request("/api/online-users?pageSize=0", {
+      headers: authHeaders
+    });
+    const pageBody = await pageResponse.json();
+
+    expect(userResponse.status).toBe(400);
+    expect(userBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(organizationResponse.status).toBe(400);
+    expect(organizationBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+    expect(pageResponse.status).toBe(400);
+    expect(pageBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
+  });
+
   it("updates session last seen time on authenticated API activity", async () => {
     const { app } = await setupInitializedApp();
     const { login, authHeaders } = await loginAsAdmin(app);

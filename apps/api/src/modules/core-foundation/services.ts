@@ -26,7 +26,7 @@ import type {
   UpdateUserRequest
 } from "@web-admin-base/contracts";
 
-import { AuthService } from "./auth.service";
+import { AuthService, type OnlineUserListFilters } from "./auth.service";
 import { InitializationService } from "./initialization.service";
 import { InMemoryBackendStore } from "./in-memory-store";
 import { MenuService } from "./menu.service";
@@ -187,8 +187,8 @@ export class BackendCoreServices {
     return this.auth.logout(sessionId);
   }
 
-  listOnlineUsers() {
-    return this.auth.listOnlineUsers();
+  listOnlineUsers(filters: OnlineUserListFilters = {}) {
+    return this.auth.listOnlineUsers(filters);
   }
 
   listOrganizations() {
