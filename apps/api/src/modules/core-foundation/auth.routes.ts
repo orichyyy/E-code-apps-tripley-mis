@@ -1,6 +1,7 @@
 import {
   changePasswordRequestSchema,
   loginRequestSchema,
+  logoutRequestSchema,
   switchCurrentOrganizationRequestSchema
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
@@ -52,7 +53,7 @@ export function createAuthRoutes(services: BackendCoreServices) {
   routes.post("/auth/logout", async (context) => {
     const authContext = context.get("authContext");
     if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
-    const body = await readOptionalJson<{ sessionId?: string }>(context.req.raw);
+    const body = logoutRequestSchema.parse((await readOptionalJson(context.req.raw)) ?? {});
     if (body?.sessionId && body.sessionId !== authContext.sessionId) {
       throw createKnownError("PERMISSION_DENIED");
     }

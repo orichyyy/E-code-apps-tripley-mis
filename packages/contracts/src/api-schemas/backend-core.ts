@@ -17,6 +17,10 @@ export const loginRequestSchema = z.object({
   password: z.string().min(1)
 });
 
+export const logoutRequestSchema = z.object({
+  sessionId: integerIdStringSchema.optional()
+});
+
 export const changePasswordRequestSchema = z.object({
   oldPassword: z.string().min(1),
   newPassword: z.string().min(1)
@@ -133,6 +137,7 @@ export const updateMenuRequestSchema = z.object({
 
 export type InitializationSetupRequest = z.infer<typeof initializationSetupRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
+export type LogoutRequest = z.infer<typeof logoutRequestSchema>;
 export type ChangePasswordRequest = z.infer<typeof changePasswordRequestSchema>;
 export type SwitchCurrentOrganizationRequest = z.infer<
   typeof switchCurrentOrganizationRequestSchema

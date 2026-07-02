@@ -2753,6 +2753,21 @@ describe("backend core foundation routes", () => {
     expect(bindingBody.error.code).toBe("VALIDATION_INVALID_REQUEST");
   });
 
+  it("validates optional logout session IDs as integer strings", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+
+    const response = await app.request("/api/auth/logout", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({ sessionId: "not-an-id" })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error.code).toBe("VALIDATION_INVALID_REQUEST");
+  });
+
   it("returns stable business error codes", async () => {
     const { app } = await setupInitializedApp();
     const response = await app.request("/api/initialization/setup", {
