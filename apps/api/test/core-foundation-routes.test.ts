@@ -1544,7 +1544,8 @@ describe("backend core foundation routes", () => {
   });
 
   it("uses the updated primary organization on the next login", async () => {
-    const { app } = await setupInitializedApp();
+    const services = createInMemoryBackendCoreServices();
+    const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
     const { authHeaders } = await loginAsAdmin(app);
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
@@ -1557,6 +1558,11 @@ describe("backend core foundation routes", () => {
       headers: authHeaders,
       body: JSON.stringify({ permissionCodes: ["organization:view"] })
     });
+    const organizationGrant = services["context"].store.rolePermissions.find(
+      (permission) => permission.roleId === "2" && permission.permissionCode === "organization:view"
+    );
+    if (!organizationGrant) throw new Error("Expected organization:view role grant to exist");
+    services["context"].store.rolePermissions.push({ ...organizationGrant });
     const userResponse = await app.request("/api/users", {
       method: "POST",
       headers: authHeaders,
