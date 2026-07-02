@@ -653,8 +653,10 @@ describe("backend core foundation routes", () => {
     const refresh = await refreshResponse.json();
 
     expect(refresh.data.accessToken).toEqual(expect.any(String));
+    expect(refresh.data).not.toHaveProperty("refreshToken");
     expect(refresh.data.session.id).toBe("1");
     expect(refresh.data.session).not.toHaveProperty("refreshTokenHash");
+    expect(refresh.data.session).not.toHaveProperty("tokenVersion");
   });
 
   it("updates session last seen time on refresh-token exchange", async () => {
