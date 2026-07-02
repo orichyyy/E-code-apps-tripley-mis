@@ -1936,6 +1936,58 @@ describe("backend core foundation routes", () => {
     expect(update.error.code).toBe("VALIDATION_INVALID_REQUEST");
   });
 
+  it("soft deletes managed menu descendants with their parent", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    const parentResponse = await app.request("/api/menus", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentMenuId: "2",
+        code: "system.delete-parent",
+        titleI18nKey: "routes.system.deleteParent",
+        path: "/system/delete-parent",
+        requiredPermission: "menu:view"
+      })
+    });
+    const parent = await parentResponse.json();
+    const childResponse = await app.request("/api/menus", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        parentMenuId: parent.data.id,
+        code: "system.delete-parent.child",
+        titleI18nKey: "routes.system.deleteParent.child",
+        path: "/system/delete-parent/child",
+        requiredPermission: "menu:view"
+      })
+    });
+    const child = await childResponse.json();
+    const deleteResponse = await app.request(`/api/menus/${parent.data.id}`, {
+      method: "DELETE",
+      headers: authHeaders
+    });
+    const deleted = await deleteResponse.json();
+    const treeResponse = await app.request("/api/menus/tree", { headers: authHeaders });
+    const tree = await treeResponse.json();
+
+    expect(parentResponse.status).toBe(201);
+    expect(childResponse.status).toBe(201);
+    expect(deleteResponse.status).toBe(200);
+    expect(deleted.data).toMatchObject({
+      id: parent.data.id,
+      isDeleted: true,
+      deletedBy: "1"
+    });
+    expect(tree.data).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: parent.data.id }),
+        expect.objectContaining({ id: child.data.id })
+      ])
+    );
+    expect(JSON.stringify(tree.data)).not.toContain("system.delete-parent.child");
+  });
+
   it("records the authenticated user on core soft deletes", async () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);

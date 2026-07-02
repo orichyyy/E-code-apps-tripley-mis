@@ -102,10 +102,13 @@ export class MenuService {
   delete(id: string, deletedBy: string | null = null): MenuRecord {
     const menu = requireMenu(this.context.store, id);
     const now = toUtcIso(nowUtc());
-    menu.isDeleted = true;
-    menu.deletedAt = now;
-    menu.deletedBy = deletedBy;
-    menu.updatedAt = now;
+    const affectedMenus = [menu, ...this.findDescendantMenus(id)];
+    for (const affectedMenu of affectedMenus) {
+      affectedMenu.isDeleted = true;
+      affectedMenu.deletedAt = now;
+      affectedMenu.deletedBy = deletedBy;
+      affectedMenu.updatedAt = now;
+    }
     return menu;
   }
 
@@ -176,6 +179,12 @@ export class MenuService {
       current = this.context.store.menus.get(current.parentMenuId);
     }
     return false;
+  }
+
+  private findDescendantMenus(parentId: string): MenuRecord[] {
+    return [...this.context.store.menus.values()].filter(
+      (menu) => !menu.isDeleted && this.isDescendantMenu(menu.id, parentId)
+    );
   }
 
   private ensureUniqueMenuCode(code: string, currentMenuId?: string): void {
