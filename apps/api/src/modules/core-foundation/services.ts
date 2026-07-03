@@ -58,7 +58,7 @@ export class BackendCoreServices {
   readonly roles: RoleService;
   readonly users: UserService;
 
-  constructor(private readonly context: BackendCoreContext) {
+  constructor(protected readonly context: BackendCoreContext) {
     this.organizations = new OrganizationService(context);
     this.menus = new MenuService(context);
     this.routeMetadata = new RouteMetadataService(context);
@@ -371,6 +371,10 @@ export class BackendCoreServices {
 
   listPermissions(filters: PermissionListFilters = {}) {
     return this.permissions.listPermissions(filters);
+  }
+
+  listPermissionTree() {
+    return this.permissions.listPermissionTree();
   }
 
   listApiPermissions(filters: ApiPermissionListFilters = {}) {

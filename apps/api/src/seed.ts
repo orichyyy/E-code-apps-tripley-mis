@@ -1,7 +1,9 @@
 import { initializationSetupRequestSchema } from "@web-admin-base/contracts";
 import { pathToFileURL } from "node:url";
 
+import { createPersistentBackendCoreServices } from "./modules/core-foundation/persistence/persistent-backend-core-services";
 import { createInMemoryBackendCoreServices } from "./modules/core-foundation/services";
+import type { BackendCoreServices } from "./modules/core-foundation/services";
 
 export type SeedEnvironment = Record<string, string | undefined>;
 
@@ -23,20 +25,37 @@ export function readInitializationSeedInput(env: SeedEnvironment) {
 }
 
 export async function runInitializationSeed(env: SeedEnvironment = process.env) {
-  const services = createInMemoryBackendCoreServices();
-  const result = await services.seedInitialization(readInitializationSeedInput(env));
+  const services = await createSeedServices(env);
+  try {
+    const result = await services.seedInitialization(readInitializationSeedInput(env));
 
-  return {
-    initialized: result.state.status === "initialized",
-    seeded: result.seeded,
-    organizationId: result.organization?.id ?? null,
-    adminId: result.admin?.id ?? null,
-    roleCount: result.roles.length,
-    permissionCount: result.permissions.length,
-    apiPermissionCount: result.apiPermissions.length,
-    menuCount: result.menus.length,
-    routeCount: result.routes.length
-  };
+    return {
+      initialized: result.state.status === "initialized",
+      seeded: result.seeded,
+      organizationId: result.organization?.id ?? null,
+      adminId: result.admin?.id ?? null,
+      roleCount: result.roles.length,
+      permissionCount: result.permissions.length,
+      apiPermissionCount: result.apiPermissions.length,
+      menuCount: result.menus.length,
+      routeCount: result.routes.length
+    };
+  } finally {
+    await closeSeedServices(services);
+  }
+}
+
+async function createSeedServices(env: SeedEnvironment): Promise<BackendCoreServices> {
+  if (env.BACKEND_CORE_STORE === "database") {
+    return createPersistentBackendCoreServices();
+  }
+  return createInMemoryBackendCoreServices();
+}
+
+async function closeSeedServices(services: BackendCoreServices): Promise<void> {
+  if ("close" in services && typeof services.close === "function") {
+    await services.close();
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

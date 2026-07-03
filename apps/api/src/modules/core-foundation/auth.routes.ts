@@ -1,4 +1,7 @@
 import {
+  randomBytes
+} from "node:crypto";
+import {
   changePasswordRequestSchema,
   loginRequestSchema,
   logoutRequestSchema,
@@ -34,7 +37,19 @@ export function createAuthRoutes(services: BackendCoreServices) {
         secure: result.refreshTokenCookie.secure,
         domain: result.refreshTokenCookie.domain,
         maxAgeSeconds: result.refreshTokenCookie.maxAgeSeconds
-      })
+      }),
+      { append: true }
+    );
+    context.header(
+      "set-cookie",
+      formatCsrfTokenCookie(createCsrfToken(), {
+        path: result.refreshTokenCookie.path,
+        sameSite: result.refreshTokenCookie.sameSite,
+        secure: result.refreshTokenCookie.secure,
+        domain: result.refreshTokenCookie.domain,
+        maxAgeSeconds: result.refreshTokenCookie.maxAgeSeconds
+      }),
+      { append: true }
     );
 
     return context.json({
@@ -62,6 +77,7 @@ export function createAuthRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
     const body = logoutRequestSchema.parse((await readOptionalJson(context.req.raw)) ?? {});
+    requireDoubleSubmitCsrf(context.req.header("cookie") ?? "", context.req.header("x-csrf-token"));
     if (body?.sessionId && body.sessionId !== authContext.sessionId) {
       throw createKnownError("PERMISSION_DENIED");
     }
@@ -71,7 +87,16 @@ export function createAuthRoutes(services: BackendCoreServices) {
       formatRefreshTokenCookie("", {
         ...services.getRefreshTokenCookieOptions(),
         maxAgeSeconds: 0
-      })
+      }),
+      { append: true }
+    );
+    context.header(
+      "set-cookie",
+      formatCsrfTokenCookie("", {
+        ...services.getRefreshTokenCookieOptions(),
+        maxAgeSeconds: 0
+      }),
+      { append: true }
     );
     return context.json({ data: result });
   });
@@ -117,7 +142,9 @@ export function createAuthRoutes(services: BackendCoreServices) {
 
   routes.post("/auth/refresh", async (context) => {
     await assertEmptyJsonBody(context.req.raw);
-    const refreshToken = readCookie(context.req.header("cookie") ?? "", "refresh_token");
+    const cookieHeader = context.req.header("cookie") ?? "";
+    requireDoubleSubmitCsrf(cookieHeader, context.req.header("x-csrf-token"));
+    const refreshToken = readCookie(cookieHeader, "refresh_token");
     if (!refreshToken) throw createKnownError("AUTH_TOKEN_EXPIRED");
     return context.json({ data: await services.refreshAccessToken(refreshToken) });
   });
@@ -140,6 +167,17 @@ export function createAuthRoutes(services: BackendCoreServices) {
   });
 
   return routes;
+}
+
+function createCsrfToken(): string {
+  return randomBytes(32).toString("base64url");
+}
+
+function requireDoubleSubmitCsrf(cookieHeader: string, headerToken: string | undefined): void {
+  const cookieToken = readCookie(cookieHeader, "csrf_token");
+  if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+    throw createKnownError("AUTH_CSRF_TOKEN_INVALID");
+  }
 }
 
 function readCookie(cookieHeader: string, name: string): string | null {
@@ -167,6 +205,27 @@ function formatRefreshTokenCookie(
   const parts = [
     `refresh_token=${encodeURIComponent(value)}`,
     "HttpOnly",
+    `SameSite=${options.sameSite}`,
+    `Path=${options.path}`,
+    `Max-Age=${options.maxAgeSeconds}`
+  ];
+  if (options.secure) parts.push("Secure");
+  if (options.domain) parts.push(`Domain=${options.domain}`);
+  return parts.join("; ");
+}
+
+function formatCsrfTokenCookie(
+  value: string,
+  options: {
+    path: string;
+    sameSite: "Strict" | "Lax" | "None";
+    secure: boolean;
+    domain: string | null;
+    maxAgeSeconds: number;
+  }
+): string {
+  const parts = [
+    `csrf_token=${encodeURIComponent(value)}`,
     `SameSite=${options.sameSite}`,
     `Path=${options.path}`,
     `Max-Age=${options.maxAgeSeconds}`

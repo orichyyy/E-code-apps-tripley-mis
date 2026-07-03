@@ -14,31 +14,33 @@
 
    Confirmed: the `better-sqlite3` driver boundary enables safe integer reads so organization `path` values round-trip as `bigint` when raw driver access is used. DB-backed repositories must preserve this boundary when they are introduced.
 
-## Backend Core Foundation Blockers
-
 4. **CSRF strategy for refresh/logout cookie endpoints**
 
-   The design spec requires CSRF protection for refresh/logout cookie auth endpoints, but does not confirm the concrete CSRF token strategy, header name, cookie pairing, or same-origin policy. Please confirm the intended CSRF mechanism before the cookie-backed refresh/logout endpoints are considered complete.
+   Confirmed: v1 uses a double-submit cookie strategy. Login issues a non-HttpOnly `csrf_token` cookie alongside the HttpOnly `refresh_token`; refresh and logout require the same token in the `x-csrf-token` header. The cookie uses SameSite Strict by default and follows the configured refresh-cookie path/secure/domain settings.
 
-5. **Role data/field permission persistence model**
+5. **Canonical login session table shape**
 
-   The design spec defines role-scoped endpoints `PUT /api/roles/:id/data-permissions` and `PUT /api/roles/:id/field-permissions`, but the logical data model lists `data_permission_rules` without an explicit role, target, or binding table. `field_permission_rules` has `target_type` and `target_id`, but the role endpoint contract still needs confirmation on whether role-specific field rules should be stored through those fields, through a separate role binding table, or through another confirmed model. Please confirm the persistence model before implementing these endpoints and migrations.
+   Confirmed: v1 keeps the PRD `auth_sessions` table name and existing fields, plus the already implemented token-version and status fields.
 
-6. **Canonical login session table shape**
+6. **Permission tree hierarchy model**
 
-   The PRD entity list names `auth_sessions` with `id`, `current_organization_id`, `created_at`, and `last_seen_at`. The design spec table summary names `login_sessions` with `session_id`, `organization_id`, `login_at`, `last_activity_at`, `created_at`, and `updated_at`. The current foundation follows the PRD `auth_sessions` naming and fields, plus confirmed token-version/status fields. Please confirm whether v1 should keep the PRD table shape, rename to `login_sessions`, add alias fields, or add `updated_at`/`login_at`/`last_activity_at` columns before further DB-backed session work.
+   Confirmed: v1 derives a virtual permission tree from flat permission metadata (`module`, `resource`, `action`, `permission_type`). No `parent_id` is added to the permissions table.
 
-7. **Permission tree hierarchy model**
+7. **Role data/field permission persistence model**
 
-   The PRD requires `GET /api/permissions/tree` and describes `permission_resources.parent_id` for hierarchical permission resources. The v2 design spec replaces that with a flat `permissions` table containing `id`, `code`, `name`, `type`, `resource`, `action`, `description`, `source`, `status`, `manifest_hash`, `created_at`, and `updated_at`, with no `parent_id` or hierarchy fields. Please confirm whether v1 should add hierarchy fields, derive a virtual tree from permission `resource`/`action`/manifest metadata, or expose a flat permission list through this endpoint.
+   Confirmed: role data permissions use a `role_data_permissions` binding table. Role field permissions use `field_permission_rules` with `target_type = 'role'` and `target_id = role_id`.
 
-8. **User permission override persistence and endpoint contract**
+8. **User permission override persistence and precedence**
 
-   The PRD requires `PUT /api/permissions/user-overrides/{userId}` and lists `user_permission_overrides.permission_resource_id`. The v2 design spec lists `user_permission_overrides.permission_id`, matching the v2 flat `permissions` table. The backend core deliverables explicitly call out RBAC through user-organization-role bindings but do not otherwise define override behavior, conflict resolution, or cache invalidation rules. Please confirm whether user-level overrides are in v1 scope, which foreign key shape to use, and how overrides should combine with role permissions.
+   Confirmed: v1 user overrides use `permission_id` with `allow`/`deny` effects. User overrides have higher priority than role grants.
 
 9. **Default initialization records for system configuration, dictionaries, and i18n**
 
-   The PRD and design spec require initialization to create default system configuration, default dictionaries, and default i18n messages, but they do not define the canonical keys, dictionary types/items, languages/messages, editable flags, or default values. Please confirm the exact default record set before adding seed data or database migrations for these modules.
+   Confirmed: seed only confirmed base system configuration, dictionary, and i18n data. Do not invent default records whose canonical keys and values are not specified.
+
+## Backend Core Foundation Blockers
+
+No unresolved backend-core blockers remain from the previously listed questions. Remaining backend-core gaps are implementation scope and are tracked in `docs/known_gaps.md`.
 
 ## Backend Infrastructure Modules Blockers
 

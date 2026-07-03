@@ -50,4 +50,8 @@ export class InMemoryBackendStore {
     this.sequences.set(sequence, next);
     return next.toString();
   }
+
+  setSequenceValue(sequence: SequenceName, value: number): void {
+    this.sequences.set(sequence, value);
+  }
 }

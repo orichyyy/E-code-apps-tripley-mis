@@ -33,6 +33,17 @@ export type PermissionListFilters = {
   status?: PermissionRecord["status"];
 };
 
+export type PermissionTreeNode = {
+  key: string;
+  label: string;
+  level: "module" | "resource" | "action";
+  module: string;
+  resource?: string;
+  action?: string;
+  permissions: PermissionRecord[];
+  children: PermissionTreeNode[];
+};
+
 export class PermissionService {
   constructor(
     private readonly context: BackendCoreContext,
@@ -147,6 +158,47 @@ export class PermissionService {
       )
       .filter((permission) => source === undefined || permission.source.toLocaleLowerCase() === source)
       .filter((permission) => keyword === undefined || matchesPermissionKeyword(permission, keyword));
+  }
+
+  listPermissionTree(): PermissionTreeNode[] {
+    const modules = new Map<string, PermissionTreeNode>();
+
+    for (const permission of this.listPermissions({ status: "enabled" })) {
+      const moduleNode = ensureNode(modules, permission.module, {
+        key: `module:${permission.module}`,
+        label: permission.module,
+        level: "module",
+        module: permission.module
+      });
+      const resourceNode = ensureNode(
+        childMap(moduleNode),
+        permission.resource,
+        {
+          key: `module:${permission.module}:resource:${permission.resource}`,
+          label: permission.resource,
+          level: "resource",
+          module: permission.module,
+          resource: permission.resource
+        }
+      );
+      const actionNode = ensureNode(
+        childMap(resourceNode),
+        permission.action,
+        {
+          key: `module:${permission.module}:resource:${permission.resource}:action:${permission.action}`,
+          label: permission.action,
+          level: "action",
+          module: permission.module,
+          resource: permission.resource,
+          action: permission.action
+        }
+      );
+      moduleNode.permissions.push(permission);
+      resourceNode.permissions.push(permission);
+      actionNode.permissions.push(permission);
+    }
+
+    return sortPermissionTree([...modules.values()]);
   }
 
   listApiPermissions(filters: ApiPermissionListFilters = {}): ApiPermissionRecord[] {
@@ -361,6 +413,38 @@ export class PermissionService {
       }
     }
   }
+}
+
+function childMap(node: PermissionTreeNode): Map<string, PermissionTreeNode> {
+  const record = node as PermissionTreeNode & { childIndex?: Map<string, PermissionTreeNode> };
+  if (!record.childIndex) record.childIndex = new Map();
+  return record.childIndex;
+}
+
+function ensureNode(
+  nodes: Map<string, PermissionTreeNode>,
+  key: string,
+  input: Omit<PermissionTreeNode, "permissions" | "children">
+): PermissionTreeNode {
+  const existing = nodes.get(key);
+  if (existing) return existing;
+  const node = { ...input, permissions: [], children: [] };
+  nodes.set(key, node);
+  return node;
+}
+
+function sortPermissionTree(nodes: PermissionTreeNode[]): PermissionTreeNode[] {
+  return nodes
+    .map((node) => {
+      const index = childMap(node);
+      const children = sortPermissionTree([...index.values()]);
+      const { childIndex: _childIndex, ...publicNode } = node as PermissionTreeNode & {
+        childIndex?: Map<string, PermissionTreeNode>;
+      };
+      void _childIndex;
+      return { ...publicNode, children };
+    })
+    .sort((left, right) => left.label.localeCompare(right.label));
 }
 
 function isActiveBinding(binding: { isDeleted: boolean; status: "enabled" | "disabled" }) {

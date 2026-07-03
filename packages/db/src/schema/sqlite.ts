@@ -194,6 +194,81 @@ export const rolePermissions = sqliteTable(
   })
 );
 
+export const roleDataPermissions = sqliteTable(
+  "role_data_permissions",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    tenantId: integer("tenant_id"),
+    roleId: integer("role_id").notNull(),
+    permissionId: integer("permission_id").notNull(),
+    effect: text("effect", { enum: ["allow", "deny"] }).notNull().default("allow"),
+    ruleJson: text("rule_json", { mode: "json" }).notNull(),
+    ...softDelete,
+    ...timestamps,
+    createdBy: integer("created_by"),
+    updatedBy: integer("updated_by")
+  },
+  (table) => ({
+    roleDataPermissionUnique: uniqueIndex("role_data_permissions_role_permission_unique").on(
+      table.roleId,
+      table.permissionId
+    ),
+    effectCheck: check("role_data_permissions_effect_check", sql`${table.effect} IN ('allow', 'deny')`)
+  })
+);
+
+export const fieldPermissionRules = sqliteTable(
+  "field_permission_rules",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    tenantId: integer("tenant_id"),
+    targetType: text("target_type", { enum: ["role"] }).notNull(),
+    targetId: integer("target_id").notNull(),
+    resource: text("resource").notNull(),
+    field: text("field").notNull(),
+    effect: text("effect", { enum: ["visible", "hidden", "readonly"] }).notNull(),
+    ...softDelete,
+    ...timestamps,
+    createdBy: integer("created_by"),
+    updatedBy: integer("updated_by")
+  },
+  (table) => ({
+    targetFieldUnique: uniqueIndex("field_permission_rules_target_field_unique").on(
+      table.targetType,
+      table.targetId,
+      table.resource,
+      table.field
+    ),
+    targetTypeCheck: check("field_permission_rules_target_type_check", sql`${table.targetType} IN ('role')`),
+    effectCheck: check(
+      "field_permission_rules_effect_check",
+      sql`${table.effect} IN ('visible', 'hidden', 'readonly')`
+    )
+  })
+);
+
+export const userPermissionOverrides = sqliteTable(
+  "user_permission_overrides",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    tenantId: integer("tenant_id"),
+    userId: integer("user_id").notNull(),
+    permissionId: integer("permission_id").notNull(),
+    effect: text("effect", { enum: ["allow", "deny"] }).notNull(),
+    ...softDelete,
+    ...timestamps,
+    createdBy: integer("created_by"),
+    updatedBy: integer("updated_by")
+  },
+  (table) => ({
+    userPermissionUnique: uniqueIndex("user_permission_overrides_user_permission_unique").on(
+      table.userId,
+      table.permissionId
+    ),
+    effectCheck: check("user_permission_overrides_effect_check", sql`${table.effect} IN ('allow', 'deny')`)
+  })
+);
+
 export const menus = sqliteTable(
   "menus",
   {
@@ -360,11 +435,14 @@ export const sqliteSchema = {
   organizations,
   permissions,
   refreshTokens,
+  fieldPermissionRules,
   rolePermissions,
+  roleDataPermissions,
   roles,
   routeMetadata,
   schemaMetadata,
   systemInitializationState,
+  userPermissionOverrides,
   userOrganizationRoles,
   users
 };

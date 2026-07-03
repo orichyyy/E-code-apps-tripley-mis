@@ -506,6 +506,16 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     public: false
   },
   {
+    method: "GET",
+    path: "/api/permissions/tree",
+    code: "api.permissions.tree",
+    description: "View virtual permission tree derived from flat permission metadata",
+    module: "permissions",
+    requiredPermission: "permission:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
     method: "POST",
     path: "/api/permissions/sync",
     code: "api.permissions.sync",

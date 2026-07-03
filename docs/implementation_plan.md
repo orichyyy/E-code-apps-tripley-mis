@@ -228,7 +228,7 @@ The backend core goal has partial implementation progress:
 - Tightened backend-core mutation contracts so unknown JSON fields are rejected instead of silently stripped, preventing unconfirmed lifecycle, hierarchy, and permission-reference fields from being accepted on implemented create/update/action endpoints.
 - Tightened no-body lifecycle and manifest-sync action routes so unexpected JSON payload fields are rejected instead of ignored, while still allowing absent or empty-object bodies on routes whose target is fully defined by path/auth context.
 - Tightened session API serialization so the internal session token-version snapshot remains hidden from login, refresh, logout, current-user context, and online-user responses while still being used for invalidation checks.
-- Tightened the cookie-backed refresh-token endpoint so JSON request bodies are rejected; refresh exchange now uses only the HttpOnly refresh-token cookie boundary until the unresolved CSRF strategy is confirmed.
+- Tightened the cookie-backed refresh-token endpoint so JSON request bodies are rejected; refresh exchange uses the HttpOnly refresh-token cookie plus the confirmed double-submit CSRF token boundary.
 - Added confirmed refresh-token cookie configuration for SameSite, Secure, Domain, and Path; login and logout now use the same configured cookie attributes, and `.env.example` exposes the deployment knobs.
 - Added the reserved public `GET /api/metrics` observability placeholder with request ID propagation and API permission manifest coverage.
 - Tightened refresh-token exchange so the backing login session expiry is enforced even if the token-store record still appears valid, and expired sessions are marked `expired`.
@@ -238,15 +238,15 @@ The backend core goal has partial implementation progress:
 - Added route coverage proving current-user and logout session responses also hide the internal session token-version snapshot.
 - Added route coverage proving public auth and user-management responses do not serialize raw passwords or password hashes.
 
-This is not yet the complete backend core foundation. Executable SQLite migrations and PostgreSQL migration smoke-test wiring now exist, but DB-backed repositories, durable initialization/auth/session persistence, durable seed execution, and finalized CSRF protection are still incomplete.
+This is not yet the complete backend core foundation. DB-backed persistence now exists for the implemented backend-core store behind `BACKEND_CORE_STORE=database`, and PostgreSQL integration coverage exercises the persisted initialization/auth/session path. Role data permissions, role field permissions, and user permission overrides currently have persistence tables only; service-level APIs and effective-permission behavior remain future work.
 
 ## Recommended Next Goals
 
-1. Implement DB-backed repositories for initialization, auth/session, users, organizations, roles, permissions, menus, and route/API permission metadata.
-2. Wire the existing initialization setup and seed CLI paths to the DB-backed repositories.
-3. Implement auth/session endpoints and core CRUD routes with PostgreSQL integration tests.
-4. Finalize CSRF strategy for refresh/logout cookie endpoints.
-5. Expand PostgreSQL integration coverage beyond migration smoke tests.
+1. Replace the snapshot-style backend-core store repository with smaller per-aggregate repositories.
+2. Implement service-level APIs and effective permission evaluation for role data permissions, role field permissions, and user permission overrides.
+3. Expand PostgreSQL integration coverage for organization/user/role/menu mutation flows through DB-backed services.
+4. Add explicit local documentation for running API and seed with `BACKEND_CORE_STORE=database`.
+5. Continue into backend infrastructure modules only after the backend-core persistence slice is stable.
 
 ## Frontend Admin UI Progress
 
@@ -300,4 +300,16 @@ The database execution slice completed the following:
 - Added SQLite migration smoke tests, including bigint-safe organization materialized-path reads at the driver boundary.
 - Added PostgreSQL migration smoke tests that run only when `TEST_DATABASE_URL` is present.
 
-Durable DB-backed repositories remain the next recommended implementation goal.
+## Backend Core Persistence Resume
+
+The resumed backend-core persistence slice completed the following:
+
+- Added DB-backed backend-core services behind `BACKEND_CORE_STORE=database` while preserving the existing in-memory default for focused unit tests.
+- Added a relational store repository for initialization state, auth sessions, refresh tokens, users, organizations, roles, role permissions, permissions, menus, menu/API bindings, route metadata, API permission metadata, and user-organization-role bindings.
+- Wired API runtime and the seed CLI to use DB-backed services when `BACKEND_CORE_STORE=database` is set.
+- Added PostgreSQL integration coverage using `TEST_DATABASE_URL` for initialization, reload, auth session/token persistence, users, permissions, route/menu metadata, virtual permission tree, and refresh-token exchange after reload.
+- Implemented the confirmed double-submit CSRF protection for refresh/logout cookie endpoints with `csrf_token` and `x-csrf-token`.
+- Added `GET /api/permissions/tree` as a virtual tree derived from flat permission metadata without adding permission `parent_id`.
+- Added SQLite/PostgreSQL migrations and Drizzle schema for `role_data_permissions`, `field_permission_rules`, and `user_permission_overrides` according to the confirmed persistence decisions.
+
+The next recommended backend-core goal is to replace the snapshot-style repository with smaller per-aggregate repositories and add service-level APIs/effective permission evaluation for role data permissions, role field permissions, and user permission overrides.

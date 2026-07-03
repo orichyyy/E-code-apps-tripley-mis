@@ -28,13 +28,44 @@ async function loginAsAdmin(app: ReturnType<typeof createApp>) {
     body: JSON.stringify({ username: "admin", password: "password1" })
   });
   const login = await loginResponse.json();
+  const setCookie = loginResponse.headers.get("set-cookie") ?? "";
   return {
     login,
     loginResponse,
+    setCookie,
     authHeaders: {
       authorization: `Bearer ${login.data.accessToken}`
+    },
+    csrfAuthHeaders: {
+      authorization: `Bearer ${login.data.accessToken}`,
+      ...csrfHeaders(setCookie)
     }
   };
+}
+
+function csrfHeaders(setCookieHeader: string): { cookie: string; "x-csrf-token": string } {
+  const refreshToken = readSetCookieValue(setCookieHeader, "refresh_token");
+  const csrfToken = readSetCookieValue(setCookieHeader, "csrf_token");
+  return {
+    cookie: `refresh_token=${refreshToken}; csrf_token=${csrfToken}`,
+    "x-csrf-token": csrfToken
+  };
+}
+
+function authAndCsrfHeaders(
+  authorization: string,
+  setCookieHeader: string
+): { authorization: string; cookie: string; "x-csrf-token": string } {
+  return {
+    authorization,
+    ...csrfHeaders(setCookieHeader)
+  };
+}
+
+function readSetCookieValue(setCookieHeader: string, name: string): string {
+  const match = setCookieHeader.match(new RegExp(`${name}=([^;,]+)`));
+  if (!match?.[1]) throw new Error(`Missing ${name} cookie.`);
+  return match[1];
 }
 
 describe("backend core foundation routes", () => {
@@ -299,7 +330,7 @@ describe("backend core foundation routes", () => {
     const oldAccess = await oldAccessResponse.json();
     const oldRefreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: { cookie: cookie.split(";")[0] }
+      headers: csrfHeaders(cookie)
     });
     const oldRefresh = await oldRefreshResponse.json();
     const onlineUsersResponse = await app.request("/api/online-users", {
@@ -366,7 +397,7 @@ describe("backend core foundation routes", () => {
     const oldAccess = await oldAccessResponse.json();
     const oldRefreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: { cookie: cookie.split(";")[0] }
+      headers: csrfHeaders(cookie)
     });
     const oldRefresh = await oldRefreshResponse.json();
 
@@ -422,7 +453,7 @@ describe("backend core foundation routes", () => {
     const oldAccess = await oldAccessResponse.json();
     const oldRefreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: { cookie: cookie.split(";")[0] }
+      headers: csrfHeaders(cookie)
     });
     const oldRefresh = await oldRefreshResponse.json();
 
@@ -519,7 +550,7 @@ describe("backend core foundation routes", () => {
     const oldAccess = await oldAccessResponse.json();
     const oldRefreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: { cookie: cookie.split(";")[0] }
+      headers: csrfHeaders(cookie)
     });
     const oldRefresh = await oldRefreshResponse.json();
     const onlineUsersResponse = await app.request("/api/online-users", {
@@ -651,9 +682,7 @@ describe("backend core foundation routes", () => {
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
     const refreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: {
-        cookie: cookie.split(";")[0]
-      }
+      headers: csrfHeaders(cookie)
     });
     const refresh = await refreshResponse.json();
 
@@ -676,7 +705,7 @@ describe("backend core foundation routes", () => {
     await new Promise((resolve) => setTimeout(resolve, 5));
     const refreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: { cookie: cookie.split(";")[0] }
+      headers: csrfHeaders(cookie)
     });
     const refresh = await refreshResponse.json();
 
@@ -698,7 +727,7 @@ describe("backend core foundation routes", () => {
       method: "POST",
       headers: {
         authorization: "Bearer not-a-valid-access-token",
-        cookie: cookie.split(";")[0]
+        ...csrfHeaders(cookie)
       }
     });
     const refresh = await refreshResponse.json();
@@ -718,7 +747,7 @@ describe("backend core foundation routes", () => {
 
     const refreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: { cookie: cookie.split(";")[0] },
+      headers: csrfHeaders(cookie),
       body: JSON.stringify({ refreshToken: "client-provided-token" })
     });
     const refresh = await refreshResponse.json();
@@ -731,7 +760,7 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp();
     const response = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: { cookie: "refresh_token=%" }
+      headers: { cookie: "refresh_token=%; csrf_token=test-csrf", "x-csrf-token": "test-csrf" }
     });
     const body = await response.json();
 
@@ -801,7 +830,7 @@ describe("backend core foundation routes", () => {
 
     const refreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: { cookie: cookie.split(";")[0] }
+      headers: csrfHeaders(cookie)
     });
     const refresh = await refreshResponse.json();
 
@@ -824,7 +853,7 @@ describe("backend core foundation routes", () => {
 
     const refreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: { cookie: cookie.split(";")[0] }
+      headers: csrfHeaders(cookie)
     });
     const refresh = await refreshResponse.json();
 
@@ -864,7 +893,7 @@ describe("backend core foundation routes", () => {
     });
     const refreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: { cookie: cookie.split(";")[0] }
+      headers: csrfHeaders(cookie)
     });
     const refresh = await refreshResponse.json();
 
@@ -996,13 +1025,13 @@ describe("backend core foundation routes", () => {
 
     const logoutResponse = await app.request("/api/auth/logout", {
       method: "POST",
-      headers: { authorization: `Bearer ${login.data.accessToken}` },
+      headers: authAndCsrfHeaders(`Bearer ${login.data.accessToken}`, cookie),
       body: JSON.stringify({ sessionId: login.data.session.id })
     });
     const logout = await logoutResponse.json();
     const refreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: { cookie: cookie.split(";")[0] }
+      headers: csrfHeaders(cookie)
     });
     const refresh = await refreshResponse.json();
 
@@ -1024,10 +1053,11 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({ username: "admin", password: "password1" })
     });
     const login = await loginResponse.json();
+    const cookie = loginResponse.headers.get("set-cookie") ?? "";
 
     const logoutResponse = await app.request("/api/auth/logout", {
       method: "POST",
-      headers: { authorization: `Bearer ${login.data.accessToken}` }
+      headers: authAndCsrfHeaders(`Bearer ${login.data.accessToken}`, cookie)
     });
     const oldTokenResponse = await app.request("/api/auth/me", {
       headers: { authorization: `Bearer ${login.data.accessToken}` }
@@ -1046,10 +1076,11 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({ username: "admin", password: "password1" })
     });
     const login = await loginResponse.json();
+    const cookie = loginResponse.headers.get("set-cookie") ?? "";
 
     const response = await app.request("/api/auth/logout", {
       method: "POST",
-      headers: { authorization: `Bearer ${login.data.accessToken}` },
+      headers: authAndCsrfHeaders(`Bearer ${login.data.accessToken}`, cookie),
       body: JSON.stringify({ sessionId: "999" })
     });
     const body = await response.json();
@@ -2388,7 +2419,7 @@ describe("backend core foundation routes", () => {
     const oldAccess = await oldAccessResponse.json();
     const oldRefreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: { cookie: cookie.split(";")[0] }
+      headers: csrfHeaders(cookie)
     });
     const oldRefresh = await oldRefreshResponse.json();
     const onlineUsersResponse = await app.request("/api/online-users", { headers: authHeaders });
@@ -4864,7 +4895,7 @@ describe("backend core foundation routes", () => {
     const staleAccess = await staleAccessResponse.json();
     const staleRefreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: { cookie: loginResponse.headers.get("set-cookie") ?? "" }
+      headers: csrfHeaders(loginResponse.headers.get("set-cookie") ?? "")
     });
     const staleRefresh = await staleRefreshResponse.json();
     const afterRemoveResponse = await app.request("/api/online-users", { headers: authHeaders });
@@ -5125,11 +5156,11 @@ describe("backend core foundation routes", () => {
 
   it("validates optional logout session IDs as integer strings", async () => {
     const { app } = await setupInitializedApp();
-    const { authHeaders } = await loginAsAdmin(app);
+    const { csrfAuthHeaders } = await loginAsAdmin(app);
 
     const response = await app.request("/api/auth/logout", {
       method: "POST",
-      headers: authHeaders,
+      headers: csrfAuthHeaders,
       body: JSON.stringify({ sessionId: "not-an-id" })
     });
     const body = await response.json();
@@ -5378,3 +5409,4 @@ describe("backend core foundation routes", () => {
 function setupResponseStatus(setup: { data: { state: { status: string } } }) {
   return setup.data.state.status;
 }
+

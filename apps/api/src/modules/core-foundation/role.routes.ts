@@ -118,6 +118,10 @@ export function createRoleRoutes(services: BackendCoreServices) {
     });
   });
 
+  routes.get("/permissions/tree", (context) => {
+    return context.json({ data: services.listPermissionTree() });
+  });
+
   routes.post("/permissions/sync", async (context) => {
     await assertEmptyJsonBody(context.req.raw);
     return context.json({ data: await services.syncPermissions() });

@@ -33,7 +33,10 @@ describe("database migration execution", () => {
     try {
       const tables = client.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all();
 
-      expect(applied).toEqual(["0001_backend_core_foundation.sql"]);
+      expect(applied).toEqual([
+        "0001_backend_core_foundation.sql",
+        "0002_permission_extension_persistence.sql"
+      ]);
       expect(tables).toContainEqual({ name: "users" });
       expect(tables).toContainEqual({ name: "organizations" });
       expect(tables).toContainEqual({ name: "system_initialization_state" });
@@ -80,7 +83,10 @@ describe("database migration execution", () => {
          ORDER BY table_name`
       );
 
-      expect(applied).toEqual(["0001_backend_core_foundation.sql"]);
+      expect(applied).toEqual([
+        "0001_backend_core_foundation.sql",
+        "0002_permission_extension_persistence.sql"
+      ]);
       expect(result.rows.map((row) => row.table_name)).toEqual([
         "organizations",
         "system_initialization_state",

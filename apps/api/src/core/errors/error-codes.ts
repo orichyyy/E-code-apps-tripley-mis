@@ -3,6 +3,7 @@ import { appError, type AppError } from "./app-error";
 const errorDefinitions = {
   AUTH_ACCOUNT_DISABLED: ["Account is disabled", 403, "authentication"],
   AUTH_ACCOUNT_LOCKED: ["Account is locked", 423, "authentication"],
+  AUTH_CSRF_TOKEN_INVALID: ["CSRF token is invalid", 403, "authentication"],
   AUTH_INVALID_CREDENTIALS: ["Username or password is invalid", 401, "authentication"],
   AUTH_PASSWORD_CHANGE_REQUIRED: ["Password change is required", 403, "authentication"],
   AUTH_SESSION_NOT_FOUND: ["Session was not found", 401, "authentication"],

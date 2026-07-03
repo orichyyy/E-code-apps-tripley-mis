@@ -12,6 +12,7 @@ import {
   createInMemoryBackendCoreServices,
   type BackendCoreServices
 } from "./modules/core-foundation/services";
+import { createPersistentBackendCoreServices } from "./modules/core-foundation/persistence/persistent-backend-core-services";
 import { createManifestRoutes } from "./modules/manifests/manifest.routes";
 import {
   createStructuredLoggingMiddleware,
@@ -94,6 +95,15 @@ export type ApiApp = ReturnType<typeof createApp>;
 export function createDefaultAppDependencies(config: ApiConfig = loadApiConfig()): AppDependencies {
   return {
     backendCoreServices: createInMemoryBackendCoreServices(config.backendCore),
+    structuredLogSink: noopStructuredLogSink
+  };
+}
+
+export async function createDatabaseBackedAppDependencies(
+  config: ApiConfig = loadApiConfig()
+): Promise<AppDependencies> {
+  return {
+    backendCoreServices: await createPersistentBackendCoreServices(config.backendCore),
     structuredLogSink: noopStructuredLogSink
   };
 }

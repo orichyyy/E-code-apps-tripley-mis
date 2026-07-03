@@ -98,6 +98,21 @@ describe("backend core schema", () => {
     expect(postgresql.rolePermissions.updatedAt.name).toBe("updated_at");
   });
 
+  it("keeps permission extension tables aligned across dialects", () => {
+    expect(sqlite.roleDataPermissions.roleId.name).toBe("role_id");
+    expect(sqlite.roleDataPermissions.permissionId.name).toBe("permission_id");
+    expect(sqlite.fieldPermissionRules.targetType.name).toBe("target_type");
+    expect(sqlite.fieldPermissionRules.targetId.name).toBe("target_id");
+    expect(sqlite.userPermissionOverrides.userId.name).toBe("user_id");
+    expect(sqlite.userPermissionOverrides.permissionId.name).toBe("permission_id");
+    expect(postgresql.roleDataPermissions.roleId.name).toBe("role_id");
+    expect(postgresql.roleDataPermissions.permissionId.name).toBe("permission_id");
+    expect(postgresql.fieldPermissionRules.targetType.name).toBe("target_type");
+    expect(postgresql.fieldPermissionRules.targetId.name).toBe("target_id");
+    expect(postgresql.userPermissionOverrides.userId.name).toBe("user_id");
+    expect(postgresql.userPermissionOverrides.permissionId.name).toBe("permission_id");
+  });
+
   it("keeps user organization role binding soft-delete columns aligned across dialects", () => {
     expect(sqlite.userOrganizationRoles.isPrimary.name).toBe("is_primary");
     expect(sqlite.userOrganizationRoles.status.name).toBe("status");
@@ -178,6 +193,12 @@ describe("backend core schema", () => {
       ["userOrganizationRoles", ["user_organization_roles_status_check"]],
       ["permissions", ["permissions_status_check", "permissions_type_check"]],
       ["rolePermissions", ["role_permissions_effect_check"]],
+      ["roleDataPermissions", ["role_data_permissions_effect_check"]],
+      [
+        "fieldPermissionRules",
+        ["field_permission_rules_effect_check", "field_permission_rules_target_type_check"]
+      ],
+      ["userPermissionOverrides", ["user_permission_overrides_effect_check"]],
       ["menus", ["menus_status_check"]],
       ["routeMetadata", ["route_metadata_status_check"]],
       ["apiPermissions", ["api_permissions_log_level_check", "api_permissions_status_check"]],
@@ -202,6 +223,9 @@ describe("backend core schema", () => {
       ["userOrganizationRoles", ["user_organization_roles_user_org_unique"]],
       ["permissions", ["permissions_code_unique"]],
       ["rolePermissions", ["role_permissions_role_permission_unique"]],
+      ["roleDataPermissions", ["role_data_permissions_role_permission_unique"]],
+      ["fieldPermissionRules", ["field_permission_rules_target_field_unique"]],
+      ["userPermissionOverrides", ["user_permission_overrides_user_permission_unique"]],
       ["menus", ["menus_code_unique", "menus_path_unique"]],
       ["routeMetadata", ["route_metadata_route_code_unique"]],
       ["apiPermissions", ["api_permissions_code_unique", "api_permissions_method_path_unique"]],
