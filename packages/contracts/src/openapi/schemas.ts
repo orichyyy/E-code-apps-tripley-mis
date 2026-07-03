@@ -1,4 +1,5 @@
 import type { OpenApiDocument, OpenApiSchema } from "./types";
+import { systemManagementComponentSchemas } from "./system-management-schemas";
 
 export const idStringSchema: OpenApiSchema = {
   type: "string",
@@ -522,6 +523,7 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
     type: "array",
     items: { $ref: "#/components/schemas/UserPermissionOverride" }
   }),
+  ...systemManagementComponentSchemas,
   PermissionContextResponse: envelopeSchema({
     type: "object",
     required: [

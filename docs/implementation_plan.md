@@ -410,3 +410,32 @@ The infrastructure gap slice completed the following tested pieces:
 - Replaced frontend typed placeholders with real API fetches for implemented infrastructure pages: files, in-app notifications, scheduler, import/export task list, log pages, and online users. Pages still fall back to typed placeholders when no access token/API response is available.
 
 Remaining base-system gaps are tracked in `docs/known_gaps.md`. The next recommended goal is to add confirmed schemas/APIs for system configuration, dictionaries, i18n management, announcements, webhook subscriptions, and optional external drivers only after their concrete configuration and persistence contracts are confirmed.
+
+## System Management Module Progress
+
+The system-management slice completed the following tested pieces:
+
+- Added SQLite/PostgreSQL migrations and Drizzle schema tables for:
+  - `system_configs`
+  - `dictionary_types`
+  - `dictionary_items`
+  - `i18n_messages`
+- Added a focused `apps/api/src/modules/system-management` API module with repository, service, and route boundaries instead of expanding the existing infrastructure module.
+- Added backend APIs for the confirmed design-spec endpoints:
+  - `GET /api/system-config`
+  - `PATCH /api/system-config/:key`
+  - `GET /api/dictionary-types`
+  - `POST /api/dictionary-types`
+  - `PATCH /api/dictionary-types/:id`
+  - `GET /api/dictionary-types/:id/items`
+  - `POST /api/dictionary-types/:id/items`
+  - `PATCH /api/dictionary-items/:id`
+  - `GET /api/i18n/messages`
+  - `PATCH /api/i18n/messages/:id`
+- Added API permission manifest entries, base permission manifest entries, and explicit OpenAPI request/response schemas for the implemented system-management APIs.
+- Kept system configuration and dictionaries global in v1; tenant fields remain reserved and nullable, and organization-level overrides remain unimplemented as required.
+- Avoided unconfirmed seed content for system configuration, dictionaries, and i18n messages.
+- Added in-memory route coverage and PostgreSQL-backed persistence coverage for system config updates, dictionary type/item creation, and i18n message updates.
+- Replaced frontend typed placeholders with real API fetches for the system configuration and dictionary management pages when an access token is available.
+
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. The next recommended goal is to implement announcements and webhook subscription APIs, then revisit optional SMTP/S3/Redis/RabbitMQ drivers only when their concrete package and configuration contracts are confirmed.

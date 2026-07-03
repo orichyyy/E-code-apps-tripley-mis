@@ -427,6 +427,88 @@ export const systemInitializationState = sqliteTable(
   })
 );
 
+export const systemConfigs = sqliteTable(
+  "system_configs",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    tenantId: integer("tenant_id"),
+    configKey: text("config_key").notNull(),
+    configValue: text("config_value", { mode: "json" }).notNull(),
+    valueType: text("value_type", { enum: ["string", "number", "boolean", "json"] }).notNull(),
+    groupKey: text("group_key").notNull(),
+    description: text("description"),
+    editable: integer("editable", { mode: "boolean" }).notNull().default(true),
+    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
+    updatedAt: text("updated_at").notNull()
+  },
+  (table) => ({
+    keyUnique: uniqueIndex("system_configs_key_unique").on(table.configKey),
+    groupIndex: index("system_configs_group_idx").on(table.groupKey),
+    valueTypeCheck: check(
+      "system_configs_value_type_check",
+      sql`${table.valueType} IN ('string', 'number', 'boolean', 'json')`
+    ),
+    statusCheck: check("system_configs_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
+  })
+);
+
+export const dictionaryTypes = sqliteTable(
+  "dictionary_types",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    tenantId: integer("tenant_id"),
+    code: text("code").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled")
+  },
+  (table) => ({
+    codeUnique: uniqueIndex("dictionary_types_code_unique").on(table.code),
+    statusCheck: check("dictionary_types_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
+  })
+);
+
+export const dictionaryItems = sqliteTable(
+  "dictionary_items",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    tenantId: integer("tenant_id"),
+    typeId: integer("type_id").notNull(),
+    itemValue: text("item_value").notNull(),
+    labelI18nKey: text("label_i18n_key").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled")
+  },
+  (table) => ({
+    typeValueUnique: uniqueIndex("dictionary_items_type_value_unique").on(
+      table.typeId,
+      table.itemValue
+    ),
+    typeIndex: index("dictionary_items_type_idx").on(table.typeId),
+    statusCheck: check("dictionary_items_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
+  })
+);
+
+export const i18nMessages = sqliteTable(
+  "i18n_messages",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    tenantId: integer("tenant_id"),
+    messageKey: text("message_key").notNull(),
+    language: text("language").notNull(),
+    messageValue: text("message_value").notNull(),
+    module: text("module").notNull(),
+    updatedAt: text("updated_at").notNull()
+  },
+  (table) => ({
+    keyLanguageUnique: uniqueIndex("i18n_messages_key_language_unique").on(
+      table.messageKey,
+      table.language
+    ),
+    moduleIndex: index("i18n_messages_module_idx").on(table.module)
+  })
+);
+
 export const cacheEntries = sqliteTable(
   "cache_entries",
   {
@@ -690,8 +772,11 @@ export const sqliteSchema = {
   apiPermissions,
   authSessions,
   cacheEntries,
+  dictionaryItems,
+  dictionaryTypes,
   eventOutbox,
   fileObjects,
+  i18nMessages,
   importExportTasks,
   locks,
   logEntries,
@@ -711,6 +796,7 @@ export const sqliteSchema = {
   routeMetadata,
   scheduledJobs,
   schemaMetadata,
+  systemConfigs,
   systemInitializationState,
   userPermissionOverrides,
   userOrganizationRoles,

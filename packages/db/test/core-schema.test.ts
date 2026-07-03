@@ -188,6 +188,19 @@ describe("backend core schema", () => {
     expect(postgresql.importExportTasks.resultExpiresAt.name).toBe("result_expires_at");
   });
 
+  it("keeps system configuration, dictionary, and i18n tables aligned across dialects", () => {
+    expect(sqlite.systemConfigs.configKey.name).toBe("config_key");
+    expect(postgresql.systemConfigs.configKey.name).toBe("config_key");
+    expect(sqlite.systemConfigs.configValue.name).toBe("config_value");
+    expect(postgresql.systemConfigs.configValue.name).toBe("config_value");
+    expect(sqlite.dictionaryTypes.code.name).toBe("code");
+    expect(postgresql.dictionaryTypes.code.name).toBe("code");
+    expect(sqlite.dictionaryItems.labelI18nKey.name).toBe("label_i18n_key");
+    expect(postgresql.dictionaryItems.labelI18nKey.name).toBe("label_i18n_key");
+    expect(sqlite.i18nMessages.messageKey.name).toBe("message_key");
+    expect(postgresql.i18nMessages.messageKey.name).toBe("message_key");
+  });
+
 
   it("keeps the root organization segment constraint in both migrations", () => {
     const sqliteMigration = readFileSync(
@@ -240,7 +253,10 @@ describe("backend core schema", () => {
         ["notification_templates_channel_check", "notification_templates_status_check"]
       ],
       ["logEntries", ["log_entries_level_check", "log_entries_type_check"]],
-      ["importExportTasks", ["import_export_tasks_status_check", "import_export_tasks_type_check"]]
+      ["importExportTasks", ["import_export_tasks_status_check", "import_export_tasks_type_check"]],
+      ["systemConfigs", ["system_configs_status_check", "system_configs_value_type_check"]],
+      ["dictionaryTypes", ["dictionary_types_status_check"]],
+      ["dictionaryItems", ["dictionary_items_status_check"]]
     ]);
 
     for (const [tableName, expectedChecks] of expectedChecksByTable) {
@@ -282,7 +298,11 @@ describe("backend core schema", () => {
       ["notifications", ["notifications_user_status_idx"]],
       ["notificationTemplates", ["notification_templates_code_locale_unique"]],
       ["logEntries", ["log_entries_type_occurred_idx"]],
-      ["importExportTasks", ["import_export_tasks_status_idx"]]
+      ["importExportTasks", ["import_export_tasks_status_idx"]],
+      ["systemConfigs", ["system_configs_group_idx", "system_configs_key_unique"]],
+      ["dictionaryTypes", ["dictionary_types_code_unique"]],
+      ["dictionaryItems", ["dictionary_items_type_idx", "dictionary_items_type_value_unique"]],
+      ["i18nMessages", ["i18n_messages_key_language_unique", "i18n_messages_module_idx"]]
     ]);
 
     for (const [tableName, expectedIndexes] of expectedIndexesByTable) {

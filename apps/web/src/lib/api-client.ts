@@ -82,6 +82,8 @@ const routeEndpointByCode: Record<string, string> = {
   "operations.online-users": "/online-users",
   "operations.scheduler": "/scheduled-tasks",
   "operations.import-export": "/import-export/tasks",
+  "system.config": "/system-config",
+  "system.dictionaries": "/dictionary-types",
   "system.files": "/files",
   "notifications.in-app": "/notifications",
   "logs.login": "/logs/login",
@@ -126,7 +128,10 @@ function toRecords(routeCode: string, records: Array<Record<string, unknown>>): 
   return records.map((record, index) => ({
     id: stringField(record.id, `${routeCode}-${index + 1}`),
     name: displayName(routeCode, record),
-    code: stringField(record.code ?? record.logType ?? record.resourceType ?? record.channel, routeCode),
+    code: stringField(
+      record.code ?? record.configKey ?? record.itemValue ?? record.messageKey ?? record.logType ?? record.resourceType ?? record.channel,
+      routeCode
+    ),
     status: stringField(record.status ?? record.level ?? record.enabled, "active"),
     owner: stringField(record.owner ?? record.userId ?? record.createdBy ?? record.handlerType, "System"),
     updatedAt: stringField(record.updatedAt ?? record.createdAt ?? record.occurredAt, ""),
@@ -146,6 +151,9 @@ function displayName(routeCode: string, record: Record<string, unknown>): string
       record.originalName ??
       record.title ??
       record.message ??
+      record.configKey ??
+      record.itemValue ??
+      record.messageKey ??
       record.code ??
       record.resourceType,
     routeCode

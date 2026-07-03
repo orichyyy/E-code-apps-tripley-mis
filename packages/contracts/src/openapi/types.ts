@@ -11,6 +11,7 @@ export type OpenApiSchema = {
   enum?: string[];
   nullable?: boolean;
   description?: string;
+  anyOf?: OpenApiSchema[];
 };
 
 export type OpenApiOperation = {

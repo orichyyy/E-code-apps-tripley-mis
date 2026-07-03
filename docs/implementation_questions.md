@@ -38,6 +38,8 @@
 
    Confirmed: seed only confirmed base system configuration, dictionary, and i18n data. Do not invent default records whose canonical keys and values are not specified.
 
+   Implemented handling: system configuration, dictionary, and i18n schema/API support is implemented without adding unconfirmed default seed records.
+
 ## Backend Core Foundation Blockers
 
 No unresolved backend-core blockers remain from the previously listed questions. Role data permissions, role field permissions, and user permission overrides now have service-level APIs and effective-permission behavior; remaining gaps are tracked in `docs/known_gaps.md`.

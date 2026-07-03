@@ -36,7 +36,8 @@ describe("database migration execution", () => {
       expect(applied).toEqual([
         "0001_backend_core_foundation.sql",
         "0002_permission_extension_persistence.sql",
-        "0003_infrastructure_foundation.sql"
+        "0003_infrastructure_foundation.sql",
+        "0004_system_dictionary_i18n.sql"
       ]);
       expect(tables).toContainEqual({ name: "users" });
       expect(tables).toContainEqual({ name: "organizations" });
@@ -44,6 +45,10 @@ describe("database migration execution", () => {
       expect(tables).toContainEqual({ name: "queue_jobs" });
       expect(tables).toContainEqual({ name: "event_outbox" });
       expect(tables).toContainEqual({ name: "log_entries" });
+      expect(tables).toContainEqual({ name: "system_configs" });
+      expect(tables).toContainEqual({ name: "dictionary_types" });
+      expect(tables).toContainEqual({ name: "dictionary_items" });
+      expect(tables).toContainEqual({ name: "i18n_messages" });
     } finally {
       client.close();
     }
@@ -89,7 +94,11 @@ describe("database migration execution", () => {
              'system_initialization_state',
              'queue_jobs',
              'event_outbox',
-             'log_entries'
+             'log_entries',
+             'system_configs',
+             'dictionary_types',
+             'dictionary_items',
+             'i18n_messages'
            )
          ORDER BY table_name`
       );
@@ -97,13 +106,18 @@ describe("database migration execution", () => {
       expect(applied).toEqual([
         "0001_backend_core_foundation.sql",
         "0002_permission_extension_persistence.sql",
-        "0003_infrastructure_foundation.sql"
+        "0003_infrastructure_foundation.sql",
+        "0004_system_dictionary_i18n.sql"
       ]);
       expect(result.rows.map((row) => row.table_name)).toEqual([
+        "dictionary_items",
+        "dictionary_types",
         "event_outbox",
+        "i18n_messages",
         "log_entries",
         "organizations",
         "queue_jobs",
+        "system_configs",
         "system_initialization_state",
         "users"
       ]);

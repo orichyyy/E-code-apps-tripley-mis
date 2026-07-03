@@ -687,6 +687,106 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
   },
   {
     method: "GET",
+    path: "/api/system-config",
+    code: "api.system-config.list",
+    description: "List system configuration items",
+    module: "system-config",
+    requiredPermission: "system-config:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "PATCH",
+    path: "/api/system-config/:key",
+    code: "api.system-config.update",
+    description: "Update a system configuration value",
+    module: "system-config",
+    requiredPermission: "system-config:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/dictionary-types",
+    code: "api.dictionary-types.list",
+    description: "List dictionary types",
+    module: "dictionaries",
+    requiredPermission: "dictionary:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/dictionary-types",
+    code: "api.dictionary-types.create",
+    description: "Create dictionary type",
+    module: "dictionaries",
+    requiredPermission: "dictionary:create",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "PATCH",
+    path: "/api/dictionary-types/:id",
+    code: "api.dictionary-types.update",
+    description: "Update dictionary type",
+    module: "dictionaries",
+    requiredPermission: "dictionary:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/dictionary-types/:id/items",
+    code: "api.dictionary-items.list",
+    description: "List dictionary items",
+    module: "dictionaries",
+    requiredPermission: "dictionary:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/dictionary-types/:id/items",
+    code: "api.dictionary-items.create",
+    description: "Create dictionary item",
+    module: "dictionaries",
+    requiredPermission: "dictionary:create",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "PATCH",
+    path: "/api/dictionary-items/:id",
+    code: "api.dictionary-items.update",
+    description: "Update dictionary item",
+    module: "dictionaries",
+    requiredPermission: "dictionary:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/i18n/messages",
+    code: "api.i18n.messages.list",
+    description: "List i18n messages",
+    module: "i18n",
+    requiredPermission: "i18n:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "PATCH",
+    path: "/api/i18n/messages/:id",
+    code: "api.i18n.messages.update",
+    description: "Update i18n message",
+    module: "i18n",
+    requiredPermission: "i18n:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "GET",
     path: "/api/logs/login",
     code: "api.logs.login.list",
     description: "View login logs",

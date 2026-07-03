@@ -16,6 +16,8 @@ import { createPersistentBackendCoreServices } from "./modules/core-foundation/p
 import { createManifestRoutes } from "./modules/manifests/manifest.routes";
 import { createInfrastructureRoutes } from "./modules/infrastructure/infrastructure.routes";
 import { InfrastructureServices } from "./modules/infrastructure/infrastructure.service";
+import { createSystemManagementRoutes } from "./modules/system-management/system-management.routes";
+import { SystemManagementServices } from "./modules/system-management/system-management.service";
 import {
   createStructuredLoggingMiddleware,
   noopStructuredLogSink,
@@ -29,12 +31,15 @@ type AppBindings = {
 export type AppDependencies = {
   backendCoreServices: BackendCoreServices;
   infrastructureServices?: InfrastructureServices;
+  systemManagementServices?: SystemManagementServices;
   structuredLogSink?: StructuredLogSink;
 };
 
 export function createApp(dependencies: AppDependencies = createDefaultAppDependencies()) {
   const structuredLogSink = dependencies.structuredLogSink ?? noopStructuredLogSink;
   const infrastructureServices = dependencies.infrastructureServices ?? InfrastructureServices.inMemory();
+  const systemManagementServices =
+    dependencies.systemManagementServices ?? SystemManagementServices.inMemory();
   const app = new Hono<AppBindings>().basePath("/api");
 
   app.use("*", requestIdMiddleware);
@@ -70,6 +75,7 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
   const routedApp = app
     .route("/", createCoreFoundationRoutes(dependencies.backendCoreServices))
     .route("/", createInfrastructureRoutes(infrastructureServices))
+    .route("/", createSystemManagementRoutes(systemManagementServices))
     .route("/", createManifestRoutes());
 
   routedApp.notFound((context) => {
@@ -102,6 +108,7 @@ export function createDefaultAppDependencies(config: ApiConfig = loadApiConfig()
   return {
     backendCoreServices: createInMemoryBackendCoreServices(config.backendCore),
     infrastructureServices: InfrastructureServices.inMemory(),
+    systemManagementServices: SystemManagementServices.inMemory(),
     structuredLogSink: noopStructuredLogSink
   };
 }
@@ -112,6 +119,7 @@ export async function createDatabaseBackedAppDependencies(
   return {
     backendCoreServices: await createPersistentBackendCoreServices(config.backendCore),
     infrastructureServices: InfrastructureServices.database(),
+    systemManagementServices: SystemManagementServices.database(),
     structuredLogSink: noopStructuredLogSink
   };
 }

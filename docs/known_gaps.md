@@ -23,10 +23,12 @@ This file records incomplete requirements that must not be claimed complete.
 - Runnable default in-memory adapters now exist for lock, queue, event bus, rate limit, scheduler, and notifications. Local filesystem storage exists and writes through temp-file-then-rename.
 - Database-backed runtime adapter drivers now exist for cache, rate limiting, lease-table locks, queue jobs, event outbox, and scheduled jobs.
 - Backend API modules now exist for the implemented durable infrastructure tables: logs, files, in-app notifications, notification templates, scheduled tasks, and import/export task lists.
-- System configuration, dictionary management, i18n management, announcements, webhook subscriptions, SMTP delivery, and S3-compatible storage are not complete backend API modules yet.
+- System configuration, dictionary management, and i18n management now have database schema, backend APIs, OpenAPI coverage, PostgreSQL tests, and frontend API integration for the implemented pages.
+- Announcements, webhook subscriptions, SMTP delivery, and S3-compatible storage are not complete backend API modules or concrete drivers yet.
 - Worker execution now has queue/scheduler registration boundaries plus durable `runOnce`/polling hooks over database queue and scheduler adapters. Full production task catalogs, cron expression evaluation, timeout enforcement, and dead-letter workflows remain reserved or incomplete.
 - Redis, RabbitMQ, S3-compatible storage, and SMTP remain optional placeholders only; no mandatory dependencies have been added.
 - Frontend pages use real API fetches for implemented infrastructure modules where backend APIs exist. Pages whose backend APIs are still incomplete continue to use typed placeholder data.
+- Frontend system configuration and dictionary pages now use real API fetches when an access token is available. i18n message management has backend APIs but does not yet have a dedicated frontend management page beyond the existing English/Chinese UI message bundle.
 
 ## Validation Gaps
 
@@ -36,4 +38,5 @@ This file records incomplete requirements that must not be claimed complete.
 - SQLite is executable locally through `better-sqlite3`, including bigint-safe organization path reads at the driver boundary.
 - OpenAPI request/response schemas are explicit for the permission-extension endpoints and effective permission context. Older backend-core endpoints still use the generic success envelope unless they have already been mapped.
 - SQLite and PostgreSQL migrations now include the infrastructure foundation tables.
+- SQLite and PostgreSQL migrations now include the system configuration, dictionary, and i18n management tables.
 - PostgreSQL integration tests now cover database-backed infrastructure adapter drivers and DB-backed infrastructure API persistence. SQLite adapter smoke coverage remains executable locally.

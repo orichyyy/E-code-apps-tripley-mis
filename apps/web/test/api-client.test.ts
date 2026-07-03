@@ -43,4 +43,40 @@ describe("frontend API client", () => {
       })
     ]);
   });
+
+  it("loads system configuration pages from the backend API", async () => {
+    localStorage.setItem("web-admin.access-token", "token");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [
+            {
+              id: "11",
+              configKey: "password.minimumLength",
+              configValue: 8,
+              valueType: "number",
+              groupKey: "password",
+              status: "enabled",
+              updatedAt: "2026-07-03T00:00:00.000Z"
+            }
+          ]
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+
+    const dataset = await fetchPageDataset("system.config");
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/system-config", {
+      headers: { authorization: "Bearer token" }
+    });
+    expect(dataset.records).toEqual([
+      expect.objectContaining({
+        id: "11",
+        name: "password.minimumLength",
+        code: "password.minimumLength",
+        source: "available-api"
+      })
+    ]);
+  });
 });
