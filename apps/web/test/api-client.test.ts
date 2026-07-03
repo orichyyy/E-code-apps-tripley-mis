@@ -23,6 +23,7 @@ import {
   fetchWebhookSubscriptions,
   updateWebhookSubscription
 } from "../src/features/notifications/webhook-subscription-api";
+import { deleteFile, fetchFileDetail, fetchFiles } from "../src/features/system/file-api";
 import { fetchI18nMessages, updateI18nMessage } from "../src/features/system/i18n-message-api";
 import { fetchPageDataset } from "../src/lib/api-client";
 
@@ -405,6 +406,84 @@ describe("frontend API client", () => {
         authorization: "Bearer token",
         "content-type": "application/json"
       }
+    });
+  });
+
+  it("loads file metadata and invalidates files through the backend API", async () => {
+    localStorage.setItem("web-admin.access-token", "token");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url === "/api/files" || url === "/api/files/71") {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              data:
+                url === "/api/files"
+                  ? [
+                      {
+                        id: "71",
+                        objectKey: "uploads/report.pdf",
+                        originalName: "report.pdf",
+                        contentType: "application/pdf",
+                        extension: "pdf",
+                        sizeBytes: 2048,
+                        storageDriver: "local",
+                        status: "active",
+                        referenced: true,
+                        isDeleted: false,
+                        createdAt: "2026-07-03T00:00:00.000Z",
+                        updatedAt: "2026-07-03T00:00:00.000Z"
+                      }
+                    ]
+                  : {
+                      id: "71",
+                      objectKey: "uploads/report.pdf",
+                      originalName: "report.pdf",
+                      contentType: "application/pdf",
+                      extension: "pdf",
+                      sizeBytes: 2048,
+                      storageDriver: "local",
+                      status: "active",
+                      referenced: true,
+                      isDeleted: false,
+                      createdAt: "2026-07-03T00:00:00.000Z",
+                      updatedAt: "2026-07-03T00:00:00.000Z"
+                    }
+            }),
+            { status: 200, headers: { "content-type": "application/json" } }
+          )
+        );
+      }
+      return Promise.resolve(
+        new Response(JSON.stringify({ data: null }), {
+          status: 200,
+          headers: { "content-type": "application/json" }
+        })
+      );
+    });
+
+    const records = await fetchFiles();
+    const detail = await fetchFileDetail("71");
+    await deleteFile("71");
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/files", {
+      headers: { authorization: "Bearer token" }
+    });
+    expect(records).toEqual([
+      expect.objectContaining({
+        id: "71",
+        originalName: "report.pdf",
+        contentType: "application/pdf",
+        referenced: true
+      })
+    ]);
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/files/71", {
+      headers: { authorization: "Bearer token" }
+    });
+    expect(detail).toEqual(expect.objectContaining({ id: "71", objectKey: "uploads/report.pdf" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/files/71", {
+      method: "DELETE",
+      headers: { authorization: "Bearer token" }
     });
   });
 

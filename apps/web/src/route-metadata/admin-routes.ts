@@ -96,7 +96,8 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     requiredPermission: "file:view",
     menuVisible: true,
     group: "system",
-    sortOrder: 170
+    sortOrder: 170,
+    actions: [{ code: "file:delete", labelI18nKey: "actions.delete", requiredPermission: "file:delete" }]
   },
   {
     routeCode: "notifications.announcements",

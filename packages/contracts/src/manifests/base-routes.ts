@@ -57,6 +57,14 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     sortOrder: 165
   },
   {
+    routeCode: "system.files",
+    path: "/system/files",
+    titleI18nKey: "routes.system.files",
+    requiredPermission: "file:view",
+    menuVisible: true,
+    sortOrder: 170
+  },
+  {
     routeCode: "notifications.announcements",
     path: "/notifications/announcements",
     titleI18nKey: "routes.notifications.announcements",

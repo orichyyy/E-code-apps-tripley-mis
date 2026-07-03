@@ -268,4 +268,50 @@ describe("web admin frontend", () => {
     expect(screen.getAllByText("Dashboard").length).toBeGreaterThan(0);
     expect(screen.getAllByText("i18n messages").length).toBeGreaterThan(0);
   });
+
+  it("renders file metadata from the backend API", async () => {
+    window.history.pushState(null, "", "/system/files");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [
+            {
+              id: "71",
+              objectKey: "uploads/report.pdf",
+              originalName: "report.pdf",
+              contentType: "application/pdf",
+              extension: "pdf",
+              sizeBytes: 2048,
+              storageDriver: "local",
+              status: "active",
+              referenced: true,
+              isDeleted: false,
+              createdAt: "2026-07-03T00:00:00.000Z",
+              updatedAt: "2026-07-03T00:00:00.000Z"
+            }
+          ]
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+    useAuthStore.getState().signIn({
+      accessToken: "test-token",
+      user: {
+        id: "1",
+        username: "admin",
+        displayName: "Super Administrator",
+        language: "en",
+        forcePasswordChange: false
+      },
+      permissionCodes: ["file:view", "file:delete"]
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText("report.pdf")).toBeInTheDocument();
+    expect(screen.getByText("application/pdf")).toBeInTheDocument();
+    expect(screen.getByText("2 KB")).toBeInTheDocument();
+    expect(screen.getByText("Referenced")).toBeInTheDocument();
+    expect(screen.getAllByText("File management").length).toBeGreaterThan(0);
+  });
 });

@@ -546,3 +546,19 @@ The i18n message frontend slice completed the following:
 - Added frontend API/client and component coverage for listing, update requests, and route rendering.
 
 Remaining base-system gaps are tracked in `docs/known_gaps.md`. New i18n key creation remains manifest/module-driven rather than a frontend ad hoc create flow.
+
+## File Management Frontend Progress
+
+The file management frontend slice completed the following:
+
+- Added the `system.files` route/menu entry to the contracts base route and menu manifests for backend route/menu synchronization.
+- Added a dedicated file metadata management page using TanStack Query for server state.
+- Wired the page to the existing backend APIs:
+  - `GET /api/files`
+  - `GET /api/files/:id`
+  - `DELETE /api/files/:id`
+- Added list, filter, detail, delete-invalidate, loading, empty, error, and permission-denied behavior for stored file metadata.
+- Preserved the confirmed reference rule by showing referenced and invalid/deleted states without adding business-module-specific reference behavior.
+- Added frontend API/client and component coverage for listing, detail fetch, delete-invalidate requests, and route rendering.
+
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. File upload, download, preview, S3-compatible storage configuration UI, and file-reference listing remain reserved until their concrete backend API contracts are implemented.
