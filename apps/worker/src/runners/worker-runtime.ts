@@ -9,6 +9,8 @@ import type {
 
 import type { WorkerConfig } from "../config/load-config";
 
+type WorkerRuntimeConfig = Pick<WorkerConfig, "nodeEnv" | "workerName">;
+
 export type WorkerRuntime = {
   readonly name: string;
   start: () => Promise<void>;
@@ -38,7 +40,7 @@ export type WorkerRuntimeDependencies = {
 };
 
 export function createWorkerRuntime(
-  config: WorkerConfig,
+  config: WorkerRuntimeConfig,
   dependencies: WorkerRuntimeDependencies = {}
 ): WorkerRuntime {
   let started = false;
@@ -57,7 +59,7 @@ export function createWorkerRuntime(
       }
       for (const task of dependencies.scheduledTasks ?? []) {
         if (!dependencies.scheduler) continue;
-          await dependencies.scheduler.register(task.definition, task.handler);
+        await dependencies.scheduler.register(task.definition, task.handler);
       }
       if (pollIntervalMs > 0 && (dependencies.durableQueue || dependencies.durableScheduler)) {
         pollTimer = setInterval(() => {

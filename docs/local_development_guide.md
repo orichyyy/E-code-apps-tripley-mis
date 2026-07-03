@@ -43,6 +43,17 @@ pnpm db:migrate
 pnpm dev:api
 ```
 
+Run the worker against the same local database when you want durable queue/scheduler jobs to execute:
+
+```bash
+set DATABASE_DIALECT=sqlite
+set DATABASE_URL=file:./data/web-admin-base.sqlite
+set WORKER_POLL_INTERVAL_MS=1000
+pnpm dev:worker
+```
+
+`WORKER_POLL_INTERVAL_MS=0` disables continuous polling and is useful for tests or one-shot `runOnce()` usage.
+
 For PostgreSQL integration testing, set `TEST_DATABASE_URL` before running `pnpm test`.
 
 SMTP email sending is disabled by default. For local SMTP testing, point the API at a local SMTP capture tool:

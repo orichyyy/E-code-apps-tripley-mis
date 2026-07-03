@@ -1,16 +1,16 @@
+import { createWorkerApplication } from "./bootstrap";
 import { loadWorkerConfig } from "./config/load-config";
-import { createWorkerRuntime } from "./runners/worker-runtime";
 
-const runtime = createWorkerRuntime(loadWorkerConfig());
+const application = createWorkerApplication(loadWorkerConfig());
 
-await runtime.start();
+await application.runtime.start();
 
 process.once("SIGINT", async () => {
-  await runtime.stop();
+  await application.close();
   process.exit(0);
 });
 
 process.once("SIGTERM", async () => {
-  await runtime.stop();
+  await application.close();
   process.exit(0);
 });

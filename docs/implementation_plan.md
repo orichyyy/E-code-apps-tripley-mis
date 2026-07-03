@@ -628,3 +628,16 @@ The in-app notification dispatch slice completed the following:
 - Added in-memory service coverage, worker task coverage, and PostgreSQL durable queue/notification persistence coverage.
 
 Remaining base-system gaps are tracked in `docs/known_gaps.md`. Production notification retry catalogs, external webhook delivery, SMS sending, S3-compatible storage, Redis, and RabbitMQ remain reserved or optional until their concrete contracts are confirmed.
+
+## Worker Runtime Wiring Progress
+
+The worker runtime wiring slice completed the following:
+
+- Extended worker configuration with `DATABASE_DIALECT`, `DATABASE_URL`, and `WORKER_POLL_INTERVAL_MS`.
+- Added a worker database executor for SQLite local/demo and PostgreSQL deployment databases.
+- Wired worker startup to database-backed queue and scheduler adapters.
+- Registered the implemented `notification.in_app.dispatch` task in the default worker application.
+- Updated `main.ts` so process shutdown stops the runtime and closes owned database resources.
+- Added worker bootstrap coverage proving a durable queue job is processed into persisted in-app notification records.
+
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. Additional production task catalogs, cron expression evaluation, timeout enforcement, dead-letter workflows, real outbound webhook delivery, SMS sending, S3-compatible storage, Redis, and RabbitMQ remain reserved or optional until their concrete contracts are confirmed.

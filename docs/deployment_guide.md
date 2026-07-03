@@ -8,11 +8,13 @@ The v1 backend runtime target is Node.js only. Bun, Deno, and SQL Server deploym
 
 - Deploy `apps/api` as the Hono API service.
 - Deploy `apps/web` as the Vite-built SPA.
-- Deploy `apps/worker` separately for durable queue and scheduled-task execution.
+- Deploy `apps/worker` separately for durable queue and scheduled-task execution. Configure `WORKER_POLL_INTERVAL_MS` with a positive value for continuous polling.
 
 ## Database
 
 The design supports SQLite for local/demo usage and PostgreSQL for supported deployment. PostgreSQL migration execution uses `DATABASE_URL` or `TEST_DATABASE_URL`. Use `BACKEND_CORE_STORE=database`, `DATABASE_DIALECT=postgresql`, and `DATABASE_URL` for DB-backed backend-core and infrastructure persistence.
+
+The worker uses `DATABASE_DIALECT` and `DATABASE_URL` to create database-backed queue and scheduler adapters. In production, run migrations before starting both API and worker processes.
 
 File upload/download works with local filesystem storage through `FILE_STORAGE_ROOT`. In multi-server deployments this path must be a shared mounted directory if local storage is used; S3-compatible storage remains the recommended production direction once its concrete client/configuration contract is implemented.
 
