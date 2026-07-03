@@ -1,5 +1,6 @@
 import { baseApiPermissionManifest, type BaseApiPermissionManifestEntry } from "../manifests";
 import { requestSchemaByOperationCode } from "./request-schema-map";
+import { responseSchemaByOperationCode } from "./response-schema-map";
 import { componentSchemas, errorSchema, idStringSchema } from "./schemas";
 import type { OpenApiDocument, OpenApiOperation } from "./types";
 
@@ -50,6 +51,7 @@ function createOpenApiPaths(): OpenApiDocument["paths"] {
 
 function createOperation(entry: BaseApiPermissionManifestEntry): OpenApiOperation {
   const requestSchemaName = requestSchemaByOperationCode[entry.code];
+  const responseSchemaName = responseSchemaByOperationCode[entry.code];
   const parameters = createPathParameters(entry.path);
 
   return {
@@ -62,7 +64,7 @@ function createOperation(entry: BaseApiPermissionManifestEntry): OpenApiOperatio
     ...(entry.public ? {} : { security: [{ bearerAuth: [] }] }),
     ...(parameters.length === 0 ? {} : { parameters }),
     ...(requestSchemaName ? { requestBody: createJsonRequestBody(requestSchemaName) } : {}),
-    responses: createStandardResponses(),
+    responses: createStandardResponses(responseSchemaName),
     "x-permission-code": entry.code,
     ...(entry.requiredPermission ? { "x-required-permission": entry.requiredPermission } : {}),
     "x-log-level": entry.logLevel,
@@ -81,13 +83,15 @@ function createJsonRequestBody(schemaName: string): NonNullable<OpenApiOperation
   };
 }
 
-function createStandardResponses(): OpenApiOperation["responses"] {
+function createStandardResponses(responseSchemaName?: string): OpenApiOperation["responses"] {
   return {
     "200": {
       description: "Successful response",
       content: {
         "application/json": {
-          schema: { type: "object", description: "Response envelope for this endpoint." }
+          schema: responseSchemaName
+            ? { $ref: `#/components/schemas/${responseSchemaName}` }
+            : { type: "object", description: "Response envelope for this endpoint." }
         }
       }
     },

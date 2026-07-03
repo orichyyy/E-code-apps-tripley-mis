@@ -29,3 +29,4 @@ This file records incomplete requirements that must not be claimed complete.
 - PostgreSQL database tests now include backend-core DB-backed initialization, seed idempotency, session/token reload, user/organization/role/menu/route/permission mutation persistence, user-organization-role binding persistence, logout persistence, and refresh-token exchange coverage when `TEST_DATABASE_URL` is present.
 - PostgreSQL database tests now include role data-permission, role field-permission, and user permission override persistence after reload, plus effective permission behavior after reload.
 - SQLite is executable locally through `better-sqlite3`, including bigint-safe organization path reads at the driver boundary.
+- OpenAPI request/response schemas are explicit for the permission-extension endpoints and effective permission context. Older backend-core endpoints still use the generic success envelope unless they have already been mapped.

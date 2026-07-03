@@ -346,3 +346,17 @@ The backend-core permission extension slice completed the following:
 - Added in-memory route coverage and PostgreSQL reload coverage for permission extension records, effective permission behavior, and cache invalidation.
 
 The next recommended backend-core goal is to tighten OpenAPI request/response schemas for the newly implemented permission-extension endpoints and then move to infrastructure work only after the remaining infrastructure questions are resolved.
+
+## Permission Extension Contract Hardening
+
+The permission-extension contract hardening slice completed the following:
+
+- Added OpenAPI request schema mappings for role data-permission updates, role field-permission updates, and user permission override updates.
+- Added OpenAPI response schema mappings for role data permissions, role field permissions, user permission overrides, and the effective permission context.
+- Documented the effective permission context response fields for `dataPermissions`, `fieldPermissions`, and `userPermissionOverrides`.
+- Added manifest consistency tests for the new permission-extension API metadata.
+- Added OpenAPI tests for the new permission-extension request and response schemas.
+- Changed API route composition so the newly implemented permission-extension routes retain Hono route schema types.
+- Added a Hono RPC type test proving typed client access remains available for the new permission-extension routes.
+
+The next recommended backend-core goal is to add full response-schema coverage for the older backend-core endpoints, or move to infrastructure modules after resolving the infrastructure questions in `docs/implementation_questions.md`.

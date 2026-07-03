@@ -63,10 +63,11 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
     return context.json(createOpenApiDocument());
   });
 
-  app.route("/", createCoreFoundationRoutes(dependencies.backendCoreServices));
-  app.route("/", createManifestRoutes());
+  const routedApp = app
+    .route("/", createCoreFoundationRoutes(dependencies.backendCoreServices))
+    .route("/", createManifestRoutes());
 
-  app.notFound((context) => {
+  routedApp.notFound((context) => {
     return context.json(
       {
         error: {
@@ -79,7 +80,7 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
     );
   });
 
-  app.onError((error, context) => {
+  routedApp.onError((error, context) => {
     const appError = normalizeError(error);
     return context.json(
       createErrorResponse(appError, context.get("requestId")),
@@ -87,7 +88,7 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
     );
   });
 
-  return app;
+  return routedApp;
 }
 
 export type ApiApp = ReturnType<typeof createApp>;

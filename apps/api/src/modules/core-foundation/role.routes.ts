@@ -1,10 +1,7 @@
 import {
   createRoleRequestSchema,
-  updateRoleDataPermissionsRequestSchema,
-  updateRoleFieldPermissionsRequestSchema,
   updateRolePermissionsRequestSchema,
-  updateRoleRequestSchema,
-  updateUserPermissionOverridesRequestSchema
+  updateRoleRequestSchema
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
@@ -101,38 +98,6 @@ export function createRoleRoutes(services: BackendCoreServices) {
     });
   });
 
-  routes.get("/roles/:id/data-permissions", (context) => {
-    return context.json({ data: services.listRoleDataPermissions(context.req.param("id")) });
-  });
-
-  routes.put("/roles/:id/data-permissions", async (context) => {
-    const authContext = context.get("authContext");
-    const input = updateRoleDataPermissionsRequestSchema.parse(await context.req.json());
-    return context.json({
-      data: await services.updateRoleDataPermissions(
-        context.req.param("id"),
-        input,
-        authContext?.userId ?? null
-      )
-    });
-  });
-
-  routes.get("/roles/:id/field-permissions", (context) => {
-    return context.json({ data: services.listRoleFieldPermissions(context.req.param("id")) });
-  });
-
-  routes.put("/roles/:id/field-permissions", async (context) => {
-    const authContext = context.get("authContext");
-    const input = updateRoleFieldPermissionsRequestSchema.parse(await context.req.json());
-    return context.json({
-      data: await services.updateRoleFieldPermissions(
-        context.req.param("id"),
-        input,
-        authContext?.userId ?? null
-      )
-    });
-  });
-
   routes.get("/permissions", (context) => {
     const permissions = services.listPermissions({
       action: context.req.query("action"),
@@ -155,22 +120,6 @@ export function createRoleRoutes(services: BackendCoreServices) {
 
   routes.get("/permissions/tree", (context) => {
     return context.json({ data: services.listPermissionTree() });
-  });
-
-  routes.get("/permissions/user-overrides/:userId", (context) => {
-    return context.json({ data: services.listUserPermissionOverrides(context.req.param("userId")) });
-  });
-
-  routes.put("/permissions/user-overrides/:userId", async (context) => {
-    const authContext = context.get("authContext");
-    const input = updateUserPermissionOverridesRequestSchema.parse(await context.req.json());
-    return context.json({
-      data: await services.updateUserPermissionOverrides(
-        context.req.param("userId"),
-        input,
-        authContext?.userId ?? null
-      )
-    });
   });
 
   routes.post("/permissions/sync", async (context) => {

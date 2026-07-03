@@ -53,6 +53,71 @@ describe("OpenAPI document generation", () => {
       }
     });
     expect(document.components.schemas.CreateUserRequest.required).toContain("primaryOrganizationId");
+    expect(document.paths["/roles/{id}/data-permissions"]?.put?.requestBody).toMatchObject({
+      content: {
+        "application/json": {
+          schema: { $ref: "#/components/schemas/UpdateRoleDataPermissionsRequest" }
+        }
+      }
+    });
+    expect(document.paths["/roles/{id}/field-permissions"]?.put?.requestBody).toMatchObject({
+      content: {
+        "application/json": {
+          schema: { $ref: "#/components/schemas/UpdateRoleFieldPermissionsRequest" }
+        }
+      }
+    });
+    expect(document.paths["/permissions/user-overrides/{userId}"]?.put?.requestBody).toMatchObject({
+      content: {
+        "application/json": {
+          schema: { $ref: "#/components/schemas/UpdateUserPermissionOverridesRequest" }
+        }
+      }
+    });
+  });
+
+  it("documents permission extension and effective permission responses", () => {
+    const document = createOpenApiDocument();
+
+    expect(document.paths["/roles/{id}/data-permissions"]?.get?.responses["200"]).toMatchObject({
+      content: {
+        "application/json": {
+          schema: { $ref: "#/components/schemas/RoleDataPermissionListResponse" }
+        }
+      }
+    });
+    expect(document.paths["/roles/{id}/field-permissions"]?.get?.responses["200"]).toMatchObject({
+      content: {
+        "application/json": {
+          schema: { $ref: "#/components/schemas/RoleFieldPermissionListResponse" }
+        }
+      }
+    });
+    expect(document.paths["/permissions/user-overrides/{userId}"]?.get?.responses["200"]).toMatchObject({
+      content: {
+        "application/json": {
+          schema: { $ref: "#/components/schemas/UserPermissionOverrideListResponse" }
+        }
+      }
+    });
+    expect(document.paths["/permissions/effective"]?.get?.responses["200"]).toMatchObject({
+      content: {
+        "application/json": {
+          schema: { $ref: "#/components/schemas/PermissionContextResponse" }
+        }
+      }
+    });
+    expect(document.components.schemas.PermissionContextResponse).toMatchObject({
+      properties: {
+        data: {
+          properties: {
+            dataPermissions: { type: "array" },
+            fieldPermissions: { type: "array" },
+            userPermissionOverrides: { type: "array" }
+          }
+        }
+      }
+    });
   });
 });
 

@@ -16,6 +16,9 @@ export const requestSchemaByOperationCode: Record<string, string> = {
   "api.roles.create": "CreateRoleRequest",
   "api.roles.update": "UpdateRoleRequest",
   "api.roles.permissions.update": "UpdateRolePermissionsRequest",
+  "api.roles.data-permissions.update": "UpdateRoleDataPermissionsRequest",
+  "api.roles.field-permissions.update": "UpdateRoleFieldPermissionsRequest",
+  "api.permissions.user-overrides.update": "UpdateUserPermissionOverridesRequest",
   "api.menus.create": "CreateMenuRequest",
   "api.menus.update": "UpdateMenuRequest",
   "api.menus.api-bindings.update": "UpdateMenuApiBindingsRequest"

@@ -120,6 +120,36 @@ describe("baseApiPermissionManifest", () => {
           requiredPermission: "role:view"
         }),
         expect.objectContaining({
+          method: "GET",
+          path: "/api/roles/:id/data-permissions",
+          requiredPermission: "role:view"
+        }),
+        expect.objectContaining({
+          method: "PUT",
+          path: "/api/roles/:id/data-permissions",
+          requiredPermission: "role:permissions:update"
+        }),
+        expect.objectContaining({
+          method: "GET",
+          path: "/api/roles/:id/field-permissions",
+          requiredPermission: "role:view"
+        }),
+        expect.objectContaining({
+          method: "PUT",
+          path: "/api/roles/:id/field-permissions",
+          requiredPermission: "role:permissions:update"
+        }),
+        expect.objectContaining({
+          method: "GET",
+          path: "/api/permissions/user-overrides/:userId",
+          requiredPermission: "permission:view"
+        }),
+        expect.objectContaining({
+          method: "PUT",
+          path: "/api/permissions/user-overrides/:userId",
+          requiredPermission: "permission:sync"
+        }),
+        expect.objectContaining({
           method: "POST",
           path: "/api/menus",
           requiredPermission: "menu:create"

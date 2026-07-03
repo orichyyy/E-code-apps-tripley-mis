@@ -31,6 +31,141 @@ const envelopeSchema = (data: OpenApiSchema): OpenApiSchema => ({
   additionalProperties: true
 });
 
+const auditSchemaProperties: Record<string, OpenApiSchema> = {
+  createdAt: { type: "string", format: "date-time" },
+  updatedAt: { type: "string", format: "date-time" },
+  createdBy: { ...idStringSchema, nullable: true },
+  updatedBy: { ...idStringSchema, nullable: true },
+  isDeleted: { type: "boolean" },
+  deletedAt: { type: "string", format: "date-time", nullable: true },
+  deletedBy: { ...idStringSchema, nullable: true }
+};
+
+const roleDataPermissionSchema: OpenApiSchema = {
+  type: "object",
+  required: [
+    "id",
+    "tenantId",
+    "roleId",
+    "permissionId",
+    "permissionCode",
+    "effect",
+    "rule",
+    "isDeleted",
+    "deletedAt",
+    "deletedBy",
+    "createdAt",
+    "updatedAt",
+    "createdBy",
+    "updatedBy"
+  ],
+  properties: {
+    id: idStringSchema,
+    tenantId: { ...idStringSchema, nullable: true },
+    roleId: idStringSchema,
+    permissionId: idStringSchema,
+    permissionCode: { type: "string" },
+    effect: { type: "string", enum: ["allow", "deny"] },
+    rule: { type: "object", additionalProperties: true },
+    ...auditSchemaProperties
+  },
+  additionalProperties: false
+};
+
+const roleFieldPermissionSchema: OpenApiSchema = {
+  type: "object",
+  required: [
+    "id",
+    "tenantId",
+    "targetType",
+    "targetId",
+    "resource",
+    "field",
+    "effect",
+    "isDeleted",
+    "deletedAt",
+    "deletedBy",
+    "createdAt",
+    "updatedAt",
+    "createdBy",
+    "updatedBy"
+  ],
+  properties: {
+    id: idStringSchema,
+    tenantId: { ...idStringSchema, nullable: true },
+    targetType: { type: "string", enum: ["role"] },
+    targetId: idStringSchema,
+    resource: { type: "string" },
+    field: { type: "string" },
+    effect: { type: "string", enum: ["visible", "hidden", "readonly"] },
+    ...auditSchemaProperties
+  },
+  additionalProperties: false
+};
+
+const userPermissionOverrideSchema: OpenApiSchema = {
+  type: "object",
+  required: [
+    "id",
+    "tenantId",
+    "userId",
+    "permissionId",
+    "permissionCode",
+    "effect",
+    "isDeleted",
+    "deletedAt",
+    "deletedBy",
+    "createdAt",
+    "updatedAt",
+    "createdBy",
+    "updatedBy"
+  ],
+  properties: {
+    id: idStringSchema,
+    tenantId: { ...idStringSchema, nullable: true },
+    userId: idStringSchema,
+    permissionId: idStringSchema,
+    permissionCode: { type: "string" },
+    effect: { type: "string", enum: ["allow", "deny"] },
+    ...auditSchemaProperties
+  },
+  additionalProperties: false
+};
+
+const effectiveDataPermissionSchema: OpenApiSchema = {
+  type: "object",
+  required: ["roleId", "permissionCode", "effect", "rule"],
+  properties: {
+    roleId: idStringSchema,
+    permissionCode: { type: "string" },
+    effect: { type: "string", enum: ["allow", "deny"] },
+    rule: { type: "object", additionalProperties: true }
+  },
+  additionalProperties: false
+};
+
+const effectiveFieldPermissionSchema: OpenApiSchema = {
+  type: "object",
+  required: ["roleId", "resource", "field", "effect"],
+  properties: {
+    roleId: idStringSchema,
+    resource: { type: "string" },
+    field: { type: "string" },
+    effect: { type: "string", enum: ["visible", "hidden", "readonly"] }
+  },
+  additionalProperties: false
+};
+
+const effectiveUserPermissionOverrideSchema: OpenApiSchema = {
+  type: "object",
+  required: ["permissionCode", "effect"],
+  properties: {
+    permissionCode: { type: "string" },
+    effect: { type: "string", enum: ["allow", "deny"] }
+  },
+  additionalProperties: false
+};
+
 export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
   ErrorResponse: errorSchema,
   IdString: idStringSchema,
@@ -205,6 +340,65 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
     },
     additionalProperties: false
   },
+  UpdateRoleDataPermissionsRequest: {
+    type: "object",
+    required: ["rules"],
+    properties: {
+      rules: {
+        type: "array",
+        items: {
+          type: "object",
+          required: ["permissionCode", "rule"],
+          properties: {
+            permissionCode: { type: "string" },
+            effect: { type: "string", enum: ["allow", "deny"] },
+            rule: { type: "object", additionalProperties: true }
+          },
+          additionalProperties: false
+        }
+      }
+    },
+    additionalProperties: false
+  },
+  UpdateRoleFieldPermissionsRequest: {
+    type: "object",
+    required: ["rules"],
+    properties: {
+      rules: {
+        type: "array",
+        items: {
+          type: "object",
+          required: ["resource", "field", "effect"],
+          properties: {
+            resource: { type: "string" },
+            field: { type: "string" },
+            effect: { type: "string", enum: ["visible", "hidden", "readonly"] }
+          },
+          additionalProperties: false
+        }
+      }
+    },
+    additionalProperties: false
+  },
+  UpdateUserPermissionOverridesRequest: {
+    type: "object",
+    required: ["overrides"],
+    properties: {
+      overrides: {
+        type: "array",
+        items: {
+          type: "object",
+          required: ["permissionCode", "effect"],
+          properties: {
+            permissionCode: { type: "string" },
+            effect: { type: "string", enum: ["allow", "deny"] }
+          },
+          additionalProperties: false
+        }
+      }
+    },
+    additionalProperties: false
+  },
   CreateMenuRequest: {
     type: "object",
     required: ["code", "titleI18nKey", "path"],
@@ -246,5 +440,49 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
     },
     additionalProperties: false
   },
+  RoleDataPermission: roleDataPermissionSchema,
+  RoleFieldPermission: roleFieldPermissionSchema,
+  UserPermissionOverride: userPermissionOverrideSchema,
+  RoleDataPermissionListResponse: envelopeSchema({
+    type: "array",
+    items: { $ref: "#/components/schemas/RoleDataPermission" }
+  }),
+  RoleFieldPermissionListResponse: envelopeSchema({
+    type: "array",
+    items: { $ref: "#/components/schemas/RoleFieldPermission" }
+  }),
+  UserPermissionOverrideListResponse: envelopeSchema({
+    type: "array",
+    items: { $ref: "#/components/schemas/UserPermissionOverride" }
+  }),
+  PermissionContextResponse: envelopeSchema({
+    type: "object",
+    required: [
+      "currentOrganization",
+      "permissionCodes",
+      "menus",
+      "dataPermissions",
+      "fieldPermissions",
+      "userPermissionOverrides"
+    ],
+    properties: {
+      currentOrganization: { type: "object", additionalProperties: true },
+      permissionCodes: { type: "array", items: { type: "string" } },
+      menus: { type: "array", items: { type: "object", additionalProperties: true } },
+      dataPermissions: {
+        type: "array",
+        items: effectiveDataPermissionSchema
+      },
+      fieldPermissions: {
+        type: "array",
+        items: effectiveFieldPermissionSchema
+      },
+      userPermissionOverrides: {
+        type: "array",
+        items: effectiveUserPermissionOverrideSchema
+      }
+    },
+    additionalProperties: false
+  }),
   GenericDataEnvelope: envelopeSchema({ type: "object", additionalProperties: true })
 };
