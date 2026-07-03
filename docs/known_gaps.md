@@ -30,7 +30,8 @@ This file records incomplete requirements that must not be claimed complete.
 - Worker execution now has queue/scheduler registration boundaries plus durable `runOnce`/polling hooks over database queue and scheduler adapters. Full production task catalogs, cron expression evaluation, timeout enforcement, and dead-letter workflows remain reserved or incomplete.
 - Redis, RabbitMQ, S3-compatible storage, and SMTP remain optional placeholders only; no mandatory dependencies have been added.
 - Frontend pages use real API fetches for implemented infrastructure modules where backend APIs exist. Pages whose backend APIs are still incomplete continue to use typed placeholder data.
-- Frontend system configuration and dictionary pages now use real API fetches when an access token is available. i18n message management has backend APIs but does not yet have a dedicated frontend management page beyond the existing English/Chinese UI message bundle.
+- Frontend system configuration and dictionary pages now use real API fetches when an access token is available.
+- i18n message management now has a dedicated frontend route/page wired to the implemented backend APIs. The static English/Chinese UI message bundle remains the local frontend default.
 - Webhook subscription management now has a frontend route/page wired to the implemented backend APIs. Real outbound delivery remains reserved.
 - Notification template management now has a frontend route/page wired to the implemented backend APIs. SMTP/SMS sending remains reserved.
 

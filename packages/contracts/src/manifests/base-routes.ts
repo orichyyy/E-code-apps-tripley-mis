@@ -49,6 +49,14 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     sortOrder: 140
   },
   {
+    routeCode: "system.i18nMessages",
+    path: "/system/i18n-messages",
+    titleI18nKey: "routes.system.i18nMessages",
+    requiredPermission: "i18n:view",
+    menuVisible: true,
+    sortOrder: 165
+  },
+  {
     routeCode: "notifications.templates",
     path: "/notifications/templates",
     titleI18nKey: "routes.notifications.templates",

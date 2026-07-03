@@ -10,6 +10,7 @@ import {
   fetchWebhookSubscriptions,
   updateWebhookSubscription
 } from "../src/features/notifications/webhook-subscription-api";
+import { fetchI18nMessages, updateI18nMessage } from "../src/features/system/i18n-message-api";
 import { fetchPageDataset } from "../src/lib/api-client";
 
 describe("frontend API client", () => {
@@ -211,6 +212,56 @@ describe("frontend API client", () => {
         updatedAt: "2026-07-03T00:00:00.000Z"
       }
     ]);
+  });
+
+  it("loads and updates i18n messages through the backend API", async () => {
+    localStorage.setItem("web-admin.access-token", "token");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            data: [
+              {
+                id: "51",
+                tenantId: null,
+                messageKey: "routes.dashboard",
+                language: "en",
+                messageValue: "Dashboard",
+                module: "routes",
+                updatedAt: "2026-07-03T00:00:00.000Z"
+              }
+            ]
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+    );
+
+    const records = await fetchI18nMessages();
+    await updateI18nMessage("51", { messageValue: "Control center" });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/i18n/messages", {
+      headers: { authorization: "Bearer token" }
+    });
+    expect(records).toEqual([
+      {
+        id: "51",
+        tenantId: null,
+        messageKey: "routes.dashboard",
+        language: "en",
+        messageValue: "Dashboard",
+        module: "routes",
+        updatedAt: "2026-07-03T00:00:00.000Z"
+      }
+    ]);
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/i18n/messages/51", {
+      method: "PATCH",
+      body: JSON.stringify({ messageValue: "Control center" }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
   });
 
   it("creates and updates notification templates through the backend API", async () => {

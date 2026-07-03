@@ -80,6 +80,7 @@ const routeEndpointByCode: Record<string, string> = {
   "operations.import-export": "/import-export/tasks",
   "system.config": "/system-config",
   "system.dictionaries": "/dictionary-types",
+  "system.i18nMessages": "/i18n/messages",
   "system.files": "/files",
   "notifications.announcements": "/announcements",
   "notifications.templates": "/notification-templates",

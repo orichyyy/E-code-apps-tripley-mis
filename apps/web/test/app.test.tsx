@@ -139,4 +139,43 @@ describe("web admin frontend", () => {
     expect(screen.getByText("userName")).toBeInTheDocument();
     expect(screen.getAllByText("Notification templates").length).toBeGreaterThan(0);
   });
+
+  it("renders i18n messages from the backend API", async () => {
+    window.history.pushState(null, "", "/system/i18n-messages");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [
+            {
+              id: "51",
+              tenantId: null,
+              messageKey: "routes.dashboard",
+              language: "en",
+              messageValue: "Dashboard",
+              module: "routes",
+              updatedAt: "2026-07-03T00:00:00.000Z"
+            }
+          ]
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+    useAuthStore.getState().signIn({
+      accessToken: "test-token",
+      user: {
+        id: "1",
+        username: "admin",
+        displayName: "Super Administrator",
+        language: "en",
+        forcePasswordChange: false
+      },
+      permissionCodes: ["i18n:view", "i18n:update"]
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText("routes.dashboard")).toBeInTheDocument();
+    expect(screen.getAllByText("Dashboard").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("i18n messages").length).toBeGreaterThan(0);
+  });
 });

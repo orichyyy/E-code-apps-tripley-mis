@@ -69,6 +69,15 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     sortOrder: 140
   },
   {
+    code: "system.i18nMessages",
+    titleI18nKey: "routes.system.i18nMessages",
+    path: "/system/i18n-messages",
+    parentCode: "system",
+    requiredPermission: "i18n:view",
+    routeCode: "system.i18nMessages",
+    sortOrder: 165
+  },
+  {
     code: "notifications",
     titleI18nKey: "nav.notifications",
     path: "/notifications",

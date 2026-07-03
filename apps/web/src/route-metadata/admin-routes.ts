@@ -80,6 +80,16 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     sortOrder: 160
   },
   {
+    routeCode: "system.i18nMessages",
+    path: "/system/i18n-messages",
+    titleI18nKey: "routes.system.i18nMessages",
+    requiredPermission: "i18n:view",
+    menuVisible: true,
+    group: "system",
+    sortOrder: 165,
+    actions: [{ code: "i18n:update", labelI18nKey: "actions.edit", requiredPermission: "i18n:update" }]
+  },
+  {
     routeCode: "system.files",
     path: "/system/files",
     titleI18nKey: "routes.system.files",

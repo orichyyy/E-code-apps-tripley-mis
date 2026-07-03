@@ -498,3 +498,18 @@ The notification template frontend slice completed the following:
 - Added frontend API/client and component coverage for listing, create/update requests, route rendering, and template variable display.
 
 Remaining base-system gaps are tracked in `docs/known_gaps.md`. SMTP delivery, SMS delivery, real outbound webhook delivery, retry workers, S3-compatible storage, Redis, and RabbitMQ remain optional/reserved until concrete package and runtime contracts are confirmed.
+
+## i18n Message Frontend Progress
+
+The i18n message frontend slice completed the following:
+
+- Added the `system.i18nMessages` frontend route metadata and menu binding under the System group.
+- Added the same i18n message route/menu entry to the contracts base route and menu manifests for backend route/menu synchronization.
+- Added a dedicated i18n message management page using TanStack Query for server state and TanStack Form plus Zod for update validation.
+- Wired the page to the existing backend APIs:
+  - `GET /api/i18n/messages`
+  - `PATCH /api/i18n/messages/:id`
+- Added list, filter, edit, loading, empty, error, and permission-denied behavior for existing i18n message records.
+- Added frontend API/client and component coverage for listing, update requests, and route rendering.
+
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. New i18n key creation remains manifest/module-driven rather than a frontend ad hoc create flow.

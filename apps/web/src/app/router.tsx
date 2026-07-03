@@ -7,6 +7,7 @@ import { ManagementPage } from "@/components/admin/management-page";
 import { PasswordChangePage, ForcedPasswordChangePage, LoginPage } from "@/features/auth/auth-pages";
 import { NotificationTemplatesPage } from "@/features/notifications/notification-templates-page";
 import { WebhookSubscriptionsPage } from "@/features/notifications/webhook-subscriptions-page";
+import { I18nMessagesPage } from "@/features/system/i18n-messages-page";
 import { PersonalSettingsPage } from "@/features/account/settings-page";
 import { ProfilePage } from "@/features/account/profile-page";
 import { adminRouteMetadata } from "@/route-metadata";
@@ -80,7 +81,9 @@ const managementRoutes = adminRouteMetadata
       path: route.path,
       component: () => (
         <RoutePermissionGuard requiredPermission={route.requiredPermission}>
-          {route.routeCode === "notifications.templates" ? (
+          {route.routeCode === "system.i18nMessages" ? (
+            <I18nMessagesPage route={route} />
+          ) : route.routeCode === "notifications.templates" ? (
             <NotificationTemplatesPage route={route} />
           ) : route.routeCode === "notifications.webhooks" ? (
             <WebhookSubscriptionsPage route={route} />
