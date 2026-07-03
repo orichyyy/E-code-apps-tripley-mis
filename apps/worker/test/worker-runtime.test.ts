@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import {
+  createInMemoryJobSchedulerAdapter,
+  createInMemoryQueueAdapter
+} from "@web-admin-base/adapters";
 import { createWorkerRuntime } from "../src/runners/worker-runtime";
 
 describe("worker runtime", () => {
@@ -10,5 +14,48 @@ describe("worker runtime", () => {
     });
 
     expect(runtime.name).toBe("test-worker");
+  });
+
+  it("registers queue and scheduler tasks on start", async () => {
+    const queue = createInMemoryQueueAdapter();
+    const scheduler = createInMemoryJobSchedulerAdapter();
+    const handledJobs: string[] = [];
+    const logs: string[] = [];
+    const runtime = createWorkerRuntime(
+      {
+        nodeEnv: "test",
+        workerName: "test-worker"
+      },
+      {
+        queue,
+        scheduler,
+        log: (message) => logs.push(message),
+        queueTasks: [
+          {
+            jobType: "log.write",
+            handler: async (job) => {
+              handledJobs.push(job.id);
+            }
+          }
+        ],
+        scheduledTasks: [
+          {
+            definition: {
+              code: "cleanup",
+              cronExpression: "0 0 * * *",
+              enabled: true
+            },
+            handler: async () => undefined
+          }
+        ]
+      }
+    );
+
+    await runtime.start();
+    const job = await queue.enqueue("log.write", { message: "ok" });
+    await runtime.stop();
+
+    expect(handledJobs).toEqual([job.id]);
+    expect(logs).toEqual(["test-worker started", "test-worker stopped"]);
   });
 });

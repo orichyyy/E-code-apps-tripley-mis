@@ -7,9 +7,10 @@ Reusable multi-organization admin-system foundation built as a pnpm monorepo.
 - `apps/api`: Node.js Hono API with request IDs, auth/session/user/organization/role/permission/menu foundations, OpenAPI JSON, and manifest-based API authorization.
 - `apps/web`: React Vite SPA admin shell using TanStack Router, TanStack Query, TanStack Form, Zod, Zustand, Tailwind CSS, and shadcn/ui.
 - `apps/worker`: Node.js worker skeleton.
+- `apps/worker`: Node.js worker runtime with queue-task and scheduled-task registration boundaries.
 - `packages/contracts`: Zod contracts, Hono RPC boundary types, permission/route/menu/API manifests, and OpenAPI generation.
 - `packages/db`: Drizzle schemas, SQLite/PostgreSQL migration files, and executable migration runners.
-- `packages/adapters`: adapter interfaces and selected in-memory drivers.
+- `packages/adapters`: adapter interfaces plus in-memory defaults for cache, token store, lock, queue, event bus, rate limit, scheduler, notifications, and local filesystem storage.
 - `packages/shared`: shared constants, result types, i18n keys, and utilities.
 
 ## Commands

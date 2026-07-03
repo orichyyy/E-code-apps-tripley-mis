@@ -14,3 +14,5 @@ export type EventBusAdapter = HealthCheckableAdapter & {
     handler: (event: DomainEvent<TPayload>) => Promise<void>
   ) => Promise<void>;
 };
+
+export * from "./in-process-event-bus";

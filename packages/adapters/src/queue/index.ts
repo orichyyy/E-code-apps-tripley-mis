@@ -13,3 +13,5 @@ export type QueueAdapter = HealthCheckableAdapter & {
     handler: (job: QueueJob<TPayload>) => Promise<void>
   ) => Promise<void>;
 };
+
+export * from "./in-memory-queue";

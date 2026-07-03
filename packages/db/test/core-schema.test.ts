@@ -163,6 +163,32 @@ describe("backend core schema", () => {
     expect(postgresql.authSessions.status.name).toBe("status");
   });
 
+  it("keeps infrastructure foundation tables aligned across dialects", () => {
+    expect(sqlite.cacheEntries.key.name).toBe("key");
+    expect(postgresql.cacheEntries.key.name).toBe("key");
+    expect(sqlite.rateLimitCounters.windowStartsAt.name).toBe("window_starts_at");
+    expect(postgresql.rateLimitCounters.windowStartsAt.name).toBe("window_starts_at");
+    expect(sqlite.locks.fencingToken.name).toBe("fencing_token");
+    expect(postgresql.locks.fencingToken.name).toBe("fencing_token");
+    expect(sqlite.queueJobs.maxAttempts.name).toBe("max_attempts");
+    expect(postgresql.queueJobs.maxAttempts.name).toBe("max_attempts");
+    expect(sqlite.eventOutbox.eventType.name).toBe("event_type");
+    expect(postgresql.eventOutbox.eventType.name).toBe("event_type");
+    expect(sqlite.scheduledJobs.cronExpression.name).toBe("cron_expression");
+    expect(postgresql.scheduledJobs.cronExpression.name).toBe("cron_expression");
+    expect(sqlite.fileObjects.objectKey.name).toBe("object_key");
+    expect(postgresql.fileObjects.objectKey.name).toBe("object_key");
+    expect(sqlite.notifications.metadataJson.name).toBe("metadata_json");
+    expect(postgresql.notifications.metadataJson.name).toBe("metadata_json");
+    expect(sqlite.notificationTemplates.variablesJson.name).toBe("variables_json");
+    expect(postgresql.notificationTemplates.variablesJson.name).toBe("variables_json");
+    expect(sqlite.logEntries.logType.name).toBe("log_type");
+    expect(postgresql.logEntries.logType.name).toBe("log_type");
+    expect(sqlite.importExportTasks.resultExpiresAt.name).toBe("result_expires_at");
+    expect(postgresql.importExportTasks.resultExpiresAt.name).toBe("result_expires_at");
+  });
+
+
   it("keeps the root organization segment constraint in both migrations", () => {
     const sqliteMigration = readFileSync(
       new URL("../src/migrations/sqlite/0001_backend_core_foundation.sql", import.meta.url),
@@ -203,7 +229,18 @@ describe("backend core schema", () => {
       ["routeMetadata", ["route_metadata_status_check"]],
       ["apiPermissions", ["api_permissions_log_level_check", "api_permissions_status_check"]],
       ["authSessions", ["auth_sessions_status_check"]],
-      ["systemInitializationState", ["system_initialization_state_status_check"]]
+      ["systemInitializationState", ["system_initialization_state_status_check"]],
+      ["queueJobs", ["queue_jobs_status_check"]],
+      ["eventOutbox", ["event_outbox_status_check"]],
+      ["scheduledJobs", ["scheduled_jobs_status_check"]],
+      ["fileObjects", ["file_objects_status_check"]],
+      ["notifications", ["notifications_channel_check", "notifications_status_check"]],
+      [
+        "notificationTemplates",
+        ["notification_templates_channel_check", "notification_templates_status_check"]
+      ],
+      ["logEntries", ["log_entries_level_check", "log_entries_type_check"]],
+      ["importExportTasks", ["import_export_tasks_status_check", "import_export_tasks_type_check"]]
     ]);
 
     for (const [tableName, expectedChecks] of expectedChecksByTable) {
@@ -231,7 +268,21 @@ describe("backend core schema", () => {
       ["apiPermissions", ["api_permissions_code_unique", "api_permissions_method_path_unique"]],
       ["menuApiBindings", ["menu_api_bindings_unique"]],
       ["authSessions", ["auth_sessions_user_active_idx"]],
-      ["refreshTokens", ["refresh_tokens_hash_unique"]]
+      ["refreshTokens", ["refresh_tokens_hash_unique"]],
+      ["cacheEntries", ["cache_entries_expires_at_idx", "cache_entries_key_unique"]],
+      [
+        "rateLimitCounters",
+        ["rate_limit_counters_expires_at_idx", "rate_limit_counters_key_window_unique"]
+      ],
+      ["locks", ["locks_expires_at_idx", "locks_key_unique"]],
+      ["queueJobs", ["queue_jobs_status_available_idx"]],
+      ["eventOutbox", ["event_outbox_status_next_run_idx"]],
+      ["scheduledJobs", ["scheduled_jobs_code_unique", "scheduled_jobs_next_run_idx"]],
+      ["fileObjects", ["file_objects_object_key_unique"]],
+      ["notifications", ["notifications_user_status_idx"]],
+      ["notificationTemplates", ["notification_templates_code_locale_unique"]],
+      ["logEntries", ["log_entries_type_occurred_idx"]],
+      ["importExportTasks", ["import_export_tasks_status_idx"]]
     ]);
 
     for (const [tableName, expectedIndexes] of expectedIndexesByTable) {

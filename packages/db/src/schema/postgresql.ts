@@ -433,19 +433,281 @@ export const systemInitializationState = pgTable(
   })
 );
 
+export const cacheEntries = pgTable(
+  "cache_entries",
+  {
+    id: serial("id").primaryKey(),
+    key: text("key").notNull(),
+    valueJson: jsonb("value_json").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    ...timestamps
+  },
+  (table) => ({
+    keyUnique: uniqueIndex("cache_entries_key_unique").on(table.key),
+    expiresAtIndex: index("cache_entries_expires_at_idx").on(table.expiresAt)
+  })
+);
+
+export const rateLimitCounters = pgTable(
+  "rate_limit_counters",
+  {
+    id: serial("id").primaryKey(),
+    key: text("key").notNull(),
+    windowStartsAt: timestamp("window_starts_at", { withTimezone: true }).notNull(),
+    windowSeconds: integer("window_seconds").notNull(),
+    count: integer("count").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    ...timestamps
+  },
+  (table) => ({
+    keyWindowUnique: uniqueIndex("rate_limit_counters_key_window_unique").on(
+      table.key,
+      table.windowStartsAt
+    ),
+    expiresAtIndex: index("rate_limit_counters_expires_at_idx").on(table.expiresAt)
+  })
+);
+
+export const locks = pgTable(
+  "locks",
+  {
+    id: serial("id").primaryKey(),
+    key: text("key").notNull(),
+    owner: text("owner").notNull(),
+    fencingToken: integer("fencing_token").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    heartbeatAt: timestamp("heartbeat_at", { withTimezone: true }).notNull(),
+    ...timestamps
+  },
+  (table) => ({
+    keyUnique: uniqueIndex("locks_key_unique").on(table.key),
+    expiresAtIndex: index("locks_expires_at_idx").on(table.expiresAt)
+  })
+);
+
+export const queueJobs = pgTable(
+  "queue_jobs",
+  {
+    id: serial("id").primaryKey(),
+    type: text("type").notNull(),
+    payloadJson: jsonb("payload_json").notNull(),
+    status: text("status").notNull().default("pending"),
+    attempt: integer("attempt").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull().default(1),
+    availableAt: timestamp("available_at", { withTimezone: true }).notNull(),
+    nextRunAt: timestamp("next_run_at", { withTimezone: true }),
+    lockedBy: text("locked_by"),
+    lockedAt: timestamp("locked_at", { withTimezone: true }),
+    lastError: text("last_error"),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    ...timestamps
+  },
+  (table) => ({
+    statusAvailableIndex: index("queue_jobs_status_available_idx").on(
+      table.status,
+      table.availableAt
+    ),
+    statusCheck: check(
+      "queue_jobs_status_check",
+      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed', 'dead_letter')`
+    )
+  })
+);
+
+export const eventOutbox = pgTable(
+  "event_outbox",
+  {
+    id: serial("id").primaryKey(),
+    eventType: text("event_type").notNull(),
+    payloadJson: jsonb("payload_json").notNull(),
+    status: text("status").notNull().default("pending"),
+    attempt: integer("attempt").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull().default(1),
+    nextRunAt: timestamp("next_run_at", { withTimezone: true }),
+    lastError: text("last_error"),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
+    processedAt: timestamp("processed_at", { withTimezone: true }),
+    ...timestamps
+  },
+  (table) => ({
+    statusNextRunIndex: index("event_outbox_status_next_run_idx").on(table.status, table.nextRunAt),
+    statusCheck: check(
+      "event_outbox_status_check",
+      sql`${table.status} IN ('pending', 'published', 'failed', 'dead_letter')`
+    )
+  })
+);
+
+export const scheduledJobs = pgTable(
+  "scheduled_jobs",
+  {
+    id: serial("id").primaryKey(),
+    code: text("code").notNull(),
+    cronExpression: text("cron_expression").notNull(),
+    handlerType: text("handler_type").notNull(),
+    payloadJson: jsonb("payload_json").notNull(),
+    status: text("status").notNull().default("enabled"),
+    lastRunAt: timestamp("last_run_at", { withTimezone: true }),
+    nextRunAt: timestamp("next_run_at", { withTimezone: true }),
+    attempt: integer("attempt").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull().default(1),
+    lastError: text("last_error"),
+    ...timestamps
+  },
+  (table) => ({
+    codeUnique: uniqueIndex("scheduled_jobs_code_unique").on(table.code),
+    nextRunIndex: index("scheduled_jobs_next_run_idx").on(table.status, table.nextRunAt),
+    statusCheck: check("scheduled_jobs_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
+  })
+);
+
+export const fileObjects = pgTable(
+  "file_objects",
+  {
+    id: serial("id").primaryKey(),
+    objectKey: text("object_key").notNull(),
+    originalName: text("original_name").notNull(),
+    contentType: text("content_type").notNull(),
+    extension: text("extension").notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    storageDriver: text("storage_driver").notNull(),
+    status: text("status").notNull().default("active"),
+    referenced: boolean("referenced").notNull().default(false),
+    ...softDelete,
+    ...timestamps,
+    createdBy: integer("created_by"),
+    updatedBy: integer("updated_by")
+  },
+  (table) => ({
+    objectKeyUnique: uniqueIndex("file_objects_object_key_unique").on(table.objectKey),
+    statusCheck: check("file_objects_status_check", sql`${table.status} IN ('active', 'invalid')`)
+  })
+);
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id"),
+    channel: text("channel").notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    status: text("status").notNull().default("unread"),
+    metadataJson: jsonb("metadata_json").notNull(),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    ...softDelete,
+    ...timestamps
+  },
+  (table) => ({
+    userStatusIndex: index("notifications_user_status_idx").on(table.userId, table.status),
+    channelCheck: check("notifications_channel_check", sql`${table.channel} IN ('in_app', 'email', 'webhook', 'sms')`),
+    statusCheck: check(
+      "notifications_status_check",
+      sql`${table.status} IN ('unread', 'read', 'archived', 'deleted')`
+    )
+  })
+);
+
+export const notificationTemplates = pgTable(
+  "notification_templates",
+  {
+    id: serial("id").primaryKey(),
+    code: text("code").notNull(),
+    channel: text("channel").notNull(),
+    locale: text("locale").notNull(),
+    subject: text("subject"),
+    body: text("body").notNull(),
+    variablesJson: jsonb("variables_json").notNull(),
+    status: text("status").notNull().default("enabled"),
+    ...timestamps
+  },
+  (table) => ({
+    codeLocaleUnique: uniqueIndex("notification_templates_code_locale_unique").on(
+      table.code,
+      table.locale
+    ),
+    channelCheck: check("notification_templates_channel_check", sql`${table.channel} IN ('in_app', 'email', 'sms')`),
+    statusCheck: check("notification_templates_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
+  })
+);
+
+export const logEntries = pgTable(
+  "log_entries",
+  {
+    id: serial("id").primaryKey(),
+    logType: text("log_type").notNull(),
+    level: text("level").notNull(),
+    message: text("message").notNull(),
+    traceId: text("trace_id"),
+    userId: integer("user_id"),
+    ipAddress: text("ip_address"),
+    metadataJson: jsonb("metadata_json").notNull(),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull()
+  },
+  (table) => ({
+    typeOccurredIndex: index("log_entries_type_occurred_idx").on(table.logType, table.occurredAt),
+    typeCheck: check(
+      "log_entries_type_check",
+      sql`${table.logType} IN ('login', 'operation', 'access', 'api_call', 'exception', 'security', 'scheduler', 'file_operation')`
+    ),
+    levelCheck: check("log_entries_level_check", sql`${table.level} IN ('debug', 'info', 'warn', 'error')`)
+  })
+);
+
+export const importExportTasks = pgTable(
+  "import_export_tasks",
+  {
+    id: serial("id").primaryKey(),
+    taskType: text("task_type").notNull(),
+    resourceType: text("resource_type").notNull(),
+    status: text("status").notNull().default("pending"),
+    fileObjectId: integer("file_object_id"),
+    resultFileObjectId: integer("result_file_object_id"),
+    errorFileObjectId: integer("error_file_object_id"),
+    totalRows: integer("total_rows").notNull().default(0),
+    successRows: integer("success_rows").notNull().default(0),
+    failedRows: integer("failed_rows").notNull().default(0),
+    errorPreviewJson: jsonb("error_preview_json").notNull(),
+    resultExpiresAt: timestamp("result_expires_at", { withTimezone: true }),
+    ...timestamps,
+    createdBy: integer("created_by")
+  },
+  (table) => ({
+    statusIndex: index("import_export_tasks_status_idx").on(table.status),
+    typeCheck: check("import_export_tasks_type_check", sql`${table.taskType} IN ('import', 'export')`),
+    statusCheck: check(
+      "import_export_tasks_status_check",
+      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed')`
+    )
+  })
+);
+
 export const postgresqlSchema = {
   apiPermissions,
   authSessions,
+  cacheEntries,
+  eventOutbox,
+  fileObjects,
+  importExportTasks,
+  locks,
+  logEntries,
   menuApiBindings,
   menus,
+  notificationTemplates,
+  notifications,
   organizations,
   permissions,
+  queueJobs,
+  rateLimitCounters,
   refreshTokens,
   fieldPermissionRules,
   rolePermissions,
   roleDataPermissions,
   roles,
   routeMetadata,
+  scheduledJobs,
   schemaMetadata,
   systemInitializationState,
   userPermissionOverrides,

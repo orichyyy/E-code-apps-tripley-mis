@@ -11,3 +11,5 @@ export type NotificationMessage = {
 export type NotificationChannelAdapter = HealthCheckableAdapter & {
   send: (message: NotificationMessage) => Promise<void>;
 };
+
+export * from "./in-memory-notification";

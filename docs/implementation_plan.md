@@ -360,3 +360,27 @@ The permission-extension contract hardening slice completed the following:
 - Added a Hono RPC type test proving typed client access remains available for the new permission-extension routes.
 
 The next recommended backend-core goal is to add full response-schema coverage for the older backend-core endpoints, or move to infrastructure modules after resolving the infrastructure questions in `docs/implementation_questions.md`.
+
+## Infrastructure Foundation Progress
+
+The remaining-gap implementation pass confirmed the previously blocked infrastructure decisions and added the first durable infrastructure foundation:
+
+- Resolved infrastructure questions 10-20 in `docs/implementation_questions.md` using the recommended v1 decisions.
+- Added SQLite/PostgreSQL migrations and Drizzle schema tables for:
+  - `cache_entries`
+  - `rate_limit_counters`
+  - `locks`
+  - `queue_jobs`
+  - `event_outbox`
+  - `scheduled_jobs`
+  - `file_objects`
+  - `notifications`
+  - `notification_templates`
+  - `log_entries`
+  - `import_export_tasks`
+- Added schema and migration tests proving the new infrastructure tables are present in SQLite and PostgreSQL migration execution.
+- Added runnable in-memory default adapters for lock, queue, event bus, rate limit, scheduler, and notifications.
+- Added a local filesystem storage adapter that writes through a temp file and then atomically renames into place, supporting shared mounted local storage compatibility.
+- Extended the worker runtime with queue task and scheduled task registration boundaries while keeping the default worker safe to run with no configured tasks.
+
+The next recommended goal is to implement database-backed adapter drivers and backend API modules over these infrastructure tables, then replace frontend placeholders page by page as those APIs become available.

@@ -9,3 +9,5 @@ export type RateLimitResult = {
 export type RateLimitAdapter = HealthCheckableAdapter & {
   check: (key: string, limit: number, windowSeconds: number) => Promise<RateLimitResult>;
 };
+
+export * from "./in-memory-rate-limit";

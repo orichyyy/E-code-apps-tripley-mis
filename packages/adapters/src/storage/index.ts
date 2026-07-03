@@ -11,3 +11,5 @@ export type FileStorageAdapter = HealthCheckableAdapter & {
   get: (objectKey: string) => Promise<Uint8Array | null>;
   delete: (objectKey: string) => Promise<void>;
 };
+
+export * from "./local-file-storage";

@@ -427,19 +427,289 @@ export const systemInitializationState = sqliteTable(
   })
 );
 
+export const cacheEntries = sqliteTable(
+  "cache_entries",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    key: text("key").notNull(),
+    valueJson: text("value_json", { mode: "json" }).notNull(),
+    expiresAt: text("expires_at"),
+    ...timestamps
+  },
+  (table) => ({
+    keyUnique: uniqueIndex("cache_entries_key_unique").on(table.key),
+    expiresAtIndex: index("cache_entries_expires_at_idx").on(table.expiresAt)
+  })
+);
+
+export const rateLimitCounters = sqliteTable(
+  "rate_limit_counters",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    key: text("key").notNull(),
+    windowStartsAt: text("window_starts_at").notNull(),
+    windowSeconds: integer("window_seconds").notNull(),
+    count: integer("count").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    ...timestamps
+  },
+  (table) => ({
+    keyWindowUnique: uniqueIndex("rate_limit_counters_key_window_unique").on(
+      table.key,
+      table.windowStartsAt
+    ),
+    expiresAtIndex: index("rate_limit_counters_expires_at_idx").on(table.expiresAt)
+  })
+);
+
+export const locks = sqliteTable(
+  "locks",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    key: text("key").notNull(),
+    owner: text("owner").notNull(),
+    fencingToken: integer("fencing_token").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    heartbeatAt: text("heartbeat_at").notNull(),
+    ...timestamps
+  },
+  (table) => ({
+    keyUnique: uniqueIndex("locks_key_unique").on(table.key),
+    expiresAtIndex: index("locks_expires_at_idx").on(table.expiresAt)
+  })
+);
+
+export const queueJobs = sqliteTable(
+  "queue_jobs",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    type: text("type").notNull(),
+    payloadJson: text("payload_json", { mode: "json" }).notNull(),
+    status: text("status", { enum: ["pending", "running", "succeeded", "failed", "dead_letter"] })
+      .notNull()
+      .default("pending"),
+    attempt: integer("attempt").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull().default(1),
+    availableAt: text("available_at").notNull(),
+    nextRunAt: text("next_run_at"),
+    lockedBy: text("locked_by"),
+    lockedAt: text("locked_at"),
+    lastError: text("last_error"),
+    completedAt: text("completed_at"),
+    ...timestamps
+  },
+  (table) => ({
+    statusAvailableIndex: index("queue_jobs_status_available_idx").on(
+      table.status,
+      table.availableAt
+    ),
+    statusCheck: check(
+      "queue_jobs_status_check",
+      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed', 'dead_letter')`
+    )
+  })
+);
+
+export const eventOutbox = sqliteTable(
+  "event_outbox",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    eventType: text("event_type").notNull(),
+    payloadJson: text("payload_json", { mode: "json" }).notNull(),
+    status: text("status", { enum: ["pending", "published", "failed", "dead_letter"] })
+      .notNull()
+      .default("pending"),
+    attempt: integer("attempt").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull().default(1),
+    nextRunAt: text("next_run_at"),
+    lastError: text("last_error"),
+    occurredAt: text("occurred_at").notNull(),
+    processedAt: text("processed_at"),
+    ...timestamps
+  },
+  (table) => ({
+    statusNextRunIndex: index("event_outbox_status_next_run_idx").on(table.status, table.nextRunAt),
+    statusCheck: check(
+      "event_outbox_status_check",
+      sql`${table.status} IN ('pending', 'published', 'failed', 'dead_letter')`
+    )
+  })
+);
+
+export const scheduledJobs = sqliteTable(
+  "scheduled_jobs",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    code: text("code").notNull(),
+    cronExpression: text("cron_expression").notNull(),
+    handlerType: text("handler_type").notNull(),
+    payloadJson: text("payload_json", { mode: "json" }).notNull(),
+    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
+    lastRunAt: text("last_run_at"),
+    nextRunAt: text("next_run_at"),
+    attempt: integer("attempt").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull().default(1),
+    lastError: text("last_error"),
+    ...timestamps
+  },
+  (table) => ({
+    codeUnique: uniqueIndex("scheduled_jobs_code_unique").on(table.code),
+    nextRunIndex: index("scheduled_jobs_next_run_idx").on(table.status, table.nextRunAt),
+    statusCheck: check("scheduled_jobs_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
+  })
+);
+
+export const fileObjects = sqliteTable(
+  "file_objects",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    objectKey: text("object_key").notNull(),
+    originalName: text("original_name").notNull(),
+    contentType: text("content_type").notNull(),
+    extension: text("extension").notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    storageDriver: text("storage_driver").notNull(),
+    status: text("status", { enum: ["active", "invalid"] }).notNull().default("active"),
+    referenced: integer("referenced", { mode: "boolean" }).notNull().default(false),
+    ...softDelete,
+    ...timestamps,
+    createdBy: integer("created_by"),
+    updatedBy: integer("updated_by")
+  },
+  (table) => ({
+    objectKeyUnique: uniqueIndex("file_objects_object_key_unique").on(table.objectKey),
+    statusCheck: check("file_objects_status_check", sql`${table.status} IN ('active', 'invalid')`)
+  })
+);
+
+export const notifications = sqliteTable(
+  "notifications",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: integer("user_id"),
+    channel: text("channel", { enum: ["in_app", "email", "webhook", "sms"] }).notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    status: text("status", { enum: ["unread", "read", "archived", "deleted"] })
+      .notNull()
+      .default("unread"),
+    metadataJson: text("metadata_json", { mode: "json" }).notNull(),
+    readAt: text("read_at"),
+    archivedAt: text("archived_at"),
+    ...softDelete,
+    ...timestamps
+  },
+  (table) => ({
+    userStatusIndex: index("notifications_user_status_idx").on(table.userId, table.status),
+    channelCheck: check("notifications_channel_check", sql`${table.channel} IN ('in_app', 'email', 'webhook', 'sms')`),
+    statusCheck: check(
+      "notifications_status_check",
+      sql`${table.status} IN ('unread', 'read', 'archived', 'deleted')`
+    )
+  })
+);
+
+export const notificationTemplates = sqliteTable(
+  "notification_templates",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    code: text("code").notNull(),
+    channel: text("channel", { enum: ["in_app", "email", "sms"] }).notNull(),
+    locale: text("locale").notNull(),
+    subject: text("subject"),
+    body: text("body").notNull(),
+    variablesJson: text("variables_json", { mode: "json" }).notNull(),
+    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
+    ...timestamps
+  },
+  (table) => ({
+    codeLocaleUnique: uniqueIndex("notification_templates_code_locale_unique").on(
+      table.code,
+      table.locale
+    ),
+    channelCheck: check("notification_templates_channel_check", sql`${table.channel} IN ('in_app', 'email', 'sms')`),
+    statusCheck: check("notification_templates_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
+  })
+);
+
+export const logEntries = sqliteTable(
+  "log_entries",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    logType: text("log_type").notNull(),
+    level: text("level", { enum: ["debug", "info", "warn", "error"] }).notNull(),
+    message: text("message").notNull(),
+    traceId: text("trace_id"),
+    userId: integer("user_id"),
+    ipAddress: text("ip_address"),
+    metadataJson: text("metadata_json", { mode: "json" }).notNull(),
+    occurredAt: text("occurred_at").notNull(),
+    createdAt: text("created_at").notNull()
+  },
+  (table) => ({
+    typeOccurredIndex: index("log_entries_type_occurred_idx").on(table.logType, table.occurredAt),
+    typeCheck: check(
+      "log_entries_type_check",
+      sql`${table.logType} IN ('login', 'operation', 'access', 'api_call', 'exception', 'security', 'scheduler', 'file_operation')`
+    ),
+    levelCheck: check("log_entries_level_check", sql`${table.level} IN ('debug', 'info', 'warn', 'error')`)
+  })
+);
+
+export const importExportTasks = sqliteTable(
+  "import_export_tasks",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    taskType: text("task_type", { enum: ["import", "export"] }).notNull(),
+    resourceType: text("resource_type").notNull(),
+    status: text("status", { enum: ["pending", "running", "succeeded", "failed"] })
+      .notNull()
+      .default("pending"),
+    fileObjectId: integer("file_object_id"),
+    resultFileObjectId: integer("result_file_object_id"),
+    errorFileObjectId: integer("error_file_object_id"),
+    totalRows: integer("total_rows").notNull().default(0),
+    successRows: integer("success_rows").notNull().default(0),
+    failedRows: integer("failed_rows").notNull().default(0),
+    errorPreviewJson: text("error_preview_json", { mode: "json" }).notNull(),
+    resultExpiresAt: text("result_expires_at"),
+    ...timestamps,
+    createdBy: integer("created_by")
+  },
+  (table) => ({
+    statusIndex: index("import_export_tasks_status_idx").on(table.status),
+    typeCheck: check("import_export_tasks_type_check", sql`${table.taskType} IN ('import', 'export')`),
+    statusCheck: check(
+      "import_export_tasks_status_check",
+      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed')`
+    )
+  })
+);
+
 export const sqliteSchema = {
   apiPermissions,
   authSessions,
+  cacheEntries,
+  eventOutbox,
+  fileObjects,
+  importExportTasks,
+  locks,
+  logEntries,
   menuApiBindings,
   menus,
+  notificationTemplates,
+  notifications,
   organizations,
   permissions,
+  queueJobs,
+  rateLimitCounters,
   refreshTokens,
   fieldPermissionRules,
   rolePermissions,
   roleDataPermissions,
   roles,
   routeMetadata,
+  scheduledJobs,
   schemaMetadata,
   systemInitializationState,
   userPermissionOverrides,

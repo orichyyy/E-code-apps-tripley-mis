@@ -19,9 +19,13 @@ This file records incomplete requirements that must not be claimed complete.
 
 ## Base Module Gaps
 
-- System configuration, dictionary management, file management, notifications, logs, scheduled tasks, import/export, and i18n management are not durable backend modules yet.
-- Worker execution is still a skeleton and does not process durable queue jobs.
-- Infrastructure drivers requiring Redis, RabbitMQ, S3-compatible storage, SMTP, and concrete database adapter tables remain incomplete unless explicitly implemented in the adapter package.
+- Durable infrastructure tables now exist for cache, rate limiting, locks, queue jobs, event outbox, scheduled jobs, files, notifications, notification templates, logs, and import/export tasks.
+- Runnable default in-memory adapters now exist for lock, queue, event bus, rate limit, scheduler, and notifications. Local filesystem storage exists and writes through temp-file-then-rename.
+- Database-backed runtime adapter drivers over the new durable infrastructure tables are not complete yet.
+- System configuration, dictionary management, file management, notifications, logs, scheduled tasks, import/export, and i18n management are not complete backend API modules yet.
+- Worker execution now has queue/scheduler registration boundaries, but durable task polling/execution over `queue_jobs` and `scheduled_jobs` is not complete yet.
+- Redis, RabbitMQ, S3-compatible storage, and SMTP remain optional placeholders only; no mandatory dependencies have been added.
+- Frontend pages still use typed placeholder data for modules whose backend APIs are not complete. Real API integration is complete only for backend-core APIs already implemented in prior goals.
 
 ## Validation Gaps
 
@@ -30,3 +34,4 @@ This file records incomplete requirements that must not be claimed complete.
 - PostgreSQL database tests now include role data-permission, role field-permission, and user permission override persistence after reload, plus effective permission behavior after reload.
 - SQLite is executable locally through `better-sqlite3`, including bigint-safe organization path reads at the driver boundary.
 - OpenAPI request/response schemas are explicit for the permission-extension endpoints and effective permission context. Older backend-core endpoints still use the generic success envelope unless they have already been mapped.
+- SQLite and PostgreSQL migrations now include the infrastructure foundation tables. PostgreSQL integration tests for database-backed infrastructure runtime drivers remain pending until those drivers are implemented.

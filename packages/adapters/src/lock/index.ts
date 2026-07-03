@@ -8,3 +8,5 @@ export type LockHandle = {
 export type LockAdapter = HealthCheckableAdapter & {
   acquire: (key: string, options?: { ttlSeconds?: number }) => Promise<LockHandle | null>;
 };
+
+export * from "./in-memory-lock";

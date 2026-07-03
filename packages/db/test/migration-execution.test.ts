@@ -35,11 +35,15 @@ describe("database migration execution", () => {
 
       expect(applied).toEqual([
         "0001_backend_core_foundation.sql",
-        "0002_permission_extension_persistence.sql"
+        "0002_permission_extension_persistence.sql",
+        "0003_infrastructure_foundation.sql"
       ]);
       expect(tables).toContainEqual({ name: "users" });
       expect(tables).toContainEqual({ name: "organizations" });
       expect(tables).toContainEqual({ name: "system_initialization_state" });
+      expect(tables).toContainEqual({ name: "queue_jobs" });
+      expect(tables).toContainEqual({ name: "event_outbox" });
+      expect(tables).toContainEqual({ name: "log_entries" });
     } finally {
       client.close();
     }
@@ -79,16 +83,27 @@ describe("database migration execution", () => {
         `SELECT table_name
          FROM information_schema.tables
          WHERE table_schema = 'public'
-           AND table_name IN ('users', 'organizations', 'system_initialization_state')
+           AND table_name IN (
+             'users',
+             'organizations',
+             'system_initialization_state',
+             'queue_jobs',
+             'event_outbox',
+             'log_entries'
+           )
          ORDER BY table_name`
       );
 
       expect(applied).toEqual([
         "0001_backend_core_foundation.sql",
-        "0002_permission_extension_persistence.sql"
+        "0002_permission_extension_persistence.sql",
+        "0003_infrastructure_foundation.sql"
       ]);
       expect(result.rows.map((row) => row.table_name)).toEqual([
+        "event_outbox",
+        "log_entries",
         "organizations",
+        "queue_jobs",
         "system_initialization_state",
         "users"
       ]);
