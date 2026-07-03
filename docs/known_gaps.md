@@ -8,7 +8,7 @@ This file records incomplete requirements that must not be claimed complete.
 - PostgreSQL migration execution and PostgreSQL smoke tests use an externally provided `TEST_DATABASE_URL` or `DATABASE_URL`.
 - PostgreSQL tests are skipped when `TEST_DATABASE_URL` is absent in the local environment.
 - DB-backed backend-core persistence now exists behind `BACKEND_CORE_STORE=database` for initialization, auth sessions, refresh tokens, users, organizations, roles, role permissions, permissions, menus, menu/API bindings, route metadata, API permission metadata, and user-organization-role bindings.
-- The DB-backed repository currently snapshots the existing backend-core store into relational tables. Future work should replace this with narrower per-aggregate repositories before high-concurrency production use.
+- Normal DB-backed backend-core API mutation flows now persist through narrower per-aggregate repositories. A whole-store snapshot save helper remains for test reset and full-store support utilities.
 
 ## Auth and Permission Gaps
 
@@ -25,5 +25,5 @@ This file records incomplete requirements that must not be claimed complete.
 ## Validation Gaps
 
 - `pnpm db:migrate:postgresql` cannot run without `TEST_DATABASE_URL` or `DATABASE_URL`.
-- PostgreSQL database tests now include backend-core DB-backed initialization, session/token reload, user/menu/route/permission persistence, and refresh-token exchange coverage when `TEST_DATABASE_URL` is present.
+- PostgreSQL database tests now include backend-core DB-backed initialization, seed idempotency, session/token reload, user/organization/role/menu/route/permission mutation persistence, user-organization-role binding persistence, logout persistence, and refresh-token exchange coverage when `TEST_DATABASE_URL` is present.
 - SQLite is executable locally through `better-sqlite3`, including bigint-safe organization path reads at the driver boundary.

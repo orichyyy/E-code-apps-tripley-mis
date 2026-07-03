@@ -242,11 +242,9 @@ This is not yet the complete backend core foundation. DB-backed persistence now 
 
 ## Recommended Next Goals
 
-1. Replace the snapshot-style backend-core store repository with smaller per-aggregate repositories.
-2. Implement service-level APIs and effective permission evaluation for role data permissions, role field permissions, and user permission overrides.
-3. Expand PostgreSQL integration coverage for organization/user/role/menu mutation flows through DB-backed services.
-4. Add explicit local documentation for running API and seed with `BACKEND_CORE_STORE=database`.
-5. Continue into backend infrastructure modules only after the backend-core persistence slice is stable.
+1. Implement service-level APIs and effective permission evaluation for role data permissions, role field permissions, and user permission overrides.
+2. Add explicit local documentation for running API and seed with `BACKEND_CORE_STORE=database`.
+3. Continue into backend infrastructure modules only after the backend-core permission-extension slice is stable.
 
 ## Frontend Admin UI Progress
 
@@ -312,4 +310,16 @@ The resumed backend-core persistence slice completed the following:
 - Added `GET /api/permissions/tree` as a virtual tree derived from flat permission metadata without adding permission `parent_id`.
 - Added SQLite/PostgreSQL migrations and Drizzle schema for `role_data_permissions`, `field_permission_rules`, and `user_permission_overrides` according to the confirmed persistence decisions.
 
-The next recommended backend-core goal is to replace the snapshot-style repository with smaller per-aggregate repositories and add service-level APIs/effective permission evaluation for role data permissions, role field permissions, and user permission overrides.
+The next recommended backend-core goal is to add service-level APIs and effective permission evaluation for role data permissions, role field permissions, and user permission overrides.
+
+## Backend Core Aggregate Persistence
+
+The backend-core persistence refactor completed the following:
+
+- Added focused aggregate repositories for initialization state, auth sessions/refresh tokens, users, organizations, roles/role permissions, permission/API metadata, menus/menu API bindings, route metadata, and user-organization-role bindings.
+- Changed DB-backed runtime mutation paths to persist only the affected aggregate scopes instead of clearing and rewriting all backend-core tables after every mutation.
+- Kept the whole-store snapshot save path only for test reset and full-store support utilities; normal API mutation flows now use aggregate repositories.
+- Preserved `BACKEND_CORE_STORE=database` runtime and seed support.
+- Expanded PostgreSQL integration coverage for first-start initialization, DB-backed seed idempotency, login/refresh/logout, user mutations, organization mutations, role/role-permission mutations, user-organization-role assignment/removal, menu/API binding mutations, permission sync, and route sync.
+
+The next recommended backend-core goal is to implement service-level APIs and effective permission evaluation for role data permissions, role field permissions, and user permission overrides.

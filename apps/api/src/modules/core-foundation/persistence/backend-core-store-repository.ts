@@ -2,6 +2,7 @@ import { loadDatabaseConfig } from "@web-admin-base/db";
 import type { DatabaseConfig } from "@web-admin-base/db";
 
 import { InMemoryBackendStore } from "../in-memory-store";
+import { BackendCoreAggregateRepositories } from "./backend-core-aggregate-repositories";
 import {
   createPostgresqlExecutor,
   createSqliteExecutor,
@@ -32,7 +33,11 @@ import {
 } from "./row-values";
 
 export class BackendCoreStoreRepository {
-  constructor(private readonly executor: QueryExecutor) {}
+  readonly aggregates: BackendCoreAggregateRepositories;
+
+  constructor(private readonly executor: QueryExecutor) {
+    this.aggregates = new BackendCoreAggregateRepositories(executor);
+  }
 
   static fromEnvironment(env: NodeJS.ProcessEnv = process.env): BackendCoreStoreRepository {
     return BackendCoreStoreRepository.fromConfig(loadDatabaseConfig(env));
@@ -47,6 +52,10 @@ export class BackendCoreStoreRepository {
 
   async close(): Promise<void> {
     await this.executor.close();
+  }
+
+  transaction<T>(operation: () => Promise<T>): Promise<T> {
+    return this.executor.transaction(operation);
   }
 
   async load(): Promise<InMemoryBackendStore> {

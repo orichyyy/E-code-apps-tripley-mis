@@ -25,6 +25,10 @@ export function createPostgresqlExecutor(url: string): QueryExecutor {
       await (activeClient ?? pool).query(sql, params);
     },
     async transaction(operation) {
+      if (activeClient) {
+        return operation();
+      }
+
       const client = await pool.connect();
       activeClient = client;
       try {
@@ -48,6 +52,7 @@ export function createPostgresqlExecutor(url: string): QueryExecutor {
 
 export function createSqliteExecutor(url: string): QueryExecutor {
   const client = createSqliteClient(url);
+  let transactionDepth = 0;
 
   return {
     dialect: "sqlite",
@@ -58,6 +63,16 @@ export function createSqliteExecutor(url: string): QueryExecutor {
       client.prepare(sql).run(...params);
     },
     async transaction(operation) {
+      if (transactionDepth > 0) {
+        transactionDepth += 1;
+        try {
+          return await operation();
+        } finally {
+          transactionDepth -= 1;
+        }
+      }
+
+      transactionDepth = 1;
       await this.run("BEGIN");
       try {
         const result = await operation();
@@ -66,6 +81,8 @@ export function createSqliteExecutor(url: string): QueryExecutor {
       } catch (error) {
         await this.run("ROLLBACK");
         throw error;
+      } finally {
+        transactionDepth = 0;
       }
     },
     async close() {

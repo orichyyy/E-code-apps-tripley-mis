@@ -30,6 +30,18 @@ import {
 } from "../service-context";
 import { BackendCoreStoreRepository } from "./backend-core-store-repository";
 
+type PersistenceScope =
+  | "all"
+  | "authSessions"
+  | "initializationState"
+  | "menus"
+  | "organizations"
+  | "permissions"
+  | "roles"
+  | "routeMetadata"
+  | "userOrganizationRoles"
+  | "users";
+
 export class PersistentBackendCoreServices extends BackendCoreServices {
   private pendingSave: Promise<void> = Promise.resolve();
 
@@ -73,49 +85,49 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
   }
 
   override async initialize(input: InitializationSetupRequest) {
-    return this.persistAfter(() => super.initialize(input));
+    return this.persistAfter(() => super.initialize(input), ["all"]);
   }
 
   override async seedInitialization(input: InitializationSetupRequest) {
-    return this.persistAfter(() => super.seedInitialization(input));
+    return this.persistAfter(() => super.seedInitialization(input), ["all"]);
   }
 
   override async login(input: Parameters<BackendCoreServices["login"]>[0], request: Parameters<BackendCoreServices["login"]>[1]) {
-    return this.persistAfter(() => super.login(input, request));
+    return this.persistAfter(() => super.login(input, request), ["users", "authSessions"]);
   }
 
   override async refreshAccessToken(refreshToken: string) {
-    return this.persistAfter(() => super.refreshAccessToken(refreshToken));
+    return this.persistAfter(() => super.refreshAccessToken(refreshToken), ["authSessions"]);
   }
 
   override async changePassword(
     authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
     input: ChangePasswordRequest
   ) {
-    return this.persistAfter(() => super.changePassword(authContext, input));
+    return this.persistAfter(() => super.changePassword(authContext, input), ["users"]);
   }
 
   override async switchCurrentOrganization(
     authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
     input: SwitchCurrentOrganizationRequest
   ) {
-    return this.persistAfter(() => super.switchCurrentOrganization(authContext, input));
+    return this.persistAfter(() => super.switchCurrentOrganization(authContext, input), ["authSessions"]);
   }
 
   override logout(sessionId: string) {
-    return this.persistAfter(() => super.logout(sessionId));
+    return this.persistAfter(() => super.logout(sessionId), ["authSessions"]);
   }
 
   override listOnlineUsers(filters: OnlineUserListFilters = {}) {
-    return this.persistSync(() => super.listOnlineUsers(filters));
+    return this.persistSync(() => super.listOnlineUsers(filters), ["authSessions"]);
   }
 
   override updateOrganizationDepthConfig(input: UpdateOrganizationDepthConfigRequest) {
-    return this.persistSync(() => super.updateOrganizationDepthConfig(input));
+    return super.updateOrganizationDepthConfig(input);
   }
 
   override async createOrganization(input: CreateOrganizationRequest, actorId: string | null = null) {
-    return this.persistAfter(() => super.createOrganization(input, actorId));
+    return this.persistAfter(() => super.createOrganization(input, actorId), ["organizations"]);
   }
 
   override async updateOrganization(
@@ -123,27 +135,33 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
     input: UpdateOrganizationRequest,
     actorId: string | null = null
   ) {
-    return this.persistAfter(() => super.updateOrganization(id, input, actorId));
+    return this.persistAfter(() => super.updateOrganization(id, input, actorId), ["organizations"]);
   }
 
   override async disableOrganization(id: string, actorId: string | null = null) {
-    return this.persistAfter(() => super.disableOrganization(id, actorId));
+    return this.persistAfter(() => super.disableOrganization(id, actorId), ["organizations"]);
   }
 
   override async enableOrganization(id: string, actorId: string | null = null) {
-    return this.persistAfter(() => super.enableOrganization(id, actorId));
+    return this.persistAfter(() => super.enableOrganization(id, actorId), ["organizations"]);
   }
 
   override async deleteOrganization(id: string, deletedBy: string | null = null) {
-    return this.persistAfter(() => super.deleteOrganization(id, deletedBy));
+    return this.persistAfter(() => super.deleteOrganization(id, deletedBy), [
+      "organizations",
+      "userOrganizationRoles"
+    ]);
   }
 
   override createUser(input: CreateUserRequest, actorId: string | null = null) {
-    return this.persistSync(() => super.createUser(input, actorId));
+    return this.persistSync(() => super.createUser(input, actorId), ["users", "userOrganizationRoles"]);
   }
 
   override async updateUser(id: string, input: UpdateUserRequest, actorId: string | null = null) {
-    return this.persistAfter(() => super.updateUser(id, input, actorId));
+    return this.persistAfter(() => super.updateUser(id, input, actorId), [
+      "users",
+      "userOrganizationRoles"
+    ]);
   }
 
   override async setUserStatus(
@@ -151,7 +169,7 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
     status: "enabled" | "disabled" | "locked",
     actorId: string | null = null
   ) {
-    return this.persistAfter(() => super.setUserStatus(id, status, actorId));
+    return this.persistAfter(() => super.setUserStatus(id, status, actorId), ["users"]);
   }
 
   override async resetUserPassword(
@@ -159,11 +177,11 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
     input: ResetPasswordRequest,
     actorId: string | null = null
   ) {
-    return this.persistAfter(() => super.resetUserPassword(id, input, actorId));
+    return this.persistAfter(() => super.resetUserPassword(id, input, actorId), ["users"]);
   }
 
   override async deleteUser(id: string, deletedBy: string | null = null) {
-    return this.persistAfter(() => super.deleteUser(id, deletedBy));
+    return this.persistAfter(() => super.deleteUser(id, deletedBy), ["users", "userOrganizationRoles"]);
   }
 
   override async assignUserOrganizationRole(
@@ -171,7 +189,10 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
     input: AssignUserOrganizationRoleRequest,
     actorId: string | null = null
   ) {
-    return this.persistAfter(() => super.assignUserOrganizationRole(userId, input, actorId));
+    return this.persistAfter(() => super.assignUserOrganizationRole(userId, input, actorId), [
+      "users",
+      "userOrganizationRoles"
+    ]);
   }
 
   override async removeUserOrganizationRole(
@@ -179,15 +200,18 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
     organizationId: string,
     deletedBy: string | null = null
   ) {
-    return this.persistAfter(() => super.removeUserOrganizationRole(userId, organizationId, deletedBy));
+    return this.persistAfter(() => super.removeUserOrganizationRole(userId, organizationId, deletedBy), [
+      "users",
+      "userOrganizationRoles"
+    ]);
   }
 
   override createRole(input: CreateRoleRequest, actorId: string | null = null) {
-    return this.persistSync(() => super.createRole(input, actorId));
+    return this.persistSync(() => super.createRole(input, actorId), ["roles"]);
   }
 
   override async updateRole(id: string, input: UpdateRoleRequest, actorId: string | null = null) {
-    return this.persistAfter(() => super.updateRole(id, input, actorId));
+    return this.persistAfter(() => super.updateRole(id, input, actorId), ["roles"]);
   }
 
   override async setRoleStatus(
@@ -195,11 +219,11 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
     status: "enabled" | "disabled",
     actorId: string | null = null
   ) {
-    return this.persistAfter(() => super.setRoleStatus(id, status, actorId));
+    return this.persistAfter(() => super.setRoleStatus(id, status, actorId), ["roles"]);
   }
 
   override copyRole(id: string, actorId: string | null = null) {
-    return this.persistSync(() => super.copyRole(id, actorId));
+    return this.persistSync(() => super.copyRole(id, actorId), ["roles"]);
   }
 
   override async updateRolePermissions(
@@ -207,62 +231,117 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
     input: UpdateRolePermissionsRequest,
     actorId: string | null = null
   ) {
-    return this.persistAfter(() => super.updateRolePermissions(id, input, actorId));
+    return this.persistAfter(() => super.updateRolePermissions(id, input, actorId), ["roles"]);
   }
 
   override async deleteRole(id: string, deletedBy: string | null = null) {
-    return this.persistAfter(() => super.deleteRole(id, deletedBy));
+    return this.persistAfter(() => super.deleteRole(id, deletedBy), [
+      "roles",
+      "userOrganizationRoles"
+    ]);
   }
 
   override syncPermissions() {
-    return this.persistAfter(() => super.syncPermissions());
+    return this.persistAfter(() => super.syncPermissions(), ["permissions"]);
   }
 
   override async syncRoutes() {
-    return this.persistAfter(() => super.syncRoutes());
+    return this.persistAfter(() => super.syncRoutes(), ["routeMetadata"]);
   }
 
   override async createMenu(input: CreateMenuRequest) {
-    return this.persistAfter(() => super.createMenu(input));
+    return this.persistAfter(() => super.createMenu(input), ["menus"]);
   }
 
   override async updateMenu(id: string, input: UpdateMenuRequest) {
-    return this.persistAfter(() => super.updateMenu(id, input));
+    return this.persistAfter(() => super.updateMenu(id, input), ["menus"]);
   }
 
   override async deleteMenu(id: string, deletedBy: string | null = null) {
-    return this.persistAfter(() => super.deleteMenu(id, deletedBy));
+    return this.persistAfter(() => super.deleteMenu(id, deletedBy), ["menus"]);
   }
 
   override async updateMenuApiBindings(id: string, input: UpdateMenuApiBindingsRequest) {
-    return this.persistAfter(() => super.updateMenuApiBindings(id, input));
+    return this.persistAfter(() => super.updateMenuApiBindings(id, input), ["menus"]);
   }
 
-  private async persistAfter<T>(operation: () => T | Promise<T>): Promise<Awaited<T>> {
+  private async persistAfter<T>(
+    operation: () => T | Promise<T>,
+    scopes: PersistenceScope[]
+  ): Promise<Awaited<T>> {
     const result = await operation();
-    await this.persistNow();
+    await this.persistNow(scopes);
     return result;
   }
 
-  private persistSync<T>(operation: () => T): T {
+  private persistSync<T>(operation: () => T, scopes: PersistenceScope[]): T {
     const result = operation();
-    this.enqueueSave();
+    this.enqueueSave(scopes);
     return result;
   }
 
-  private async persistNow(): Promise<void> {
+  private async persistNow(scopes: PersistenceScope[]): Promise<void> {
     await this.flush();
-    const save = this.repository.save(this.getStore());
+    const save = this.persistScopes(scopes);
     this.pendingSave = save.catch(() => undefined);
     await save;
   }
 
-  private enqueueSave(): void {
-    this.pendingSave = this.pendingSave.then(() => this.repository.save(this.getStore()));
+  private enqueueSave(scopes: PersistenceScope[]): void {
+    this.pendingSave = this.pendingSave.then(() => this.persistScopes(scopes));
   }
 
   flush(): Promise<void> {
     return this.pendingSave;
+  }
+
+  private async persistScopes(scopes: PersistenceScope[]): Promise<void> {
+    const normalizedScopes = scopes.includes("all")
+      ? (["all"] as PersistenceScope[])
+      : [...new Set(scopes)];
+
+    await this.repository.transaction(async () => {
+      for (const scope of normalizedScopes) {
+        await this.persistScope(scope);
+      }
+    });
+  }
+
+  private async persistScope(scope: PersistenceScope): Promise<void> {
+    const store = this.getStore();
+
+    switch (scope) {
+      case "all":
+        await this.repository.aggregates.replaceAllFromStore(store);
+        return;
+      case "authSessions":
+        await this.repository.aggregates.authSessions.replaceFromStore(store);
+        return;
+      case "initializationState":
+        await this.repository.aggregates.initializationState.replaceFromStore(store);
+        return;
+      case "menus":
+        await this.repository.aggregates.menus.replaceFromStore(store);
+        return;
+      case "organizations":
+        await this.repository.aggregates.organizations.replaceFromStore(store);
+        return;
+      case "permissions":
+        await this.repository.aggregates.permissions.replaceFromStore(store);
+        return;
+      case "roles":
+        await this.repository.aggregates.roles.replaceFromStore(store);
+        return;
+      case "routeMetadata":
+        await this.repository.aggregates.routeMetadata.replaceFromStore(store);
+        return;
+      case "userOrganizationRoles":
+        await this.repository.aggregates.userOrganizationRoles.replaceFromStore(store);
+        return;
+      case "users":
+        await this.repository.aggregates.users.replaceFromStore(store);
+        return;
+    }
   }
 
   private getStore() {
