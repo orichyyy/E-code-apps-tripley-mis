@@ -1,3 +1,8 @@
+import {
+  createInMemoryNotificationChannelAdapter,
+  createSmtpNotificationChannelAdapter,
+  type NotificationChannelAdapter
+} from "@web-admin-base/adapters";
 import { createOpenApiDocument, healthResponseSchema } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
@@ -113,7 +118,9 @@ export function createDefaultAppDependencies(config: ApiConfig = loadApiConfig()
   return {
     backendCoreServices: createInMemoryBackendCoreServices(config.backendCore),
     communicationsServices: CommunicationsServices.inMemory(),
-    infrastructureServices: InfrastructureServices.inMemory(),
+    infrastructureServices: InfrastructureServices.inMemory({
+      notificationChannel: createNotificationChannel(config)
+    }),
     systemManagementServices: SystemManagementServices.inMemory(),
     structuredLogSink: noopStructuredLogSink
   };
@@ -125,8 +132,25 @@ export async function createDatabaseBackedAppDependencies(
   return {
     backendCoreServices: await createPersistentBackendCoreServices(config.backendCore),
     communicationsServices: CommunicationsServices.database(),
-    infrastructureServices: InfrastructureServices.database(),
+    infrastructureServices: InfrastructureServices.database(undefined, {
+      notificationChannel: createNotificationChannel(config)
+    }),
     systemManagementServices: SystemManagementServices.database(),
     structuredLogSink: noopStructuredLogSink
   };
+}
+
+function createNotificationChannel(config: ApiConfig): NotificationChannelAdapter {
+  if (!config.smtp.enabled) return createInMemoryNotificationChannelAdapter();
+  if (!config.smtp.host || !config.smtp.from) {
+    throw new Error("SMTP_HOST and SMTP_FROM are required when SMTP_ENABLED is true.");
+  }
+  return createSmtpNotificationChannelAdapter({
+    host: config.smtp.host,
+    port: config.smtp.port,
+    secure: config.smtp.secure,
+    username: config.smtp.username,
+    password: config.smtp.password,
+    from: config.smtp.from
+  });
 }

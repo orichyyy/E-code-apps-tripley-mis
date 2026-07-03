@@ -3,7 +3,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-import { createLocalFileStorageAdapter } from "@web-admin-base/adapters";
+import {
+  createInMemoryNotificationChannelAdapter,
+  createLocalFileStorageAdapter
+} from "@web-admin-base/adapters";
 import { createApp } from "../src/app";
 import { createInMemoryBackendCoreServices } from "../src/modules/core-foundation/services";
 import { InfrastructureServices } from "../src/modules/infrastructure/infrastructure.service";
@@ -109,6 +112,59 @@ describe("infrastructure routes", () => {
     } finally {
       await rm(root, { recursive: true, force: true });
     }
+  });
+
+  it("renders and sends test email notifications from templates", async () => {
+    const notificationChannel = createInMemoryNotificationChannelAdapter();
+    const app = createApp({
+      backendCoreServices: createInMemoryBackendCoreServices(),
+      infrastructureServices: InfrastructureServices.inMemory({ notificationChannel })
+    });
+    await initialize(app);
+    const headers = await loginHeaders(app);
+
+    const createTemplateResponse = await app.request("/api/notification-templates", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        code: "email-welcome",
+        channel: "email",
+        locale: "en",
+        subject: "Hello {userName}",
+        body: "Task {{taskName}} is ready.",
+        variables: ["userName", "taskName"]
+      })
+    });
+    const sendResponse = await app.request("/api/notifications/email/test", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        templateCode: "email-welcome",
+        locale: "en",
+        recipient: "ops@example.com",
+        variables: { userName: "Ada", taskName: "Review" }
+      })
+    });
+    const sendBody = await sendResponse.json();
+
+    expect(createTemplateResponse.status).toBe(201);
+    expect(sendResponse.status).toBe(200);
+    expect(sendBody.data).toEqual(
+      expect.objectContaining({
+        channel: "email",
+        recipient: "ops@example.com",
+        subject: "Hello Ada",
+        status: "sent"
+      })
+    );
+    expect(notificationChannel.listMessages()).toEqual([
+      expect.objectContaining({
+        channel: "email",
+        recipient: "ops@example.com",
+        subject: "Hello Ada",
+        body: "Task Review is ready."
+      })
+    ]);
   });
 });
 

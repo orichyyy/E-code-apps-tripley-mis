@@ -27,9 +27,9 @@ This file records incomplete requirements that must not be claimed complete.
 - System configuration, dictionary management, and i18n management now have database schema, backend APIs, OpenAPI coverage, PostgreSQL tests, and frontend API integration for the implemented pages.
 - Announcements and webhook subscriptions now have database schema, backend APIs, OpenAPI coverage, PostgreSQL tests, and frontend API integration where routes exist.
 - Announcement organization scoping currently stores the confirmed `scope_type` only. A concrete organization target/reference field is not implemented because it has not been confirmed in the base contract.
-- External webhook delivery, retry workers, SMTP delivery, and S3-compatible storage are not complete concrete drivers yet.
+- External webhook delivery, retry workers, and S3-compatible storage are not complete concrete drivers yet. SMTP email delivery now has an optional configuration-driven driver and test-send API, but production retry/fan-out workflows remain reserved.
 - Worker execution now has queue/scheduler registration boundaries plus durable `runOnce`/polling hooks over database queue and scheduler adapters. Full production task catalogs, cron expression evaluation, timeout enforcement, and dead-letter workflows remain reserved or incomplete.
-- Redis, RabbitMQ, S3-compatible storage, and SMTP remain optional placeholders only; no mandatory dependencies have been added.
+- Redis, RabbitMQ, and S3-compatible storage remain optional placeholders only; no mandatory dependencies have been added. SMTP remains optional and is disabled unless configured.
 - Frontend pages use real API fetches for implemented infrastructure modules where backend APIs exist. Pages whose backend APIs are still incomplete continue to use typed placeholder data.
 - Frontend system configuration and dictionary pages now use real API fetches when an access token is available.
 - i18n message management now has a dedicated frontend route/page wired to the implemented backend APIs. The static English/Chinese UI message bundle remains the local frontend default.
@@ -37,7 +37,7 @@ This file records incomplete requirements that must not be claimed complete.
 - Announcement management now has a dedicated frontend route/page wired to the implemented backend APIs. Announcement notification delivery and organization target references remain reserved/unconfirmed.
 - In-app notification management now has a dedicated frontend route/page wired to the implemented backend APIs. Notification creation and delivery fan-out remain backend/reserved concerns.
 - Webhook subscription management now has a frontend route/page wired to the implemented backend APIs. Real outbound delivery remains reserved.
-- Notification template management now has a frontend route/page wired to the implemented backend APIs. SMTP/SMS sending remains reserved.
+- Notification template management now has a frontend route/page wired to the implemented backend APIs. SMTP template test sending is implemented through the backend API; SMS sending remains reserved.
 - Personal center and personal settings now use real authenticated profile APIs for allowed self-profile fields, avatar file-id reference changes, language, theme mode, theme color, and page-tab preference persistence.
 
 ## Validation Gaps
@@ -53,3 +53,4 @@ This file records incomplete requirements that must not be claimed complete.
 - PostgreSQL integration tests now cover database-backed infrastructure adapter drivers and DB-backed infrastructure API persistence. SQLite adapter smoke coverage remains executable locally.
 - PostgreSQL integration tests now cover DB-backed announcement and webhook subscription persistence.
 - PostgreSQL integration tests now cover profile preference persistence after DB-backed reload.
+- PostgreSQL integration tests now cover DB-backed email template lookup for the SMTP test-send API.

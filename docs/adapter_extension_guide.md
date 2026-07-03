@@ -19,10 +19,11 @@ Implemented v1 drivers include:
 - in-memory cache, lock, queue, event bus, rate limit, scheduler, token store, and notifications
 - database cache, rate limit, lease-table lock, queue, event outbox, and scheduler drivers over the v1 infrastructure tables
 - local filesystem storage with temp-file-then-rename writes
+- optional SMTP notification channel over Node.js built-ins, enabled only through explicit SMTP configuration
 
 ## Rules
 
-- Keep Redis, RabbitMQ, S3, SMTP, and other external drivers optional unless explicitly confirmed.
+- Keep Redis, RabbitMQ, S3, webhook delivery, SMS, and other external drivers optional unless explicitly confirmed.
 - Do not bypass adapter interfaces from API or worker modules.
 - Keep driver configuration explicit and validated.
 - Add contract tests for each new driver.

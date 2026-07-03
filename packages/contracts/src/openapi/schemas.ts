@@ -520,6 +520,17 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
     },
     additionalProperties: false
   },
+  SendTestEmailNotificationRequest: {
+    type: "object",
+    required: ["templateCode", "locale", "recipient"],
+    properties: {
+      templateCode: { type: "string" },
+      locale: { type: "string" },
+      recipient: { type: "string", format: "email" },
+      variables: { type: "object", additionalProperties: true }
+    },
+    additionalProperties: false
+  },
   CreateScheduledTaskRequest: {
     type: "object",
     required: ["code", "cronExpression", "handlerType"],
@@ -672,6 +683,20 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
     type: "object",
     additionalProperties: true,
     nullable: true
+  }),
+  EmailNotificationSendResponse: envelopeSchema({
+    type: "object",
+    required: ["channel", "recipient", "templateCode", "locale", "subject", "status", "sentAt"],
+    properties: {
+      channel: { type: "string", enum: ["email"] },
+      recipient: { type: "string", format: "email" },
+      templateCode: { type: "string" },
+      locale: { type: "string" },
+      subject: { type: "string" },
+      status: { type: "string", enum: ["sent"] },
+      sentAt: { type: "string", format: "date-time" }
+    },
+    additionalProperties: false
   }),
   ScheduledTaskListResponse: envelopeSchema({
     type: "array",

@@ -1,14 +1,16 @@
-import { createLocalFileStorageAdapter, type FileStorageAdapter } from "@web-admin-base/adapters";
+import type { FileStorageAdapter, NotificationChannelAdapter } from "@web-admin-base/adapters";
 import type {
   CreateExportTaskRequest,
   CreateLogExportTaskRequest,
   CreateNotificationTemplateRequest,
   CreateScheduledTaskRequest,
+  SendTestEmailNotificationRequest,
   UpdateNotificationTemplateRequest,
   UpdateScheduledTaskRequest
 } from "@web-admin-base/contracts";
 
 import { createKnownError } from "../../core/errors/error-codes";
+import { sendTestEmailNotification, type NotificationTemplateRecord } from "./email-notification-sender";
 import {
   createObjectKey,
   isPreviewableImage,
@@ -16,6 +18,13 @@ import {
   type FileUploadInput
 } from "./file-management";
 import { InfrastructureRepository } from "./infrastructure.repository";
+import {
+  createDefaultFileStorage,
+  createDefaultNotificationChannel,
+  readMaxFileSizeBytes,
+  resolveInfrastructureServiceOptions,
+  type InfrastructureServiceOptions
+} from "./infrastructure-service-options";
 import type { LogType, ScheduledTaskInput } from "./infrastructure.types";
 
 export class InfrastructureServices {
@@ -25,22 +34,38 @@ export class InfrastructureServices {
     logs: [] as Array<Record<string, unknown> & { id: string; logType: LogType }>,
     notifications: [] as Array<Record<string, unknown> & { id: string; status: string }>,
     scheduledTasks: [] as Array<Record<string, unknown> & { id: string; code: string; enabled: boolean }>,
-    templates: [] as Array<Record<string, unknown> & { id: string; code: string; locale: string }>
+    templates: [] as NotificationTemplateRecord[]
   };
   private sequence = 1;
 
   constructor(
     private readonly repository?: InfrastructureRepository,
     private readonly storage: FileStorageAdapter = createDefaultFileStorage(),
-    private readonly maxFileSizeBytes = readMaxFileSizeBytes()
+    private readonly maxFileSizeBytes = readMaxFileSizeBytes(),
+    private readonly notificationChannel: NotificationChannelAdapter = createDefaultNotificationChannel()
   ) {}
 
-  static inMemory(storage?: FileStorageAdapter): InfrastructureServices {
-    return new InfrastructureServices(undefined, storage);
+  static inMemory(options?: FileStorageAdapter | InfrastructureServiceOptions): InfrastructureServices {
+    const resolved = resolveInfrastructureServiceOptions(options);
+    return new InfrastructureServices(
+      undefined,
+      resolved.storage,
+      resolved.maxFileSizeBytes,
+      resolved.notificationChannel
+    );
   }
 
-  static database(repository = InfrastructureRepository.fromEnvironment(), storage?: FileStorageAdapter): InfrastructureServices {
-    return new InfrastructureServices(repository, storage);
+  static database(
+    repository = InfrastructureRepository.fromEnvironment(),
+    options?: FileStorageAdapter | InfrastructureServiceOptions
+  ): InfrastructureServices {
+    const resolved = resolveInfrastructureServiceOptions(options);
+    return new InfrastructureServices(
+      repository,
+      resolved.storage,
+      resolved.maxFileSizeBytes,
+      resolved.notificationChannel
+    );
   }
 
   close(): Promise<void> {
@@ -157,6 +182,13 @@ export class InfrastructureServices {
     return Promise.resolve(template);
   }
 
+  async sendTestEmail(input: SendTestEmailNotificationRequest) {
+    return sendTestEmailNotification(input, {
+      listTemplates: () => this.listNotificationTemplates(),
+      notificationChannel: this.notificationChannel
+    });
+  }
+
   listScheduledTasks() {
     return this.repository?.listScheduledTasks() ?? Promise.resolve(this.memory.scheduledTasks);
   }
@@ -240,15 +272,4 @@ export class InfrastructureServices {
     this.sequence += 1;
     return id;
   }
-}
-
-function createDefaultFileStorage(): FileStorageAdapter {
-  return createLocalFileStorageAdapter({
-    rootDirectory: process.env.FILE_STORAGE_ROOT ?? ".web-admin-storage"
-  });
-}
-
-function readMaxFileSizeBytes(): number {
-  const configured = Number(process.env.FILE_MAX_SIZE_BYTES);
-  return Number.isFinite(configured) && configured > 0 ? configured : 50 * 1024 * 1024;
 }

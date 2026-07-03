@@ -72,9 +72,9 @@ No unresolved backend-core blockers remain from the previously listed questions.
 
 16. **SMTP and webhook delivery semantics**
 
-    Confirmed: v1 implements notification channel interfaces and durable notification records. Webhook/in-memory behavior may be represented as placeholders; SMTP does not add a real sending dependency until package/configuration/delivery semantics are confirmed.
+    Confirmed: v1 implements notification channel interfaces and durable notification records. SMTP email sending uses an optional configuration-driven driver over Node.js built-ins and remains disabled unless `SMTP_ENABLED=true` with host/from configuration. Webhook/in-memory behavior may be represented as placeholders.
 
-    Implemented handling: webhook subscription persistence and management APIs are implemented without adding real external delivery, retry workers, or mandatory webhook sender dependencies.
+    Implemented handling: webhook subscription persistence and management APIs are implemented without adding real external delivery, retry workers, or mandatory webhook sender dependencies. SMTP template test sending is implemented without adding a mandatory external package.
 
 17. **Infrastructure table scope for adapter persistence**
 

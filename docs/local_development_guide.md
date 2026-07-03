@@ -45,6 +45,16 @@ pnpm dev:api
 
 For PostgreSQL integration testing, set `TEST_DATABASE_URL` before running `pnpm test`.
 
+SMTP email sending is disabled by default. For local SMTP testing, point the API at a local SMTP capture tool:
+
+```bash
+set SMTP_ENABLED=true
+set SMTP_HOST=127.0.0.1
+set SMTP_PORT=1025
+set SMTP_SECURE=false
+set SMTP_FROM=no-reply@example.com
+```
+
 ## API Docs
 
 Start the API and open:

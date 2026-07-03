@@ -13,3 +13,4 @@ export type NotificationChannelAdapter = HealthCheckableAdapter & {
 };
 
 export * from "./in-memory-notification";
+export * from "./smtp-notification";

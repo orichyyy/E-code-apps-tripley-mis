@@ -1072,6 +1072,16 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     public: false
   },
   {
+    method: "POST",
+    path: "/api/notifications/email/test",
+    code: "api.notifications.email.test",
+    description: "Send a test email notification from an email template",
+    module: "notifications",
+    requiredPermission: "notification-template:update",
+    logLevel: "request",
+    public: false
+  },
+  {
     method: "GET",
     path: "/api/notification-templates",
     code: "api.notification-templates.list",

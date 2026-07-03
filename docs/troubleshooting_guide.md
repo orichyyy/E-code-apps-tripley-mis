@@ -38,6 +38,10 @@ pnpm --filter @web-admin-base/api test
 pnpm --filter @web-admin-base/contracts test
 ```
 
+## SMTP Test Send Fails
+
+SMTP sending is disabled unless `SMTP_ENABLED=true`. When enabled, `SMTP_HOST` and `SMTP_FROM` are required. Use `SMTP_SECURE=true` only for implicit TLS SMTP endpoints; plaintext local capture tools usually use `SMTP_SECURE=false`.
+
 ## Infrastructure API Returns Placeholder Data In The Frontend
 
 The frontend calls real APIs for modules whose backend routes are implemented. It falls back to typed placeholder data when:

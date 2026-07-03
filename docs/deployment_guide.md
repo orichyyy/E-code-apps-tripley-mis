@@ -16,7 +16,7 @@ The design supports SQLite for local/demo usage and PostgreSQL for supported dep
 
 File upload/download works with local filesystem storage through `FILE_STORAGE_ROOT`. In multi-server deployments this path must be a shared mounted directory if local storage is used; S3-compatible storage remains the recommended production direction once its concrete client/configuration contract is implemented.
 
-Redis, RabbitMQ, S3-compatible storage, SMTP, and webhook delivery integrations remain optional placeholders unless explicitly configured in a future slice.
+SMTP email sending is optional and disabled by default. To enable it, configure `SMTP_ENABLED=true`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, optional `SMTP_USERNAME`/`SMTP_PASSWORD`, and `SMTP_FROM`. Redis, RabbitMQ, S3-compatible storage, and real outbound webhook delivery integrations remain optional placeholders unless explicitly configured in a future slice.
 
 ## Observability
 

@@ -9,7 +9,7 @@ Reusable multi-organization admin-system foundation built as a pnpm monorepo.
 - `apps/worker`: Node.js worker runtime with queue-task/scheduled-task registration, durable queue/scheduler `runOnce`, and optional polling boundaries.
 - `packages/contracts`: Zod contracts, Hono RPC boundary types, permission/route/menu/API manifests, and OpenAPI generation.
 - `packages/db`: Drizzle schemas, SQLite/PostgreSQL migration files, and executable migration runners.
-- `packages/adapters`: adapter interfaces plus in-memory defaults, database-backed cache/lock/queue/event-bus/rate-limit/scheduler drivers, token store, notifications, and local filesystem storage.
+- `packages/adapters`: adapter interfaces plus in-memory defaults, database-backed cache/lock/queue/event-bus/rate-limit/scheduler drivers, token store, in-memory/SMTP notification channels, and local filesystem storage.
 - `packages/shared`: shared constants, result types, i18n keys, and utilities.
 
 ## Commands
@@ -29,7 +29,19 @@ Set `BACKEND_CORE_STORE=database` with `DATABASE_URL` to run DB-backed backend-c
 
 Local file storage uses `FILE_STORAGE_ROOT` when provided and falls back to `.web-admin-storage`. Uploads enforce the default 50 MB single-file limit, configurable with `FILE_MAX_SIZE_BYTES`, and the confirmed base whitelist.
 
-Notification templates and webhook subscriptions are persisted for management, but SMTP/SMS sending, real outbound webhook delivery, and retries remain optional/reserved integrations until their package and delivery contracts are configured.
+Notification templates and webhook subscriptions are persisted for management. SMTP email sending is available as an optional configuration-driven notification channel; SMS sending, real outbound webhook delivery, and delivery retries remain reserved integrations.
+
+Optional SMTP configuration:
+
+```bash
+SMTP_ENABLED=true
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USERNAME=optional-user
+SMTP_PASSWORD=optional-password
+SMTP_FROM=no-reply@example.com
+```
 
 Personal center APIs persist allowed self-profile fields and UI preferences. Avatar changes store an existing file id reference; file upload remains handled by the file management API.
 

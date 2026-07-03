@@ -464,7 +464,7 @@ The communications slice completed the following tested pieces:
 - Replaced the announcements frontend placeholder fetch with the real `/api/announcements` API when an access token is available. Dedicated management pages for announcements and webhook subscriptions are tracked in later frontend slices.
 - Fixed shared JSON parameter handling so PostgreSQL JSONB array values persist correctly for webhook event types and existing infrastructure array fields.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. The next recommended goal is to revisit optional SMTP/S3/Redis/RabbitMQ drivers only when concrete package and configuration contracts are confirmed.
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. SMTP has since been implemented as an optional configuration-driven channel; S3/Redis/RabbitMQ drivers still require concrete package and configuration contracts.
 
 ## Webhook Subscription Frontend Progress
 
@@ -481,7 +481,7 @@ The webhook subscription frontend slice completed the following:
 - Preserved the sensitive-field boundary: persisted raw secrets are never rendered; the UI only displays whether a secret is configured and allows setting/replacing a secret.
 - Added frontend API/client and component coverage for listing, create/update requests, route rendering, and raw-secret non-display.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. Real outbound webhook delivery, retry workers, SMTP, S3-compatible storage, Redis, and RabbitMQ remain optional/reserved until concrete package and runtime contracts are confirmed.
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. Real outbound webhook delivery, retry workers, S3-compatible storage, Redis, and RabbitMQ remain optional/reserved until concrete package and runtime contracts are confirmed; SMTP is available only when explicitly configured.
 
 ## Announcement Frontend Progress
 
@@ -530,7 +530,7 @@ The notification template frontend slice completed the following:
 - Added list, filter, create, and edit behavior for persisted in-app, email, and reserved SMS template records.
 - Added frontend API/client and component coverage for listing, create/update requests, route rendering, and template variable display.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. SMTP delivery, SMS delivery, real outbound webhook delivery, retry workers, S3-compatible storage, Redis, and RabbitMQ remain optional/reserved until concrete package and runtime contracts are confirmed.
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. SMTP delivery is available through the optional configured driver and test-send API. SMS delivery, real outbound webhook delivery, retry workers, S3-compatible storage, Redis, and RabbitMQ remain optional/reserved until concrete package and runtime contracts are confirmed.
 
 ## i18n Message Frontend Progress
 
@@ -599,3 +599,18 @@ The personal center persistence slice completed the following:
 - Synced saved preferences into Zustand layout/auth state for language, dark mode, theme color, and page-tab behavior.
 
 Remaining base-system gaps are tracked in `docs/known_gaps.md`. Personal avatar upload itself remains part of the existing file upload module; the profile API only stores the selected file reference.
+
+## SMTP Email Notification Progress
+
+The SMTP email notification slice completed the following:
+
+- Added an optional `NotificationChannelAdapter` SMTP driver over Node.js built-ins, with no mandatory external SMTP package dependency.
+- Added SMTP runtime configuration through `SMTP_ENABLED`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, optional credentials, and `SMTP_FROM`.
+- Added template rendering for email notification templates, supporting confirmed `{variable}` placeholders and the existing `{{variable}}` template style.
+- Added authenticated backend test-send API:
+  - `POST /api/notifications/email/test`
+- Added API permission manifest metadata using the existing `notification-template:update` permission.
+- Added OpenAPI request/response schema coverage for the test-send endpoint.
+- Added in-memory route tests, PostgreSQL route tests for DB-backed template lookup, and SMTP adapter protocol tests against a local fake SMTP server.
+
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. SMTP remains optional and disabled unless configured. SMS sending, real outbound webhook delivery, notification fan-out/retry workers, and production delivery retry catalogs remain reserved.

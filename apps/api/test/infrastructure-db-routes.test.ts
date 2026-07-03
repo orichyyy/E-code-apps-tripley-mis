@@ -1,5 +1,8 @@
 import type { DatabaseAdapterExecutor } from "@web-admin-base/adapters";
-import { createLocalFileStorageAdapter } from "@web-admin-base/adapters";
+import {
+  createInMemoryNotificationChannelAdapter,
+  createLocalFileStorageAdapter
+} from "@web-admin-base/adapters";
 import { runPostgresqlMigrations } from "@web-admin-base/db";
 import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
@@ -20,9 +23,13 @@ describe("database-backed infrastructure routes", () => {
     await runPostgresqlMigrations({ url });
     const executor = createPostgresqlInfrastructureExecutor(url);
     const root = await mkdtemp(join(tmpdir(), "web-admin-files-db-"));
+    const notificationChannel = createInMemoryNotificationChannelAdapter();
     const infrastructureServices = InfrastructureServices.database(
       new InfrastructureRepository(executor),
-      createLocalFileStorageAdapter({ rootDirectory: root })
+      {
+        storage: createLocalFileStorageAdapter({ rootDirectory: root }),
+        notificationChannel
+      }
     );
     const app = createApp({
       infrastructureServices,
@@ -50,6 +57,28 @@ describe("database-backed infrastructure routes", () => {
         headers,
         body: JSON.stringify({ resourceType: "logs:security" })
       });
+      const emailTemplateResponse = await app.request("/api/notification-templates", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          code: "db-email-template",
+          channel: "email",
+          locale: "en",
+          subject: "Hello {name}",
+          body: "Body for {{name}}",
+          variables: ["name"]
+        })
+      });
+      const sendEmailResponse = await app.request("/api/notifications/email/test", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          templateCode: "db-email-template",
+          locale: "en",
+          recipient: "ops@example.com",
+          variables: { name: "Ada" }
+        })
+      });
       const persisted = await executor.all(
         "SELECT code FROM notification_templates WHERE code = $1",
         ["db-template"]
@@ -58,6 +87,16 @@ describe("database-backed infrastructure routes", () => {
       expect(createResponse.status).toBe(201);
       expect(listResponse.status).toBe(200);
       expect(taskResponse.status).toBe(201);
+      expect(emailTemplateResponse.status).toBe(201);
+      expect(sendEmailResponse.status).toBe(200);
+      expect(notificationChannel.listMessages()).toEqual([
+        expect.objectContaining({
+          channel: "email",
+          recipient: "ops@example.com",
+          subject: "Hello Ada",
+          body: "Body for Ada"
+        })
+      ]);
       expect(persisted).toEqual([expect.objectContaining({ code: "db-template" })]);
 
       const form = new FormData();

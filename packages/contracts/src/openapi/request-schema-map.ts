@@ -39,6 +39,7 @@ export const requestSchemaByOperationCode: Record<string, string> = {
   "api.files.upload": "FileUploadRequest",
   "api.notification-templates.create": "CreateNotificationTemplateRequest",
   "api.notification-templates.update": "UpdateNotificationTemplateRequest",
+  "api.notifications.email.test": "SendTestEmailNotificationRequest",
   "api.scheduled-tasks.create": "CreateScheduledTaskRequest",
   "api.scheduled-tasks.update": "UpdateScheduledTaskRequest",
   "api.import-export.export.create": "CreateExportTaskRequest"

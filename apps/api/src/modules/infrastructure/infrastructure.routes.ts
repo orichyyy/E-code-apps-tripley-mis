@@ -3,6 +3,7 @@ import {
   createLogExportTaskRequestSchema,
   createNotificationTemplateRequestSchema,
   createScheduledTaskRequestSchema,
+  sendTestEmailNotificationRequestSchema,
   updateNotificationTemplateRequestSchema,
   updateScheduledTaskRequestSchema
 } from "@web-admin-base/contracts";
@@ -102,6 +103,11 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
   routes.delete("/notifications/:id", async (context) => {
     await assertEmptyJsonBody(context.req.raw);
     return context.json({ data: await services.updateNotificationStatus(context.req.param("id"), "deleted", actorId(context)) });
+  });
+
+  routes.post("/notifications/email/test", async (context) => {
+    const input = sendTestEmailNotificationRequestSchema.parse(await context.req.json());
+    return context.json({ data: await services.sendTestEmail(input) });
   });
 
   routes.get("/notification-templates", async (context) => context.json({ data: await services.listNotificationTemplates() }));

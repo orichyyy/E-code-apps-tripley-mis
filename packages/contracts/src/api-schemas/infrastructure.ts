@@ -26,6 +26,13 @@ export const createNotificationTemplateRequestSchema = strictObject({
 
 export const updateNotificationTemplateRequestSchema = createNotificationTemplateRequestSchema.partial();
 
+export const sendTestEmailNotificationRequestSchema = strictObject({
+  templateCode: z.string().min(1),
+  locale: z.string().min(1),
+  recipient: z.string().email(),
+  variables: z.record(z.unknown()).default({})
+});
+
 export const createScheduledTaskRequestSchema = strictObject({
   code: z.string().min(1),
   cronExpression: z.string().min(1),
@@ -43,6 +50,7 @@ export const createExportTaskRequestSchema = strictObject({
 export type CreateLogExportTaskRequest = z.infer<typeof createLogExportTaskRequestSchema>;
 export type CreateNotificationTemplateRequest = z.infer<typeof createNotificationTemplateRequestSchema>;
 export type UpdateNotificationTemplateRequest = z.infer<typeof updateNotificationTemplateRequestSchema>;
+export type SendTestEmailNotificationRequest = z.infer<typeof sendTestEmailNotificationRequestSchema>;
 export type CreateScheduledTaskRequest = z.infer<typeof createScheduledTaskRequestSchema>;
 export type UpdateScheduledTaskRequest = z.infer<typeof updateScheduledTaskRequestSchema>;
 export type CreateExportTaskRequest = z.infer<typeof createExportTaskRequestSchema>;

@@ -50,6 +50,7 @@ export const responseSchemaByOperationCode: Record<string, string> = {
   "api.notification-templates.list": "NotificationTemplateListResponse",
   "api.notification-templates.create": "NotificationTemplateResponse",
   "api.notification-templates.update": "NotificationTemplateResponse",
+  "api.notifications.email.test": "EmailNotificationSendResponse",
   "api.scheduled-tasks.list": "ScheduledTaskListResponse",
   "api.scheduled-tasks.create": "ScheduledTaskResponse",
   "api.scheduled-tasks.update": "ScheduledTaskResponse",
