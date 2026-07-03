@@ -497,6 +497,46 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
   },
   {
     method: "GET",
+    path: "/api/roles/:id/data-permissions",
+    code: "api.roles.data-permissions.view",
+    description: "View role data permission rules",
+    module: "roles",
+    requiredPermission: "role:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "PUT",
+    path: "/api/roles/:id/data-permissions",
+    code: "api.roles.data-permissions.update",
+    description: "Update role data permission rules",
+    module: "roles",
+    requiredPermission: "role:permissions:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/roles/:id/field-permissions",
+    code: "api.roles.field-permissions.view",
+    description: "View role field permission rules",
+    module: "roles",
+    requiredPermission: "role:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "PUT",
+    path: "/api/roles/:id/field-permissions",
+    code: "api.roles.field-permissions.update",
+    description: "Update role field permission rules",
+    module: "roles",
+    requiredPermission: "role:permissions:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "GET",
     path: "/api/permissions",
     code: "api.permissions.list",
     description: "View permissions",
@@ -513,6 +553,26 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "permissions",
     requiredPermission: "permission:view",
     logLevel: "basic",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/permissions/user-overrides/:userId",
+    code: "api.permissions.user-overrides.view",
+    description: "View user permission overrides",
+    module: "permissions",
+    requiredPermission: "permission:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "PUT",
+    path: "/api/permissions/user-overrides/:userId",
+    code: "api.permissions.user-overrides.update",
+    description: "Update user permission overrides",
+    module: "permissions",
+    requiredPermission: "permission:sync",
+    logLevel: "request",
     public: false
   },
   {

@@ -5,27 +5,33 @@ import type {
   MenuApiBindingRecord,
   MenuRecord,
   OrganizationRecord,
+  FieldPermissionRuleRecord,
   PermissionRecord,
   RefreshTokenRecord,
   RouteMetadataRecord,
+  RoleDataPermissionRecord,
   RolePermissionRecord,
   RoleRecord,
   UserOrganizationRoleRecord,
+  UserPermissionOverrideRecord,
   UserRecord
 } from "./domain";
 
 type SequenceName =
   | "apiPermission"
   | "authSession"
+  | "fieldPermissionRule"
   | "initializationState"
   | "menu"
   | "menuApiBinding"
   | "organization"
   | "permission"
   | "refreshToken"
+  | "roleDataPermission"
   | "routeMetadata"
   | "role"
   | "user"
+  | "userPermissionOverride"
   | "userOrganizationRole";
 
 export class InMemoryBackendStore {
@@ -41,6 +47,9 @@ export class InMemoryBackendStore {
   readonly authSessions = new Map<string, AuthSessionRecord>();
   readonly refreshTokens = new Map<string, RefreshTokenRecord>();
   readonly rolePermissions: RolePermissionRecord[] = [];
+  readonly roleDataPermissions = new Map<string, RoleDataPermissionRecord>();
+  readonly fieldPermissionRules = new Map<string, FieldPermissionRuleRecord>();
+  readonly userPermissionOverrides = new Map<string, UserPermissionOverrideRecord>();
   initializationState: InitializationStateRecord | null = null;
 
   private readonly sequences = new Map<SequenceName, number>();

@@ -673,6 +673,121 @@ describe("backend core foundation routes", () => {
     expect(effective.data.permissionCodes).toEqual(expect.arrayContaining(["menu:view", "user:view"]));
   });
 
+  it("updates permission extension records and invalidates effective permission cache", async () => {
+    const { app } = await setupInitializedApp();
+    const { authHeaders } = await loginAsAdmin(app);
+    await app.request("/api/roles/2/permissions", {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({ permissionCodes: ["user:view"] })
+    });
+    const userResponse = await app.request("/api/users", {
+      method: "POST",
+      headers: authHeaders,
+      body: JSON.stringify({
+        username: "permission-extension-user",
+        displayName: "Permission Extension User",
+        email: "permission-extension-user@example.com",
+        phone: "10000000031",
+        password: "password1",
+        primaryOrganizationId: "1",
+        roleId: "2"
+      })
+    });
+    const user = await userResponse.json();
+    const firstLoginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "permission-extension-user", password: "password1" })
+    });
+    const firstLogin = await firstLoginResponse.json();
+    await app.request("/api/auth/change-password", {
+      method: "POST",
+      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+    });
+    const loginResponse = await app.request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "permission-extension-user", password: "password2" })
+    });
+    const login = await loginResponse.json();
+    const userHeaders = { authorization: `Bearer ${login.data.accessToken}` };
+    const cachedResponse = await app.request("/api/context/permissions", { headers: userHeaders });
+    const cached = await cachedResponse.json();
+
+    const dataResponse = await app.request("/api/roles/2/data-permissions", {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({
+        rules: [
+          {
+            permissionCode: "user:view",
+            effect: "allow",
+            rule: { scope: "current_organization" }
+          }
+        ]
+      })
+    });
+    const dataRulesResponse = await app.request("/api/roles/2/data-permissions", {
+      headers: authHeaders
+    });
+    const afterDataResponse = await app.request("/api/context/permissions", { headers: userHeaders });
+    const afterData = await afterDataResponse.json();
+    const fieldResponse = await app.request("/api/roles/2/field-permissions", {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({
+        rules: [{ resource: "user", field: "email", effect: "hidden" }]
+      })
+    });
+    const fieldRulesResponse = await app.request("/api/roles/2/field-permissions", {
+      headers: authHeaders
+    });
+    const afterFieldResponse = await app.request("/api/context/permissions", { headers: userHeaders });
+    const afterField = await afterFieldResponse.json();
+    const overrideResponse = await app.request(`/api/permissions/user-overrides/${user.data.id}`, {
+      method: "PUT",
+      headers: authHeaders,
+      body: JSON.stringify({
+        overrides: [
+          { permissionCode: "user:view", effect: "deny" },
+          { permissionCode: "role:view", effect: "allow" }
+        ]
+      })
+    });
+    const overridesResponse = await app.request(`/api/permissions/user-overrides/${user.data.id}`, {
+      headers: authHeaders
+    });
+    const effectiveResponse = await app.request("/api/permissions/effective", { headers: userHeaders });
+    const effective = await effectiveResponse.json();
+
+    expect(cachedResponse.status).toBe(200);
+    expect(cached.data.permissionCodes).toEqual(["user:view"]);
+    expect(dataResponse.status).toBe(200);
+    expect(dataRulesResponse.status).toBe(200);
+    expect(afterData.data.dataPermissions).toEqual([
+      expect.objectContaining({
+        roleId: "2",
+        permissionCode: "user:view",
+        effect: "allow",
+        rule: { scope: "current_organization" }
+      })
+    ]);
+    expect(fieldResponse.status).toBe(200);
+    expect(fieldRulesResponse.status).toBe(200);
+    expect(afterField.data.fieldPermissions).toEqual([
+      expect.objectContaining({ roleId: "2", resource: "user", field: "email", effect: "hidden" })
+    ]);
+    expect(overrideResponse.status).toBe(200);
+    expect(overridesResponse.status).toBe(200);
+    expect(effective.data.permissionCodes).toEqual(["role:view"]);
+    expect(effective.data.userPermissionOverrides).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ permissionCode: "user:view", effect: "deny" }),
+        expect.objectContaining({ permissionCode: "role:view", effect: "allow" })
+      ])
+    );
+  });
+
   it("refreshes an access token from the HttpOnly refresh-token cookie design", async () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {

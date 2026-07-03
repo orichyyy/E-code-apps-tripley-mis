@@ -3,8 +3,10 @@ import type { DatabaseDialect } from "@web-admin-base/db";
 import type {
   ApiPermissionRecord,
   AuthSessionRecord,
+  FieldPermissionRuleRecord,
   InitializationStateRecord,
   PermissionRecord,
+  RoleDataPermissionRecord,
   RolePermissionRecord
 } from "../domain";
 import type { InMemoryBackendStore } from "../in-memory-store";
@@ -97,6 +99,15 @@ export function logLevel(value: unknown): ApiPermissionRecord["logLevel"] {
 
 export function rolePermissionEffect(value: unknown): RolePermissionRecord["effect"] {
   return value === "deny" ? "deny" : "allow";
+}
+
+export function dataPermissionEffect(value: unknown): RoleDataPermissionRecord["effect"] {
+  return value === "deny" ? "deny" : "allow";
+}
+
+export function fieldPermissionEffect(value: unknown): FieldPermissionRuleRecord["effect"] {
+  if (value === "hidden" || value === "readonly") return value;
+  return "visible";
 }
 
 export function initializationStatus(value: unknown): InitializationStateRecord["status"] {

@@ -139,6 +139,51 @@ export const updateRolePermissionsRequestSchema = z
   })
   .strict();
 
+export const dataPermissionEffectSchema = z.enum(["allow", "deny"]);
+
+export const fieldPermissionEffectSchema = z.enum(["visible", "hidden", "readonly"]);
+
+export const updateRoleDataPermissionsRequestSchema = z
+  .object({
+    rules: z.array(
+      z
+        .object({
+          permissionCode: z.string().min(1),
+          effect: dataPermissionEffectSchema.default("allow"),
+          rule: z.record(z.string(), z.unknown())
+        })
+        .strict()
+    )
+  })
+  .strict();
+
+export const updateRoleFieldPermissionsRequestSchema = z
+  .object({
+    rules: z.array(
+      z
+        .object({
+          resource: z.string().min(1),
+          field: z.string().min(1),
+          effect: fieldPermissionEffectSchema
+        })
+        .strict()
+    )
+  })
+  .strict();
+
+export const updateUserPermissionOverridesRequestSchema = z
+  .object({
+    overrides: z.array(
+      z
+        .object({
+          permissionCode: z.string().min(1),
+          effect: dataPermissionEffectSchema
+        })
+        .strict()
+    )
+  })
+  .strict();
+
 export const createMenuRequestSchema = z
   .object({
     parentMenuId: integerIdStringSchema.optional(),
@@ -196,6 +241,15 @@ export type AssignUserOrganizationRoleRequest = z.infer<
 export type CreateRoleRequest = z.infer<typeof createRoleRequestSchema>;
 export type UpdateRoleRequest = z.infer<typeof updateRoleRequestSchema>;
 export type UpdateRolePermissionsRequest = z.infer<typeof updateRolePermissionsRequestSchema>;
+export type UpdateRoleDataPermissionsRequest = z.infer<
+  typeof updateRoleDataPermissionsRequestSchema
+>;
+export type UpdateRoleFieldPermissionsRequest = z.infer<
+  typeof updateRoleFieldPermissionsRequestSchema
+>;
+export type UpdateUserPermissionOverridesRequest = z.infer<
+  typeof updateUserPermissionOverridesRequestSchema
+>;
 export type CreateMenuRequest = z.infer<typeof createMenuRequestSchema>;
 export type UpdateMenuRequest = z.infer<typeof updateMenuRequestSchema>;
 export type UpdateMenuApiBindingsRequest = z.infer<typeof updateMenuApiBindingsRequestSchema>;

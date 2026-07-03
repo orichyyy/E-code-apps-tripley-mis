@@ -201,6 +201,38 @@ export type RolePermissionRecord = {
   updatedAt: string;
 };
 
+export type RoleDataPermissionRecord = ActorAuditFields &
+  SoftDeleteFields & {
+    id: string;
+    tenantId: string | null;
+    roleId: string;
+    permissionId: string;
+    permissionCode: string;
+    effect: "allow" | "deny";
+    rule: Record<string, unknown>;
+  } & AuditFields;
+
+export type FieldPermissionRuleRecord = ActorAuditFields &
+  SoftDeleteFields & {
+    id: string;
+    tenantId: string | null;
+    targetType: "role";
+    targetId: string;
+    resource: string;
+    field: string;
+    effect: "visible" | "hidden" | "readonly";
+  } & AuditFields;
+
+export type UserPermissionOverrideRecord = ActorAuditFields &
+  SoftDeleteFields & {
+    id: string;
+    tenantId: string | null;
+    userId: string;
+    permissionId: string;
+    permissionCode: string;
+    effect: "allow" | "deny";
+  } & AuditFields;
+
 export type PublicOrganization = Omit<OrganizationRecord, "path"> & {
   path: string;
 };

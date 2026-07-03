@@ -16,8 +16,11 @@ import type {
   UpdateMenuRequest,
   UpdateOrganizationDepthConfigRequest,
   UpdateOrganizationRequest,
+  UpdateRoleDataPermissionsRequest,
+  UpdateRoleFieldPermissionsRequest,
   UpdateRolePermissionsRequest,
   UpdateRoleRequest,
+  UpdateUserPermissionOverridesRequest,
   UpdateUserRequest
 } from "@web-admin-base/contracts";
 
@@ -37,6 +40,7 @@ type PersistenceScope =
   | "menus"
   | "organizations"
   | "permissions"
+  | "permissionExtensions"
   | "roles"
   | "routeMetadata"
   | "userOrganizationRoles"
@@ -153,8 +157,8 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
     ]);
   }
 
-  override createUser(input: CreateUserRequest, actorId: string | null = null) {
-    return this.persistSync(() => super.createUser(input, actorId), ["users", "userOrganizationRoles"]);
+  override async createUser(input: CreateUserRequest, actorId: string | null = null) {
+    return this.persistAfter(() => super.createUser(input, actorId), ["users", "userOrganizationRoles"]);
   }
 
   override async updateUser(id: string, input: UpdateUserRequest, actorId: string | null = null) {
@@ -232,6 +236,36 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
     actorId: string | null = null
   ) {
     return this.persistAfter(() => super.updateRolePermissions(id, input, actorId), ["roles"]);
+  }
+
+  override async updateRoleDataPermissions(
+    id: string,
+    input: UpdateRoleDataPermissionsRequest,
+    actorId: string | null = null
+  ) {
+    return this.persistAfter(() => super.updateRoleDataPermissions(id, input, actorId), [
+      "permissionExtensions"
+    ]);
+  }
+
+  override async updateRoleFieldPermissions(
+    id: string,
+    input: UpdateRoleFieldPermissionsRequest,
+    actorId: string | null = null
+  ) {
+    return this.persistAfter(() => super.updateRoleFieldPermissions(id, input, actorId), [
+      "permissionExtensions"
+    ]);
+  }
+
+  override async updateUserPermissionOverrides(
+    userId: string,
+    input: UpdateUserPermissionOverridesRequest,
+    actorId: string | null = null
+  ) {
+    return this.persistAfter(() => super.updateUserPermissionOverrides(userId, input, actorId), [
+      "permissionExtensions"
+    ]);
   }
 
   override async deleteRole(id: string, deletedBy: string | null = null) {
@@ -328,6 +362,9 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
         return;
       case "permissions":
         await this.repository.aggregates.permissions.replaceFromStore(store);
+        return;
+      case "permissionExtensions":
+        await this.repository.aggregates.permissionExtensions.replaceFromStore(store);
         return;
       case "roles":
         await this.repository.aggregates.roles.replaceFromStore(store);

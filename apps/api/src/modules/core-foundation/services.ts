@@ -21,8 +21,11 @@ import type {
   UpdateMenuApiBindingsRequest,
   UpdateMenuRequest,
   UpdateOrganizationRequest,
+  UpdateRoleDataPermissionsRequest,
+  UpdateRoleFieldPermissionsRequest,
   UpdateRolePermissionsRequest,
   UpdateRoleRequest,
+  UpdateUserPermissionOverridesRequest,
   UpdateUserRequest
 } from "@web-admin-base/contracts";
 
@@ -31,6 +34,7 @@ import { InitializationService } from "./initialization.service";
 import { InMemoryBackendStore } from "./in-memory-store";
 import { MenuService } from "./menu.service";
 import { OrganizationService } from "./organization.service";
+import { PermissionExtensionService } from "./permission-extension.service";
 import {
   PermissionService,
   type ApiPermissionListFilters,
@@ -54,6 +58,7 @@ export class BackendCoreServices {
   readonly menus: MenuService;
   readonly organizations: OrganizationService;
   readonly permissions: PermissionService;
+  readonly permissionExtensions: PermissionExtensionService;
   readonly routeMetadata: RouteMetadataService;
   readonly roles: RoleService;
   readonly users: UserService;
@@ -66,6 +71,7 @@ export class BackendCoreServices {
     this.users = new UserService(context);
     this.auth = new AuthService(context);
     this.permissions = new PermissionService(context, context.permissionCache);
+    this.permissionExtensions = new PermissionExtensionService(context, this.permissions);
     this.initialization = new InitializationService(
       context,
       this.organizations,
@@ -173,7 +179,12 @@ export class BackendCoreServices {
       authContext.userId,
       authContext.currentOrganizationId
     );
-    return this.auth.getCurrentPermissionContext(authContext, permissionContext.permissionCodes);
+    return {
+      ...this.auth.getCurrentPermissionContext(authContext, permissionContext.permissionCodes),
+      dataPermissions: permissionContext.dataPermissions ?? [],
+      fieldPermissions: permissionContext.fieldPermissions ?? [],
+      userPermissionOverrides: permissionContext.userPermissionOverrides ?? []
+    };
   }
 
   findAuthContext(authorizationHeader?: string | null) {
@@ -361,6 +372,42 @@ export class BackendCoreServices {
 
   listRolePermissionCodes(id: string) {
     return this.roles.listPermissionCodes(id);
+  }
+
+  listRoleDataPermissions(id: string) {
+    return this.permissionExtensions.listRoleDataPermissions(id);
+  }
+
+  updateRoleDataPermissions(
+    id: string,
+    input: UpdateRoleDataPermissionsRequest,
+    actorId: string | null = null
+  ) {
+    return this.permissionExtensions.updateRoleDataPermissions(id, input, actorId);
+  }
+
+  listRoleFieldPermissions(id: string) {
+    return this.permissionExtensions.listRoleFieldPermissions(id);
+  }
+
+  updateRoleFieldPermissions(
+    id: string,
+    input: UpdateRoleFieldPermissionsRequest,
+    actorId: string | null = null
+  ) {
+    return this.permissionExtensions.updateRoleFieldPermissions(id, input, actorId);
+  }
+
+  listUserPermissionOverrides(userId: string) {
+    return this.permissionExtensions.listUserPermissionOverrides(userId);
+  }
+
+  updateUserPermissionOverrides(
+    userId: string,
+    input: UpdateUserPermissionOverridesRequest,
+    actorId: string | null = null
+  ) {
+    return this.permissionExtensions.updateUserPermissionOverrides(userId, input, actorId);
   }
 
   async deleteRole(id: string, deletedBy: string | null = null) {

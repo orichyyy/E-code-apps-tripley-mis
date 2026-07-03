@@ -12,7 +12,9 @@ import {
   authSessionStatus,
   bigint,
   booleanValue,
+  dataPermissionEffect,
   entityStatus,
+  fieldPermissionEffect,
   id,
   initializationStatus,
   iso,
@@ -72,6 +74,9 @@ export class BackendCoreStoreRepository {
     await this.loadAuthSessions(store);
     await this.loadRefreshTokens(store);
     await this.loadRolePermissions(store);
+    await this.loadRoleDataPermissions(store);
+    await this.loadFieldPermissionRules(store);
+    await this.loadUserPermissionOverrides(store);
     await this.loadInitializationState(store);
     this.hydrateSequences(store);
     return store;
@@ -92,6 +97,7 @@ export class BackendCoreStoreRepository {
       await this.saveAuthSessions(store);
       await this.saveRefreshTokens(store);
       await this.saveRolePermissions(store);
+      await this.savePermissionExtensions(store);
       await this.saveInitializationState(store);
     });
   }
@@ -364,6 +370,75 @@ export class BackendCoreStoreRepository {
     }));
   }
 
+  private async loadRoleDataPermissions(store: InMemoryBackendStore): Promise<void> {
+    const rows = await this.executor.all(
+      `SELECT rdp.*, p.code AS permission_code
+       FROM role_data_permissions rdp
+       JOIN permissions p ON p.id = rdp.permission_id
+       ORDER BY rdp.id`
+    );
+    rows.forEach((row) => store.roleDataPermissions.set(id(row.id), {
+      id: id(row.id),
+      tenantId: nullableId(row.tenant_id),
+      roleId: id(row.role_id),
+      permissionId: id(row.permission_id),
+      permissionCode: stringValue(row.permission_code),
+      effect: dataPermissionEffect(row.effect),
+      rule: jsonRecord(row.rule_json),
+      isDeleted: booleanValue(row.is_deleted),
+      deletedAt: nullableIso(row.deleted_at),
+      deletedBy: nullableId(row.deleted_by),
+      createdAt: iso(row.created_at),
+      updatedAt: iso(row.updated_at),
+      createdBy: nullableId(row.created_by),
+      updatedBy: nullableId(row.updated_by)
+    }));
+  }
+
+  private async loadFieldPermissionRules(store: InMemoryBackendStore): Promise<void> {
+    const rows = await this.executor.all("SELECT * FROM field_permission_rules ORDER BY id");
+    rows.forEach((row) => store.fieldPermissionRules.set(id(row.id), {
+      id: id(row.id),
+      tenantId: nullableId(row.tenant_id),
+      targetType: "role",
+      targetId: id(row.target_id),
+      resource: stringValue(row.resource),
+      field: stringValue(row.field),
+      effect: fieldPermissionEffect(row.effect),
+      isDeleted: booleanValue(row.is_deleted),
+      deletedAt: nullableIso(row.deleted_at),
+      deletedBy: nullableId(row.deleted_by),
+      createdAt: iso(row.created_at),
+      updatedAt: iso(row.updated_at),
+      createdBy: nullableId(row.created_by),
+      updatedBy: nullableId(row.updated_by)
+    }));
+  }
+
+  private async loadUserPermissionOverrides(store: InMemoryBackendStore): Promise<void> {
+    const rows = await this.executor.all(
+      `SELECT upo.*, p.code AS permission_code
+       FROM user_permission_overrides upo
+       JOIN permissions p ON p.id = upo.permission_id
+       ORDER BY upo.id`
+    );
+    rows.forEach((row) => store.userPermissionOverrides.set(id(row.id), {
+      id: id(row.id),
+      tenantId: nullableId(row.tenant_id),
+      userId: id(row.user_id),
+      permissionId: id(row.permission_id),
+      permissionCode: stringValue(row.permission_code),
+      effect: dataPermissionEffect(row.effect),
+      isDeleted: booleanValue(row.is_deleted),
+      deletedAt: nullableIso(row.deleted_at),
+      deletedBy: nullableId(row.deleted_by),
+      createdAt: iso(row.created_at),
+      updatedAt: iso(row.updated_at),
+      createdBy: nullableId(row.created_by),
+      updatedBy: nullableId(row.updated_by)
+    }));
+  }
+
   private async loadInitializationState(store: InMemoryBackendStore): Promise<void> {
     const rows = await this.executor.all("SELECT * FROM system_initialization_state ORDER BY id LIMIT 1");
     const row = rows[0];
@@ -392,6 +467,9 @@ export class BackendCoreStoreRepository {
     setSequence(store, "userOrganizationRole", store.userOrganizationRoles);
     setSequence(store, "authSession", store.authSessions);
     setSequence(store, "refreshToken", store.refreshTokens);
+    setSequence(store, "roleDataPermission", store.roleDataPermissions);
+    setSequence(store, "fieldPermissionRule", store.fieldPermissionRules);
+    setSequence(store, "userPermissionOverride", store.userPermissionOverrides);
     if (store.initializationState) {
       store.setSequenceValue("initializationState", Number(store.initializationState.id));
     }
@@ -537,6 +615,10 @@ export class BackendCoreStoreRepository {
       if (!permissionId) return [];
       return [[record.roleId, permissionId, record.effect, record.createdAt, record.updatedAt]];
     }));
+  }
+
+  private async savePermissionExtensions(store: InMemoryBackendStore): Promise<void> {
+    await this.aggregates.permissionExtensions.replaceFromStore(store);
   }
 
   private async saveInitializationState(store: InMemoryBackendStore): Promise<void> {

@@ -40,7 +40,7 @@
 
 ## Backend Core Foundation Blockers
 
-No unresolved backend-core blockers remain from the previously listed questions. Remaining backend-core gaps are implementation scope and are tracked in `docs/known_gaps.md`.
+No unresolved backend-core blockers remain from the previously listed questions. Role data permissions, role field permissions, and user permission overrides now have service-level APIs and effective-permission behavior; remaining gaps are tracked in `docs/known_gaps.md`.
 
 ## Backend Infrastructure Modules Blockers
 

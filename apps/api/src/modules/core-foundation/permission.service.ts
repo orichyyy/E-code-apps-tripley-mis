@@ -13,6 +13,7 @@ import { PermissionCache } from "../permissions/permission-cache";
 import { builtInRoleCodes } from "./built-in-roles";
 import type { ApiPermissionRecord, PermissionRecord } from "./domain";
 import type { BackendCoreContext } from "./service-context";
+import { requireIntegerIdString } from "./store-guards";
 
 export type ApiPermissionListFilters = {
   keyword?: string;
@@ -333,6 +334,8 @@ export class PermissionService {
   }
 
   async getPermissionContext(userId: string, organizationId: string) {
+    requireIntegerIdString(userId);
+    requireIntegerIdString(organizationId);
     const cached = await this.cache.get(userId, organizationId);
     if (cached) return cached;
 
@@ -344,12 +347,80 @@ export class PermissionService {
         isActiveBinding(candidate)
     );
     const role = binding ? this.context.store.roles.get(binding.roleId) : null;
-    const permissionCodes = isSuperAdmin
+    const basePermissionCodes = isSuperAdmin
       ? this.listEnabledPermissionCodes()
       : this.listRolePermissionCodes(binding?.roleId, role ?? null);
-    const context = { userId, organizationId, permissionCodes };
+    const userPermissionOverrides = this.listActiveUserPermissionOverrideEffects(userId);
+    const permissionCodes = this.applyUserPermissionOverrides(
+      basePermissionCodes,
+      userPermissionOverrides
+    );
+    const roleIds = binding ? [binding.roleId] : [];
+    const context = {
+      userId,
+      organizationId,
+      permissionCodes,
+      dataPermissions: this.listActiveRoleDataPermissionEffects(roleIds),
+      fieldPermissions: this.listActiveRoleFieldPermissionEffects(roleIds),
+      userPermissionOverrides
+    };
     await this.cache.set(context);
     return context;
+  }
+
+  private applyUserPermissionOverrides(
+    basePermissionCodes: string[],
+    overrides: Array<{ permissionCode: string; effect: "allow" | "deny" }>
+  ): string[] {
+    const effective = new Set(basePermissionCodes);
+    const enabledPermissionCodes = new Set(this.listEnabledPermissionCodes());
+
+    for (const override of overrides) {
+      if (!enabledPermissionCodes.has(override.permissionCode)) continue;
+      if (override.effect === "deny") {
+        effective.delete(override.permissionCode);
+      } else {
+        effective.add(override.permissionCode);
+      }
+    }
+
+    return [...effective];
+  }
+
+  private listActiveUserPermissionOverrideEffects(userId: string) {
+    return [...this.context.store.userPermissionOverrides.values()]
+      .filter((record) => record.userId === userId && !record.isDeleted)
+      .map((record) => ({
+        permissionCode: record.permissionCode,
+        effect: record.effect
+      }));
+  }
+
+  private listActiveRoleDataPermissionEffects(roleIds: string[]) {
+    const roleIdSet = new Set(roleIds);
+    return [...this.context.store.roleDataPermissions.values()]
+      .filter((record) => roleIdSet.has(record.roleId) && !record.isDeleted)
+      .map((record) => ({
+        roleId: record.roleId,
+        permissionCode: record.permissionCode,
+        effect: record.effect,
+        rule: record.rule
+      }));
+  }
+
+  private listActiveRoleFieldPermissionEffects(roleIds: string[]) {
+    const roleIdSet = new Set(roleIds);
+    return [...this.context.store.fieldPermissionRules.values()]
+      .filter(
+        (record) =>
+          record.targetType === "role" && roleIdSet.has(record.targetId) && !record.isDeleted
+      )
+      .map((record) => ({
+        roleId: record.targetId,
+        resource: record.resource,
+        field: record.field,
+        effect: record.effect
+      }));
   }
 
   private hasActiveSuperAdminBinding(userId: string): boolean {

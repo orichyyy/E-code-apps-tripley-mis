@@ -13,7 +13,8 @@ This file records incomplete requirements that must not be claimed complete.
 ## Auth and Permission Gaps
 
 - Cookie refresh/logout CSRF protection is implemented with the confirmed double-submit `csrf_token` cookie plus `x-csrf-token` header strategy.
-- Role data-permission, role field-permission, and user permission override persistence tables are implemented in SQLite/PostgreSQL migrations and Drizzle schema. Service-level APIs and effective-permission evaluation for these extension records are still not implemented.
+- Role data-permission, role field-permission, and user permission override persistence tables are implemented in SQLite/PostgreSQL migrations and Drizzle schema.
+- Service-level APIs, DB-backed persistence, in-memory support, effective-permission evaluation, and permission-cache invalidation are implemented for role data permissions, role field permissions, and user permission overrides.
 - `GET /api/permissions/tree` is implemented as the confirmed virtual tree derived from flat permission metadata.
 
 ## Base Module Gaps
@@ -26,4 +27,5 @@ This file records incomplete requirements that must not be claimed complete.
 
 - `pnpm db:migrate:postgresql` cannot run without `TEST_DATABASE_URL` or `DATABASE_URL`.
 - PostgreSQL database tests now include backend-core DB-backed initialization, seed idempotency, session/token reload, user/organization/role/menu/route/permission mutation persistence, user-organization-role binding persistence, logout persistence, and refresh-token exchange coverage when `TEST_DATABASE_URL` is present.
+- PostgreSQL database tests now include role data-permission, role field-permission, and user permission override persistence after reload, plus effective permission behavior after reload.
 - SQLite is executable locally through `better-sqlite3`, including bigint-safe organization path reads at the driver boundary.

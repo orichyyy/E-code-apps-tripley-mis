@@ -394,6 +394,157 @@ describe("backend core database persistence", () => {
       await resetBackendCoreDatabase(url);
     }
   });
+
+  it.runIf(postgresqlUrl)(
+    "persists permission extension records and effective permissions after reload",
+    async () => {
+      const url = getPostgresqlUrl();
+      await runPostgresqlMigrations({ url });
+      await resetBackendCoreDatabase(url);
+
+      const repository = BackendCoreStoreRepository.fromConfig({
+        dialect: "postgresql",
+        url
+      });
+      const services = await PersistentBackendCoreServices.create(repository, backendCoreConfig);
+      const app = createApp({ backendCoreServices: services });
+
+      try {
+        await initializeApp(app);
+        const loginResult = await loginAsAdmin(app);
+        const authHeaders = loginResult.authHeaders;
+        const role = await requestData(app, "/api/roles", {
+          method: "POST",
+          headers: authHeaders,
+          body: { name: "Permission Extension Role", code: "permission_extension_role" },
+          expectedStatus: 201
+        });
+        await requestData(app, `/api/roles/${role.id}/permissions`, {
+          method: "PUT",
+          headers: authHeaders,
+          body: { permissionCodes: ["user:view"] }
+        });
+        const user = await requestData(app, "/api/users", {
+          method: "POST",
+          headers: authHeaders,
+          body: {
+            username: "permission-extension-db-user",
+            displayName: "Permission Extension DB User",
+            email: "permission-extension-db-user@example.com",
+            phone: "10000000005",
+            password: "password1",
+            primaryOrganizationId: "1",
+            roleId: role.id
+          },
+          expectedStatus: 201
+        });
+        await requestData(app, `/api/roles/${role.id}/data-permissions`, {
+          method: "PUT",
+          headers: authHeaders,
+          body: {
+            rules: [
+              {
+                permissionCode: "user:view",
+                effect: "allow",
+                rule: { scope: "current_organization" }
+              }
+            ]
+          }
+        });
+        await requestData(app, `/api/roles/${role.id}/field-permissions`, {
+          method: "PUT",
+          headers: authHeaders,
+          body: {
+            rules: [{ resource: "user", field: "email", effect: "readonly" }]
+          }
+        });
+        await requestData(app, `/api/permissions/user-overrides/${user.id}`, {
+          method: "PUT",
+          headers: authHeaders,
+          body: {
+            overrides: [
+              { permissionCode: "user:view", effect: "deny" },
+              { permissionCode: "role:view", effect: "allow" }
+            ]
+          }
+        });
+        const firstUserLogin = await app.request("/api/auth/login", {
+          method: "POST",
+          body: JSON.stringify({ username: "permission-extension-db-user", password: "password1" })
+        });
+        const firstUser = await firstUserLogin.json();
+        await requestData(app, "/api/auth/change-password", {
+          method: "POST",
+          headers: { authorization: `Bearer ${firstUser.data.accessToken}` },
+          body: { oldPassword: "password1", newPassword: "password2" }
+        });
+
+        await services.close();
+
+        const reloadedRepository = BackendCoreStoreRepository.fromConfig({
+          dialect: "postgresql",
+          url
+        });
+        const reloadedServices = await PersistentBackendCoreServices.create(
+          reloadedRepository,
+          backendCoreConfig
+        );
+        const reloadedApp = createApp({ backendCoreServices: reloadedServices });
+
+        try {
+          const store = await reloadedRepository.load();
+          const userLogin = await reloadedApp.request("/api/auth/login", {
+            method: "POST",
+            body: JSON.stringify({
+              username: "permission-extension-db-user",
+              password: "password2"
+            })
+          });
+          const login = await userLogin.json();
+          expect(userLogin.status).toBe(200);
+          const effective = await requestData(reloadedApp, "/api/permissions/effective", {
+            headers: { authorization: `Bearer ${login.data.accessToken}` }
+          });
+
+          expect([...store.roleDataPermissions.values()]).toEqual([
+            expect.objectContaining({
+              roleId: role.id,
+              permissionCode: "user:view",
+              rule: { scope: "current_organization" },
+              isDeleted: false
+            })
+          ]);
+          expect([...store.fieldPermissionRules.values()]).toEqual([
+            expect.objectContaining({
+              targetId: role.id,
+              resource: "user",
+              field: "email",
+              effect: "readonly",
+              isDeleted: false
+            })
+          ]);
+          expect([...store.userPermissionOverrides.values()]).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({ userId: user.id, permissionCode: "user:view", effect: "deny" }),
+              expect.objectContaining({ userId: user.id, permissionCode: "role:view", effect: "allow" })
+            ])
+          );
+          expect(effective.permissionCodes).toEqual(["role:view"]);
+          expect(effective.dataPermissions).toEqual([
+            expect.objectContaining({ roleId: role.id, permissionCode: "user:view" })
+          ]);
+          expect(effective.fieldPermissions).toEqual([
+            expect.objectContaining({ roleId: role.id, resource: "user", field: "email" })
+          ]);
+        } finally {
+          await reloadedServices.close();
+        }
+      } finally {
+        await services.close().catch(() => undefined);
+        await resetBackendCoreDatabase(url);
+      }
+    }
+  );
 });
 
 async function initializeApp(app: ReturnType<typeof createApp>): Promise<void> {

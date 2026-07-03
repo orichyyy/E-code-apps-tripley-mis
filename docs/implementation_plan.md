@@ -323,3 +323,26 @@ The backend-core persistence refactor completed the following:
 - Expanded PostgreSQL integration coverage for first-start initialization, DB-backed seed idempotency, login/refresh/logout, user mutations, organization mutations, role/role-permission mutations, user-organization-role assignment/removal, menu/API binding mutations, permission sync, and route sync.
 
 The next recommended backend-core goal is to implement service-level APIs and effective permission evaluation for role data permissions, role field permissions, and user permission overrides.
+
+## Backend Core Permission Extension Services
+
+The backend-core permission extension slice completed the following:
+
+- Added contract schemas for role data-permission updates, role field-permission updates, and user permission override updates.
+- Added service-level APIs and Hono endpoints for:
+  - `GET /api/roles/:id/data-permissions`
+  - `PUT /api/roles/:id/data-permissions`
+  - `GET /api/roles/:id/field-permissions`
+  - `PUT /api/roles/:id/field-permissions`
+  - `GET /api/permissions/user-overrides/:userId`
+  - `PUT /api/permissions/user-overrides/:userId`
+- Added API permission manifest metadata for the new endpoints using existing base permissions.
+- Added in-memory store support for `role_data_permissions`, `field_permission_rules`, and `user_permission_overrides`.
+- Added DB load/save support and a focused permission-extension aggregate repository for the same records.
+- Extended effective permission context calculation so role permissions remain the base grant set and user overrides apply afterward; `deny` removes a role grant and `allow` adds a permission.
+- Extended current/effective permission responses with active data permission rules, field permission rules, and user override effects.
+- Invalidated permission cache contexts after role data-permission changes, role field-permission changes, and user permission override changes.
+- Fixed DB-backed async user creation persistence so user and initial organization-role bindings are saved after password hashing completes.
+- Added in-memory route coverage and PostgreSQL reload coverage for permission extension records, effective permission behavior, and cache invalidation.
+
+The next recommended backend-core goal is to tighten OpenAPI request/response schemas for the newly implemented permission-extension endpoints and then move to infrastructure work only after the remaining infrastructure questions are resolved.
