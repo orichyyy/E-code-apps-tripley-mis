@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { fetchPageDataset } from "../src/lib/api-client";
+import {
+  createWebhookSubscription,
+  fetchPageDataset,
+  fetchWebhookSubscriptions,
+  updateWebhookSubscription
+} from "../src/lib/api-client";
 
 describe("frontend API client", () => {
   afterEach(() => {
@@ -113,5 +118,92 @@ describe("frontend API client", () => {
         source: "available-api"
       })
     ]);
+  });
+
+  it("loads webhook subscriptions without exposing raw secrets", async () => {
+    localStorage.setItem("web-admin.access-token", "token");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [
+            {
+              id: "31",
+              name: "Audit webhook",
+              url: "https://example.com/audit",
+              eventTypes: ["security.event"],
+              secret: "raw-secret",
+              secretConfigured: true,
+              status: "enabled",
+              createdAt: "2026-07-03T00:00:00.000Z",
+              updatedAt: "2026-07-03T00:00:00.000Z"
+            }
+          ]
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+
+    const records = await fetchWebhookSubscriptions();
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/webhooks", {
+      headers: { authorization: "Bearer token" }
+    });
+    expect(records).toEqual([
+      {
+        id: "31",
+        name: "Audit webhook",
+        url: "https://example.com/audit",
+        eventTypes: ["security.event"],
+        secretConfigured: true,
+        status: "enabled",
+        createdAt: "2026-07-03T00:00:00.000Z",
+        updatedAt: "2026-07-03T00:00:00.000Z"
+      }
+    ]);
+    expect(records[0]).not.toHaveProperty("secret");
+  });
+
+  it("creates and updates webhook subscriptions through the backend API", async () => {
+    localStorage.setItem("web-admin.access-token", "token");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ data: { id: "31" } }), {
+          status: 200,
+          headers: { "content-type": "application/json" }
+        })
+      )
+    );
+
+    await createWebhookSubscription({
+      name: "Audit webhook",
+      url: "https://example.com/audit",
+      eventTypes: ["security.event"],
+      secret: "new-secret",
+      status: "enabled"
+    });
+    await updateWebhookSubscription("31", { status: "disabled" });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/webhooks", {
+      method: "POST",
+      body: JSON.stringify({
+        name: "Audit webhook",
+        url: "https://example.com/audit",
+        eventTypes: ["security.event"],
+        secret: "new-secret",
+        status: "enabled"
+      }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/webhooks/31", {
+      method: "PATCH",
+      body: JSON.stringify({ status: "disabled" }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
   });
 });

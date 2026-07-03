@@ -107,6 +107,19 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     sortOrder: 210
   },
   {
+    routeCode: "notifications.webhooks",
+    path: "/notifications/webhooks",
+    titleI18nKey: "routes.notifications.webhooks",
+    requiredPermission: "webhook:view",
+    menuVisible: true,
+    group: "notifications",
+    sortOrder: 220,
+    actions: [
+      { code: "webhook:create", labelI18nKey: "actions.create", requiredPermission: "webhook:create" },
+      { code: "webhook:update", labelI18nKey: "actions.edit", requiredPermission: "webhook:update" }
+    ]
+  },
+  {
     routeCode: "operations.online-users",
     path: "/operations/online-users",
     titleI18nKey: "routes.operations.onlineUsers",

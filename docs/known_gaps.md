@@ -24,14 +24,14 @@ This file records incomplete requirements that must not be claimed complete.
 - Database-backed runtime adapter drivers now exist for cache, rate limiting, lease-table locks, queue jobs, event outbox, and scheduled jobs.
 - Backend API modules now exist for the implemented durable infrastructure tables: logs, files, in-app notifications, notification templates, scheduled tasks, and import/export task lists.
 - System configuration, dictionary management, and i18n management now have database schema, backend APIs, OpenAPI coverage, PostgreSQL tests, and frontend API integration for the implemented pages.
-- Announcements and webhook subscriptions now have database schema, backend APIs, OpenAPI coverage, PostgreSQL tests, and frontend API integration for announcements where a route exists.
+- Announcements and webhook subscriptions now have database schema, backend APIs, OpenAPI coverage, PostgreSQL tests, and frontend API integration where routes exist.
 - Announcement organization scoping currently stores the confirmed `scope_type` only. A concrete organization target/reference field is not implemented because it has not been confirmed in the base contract.
 - External webhook delivery, retry workers, SMTP delivery, and S3-compatible storage are not complete concrete drivers yet.
 - Worker execution now has queue/scheduler registration boundaries plus durable `runOnce`/polling hooks over database queue and scheduler adapters. Full production task catalogs, cron expression evaluation, timeout enforcement, and dead-letter workflows remain reserved or incomplete.
 - Redis, RabbitMQ, S3-compatible storage, and SMTP remain optional placeholders only; no mandatory dependencies have been added.
 - Frontend pages use real API fetches for implemented infrastructure modules where backend APIs exist. Pages whose backend APIs are still incomplete continue to use typed placeholder data.
 - Frontend system configuration and dictionary pages now use real API fetches when an access token is available. i18n message management has backend APIs but does not yet have a dedicated frontend management page beyond the existing English/Chinese UI message bundle.
-- No webhook subscription frontend route/page exists yet, so the management UI is not implemented.
+- Webhook subscription management now has a frontend route/page wired to the implemented backend APIs. Real outbound delivery remains reserved.
 
 ## Validation Gaps
 

@@ -1,4 +1,8 @@
-import type { HonoRpcClientContract } from "@web-admin-base/contracts";
+import type {
+  CreateWebhookSubscriptionRequest,
+  HonoRpcClientContract,
+  UpdateWebhookSubscriptionRequest
+} from "@web-admin-base/contracts";
 
 export const internalApiClient = {
   basePath: "/api"
@@ -21,6 +25,17 @@ export type PageDataset = {
   records: TableRecord[];
   mode: ApiMode;
   hiddenFields: string[];
+};
+
+export type WebhookSubscription = {
+  id: string;
+  name: string;
+  url: string;
+  eventTypes: string[];
+  secretConfigured: boolean;
+  status: "enabled" | "disabled";
+  createdAt: string;
+  updatedAt: string;
 };
 
 const baseRecords: TableRecord[] = [
@@ -86,6 +101,7 @@ const routeEndpointByCode: Record<string, string> = {
   "system.dictionaries": "/dictionary-types",
   "system.files": "/files",
   "notifications.announcements": "/announcements",
+  "notifications.webhooks": "/webhooks",
   "notifications.in-app": "/notifications",
   "logs.login": "/logs/login",
   "logs.operation": "/logs/operation",
@@ -189,4 +205,52 @@ export async function loginWithPassword(input: { username: string; password: str
 export async function changeOwnPassword() {
   await new Promise((resolve) => window.setTimeout(resolve, 10));
   return { ok: true };
+}
+
+export async function fetchWebhookSubscriptions(): Promise<WebhookSubscription[]> {
+  const envelope = await requestJson<{ data?: unknown }>("/webhooks");
+  return unwrapRecords(envelope.data).map(toWebhookSubscription);
+}
+
+export async function createWebhookSubscription(input: CreateWebhookSubscriptionRequest) {
+  return requestJson<{ data: WebhookSubscription }>("/webhooks", {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export async function updateWebhookSubscription(id: string, input: UpdateWebhookSubscriptionRequest) {
+  return requestJson<{ data: WebhookSubscription }>(`/webhooks/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input)
+  });
+}
+
+async function requestJson<T>(endpoint: string, init: RequestInit = {}): Promise<T> {
+  const token = typeof localStorage === "undefined" ? null : localStorage.getItem("web-admin.access-token");
+  const response = await fetch(`${internalApiClient.basePath}${endpoint}`, {
+    ...init,
+    headers: {
+      ...(init.body ? { "content-type": "application/json" } : {}),
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+      ...init.headers
+    }
+  });
+  if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
+  return (await response.json()) as T;
+}
+
+function toWebhookSubscription(record: Record<string, unknown>): WebhookSubscription {
+  return {
+    id: stringField(record.id, ""),
+    name: stringField(record.name, ""),
+    url: stringField(record.url, ""),
+    eventTypes: Array.isArray(record.eventTypes)
+      ? record.eventTypes.filter((value): value is string => typeof value === "string")
+      : [],
+    secretConfigured: record.secretConfigured === true,
+    status: record.status === "disabled" ? "disabled" : "enabled",
+    createdAt: stringField(record.createdAt, ""),
+    updatedAt: stringField(record.updatedAt, "")
+  };
 }

@@ -1,3 +1,4 @@
+import { baseRouteManifest } from "@web-admin-base/contracts";
 import { describe, expect, it } from "vitest";
 
 import { createApp } from "../src/app";
@@ -4109,8 +4110,8 @@ describe("backend core foundation routes", () => {
     expect(body.data).toMatchObject({
       page: 2,
       pageSize: 2,
-      total: 6,
-      totalPages: 3
+      total: baseRouteManifest.length,
+      totalPages: Math.ceil(baseRouteManifest.length / 2)
     });
     expect(body.data.items).toEqual([
       expect.objectContaining({ routeCode: "system.users" }),

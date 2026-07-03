@@ -464,4 +464,21 @@ The communications slice completed the following tested pieces:
 - Replaced the announcements frontend placeholder fetch with the real `/api/announcements` API when an access token is available. No webhook subscription frontend route exists yet, so no new page was invented.
 - Fixed shared JSON parameter handling so PostgreSQL JSONB array values persist correctly for webhook event types and existing infrastructure array fields.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. The next recommended goal is to add a confirmed webhook subscription management page only if the frontend route/menu is approved, or to revisit optional SMTP/S3/Redis/RabbitMQ drivers when concrete package and configuration contracts are confirmed.
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. The next recommended goal is to revisit optional SMTP/S3/Redis/RabbitMQ drivers only when concrete package and configuration contracts are confirmed.
+
+## Webhook Subscription Frontend Progress
+
+The webhook subscription frontend slice completed the following:
+
+- Added the `notifications.webhooks` frontend route metadata and menu binding under the Notifications group.
+- Added the same webhook route/menu entry to the contracts base route and menu manifests for backend route/menu synchronization.
+- Added a dedicated webhook subscription management page using TanStack Query for server state and TanStack Form plus Zod for create/edit validation.
+- Wired the page to the existing backend APIs:
+  - `GET /api/webhooks`
+  - `POST /api/webhooks`
+  - `PATCH /api/webhooks/:id`
+- Added list, filter, create, edit, enable, and disable behavior for persisted webhook subscription records.
+- Preserved the sensitive-field boundary: persisted raw secrets are never rendered; the UI only displays whether a secret is configured and allows setting/replacing a secret.
+- Added frontend API/client and component coverage for listing, create/update requests, route rendering, and raw-secret non-display.
+
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. Real outbound webhook delivery, retry workers, SMTP, S3-compatible storage, Redis, and RabbitMQ remain optional/reserved until concrete package and runtime contracts are confirmed.

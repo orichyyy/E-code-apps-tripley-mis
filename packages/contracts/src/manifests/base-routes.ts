@@ -47,5 +47,13 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     requiredPermission: "menu:view",
     menuVisible: true,
     sortOrder: 140
+  },
+  {
+    routeCode: "notifications.webhooks",
+    path: "/notifications/webhooks",
+    titleI18nKey: "routes.notifications.webhooks",
+    requiredPermission: "webhook:view",
+    menuVisible: true,
+    sortOrder: 220
   }
 ];
