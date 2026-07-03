@@ -21,3 +21,25 @@ it("keeps Hono RPC type inference available for permission extension routes", ()
   expect(updateUserOverrides).toBeDefined();
   expect(client).toBeDefined();
 });
+
+it("keeps Hono RPC type inference available for communications routes", () => {
+  const client = hc<ApiApp>("/");
+
+  const listAnnouncements = client.api.announcements.$get;
+  const createAnnouncement = client.api.announcements.$post;
+  const updateAnnouncement = client.api.announcements[":id"].$patch;
+  const publishAnnouncement = client.api.announcements[":id"].publish.$post;
+  const unpublishAnnouncement = client.api.announcements[":id"].unpublish.$post;
+  const listWebhooks = client.api.webhooks.$get;
+  const createWebhook = client.api.webhooks.$post;
+  const updateWebhook = client.api.webhooks[":id"].$patch;
+
+  expect(listAnnouncements).toBeDefined();
+  expect(createAnnouncement).toBeDefined();
+  expect(updateAnnouncement).toBeDefined();
+  expect(publishAnnouncement).toBeDefined();
+  expect(unpublishAnnouncement).toBeDefined();
+  expect(listWebhooks).toBeDefined();
+  expect(createWebhook).toBeDefined();
+  expect(updateWebhook).toBeDefined();
+});

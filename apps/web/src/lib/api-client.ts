@@ -85,6 +85,7 @@ const routeEndpointByCode: Record<string, string> = {
   "system.config": "/system-config",
   "system.dictionaries": "/dictionary-types",
   "system.files": "/files",
+  "notifications.announcements": "/announcements",
   "notifications.in-app": "/notifications",
   "logs.login": "/logs/login",
   "logs.operation": "/logs/operation",

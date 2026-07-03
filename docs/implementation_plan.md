@@ -439,3 +439,29 @@ The system-management slice completed the following tested pieces:
 - Replaced frontend typed placeholders with real API fetches for the system configuration and dictionary management pages when an access token is available.
 
 Remaining base-system gaps are tracked in `docs/known_gaps.md`. The next recommended goal is to implement announcements and webhook subscription APIs, then revisit optional SMTP/S3/Redis/RabbitMQ drivers only when their concrete package and configuration contracts are confirmed.
+
+## Announcements and Webhook Subscription Progress
+
+The communications slice completed the following tested pieces:
+
+- Added SQLite/PostgreSQL migrations and Drizzle schema tables for:
+  - `announcements`
+  - `webhook_subscriptions`
+- Added contract schemas for announcement create/update and webhook subscription create/update requests.
+- Added backend APIs for the confirmed design-spec endpoints:
+  - `GET /api/announcements`
+  - `POST /api/announcements`
+  - `PATCH /api/announcements/:id`
+  - `POST /api/announcements/:id/publish`
+  - `POST /api/announcements/:id/unpublish`
+  - `GET /api/webhooks`
+  - `POST /api/webhooks`
+  - `PATCH /api/webhooks/:id`
+- Added API permission manifest entries, base permission manifest entries, and explicit OpenAPI request/response schemas for the implemented communications APIs.
+- Persisted webhook subscriptions without adding a mandatory webhook sender, retry worker, or external delivery dependency. API responses expose `secretConfigured` and do not return raw secrets.
+- Kept announcement organization scoping to the confirmed `scope_type` value; no organization target field was added because no concrete organization-scope reference contract is confirmed.
+- Added in-memory route coverage and PostgreSQL-backed persistence coverage for announcement creation/update/publish/unpublish and webhook subscription creation/update.
+- Replaced the announcements frontend placeholder fetch with the real `/api/announcements` API when an access token is available. No webhook subscription frontend route exists yet, so no new page was invented.
+- Fixed shared JSON parameter handling so PostgreSQL JSONB array values persist correctly for webhook event types and existing infrastructure array fields.
+
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. The next recommended goal is to add a confirmed webhook subscription management page only if the frontend route/menu is approved, or to revisit optional SMTP/S3/Redis/RabbitMQ drivers when concrete package and configuration contracts are confirmed.

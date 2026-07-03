@@ -21,11 +21,18 @@ export function param(value: unknown): unknown {
 }
 
 export function jsonParam(value: unknown, dialect: DatabaseDialect): unknown {
-  return dialect === "postgresql" ? value : JSON.stringify(value);
+  if (dialect === "sqlite") return JSON.stringify(value);
+  if (Array.isArray(value) || typeof value === "string") return JSON.stringify(value);
+  return value;
 }
 
 export function readJson<T>(value: unknown): T {
-  return typeof value === "string" ? (JSON.parse(value) as T) : (value as T);
+  if (typeof value !== "string") return value as T;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return value as T;
+  }
 }
 
 export function nowIso(): string {

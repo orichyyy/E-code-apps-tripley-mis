@@ -37,7 +37,8 @@ describe("database migration execution", () => {
         "0001_backend_core_foundation.sql",
         "0002_permission_extension_persistence.sql",
         "0003_infrastructure_foundation.sql",
-        "0004_system_dictionary_i18n.sql"
+        "0004_system_dictionary_i18n.sql",
+        "0005_announcements_webhooks.sql"
       ]);
       expect(tables).toContainEqual({ name: "users" });
       expect(tables).toContainEqual({ name: "organizations" });
@@ -49,6 +50,8 @@ describe("database migration execution", () => {
       expect(tables).toContainEqual({ name: "dictionary_types" });
       expect(tables).toContainEqual({ name: "dictionary_items" });
       expect(tables).toContainEqual({ name: "i18n_messages" });
+      expect(tables).toContainEqual({ name: "announcements" });
+      expect(tables).toContainEqual({ name: "webhook_subscriptions" });
     } finally {
       client.close();
     }
@@ -98,7 +101,9 @@ describe("database migration execution", () => {
              'system_configs',
              'dictionary_types',
              'dictionary_items',
-             'i18n_messages'
+             'i18n_messages',
+             'announcements',
+             'webhook_subscriptions'
            )
          ORDER BY table_name`
       );
@@ -107,9 +112,11 @@ describe("database migration execution", () => {
         "0001_backend_core_foundation.sql",
         "0002_permission_extension_persistence.sql",
         "0003_infrastructure_foundation.sql",
-        "0004_system_dictionary_i18n.sql"
+        "0004_system_dictionary_i18n.sql",
+        "0005_announcements_webhooks.sql"
       ]);
       expect(result.rows.map((row) => row.table_name)).toEqual([
+        "announcements",
         "dictionary_items",
         "dictionary_types",
         "event_outbox",
@@ -119,7 +126,8 @@ describe("database migration execution", () => {
         "queue_jobs",
         "system_configs",
         "system_initialization_state",
-        "users"
+        "users",
+        "webhook_subscriptions"
       ]);
     } finally {
       await pool.end();

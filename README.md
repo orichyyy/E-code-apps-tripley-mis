@@ -4,7 +4,7 @@ Reusable multi-organization admin-system foundation built as a pnpm monorepo.
 
 ## Applications and Packages
 
-- `apps/api`: Node.js Hono API with request IDs, auth/session/user/organization/role/permission/menu foundations, system configuration, dictionaries, i18n message APIs, OpenAPI JSON, and manifest-based API authorization.
+- `apps/api`: Node.js Hono API with request IDs, auth/session/user/organization/role/permission/menu foundations, system configuration, dictionaries, i18n messages, announcements, webhook subscription APIs, OpenAPI JSON, and manifest-based API authorization.
 - `apps/web`: React Vite SPA admin shell using TanStack Router, TanStack Query, TanStack Form, Zod, Zustand, Tailwind CSS, and shadcn/ui.
 - `apps/worker`: Node.js worker runtime with queue-task/scheduled-task registration, durable queue/scheduler `runOnce`, and optional polling boundaries.
 - `packages/contracts`: Zod contracts, Hono RPC boundary types, permission/route/menu/API manifests, and OpenAPI generation.
@@ -26,6 +26,8 @@ pnpm build
 `pnpm db:migrate` runs SQLite migrations with `better-sqlite3` by default. PostgreSQL migrations run when `TEST_DATABASE_URL` or `DATABASE_URL` is provided; `pnpm db:migrate:postgresql` requires one of those variables.
 
 Set `BACKEND_CORE_STORE=database` with `DATABASE_URL` to run DB-backed backend-core persistence, infrastructure services, and system-management services. PostgreSQL remains the supported deployment database; SQLite remains usable for local/demo compatibility.
+
+Webhook subscriptions are persisted for management, but real outbound webhook delivery and retries remain optional/reserved integrations until their package and delivery contracts are configured.
 
 ## API Documentation
 

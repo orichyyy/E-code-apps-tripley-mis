@@ -7,6 +7,8 @@ import type { AuthContextVariables } from "./core/auth-context/auth-context";
 import { createErrorResponse, normalizeError } from "./core/errors/error-response";
 import { createApiAuthorizationMiddleware } from "./middleware/api-authorization";
 import { requestIdMiddleware, type RequestIdVariables } from "./middleware/request-id";
+import { createCommunicationsRoutes } from "./modules/communications/communications.routes";
+import { CommunicationsServices } from "./modules/communications/communications.service";
 import { createCoreFoundationRoutes } from "./modules/core-foundation/core-foundation.routes";
 import {
   createInMemoryBackendCoreServices,
@@ -30,6 +32,7 @@ type AppBindings = {
 
 export type AppDependencies = {
   backendCoreServices: BackendCoreServices;
+  communicationsServices?: CommunicationsServices;
   infrastructureServices?: InfrastructureServices;
   systemManagementServices?: SystemManagementServices;
   structuredLogSink?: StructuredLogSink;
@@ -37,6 +40,7 @@ export type AppDependencies = {
 
 export function createApp(dependencies: AppDependencies = createDefaultAppDependencies()) {
   const structuredLogSink = dependencies.structuredLogSink ?? noopStructuredLogSink;
+  const communicationsServices = dependencies.communicationsServices ?? CommunicationsServices.inMemory();
   const infrastructureServices = dependencies.infrastructureServices ?? InfrastructureServices.inMemory();
   const systemManagementServices =
     dependencies.systemManagementServices ?? SystemManagementServices.inMemory();
@@ -74,6 +78,7 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
 
   const routedApp = app
     .route("/", createCoreFoundationRoutes(dependencies.backendCoreServices))
+    .route("/", createCommunicationsRoutes(communicationsServices))
     .route("/", createInfrastructureRoutes(infrastructureServices))
     .route("/", createSystemManagementRoutes(systemManagementServices))
     .route("/", createManifestRoutes());
@@ -107,6 +112,7 @@ export type ApiApp = ReturnType<typeof createApp>;
 export function createDefaultAppDependencies(config: ApiConfig = loadApiConfig()): AppDependencies {
   return {
     backendCoreServices: createInMemoryBackendCoreServices(config.backendCore),
+    communicationsServices: CommunicationsServices.inMemory(),
     infrastructureServices: InfrastructureServices.inMemory(),
     systemManagementServices: SystemManagementServices.inMemory(),
     structuredLogSink: noopStructuredLogSink
@@ -118,6 +124,7 @@ export async function createDatabaseBackedAppDependencies(
 ): Promise<AppDependencies> {
   return {
     backendCoreServices: await createPersistentBackendCoreServices(config.backendCore),
+    communicationsServices: CommunicationsServices.database(),
     infrastructureServices: InfrastructureServices.database(),
     systemManagementServices: SystemManagementServices.database(),
     structuredLogSink: noopStructuredLogSink

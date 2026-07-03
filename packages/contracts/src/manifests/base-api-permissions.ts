@@ -907,6 +907,56 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
   },
   {
     method: "GET",
+    path: "/api/announcements",
+    code: "api.announcements.list",
+    description: "View announcements",
+    module: "announcements",
+    requiredPermission: "announcement:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/announcements",
+    code: "api.announcements.create",
+    description: "Create announcement",
+    module: "announcements",
+    requiredPermission: "announcement:create",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "PATCH",
+    path: "/api/announcements/:id",
+    code: "api.announcements.update",
+    description: "Update announcement",
+    module: "announcements",
+    requiredPermission: "announcement:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/announcements/:id/publish",
+    code: "api.announcements.publish",
+    description: "Publish announcement",
+    module: "announcements",
+    requiredPermission: "announcement:publish",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/announcements/:id/unpublish",
+    code: "api.announcements.unpublish",
+    description: "Unpublish announcement",
+    module: "announcements",
+    requiredPermission: "announcement:publish",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "GET",
     path: "/api/notifications",
     code: "api.notifications.list",
     description: "View current user's in-app notifications",
@@ -972,6 +1022,36 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Update notification template",
     module: "notifications",
     requiredPermission: "notification-template:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/webhooks",
+    code: "api.webhooks.list",
+    description: "View webhook subscriptions",
+    module: "webhooks",
+    requiredPermission: "webhook:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/webhooks",
+    code: "api.webhooks.create",
+    description: "Create webhook subscription",
+    module: "webhooks",
+    requiredPermission: "webhook:create",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "PATCH",
+    path: "/api/webhooks/:id",
+    code: "api.webhooks.update",
+    description: "Update webhook subscription",
+    module: "webhooks",
+    requiredPermission: "webhook:update",
     logLevel: "request",
     public: false
   },

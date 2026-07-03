@@ -714,6 +714,52 @@ export const notificationTemplates = pgTable(
   })
 );
 
+export const announcements = pgTable(
+  "announcements",
+  {
+    id: serial("id").primaryKey(),
+    tenantId: integer("tenant_id"),
+    title: text("title").notNull(),
+    content: text("content").notNull(),
+    scopeType: text("scope_type").notNull(),
+    status: text("status").notNull().default("draft"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    ...softDelete,
+    ...timestamps,
+    createdBy: integer("created_by"),
+    updatedBy: integer("updated_by")
+  },
+  (table) => ({
+    statusIndex: index("announcements_status_idx").on(table.status, table.publishedAt),
+    scopeTypeCheck: check("announcements_scope_type_check", sql`${table.scopeType} IN ('system', 'organization')`),
+    statusCheck: check(
+      "announcements_status_check",
+      sql`${table.status} IN ('draft', 'published', 'deleted')`
+    )
+  })
+);
+
+export const webhookSubscriptions = pgTable(
+  "webhook_subscriptions",
+  {
+    id: serial("id").primaryKey(),
+    tenantId: integer("tenant_id"),
+    name: text("name").notNull(),
+    url: text("url").notNull(),
+    eventTypes: jsonb("event_types").notNull(),
+    secret: text("secret"),
+    status: text("status").notNull().default("enabled"),
+    ...softDelete,
+    ...timestamps,
+    createdBy: integer("created_by"),
+    updatedBy: integer("updated_by")
+  },
+  (table) => ({
+    statusIndex: index("webhook_subscriptions_status_idx").on(table.status),
+    statusCheck: check("webhook_subscriptions_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
+  })
+);
+
 export const logEntries = pgTable(
   "log_entries",
   {
@@ -767,6 +813,7 @@ export const importExportTasks = pgTable(
 );
 
 export const postgresqlSchema = {
+  announcements,
   apiPermissions,
   authSessions,
   cacheEntries,
@@ -798,5 +845,6 @@ export const postgresqlSchema = {
   systemInitializationState,
   userPermissionOverrides,
   userOrganizationRoles,
+  webhookSubscriptions,
   users
 };

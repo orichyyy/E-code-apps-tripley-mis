@@ -79,4 +79,39 @@ describe("frontend API client", () => {
       })
     ]);
   });
+
+  it("loads announcement pages from the backend API", async () => {
+    localStorage.setItem("web-admin.access-token", "token");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [
+            {
+              id: "21",
+              title: "Maintenance",
+              content: "Window",
+              scopeType: "system",
+              status: "published",
+              updatedAt: "2026-07-03T00:00:00.000Z"
+            }
+          ]
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+
+    const dataset = await fetchPageDataset("notifications.announcements");
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/announcements", {
+      headers: { authorization: "Bearer token" }
+    });
+    expect(dataset.records).toEqual([
+      expect.objectContaining({
+        id: "21",
+        name: "Maintenance",
+        status: "published",
+        source: "available-api"
+      })
+    ]);
+  });
 });

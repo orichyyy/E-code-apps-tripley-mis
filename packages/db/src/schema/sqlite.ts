@@ -714,6 +714,52 @@ export const notificationTemplates = sqliteTable(
   })
 );
 
+export const announcements = sqliteTable(
+  "announcements",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    tenantId: integer("tenant_id"),
+    title: text("title").notNull(),
+    content: text("content").notNull(),
+    scopeType: text("scope_type", { enum: ["system", "organization"] }).notNull(),
+    status: text("status", { enum: ["draft", "published", "deleted"] }).notNull().default("draft"),
+    publishedAt: text("published_at"),
+    ...softDelete,
+    ...timestamps,
+    createdBy: integer("created_by"),
+    updatedBy: integer("updated_by")
+  },
+  (table) => ({
+    statusIndex: index("announcements_status_idx").on(table.status, table.publishedAt),
+    scopeTypeCheck: check("announcements_scope_type_check", sql`${table.scopeType} IN ('system', 'organization')`),
+    statusCheck: check(
+      "announcements_status_check",
+      sql`${table.status} IN ('draft', 'published', 'deleted')`
+    )
+  })
+);
+
+export const webhookSubscriptions = sqliteTable(
+  "webhook_subscriptions",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    tenantId: integer("tenant_id"),
+    name: text("name").notNull(),
+    url: text("url").notNull(),
+    eventTypes: text("event_types", { mode: "json" }).notNull(),
+    secret: text("secret"),
+    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
+    ...softDelete,
+    ...timestamps,
+    createdBy: integer("created_by"),
+    updatedBy: integer("updated_by")
+  },
+  (table) => ({
+    statusIndex: index("webhook_subscriptions_status_idx").on(table.status),
+    statusCheck: check("webhook_subscriptions_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
+  })
+);
+
 export const logEntries = sqliteTable(
   "log_entries",
   {
@@ -769,6 +815,7 @@ export const importExportTasks = sqliteTable(
 );
 
 export const sqliteSchema = {
+  announcements,
   apiPermissions,
   authSessions,
   cacheEntries,
@@ -800,5 +847,6 @@ export const sqliteSchema = {
   systemInitializationState,
   userPermissionOverrides,
   userOrganizationRoles,
+  webhookSubscriptions,
   users
 };

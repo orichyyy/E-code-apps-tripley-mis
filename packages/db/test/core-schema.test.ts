@@ -201,6 +201,17 @@ describe("backend core schema", () => {
     expect(postgresql.i18nMessages.messageKey.name).toBe("message_key");
   });
 
+  it("keeps announcement and webhook subscription tables aligned across dialects", () => {
+    expect(sqlite.announcements.scopeType.name).toBe("scope_type");
+    expect(postgresql.announcements.scopeType.name).toBe("scope_type");
+    expect(sqlite.announcements.publishedAt.name).toBe("published_at");
+    expect(postgresql.announcements.publishedAt.name).toBe("published_at");
+    expect(sqlite.webhookSubscriptions.eventTypes.name).toBe("event_types");
+    expect(postgresql.webhookSubscriptions.eventTypes.name).toBe("event_types");
+    expect(sqlite.webhookSubscriptions.secret.name).toBe("secret");
+    expect(postgresql.webhookSubscriptions.secret.name).toBe("secret");
+  });
+
 
   it("keeps the root organization segment constraint in both migrations", () => {
     const sqliteMigration = readFileSync(
@@ -256,7 +267,9 @@ describe("backend core schema", () => {
       ["importExportTasks", ["import_export_tasks_status_check", "import_export_tasks_type_check"]],
       ["systemConfigs", ["system_configs_status_check", "system_configs_value_type_check"]],
       ["dictionaryTypes", ["dictionary_types_status_check"]],
-      ["dictionaryItems", ["dictionary_items_status_check"]]
+      ["dictionaryItems", ["dictionary_items_status_check"]],
+      ["announcements", ["announcements_scope_type_check", "announcements_status_check"]],
+      ["webhookSubscriptions", ["webhook_subscriptions_status_check"]]
     ]);
 
     for (const [tableName, expectedChecks] of expectedChecksByTable) {
@@ -302,7 +315,9 @@ describe("backend core schema", () => {
       ["systemConfigs", ["system_configs_group_idx", "system_configs_key_unique"]],
       ["dictionaryTypes", ["dictionary_types_code_unique"]],
       ["dictionaryItems", ["dictionary_items_type_idx", "dictionary_items_type_value_unique"]],
-      ["i18nMessages", ["i18n_messages_key_language_unique", "i18n_messages_module_idx"]]
+      ["i18nMessages", ["i18n_messages_key_language_unique", "i18n_messages_module_idx"]],
+      ["announcements", ["announcements_status_idx"]],
+      ["webhookSubscriptions", ["webhook_subscriptions_status_idx"]]
     ]);
 
     for (const [tableName, expectedIndexes] of expectedIndexesByTable) {

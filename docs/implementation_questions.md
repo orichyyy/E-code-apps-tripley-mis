@@ -74,6 +74,8 @@ No unresolved backend-core blockers remain from the previously listed questions.
 
     Confirmed: v1 implements notification channel interfaces and durable notification records. Webhook/in-memory behavior may be represented as placeholders; SMTP does not add a real sending dependency until package/configuration/delivery semantics are confirmed.
 
+    Implemented handling: webhook subscription persistence and management APIs are implemented without adding real external delivery, retry workers, or mandatory webhook sender dependencies.
+
 17. **Infrastructure table scope for adapter persistence**
 
     Confirmed: v1 introduces minimal durable adapter tables named `cache_entries`, `rate_limit_counters`, `locks`, `queue_jobs`, `event_outbox`, and `scheduled_jobs`, plus durable base-module tables for logs, files, notifications, and import/export tasks as needed by implemented modules.
@@ -89,3 +91,7 @@ No unresolved backend-core blockers remain from the previously listed questions.
 20. **Notification template seed records**
 
     Confirmed: v1 adds schemas/APIs for multilingual notification templates but does not seed unconfirmed default template content. SMS templates remain reserved.
+
+21. **Announcement organization scope reference**
+
+    Confirmed implementation boundary: announcements persist the confirmed `scope_type` values `system` and `organization`. A concrete organization target/reference field is not added in v1 until the API contract and multi-organization audience semantics are explicitly confirmed.
