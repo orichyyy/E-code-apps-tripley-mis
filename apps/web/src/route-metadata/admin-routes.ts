@@ -105,7 +105,12 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     requiredPermission: "announcement:view",
     menuVisible: true,
     group: "notifications",
-    sortOrder: 200
+    sortOrder: 200,
+    actions: [
+      { code: "announcement:create", labelI18nKey: "actions.create", requiredPermission: "announcement:create" },
+      { code: "announcement:update", labelI18nKey: "actions.edit", requiredPermission: "announcement:update" },
+      { code: "announcement:publish", labelI18nKey: "actions.publish", requiredPermission: "announcement:publish" }
+    ]
   },
   {
     routeCode: "notifications.in-app",

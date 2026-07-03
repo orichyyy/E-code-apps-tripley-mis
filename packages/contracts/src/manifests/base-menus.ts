@@ -84,6 +84,15 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     sortOrder: 200
   },
   {
+    code: "notifications.announcements",
+    titleI18nKey: "routes.notifications.announcements",
+    path: "/notifications/announcements",
+    parentCode: "notifications",
+    requiredPermission: "announcement:view",
+    routeCode: "notifications.announcements",
+    sortOrder: 200
+  },
+  {
     code: "notifications.templates",
     titleI18nKey: "routes.notifications.templates",
     path: "/notifications/templates",

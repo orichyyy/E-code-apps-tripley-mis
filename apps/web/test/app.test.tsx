@@ -98,6 +98,52 @@ describe("web admin frontend", () => {
     expect(screen.queryByText("raw-secret")).not.toBeInTheDocument();
   });
 
+  it("renders announcements from the backend API", async () => {
+    window.history.pushState(null, "", "/notifications/announcements");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [
+            {
+              id: "21",
+              tenantId: null,
+              title: "Maintenance",
+              content: "Planned window",
+              scopeType: "system",
+              status: "published",
+              publishedAt: "2026-07-03T00:00:00.000Z",
+              isDeleted: false,
+              deletedAt: null,
+              deletedBy: null,
+              createdAt: "2026-07-03T00:00:00.000Z",
+              updatedAt: "2026-07-03T00:00:00.000Z",
+              createdBy: "1",
+              updatedBy: "1"
+            }
+          ]
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+    useAuthStore.getState().signIn({
+      accessToken: "test-token",
+      user: {
+        id: "1",
+        username: "admin",
+        displayName: "Super Administrator",
+        language: "en",
+        forcePasswordChange: false
+      },
+      permissionCodes: ["announcement:view", "announcement:create", "announcement:update", "announcement:publish"]
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText("Maintenance")).toBeInTheDocument();
+    expect(screen.getByText("Planned window")).toBeInTheDocument();
+    expect(screen.getAllByText("Announcements").length).toBeGreaterThan(0);
+  });
+
   it("renders notification templates from the backend API", async () => {
     window.history.pushState(null, "", "/notifications/templates");
     vi.spyOn(globalThis, "fetch").mockResolvedValue(

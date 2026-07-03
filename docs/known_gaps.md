@@ -32,6 +32,7 @@ This file records incomplete requirements that must not be claimed complete.
 - Frontend pages use real API fetches for implemented infrastructure modules where backend APIs exist. Pages whose backend APIs are still incomplete continue to use typed placeholder data.
 - Frontend system configuration and dictionary pages now use real API fetches when an access token is available.
 - i18n message management now has a dedicated frontend route/page wired to the implemented backend APIs. The static English/Chinese UI message bundle remains the local frontend default.
+- Announcement management now has a dedicated frontend route/page wired to the implemented backend APIs. Announcement notification delivery and organization target references remain reserved/unconfirmed.
 - Webhook subscription management now has a frontend route/page wired to the implemented backend APIs. Real outbound delivery remains reserved.
 - Notification template management now has a frontend route/page wired to the implemented backend APIs. SMTP/SMS sending remains reserved.
 

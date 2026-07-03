@@ -1,6 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  createAnnouncement,
+  fetchAnnouncements,
+  publishAnnouncement,
+  unpublishAnnouncement,
+  updateAnnouncement
+} from "../src/features/notifications/announcement-api";
+import {
   createNotificationTemplate,
   fetchNotificationTemplates,
   updateNotificationTemplate
@@ -124,6 +131,80 @@ describe("frontend API client", () => {
         source: "available-api"
       })
     ]);
+  });
+
+  it("loads and mutates announcements through the backend API", async () => {
+    localStorage.setItem("web-admin.access-token", "token");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            data: [
+              {
+                id: "21",
+                tenantId: null,
+                title: "Maintenance",
+                content: "Window",
+                scopeType: "system",
+                status: "draft",
+                publishedAt: null,
+                isDeleted: false,
+                deletedAt: null,
+                deletedBy: null,
+                createdAt: "2026-07-03T00:00:00.000Z",
+                updatedAt: "2026-07-03T00:00:00.000Z",
+                createdBy: "1",
+                updatedBy: "1"
+              }
+            ]
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+    );
+
+    const records = await fetchAnnouncements();
+    await createAnnouncement({ title: "Maintenance", content: "Window", scopeType: "system" });
+    await updateAnnouncement("21", { title: "Maintenance updated" });
+    await publishAnnouncement("21");
+    await unpublishAnnouncement("21");
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/announcements", {
+      headers: { authorization: "Bearer token" }
+    });
+    expect(records).toEqual([
+      expect.objectContaining({
+        id: "21",
+        title: "Maintenance",
+        content: "Window",
+        scopeType: "system",
+        status: "draft"
+      })
+    ]);
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/announcements", {
+      method: "POST",
+      body: JSON.stringify({ title: "Maintenance", content: "Window", scopeType: "system" }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/announcements/21", {
+      method: "PATCH",
+      body: JSON.stringify({ title: "Maintenance updated" }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(4, "/api/announcements/21/publish", {
+      method: "POST",
+      headers: { authorization: "Bearer token" }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(5, "/api/announcements/21/unpublish", {
+      method: "POST",
+      headers: { authorization: "Bearer token" }
+    });
   });
 
   it("loads webhook subscriptions without exposing raw secrets", async () => {

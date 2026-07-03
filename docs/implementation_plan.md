@@ -461,7 +461,7 @@ The communications slice completed the following tested pieces:
 - Persisted webhook subscriptions without adding a mandatory webhook sender, retry worker, or external delivery dependency. API responses expose `secretConfigured` and do not return raw secrets.
 - Kept announcement organization scoping to the confirmed `scope_type` value; no organization target field was added because no concrete organization-scope reference contract is confirmed.
 - Added in-memory route coverage and PostgreSQL-backed persistence coverage for announcement creation/update/publish/unpublish and webhook subscription creation/update.
-- Replaced the announcements frontend placeholder fetch with the real `/api/announcements` API when an access token is available. No webhook subscription frontend route exists yet, so no new page was invented.
+- Replaced the announcements frontend placeholder fetch with the real `/api/announcements` API when an access token is available. Dedicated management pages for announcements and webhook subscriptions are tracked in later frontend slices.
 - Fixed shared JSON parameter handling so PostgreSQL JSONB array values persist correctly for webhook event types and existing infrastructure array fields.
 
 Remaining base-system gaps are tracked in `docs/known_gaps.md`. The next recommended goal is to revisit optional SMTP/S3/Redis/RabbitMQ drivers only when concrete package and configuration contracts are confirmed.
@@ -482,6 +482,23 @@ The webhook subscription frontend slice completed the following:
 - Added frontend API/client and component coverage for listing, create/update requests, route rendering, and raw-secret non-display.
 
 Remaining base-system gaps are tracked in `docs/known_gaps.md`. Real outbound webhook delivery, retry workers, SMTP, S3-compatible storage, Redis, and RabbitMQ remain optional/reserved until concrete package and runtime contracts are confirmed.
+
+## Announcement Frontend Progress
+
+The announcement frontend slice completed the following:
+
+- Added the `notifications.announcements` route/menu entry to the contracts base route and menu manifests for backend route/menu synchronization.
+- Added a dedicated announcement management page using TanStack Query for server state and TanStack Form plus Zod for create/edit validation.
+- Wired the page to the existing backend APIs:
+  - `GET /api/announcements`
+  - `POST /api/announcements`
+  - `PATCH /api/announcements/:id`
+  - `POST /api/announcements/:id/publish`
+  - `POST /api/announcements/:id/unpublish`
+- Added list, filter, create, edit, publish, unpublish, loading, empty, error, and permission-denied behavior.
+- Added frontend API/client and component coverage for listing, create/update requests, publish/unpublish requests, and route rendering.
+
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. Announcement delivery fan-out and concrete organization target references remain reserved until confirmed by the base contract.
 
 ## Notification Template Frontend Progress
 
