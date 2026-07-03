@@ -11,6 +11,7 @@ import {
   createPostgresqlInfrastructureExecutor,
   createSqliteInfrastructureExecutor
 } from "./infrastructure.executor";
+import type { StoredFileMetadataInput } from "./file-management";
 import type { LogType, ScheduledTaskInput } from "./infrastructure.types";
 
 export class InfrastructureRepository {
@@ -58,20 +59,7 @@ export class InfrastructureRepository {
       `SELECT id, object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at
        FROM file_objects ORDER BY id DESC LIMIT 100`
     );
-    return rows.map((row) => ({
-      id: String(row.id),
-      objectKey: String(row.object_key),
-      originalName: String(row.original_name),
-      contentType: String(row.content_type),
-      extension: String(row.extension),
-      sizeBytes: Number(row.size_bytes),
-      storageDriver: String(row.storage_driver),
-      status: String(row.status),
-      referenced: Boolean(row.referenced),
-      isDeleted: Boolean(row.is_deleted),
-      createdAt: iso(row.created_at),
-      updatedAt: iso(row.updated_at)
-    }));
+    return rows.map(toFileRecord);
   }
 
   async getFile(id: string) {
@@ -80,16 +68,66 @@ export class InfrastructureRepository {
        FROM file_objects WHERE id = ${this.p(1)} LIMIT 1`,
       [id]
     );
-    return rows[0] ? (await this.listFiles()).find((file) => file.id === String(rows[0].id)) ?? null : null;
+    return rows[0] ? toFileRecord(rows[0]) : null;
+  }
+
+  async createFile(input: StoredFileMetadataInput) {
+    const now = nowIso();
+    await this.executor.run(
+      `INSERT INTO file_objects (object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at, created_by, updated_by)
+       VALUES (${this.p(1)}, ${this.p(2)}, ${this.p(3)}, ${this.p(4)}, ${this.p(5)}, ${this.p(6)}, 'active', ${this.bool(false)}, ${this.bool(false)}, ${this.p(7)}, ${this.p(8)}, ${this.p(9)}, ${this.p(10)})`,
+      [
+        input.objectKey,
+        input.originalName,
+        input.contentType,
+        input.extension,
+        input.sizeBytes,
+        input.storageDriver,
+        now,
+        now,
+        input.actorId,
+        input.actorId
+      ]
+    );
+    const rows = await this.executor.all(
+      `SELECT id, object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at
+       FROM file_objects WHERE object_key = ${this.p(1)} LIMIT 1`,
+      [input.objectKey]
+    );
+    return rows[0] ? toFileRecord(rows[0]) : null;
   }
 
   async deleteFile(id: string, deletedBy: string | null) {
     const now = nowIso();
-    await this.executor.run(
-      `UPDATE file_objects SET status = 'invalid', is_deleted = ${this.bool(true)}, deleted_at = ${this.p(1)}, deleted_by = ${this.p(2)}, updated_at = ${this.p(3)} WHERE id = ${this.p(4)}`,
-      [now, deletedBy, now, id]
-    );
+    await this.executor.transaction(async () => {
+      await this.executor.run(
+        `UPDATE file_objects SET status = 'invalid', is_deleted = ${this.bool(true)}, deleted_at = ${this.p(1)}, deleted_by = ${this.p(2)}, updated_at = ${this.p(3)} WHERE id = ${this.p(4)}`,
+        [now, deletedBy, now, id]
+      );
+      await this.executor.run(
+        `UPDATE file_references SET status = 'invalid' WHERE file_object_id = ${this.p(1)}`,
+        [id]
+      );
+    });
     return this.getFile(id);
+  }
+
+  async listFileReferences(fileId: string) {
+    const rows = await this.executor.all(
+      `SELECT id, file_object_id, resource_type, resource_id, reference_type, status, created_at, created_by
+       FROM file_references WHERE file_object_id = ${this.p(1)} ORDER BY id DESC LIMIT 100`,
+      [fileId]
+    );
+    return rows.map((row) => ({
+      id: String(row.id),
+      fileObjectId: String(row.file_object_id),
+      resourceType: String(row.resource_type),
+      resourceId: String(row.resource_id),
+      referenceType: String(row.reference_type),
+      status: String(row.status),
+      createdAt: iso(row.created_at),
+      createdBy: nullableId(row.created_by)
+    }));
   }
 
   async listNotifications(userId: string) {
@@ -335,6 +373,23 @@ function toScheduledTask(row: DatabaseRow) {
     attempt: Number(row.attempt),
     maxAttempts: Number(row.max_attempts),
     lastError: nullableString(row.last_error),
+    createdAt: iso(row.created_at),
+    updatedAt: iso(row.updated_at)
+  };
+}
+
+function toFileRecord(row: DatabaseRow) {
+  return {
+    id: String(row.id),
+    objectKey: String(row.object_key),
+    originalName: String(row.original_name),
+    contentType: String(row.content_type),
+    extension: String(row.extension),
+    sizeBytes: Number(row.size_bytes),
+    storageDriver: String(row.storage_driver),
+    status: String(row.status),
+    referenced: Boolean(row.referenced),
+    isDeleted: Boolean(row.is_deleted),
     createdAt: iso(row.created_at),
     updatedAt: iso(row.updated_at)
   };

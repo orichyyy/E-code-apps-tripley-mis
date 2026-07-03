@@ -1,4 +1,4 @@
-import { Eye, Loader2, Trash2 } from "lucide-react";
+import { Download, Eye, ImageIcon, Loader2, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { FileRecord } from "./file-api";
@@ -6,14 +6,29 @@ import { FileStatusBadge, formatBytes, ReferencedBadge } from "./file-status";
 
 type FileTableProps = {
   canDelete: boolean;
+  canDownload: boolean;
+  canPreview: boolean;
   isError: boolean;
   isLoading: boolean;
   onDelete: (record: FileRecord) => void;
   onDetail: (record: FileRecord) => void;
+  onDownload: (record: FileRecord) => void;
+  onPreview: (record: FileRecord) => void;
   rows: FileRecord[];
 };
 
-export function FileTable({ canDelete, isError, isLoading, onDelete, onDetail, rows }: FileTableProps) {
+export function FileTable({
+  canDelete,
+  canDownload,
+  canPreview,
+  isError,
+  isLoading,
+  onDelete,
+  onDetail,
+  onDownload,
+  onPreview,
+  rows
+}: FileTableProps) {
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 p-8 text-sm text-muted-foreground">
@@ -63,7 +78,16 @@ export function FileTable({ canDelete, isError, isLoading, onDelete, onDetail, r
               </td>
               <td className="border-b px-4 py-3 text-muted-foreground">{record.createdAt}</td>
               <td className="border-b px-4 py-3">
-                <FileRowActions canDelete={canDelete} onDelete={onDelete} onDetail={onDetail} record={record} />
+                <FileRowActions
+                  canDelete={canDelete}
+                  canDownload={canDownload}
+                  canPreview={canPreview}
+                  onDelete={onDelete}
+                  onDetail={onDetail}
+                  onDownload={onDownload}
+                  onPreview={onPreview}
+                  record={record}
+                />
               </td>
             </tr>
           ))}
@@ -75,16 +99,25 @@ export function FileTable({ canDelete, isError, isLoading, onDelete, onDetail, r
 
 function FileRowActions({
   canDelete,
+  canDownload,
+  canPreview,
   onDelete,
   onDetail,
+  onDownload,
+  onPreview,
   record
 }: {
   canDelete: boolean;
+  canDownload: boolean;
+  canPreview: boolean;
   onDelete: (record: FileRecord) => void;
   onDetail: (record: FileRecord) => void;
+  onDownload: (record: FileRecord) => void;
+  onPreview: (record: FileRecord) => void;
   record: FileRecord;
 }) {
   const deleteDisabled = record.isDeleted || record.status === "invalid";
+  const isImage = record.contentType.startsWith("image/");
 
   return (
     <div className="flex gap-2">
@@ -92,6 +125,18 @@ function FileRowActions({
         <Eye className="size-4" aria-hidden="true" />
         Details
       </Button>
+      {canDownload ? (
+        <Button disabled={deleteDisabled} onClick={() => onDownload(record)} size="sm" variant="ghost">
+          <Download className="size-4" aria-hidden="true" />
+          Download
+        </Button>
+      ) : null}
+      {canPreview && isImage ? (
+        <Button disabled={deleteDisabled} onClick={() => onPreview(record)} size="sm" variant="ghost">
+          <ImageIcon className="size-4" aria-hidden="true" />
+          Preview
+        </Button>
+      ) : null}
       {canDelete ? (
         <Button disabled={deleteDisabled} onClick={() => onDelete(record)} size="sm" variant="ghost">
           <Trash2 className="size-4" aria-hidden="true" />

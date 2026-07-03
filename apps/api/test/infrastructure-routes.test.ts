@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { mkdtemp, rm } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 
+import { createLocalFileStorageAdapter } from "@web-admin-base/adapters";
 import { createApp } from "../src/app";
+import { createInMemoryBackendCoreServices } from "../src/modules/core-foundation/services";
+import { InfrastructureServices } from "../src/modules/infrastructure/infrastructure.service";
 
 describe("infrastructure routes", () => {
   it("exposes implemented infrastructure APIs through authenticated base permissions", async () => {
@@ -58,6 +64,51 @@ describe("infrastructure routes", () => {
     await expect(lists[0].json()).resolves.toEqual({
       data: [expect.objectContaining({ code: "welcome", locale: "en" })]
     });
+  });
+
+  it("uploads, downloads, previews, and lists file references", async () => {
+    const root = await mkdtemp(join(tmpdir(), "web-admin-files-"));
+    const app = createApp({
+      backendCoreServices: createInMemoryBackendCoreServices(),
+      infrastructureServices: InfrastructureServices.inMemory(createLocalFileStorageAdapter({ rootDirectory: root }))
+    });
+
+    try {
+      await initialize(app);
+      const headers = await loginHeaders(app);
+      const textForm = new FormData();
+      textForm.set("file", new File(["hello"], "report.txt", { type: "text/plain" }));
+      const uploadResponse = await app.request("/api/files/upload", {
+        method: "POST",
+        headers,
+        body: textForm
+      });
+      const uploadBody = await uploadResponse.json();
+      const fileId = uploadBody.data.id;
+      const downloadResponse = await app.request(`/api/files/${fileId}/download`, { headers });
+      const referencesResponse = await app.request(`/api/files/${fileId}/references`, { headers });
+      const imageForm = new FormData();
+      imageForm.set("file", new File([new Uint8Array([137, 80, 78, 71])], "pixel.png", { type: "image/png" }));
+      const imageUploadResponse = await app.request("/api/files/upload", {
+        method: "POST",
+        headers,
+        body: imageForm
+      });
+      const imageUploadBody = await imageUploadResponse.json();
+      const previewResponse = await app.request(`/api/files/${imageUploadBody.data.id}/preview`, { headers });
+
+      expect(uploadResponse.status).toBe(201);
+      expect(uploadBody.data).toEqual(expect.objectContaining({ originalName: "report.txt", extension: "txt" }));
+      expect(downloadResponse.status).toBe(200);
+      await expect(downloadResponse.text()).resolves.toBe("hello");
+      expect(downloadResponse.headers.get("content-disposition")).toContain("report.txt");
+      expect(referencesResponse.status).toBe(200);
+      await expect(referencesResponse.json()).resolves.toEqual({ data: [] });
+      expect(previewResponse.status).toBe(200);
+      expect(previewResponse.headers.get("content-type")).toBe("image/png");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });
 

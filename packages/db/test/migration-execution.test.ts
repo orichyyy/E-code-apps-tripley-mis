@@ -38,7 +38,8 @@ describe("database migration execution", () => {
         "0002_permission_extension_persistence.sql",
         "0003_infrastructure_foundation.sql",
         "0004_system_dictionary_i18n.sql",
-        "0005_announcements_webhooks.sql"
+        "0005_announcements_webhooks.sql",
+        "0006_file_references.sql"
       ]);
       expect(tables).toContainEqual({ name: "users" });
       expect(tables).toContainEqual({ name: "organizations" });
@@ -52,6 +53,7 @@ describe("database migration execution", () => {
       expect(tables).toContainEqual({ name: "i18n_messages" });
       expect(tables).toContainEqual({ name: "announcements" });
       expect(tables).toContainEqual({ name: "webhook_subscriptions" });
+      expect(tables).toContainEqual({ name: "file_references" });
     } finally {
       client.close();
     }
@@ -103,6 +105,7 @@ describe("database migration execution", () => {
              'dictionary_items',
              'i18n_messages',
              'announcements',
+             'file_references',
              'webhook_subscriptions'
            )
          ORDER BY table_name`
@@ -113,13 +116,15 @@ describe("database migration execution", () => {
         "0002_permission_extension_persistence.sql",
         "0003_infrastructure_foundation.sql",
         "0004_system_dictionary_i18n.sql",
-        "0005_announcements_webhooks.sql"
+        "0005_announcements_webhooks.sql",
+        "0006_file_references.sql"
       ]);
       expect(result.rows.map((row) => row.table_name)).toEqual([
         "announcements",
         "dictionary_items",
         "dictionary_types",
         "event_outbox",
+        "file_references",
         "i18n_messages",
         "log_entries",
         "organizations",

@@ -886,12 +886,52 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     public: false
   },
   {
+    method: "POST",
+    path: "/api/files/upload",
+    code: "api.files.upload",
+    description: "Upload file through configured storage adapter",
+    module: "files",
+    requiredPermission: "file:upload",
+    logLevel: "request",
+    public: false
+  },
+  {
     method: "GET",
     path: "/api/files/:id",
     code: "api.files.detail",
     description: "View file metadata",
     module: "files",
     requiredPermission: "file:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/files/:id/download",
+    code: "api.files.download",
+    description: "Download file after permission check",
+    module: "files",
+    requiredPermission: "file:download",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/files/:id/preview",
+    code: "api.files.preview",
+    description: "Preview image file after permission check",
+    module: "files",
+    requiredPermission: "file:preview",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/files/:id/references",
+    code: "api.files.references",
+    description: "View file reference relationships",
+    module: "files",
+    requiredPermission: "file:references:view",
     logLevel: "basic",
     public: false
   },

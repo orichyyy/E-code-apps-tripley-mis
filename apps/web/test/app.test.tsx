@@ -303,7 +303,7 @@ describe("web admin frontend", () => {
         language: "en",
         forcePasswordChange: false
       },
-      permissionCodes: ["file:view", "file:delete"]
+      permissionCodes: ["file:view", "file:upload", "file:download", "file:preview", "file:references:view", "file:delete"]
     });
 
     render(<App />);
@@ -312,6 +312,8 @@ describe("web admin frontend", () => {
     expect(screen.getByText("application/pdf")).toBeInTheDocument();
     expect(screen.getByText("2 KB")).toBeInTheDocument();
     expect(screen.getByText("Referenced")).toBeInTheDocument();
+    expect(screen.getByText("Upload")).toBeInTheDocument();
+    expect(screen.getByText("Download")).toBeInTheDocument();
     expect(screen.getAllByText("File management").length).toBeGreaterThan(0);
   });
 });

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, RefreshCw, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { AlertCircle, RefreshCw, Search, Upload } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { hasPermission } from "@/features/permissions/permission-utils";
@@ -8,7 +8,16 @@ import { translate } from "@/i18n/messages";
 import type { WebAdminRouteMetadata } from "@/route-metadata";
 import { useAuthStore } from "@/stores/auth.store";
 import { useLayoutStore } from "@/stores/layout.store";
-import { deleteFile, fetchFileDetail, fetchFiles } from "./file-api";
+import {
+  deleteFile,
+  downloadFileBlob,
+  fetchFileDetail,
+  fetchFileReferences,
+  fetchFiles,
+  previewFileBlob,
+  uploadFile,
+  type FileRecord
+} from "./file-api";
 import { FileDetailPanel } from "./file-status";
 import { FileTable } from "./file-table";
 
@@ -21,8 +30,13 @@ export function FilesPage({ route }: FilesPageProps) {
   const permissionCodes = useAuthStore((state) => state.permissionCodes);
   const canView = hasPermission(permissionCodes, route.requiredPermission);
   const canDelete = hasPermission(permissionCodes, "file:delete");
+  const canDownload = hasPermission(permissionCodes, "file:download");
+  const canPreview = hasPermission(permissionCodes, "file:preview");
+  const canUpload = hasPermission(permissionCodes, "file:upload");
+  const canViewReferences = hasPermission(permissionCodes, "file:references:view");
   const [keyword, setKeyword] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const listQuery = useQuery({
     enabled: canView,
@@ -34,11 +48,30 @@ export function FilesPage({ route }: FilesPageProps) {
     queryKey: ["files", selectedId],
     queryFn: () => fetchFileDetail(selectedId ?? "")
   });
+  const referencesQuery = useQuery({
+    enabled: canView && canViewReferences && selectedId !== null,
+    queryKey: ["files", selectedId, "references"],
+    queryFn: () => fetchFileReferences(selectedId ?? "")
+  });
+  const uploadMutation = useMutation({
+    mutationFn: uploadFile,
+    onSuccess: async (record) => {
+      if (record) setSelectedId(record.id);
+      await queryClient.invalidateQueries({ queryKey: ["files"] });
+    }
+  });
   const deleteMutation = useMutation({
     mutationFn: deleteFile,
     onSuccess: async (_result, id) => {
       await queryClient.invalidateQueries({ queryKey: ["files"] });
       await queryClient.invalidateQueries({ queryKey: ["files", id] });
+    }
+  });
+  const previewMutation = useMutation({
+    mutationFn: previewFileBlob,
+    onSuccess: (blob) => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(URL.createObjectURL(blob));
     }
   });
   const rows = useMemo(
@@ -61,6 +94,10 @@ export function FilesPage({ route }: FilesPageProps) {
   );
   const selectedRecord = detailQuery.data ?? listQuery.data?.find((record) => record.id === selectedId) ?? null;
 
+  useEffect(() => () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
+
   if (!canView) {
     return (
       <section className="rounded-lg border bg-card p-8 text-center">
@@ -74,7 +111,9 @@ export function FilesPage({ route }: FilesPageProps) {
     <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_24rem]">
       <div className="space-y-4">
         <FilesToolbar
+          canUpload={canUpload}
           language={language}
+          onUpload={(file) => uploadMutation.mutate(file)}
           onRefresh={() => void listQuery.refetch()}
           route={route}
           totalCount={listQuery.data?.length ?? 0}
@@ -83,26 +122,57 @@ export function FilesPage({ route }: FilesPageProps) {
           <FilesFilter keyword={keyword} language={language} onChange={setKeyword} />
           <FileTable
             canDelete={canDelete}
-            isError={listQuery.isError || detailQuery.isError || deleteMutation.isError}
+            canDownload={canDownload}
+            canPreview={canPreview}
+            isError={
+              listQuery.isError ||
+              detailQuery.isError ||
+              referencesQuery.isError ||
+              deleteMutation.isError ||
+              uploadMutation.isError ||
+              previewMutation.isError
+            }
             isLoading={listQuery.isLoading}
             onDelete={(record) => deleteMutation.mutate(record.id)}
-            onDetail={(record) => setSelectedId(record.id)}
+            onDetail={(record) => {
+              setPreviewUrl(null);
+              setSelectedId(record.id);
+            }}
+            onDownload={(record) => void downloadSelectedFile(record)}
+            onPreview={(record) => {
+              setSelectedId(record.id);
+              previewMutation.mutate(record.id);
+            }}
             rows={rows}
           />
         </div>
       </div>
-      <FileDetailPanel record={selectedRecord} />
+      <FileDetailPanel previewUrl={previewUrl} record={selectedRecord} references={referencesQuery.data ?? []} />
     </section>
   );
+
+  async function downloadSelectedFile(record: FileRecord) {
+    const blob = await downloadFileBlob(record.id);
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = record.originalName;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
 }
 
 function FilesToolbar({
+  canUpload,
   language,
+  onUpload,
   onRefresh,
   route,
   totalCount
 }: {
+  canUpload: boolean;
   language: "en" | "zh";
+  onUpload: (file: File) => void;
   onRefresh: () => void;
   route: WebAdminRouteMetadata;
   totalCount: number;
@@ -121,6 +191,21 @@ function FilesToolbar({
           <RefreshCw className="size-4" aria-hidden="true" />
           {translate(language, "actions.refresh")}
         </Button>
+        {canUpload ? (
+          <label className="inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90">
+            <Upload className="size-4" aria-hidden="true" />
+            {translate(language, "actions.upload")}
+            <input
+              className="sr-only"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) onUpload(file);
+                event.target.value = "";
+              }}
+              type="file"
+            />
+          </label>
+        ) : null}
       </div>
     </div>
   );

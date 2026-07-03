@@ -1,5 +1,9 @@
 import type { DatabaseAdapterExecutor } from "@web-admin-base/adapters";
+import { createLocalFileStorageAdapter } from "@web-admin-base/adapters";
 import { runPostgresqlMigrations } from "@web-admin-base/db";
+import { mkdtemp, rm } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 
 import { createApp } from "../src/app";
@@ -15,7 +19,11 @@ describe("database-backed infrastructure routes", () => {
     const url = getPostgresqlUrl();
     await runPostgresqlMigrations({ url });
     const executor = createPostgresqlInfrastructureExecutor(url);
-    const infrastructureServices = InfrastructureServices.database(new InfrastructureRepository(executor));
+    const root = await mkdtemp(join(tmpdir(), "web-admin-files-db-"));
+    const infrastructureServices = InfrastructureServices.database(
+      new InfrastructureRepository(executor),
+      createLocalFileStorageAdapter({ rootDirectory: root })
+    );
     const app = createApp({
       infrastructureServices,
       backendCoreServices: createInMemoryBackendCoreServices()
@@ -51,9 +59,23 @@ describe("database-backed infrastructure routes", () => {
       expect(listResponse.status).toBe(200);
       expect(taskResponse.status).toBe(201);
       expect(persisted).toEqual([expect.objectContaining({ code: "db-template" })]);
+
+      const form = new FormData();
+      form.set("file", new File(["db-file"], "db-file.csv", { type: "text/csv" }));
+      const uploadResponse = await app.request("/api/files/upload", { method: "POST", headers, body: form });
+      const uploadBody = await uploadResponse.json();
+      const storedFiles = await executor.all("SELECT original_name, content_type FROM file_objects WHERE id = $1", [
+        uploadBody.data.id
+      ]);
+      const downloadResponse = await app.request(`/api/files/${uploadBody.data.id}/download`, { headers });
+
+      expect(uploadResponse.status).toBe(201);
+      expect(storedFiles).toEqual([expect.objectContaining({ original_name: "db-file.csv", content_type: "text/csv" })]);
+      await expect(downloadResponse.text()).resolves.toBe("db-file");
     } finally {
       await clearInfrastructureTables(executor);
       await infrastructureServices.close();
+      await rm(root, { recursive: true, force: true });
     }
   });
 });
@@ -86,6 +108,7 @@ async function loginHeaders(app: ReturnType<typeof createApp>) {
 
 async function clearInfrastructureTables(executor: DatabaseAdapterExecutor): Promise<void> {
   for (const table of [
+    "file_references",
     "notification_templates",
     "notifications",
     "import_export_tasks",

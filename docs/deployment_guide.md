@@ -14,6 +14,8 @@ The v1 backend runtime target is Node.js only. Bun, Deno, and SQL Server deploym
 
 The design supports SQLite for local/demo usage and PostgreSQL for supported deployment. PostgreSQL migration execution uses `DATABASE_URL` or `TEST_DATABASE_URL`. Use `BACKEND_CORE_STORE=database`, `DATABASE_DIALECT=postgresql`, and `DATABASE_URL` for DB-backed backend-core and infrastructure persistence.
 
+File upload/download works with local filesystem storage through `FILE_STORAGE_ROOT`. In multi-server deployments this path must be a shared mounted directory if local storage is used; S3-compatible storage remains the recommended production direction once its concrete client/configuration contract is implemented.
+
 Redis, RabbitMQ, S3-compatible storage, SMTP, and webhook delivery integrations remain optional placeholders unless explicitly configured in a future slice.
 
 ## Observability

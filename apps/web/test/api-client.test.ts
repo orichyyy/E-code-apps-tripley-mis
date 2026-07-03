@@ -23,7 +23,15 @@ import {
   fetchWebhookSubscriptions,
   updateWebhookSubscription
 } from "../src/features/notifications/webhook-subscription-api";
-import { deleteFile, fetchFileDetail, fetchFiles } from "../src/features/system/file-api";
+import {
+  deleteFile,
+  downloadFileBlob,
+  fetchFileDetail,
+  fetchFileReferences,
+  fetchFiles,
+  previewFileBlob,
+  uploadFile
+} from "../src/features/system/file-api";
 import { fetchI18nMessages, updateI18nMessage } from "../src/features/system/i18n-message-api";
 import { fetchPageDataset } from "../src/lib/api-client";
 
@@ -413,6 +421,53 @@ describe("frontend API client", () => {
     localStorage.setItem("web-admin.access-token", "token");
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = String(input);
+      if (url === "/api/files/upload") {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              data: {
+                id: "72",
+                objectKey: "uploads/image.png",
+                originalName: "image.png",
+                contentType: "image/png",
+                extension: "png",
+                sizeBytes: 4,
+                storageDriver: "local",
+                status: "active",
+                referenced: false,
+                isDeleted: false,
+                createdAt: "2026-07-03T00:00:00.000Z",
+                updatedAt: "2026-07-03T00:00:00.000Z"
+              }
+            }),
+            { status: 201, headers: { "content-type": "application/json" } }
+          )
+        );
+      }
+      if (url === "/api/files/71/references") {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              data: [
+                {
+                  id: "81",
+                  fileObjectId: "71",
+                  resourceType: "users",
+                  resourceId: "1",
+                  referenceType: "avatar",
+                  status: "active",
+                  createdAt: "2026-07-03T00:00:00.000Z",
+                  createdBy: "1"
+                }
+              ]
+            }),
+            { status: 200, headers: { "content-type": "application/json" } }
+          )
+        );
+      }
+      if (url === "/api/files/71/download" || url === "/api/files/71/preview") {
+        return Promise.resolve(new Response("file-bytes", { status: 200 }));
+      }
       if (url === "/api/files" || url === "/api/files/71") {
         return Promise.resolve(
           new Response(
@@ -465,6 +520,10 @@ describe("frontend API client", () => {
     const records = await fetchFiles();
     const detail = await fetchFileDetail("71");
     await deleteFile("71");
+    const uploaded = await uploadFile(new File(["png"], "image.png", { type: "image/png" }));
+    const references = await fetchFileReferences("71");
+    const downloaded = await downloadFileBlob("71");
+    const preview = await previewFileBlob("71");
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/files", {
       headers: { authorization: "Bearer token" }
@@ -485,6 +544,26 @@ describe("frontend API client", () => {
       method: "DELETE",
       headers: { authorization: "Bearer token" }
     });
+    expect(fetchMock).toHaveBeenNthCalledWith(4, "/api/files/upload", {
+      method: "POST",
+      body: expect.any(FormData),
+      headers: { authorization: "Bearer token" }
+    });
+    expect(uploaded).toEqual(expect.objectContaining({ id: "72", originalName: "image.png" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(5, "/api/files/71/references", {
+      headers: { authorization: "Bearer token" }
+    });
+    expect(references).toEqual([
+      expect.objectContaining({ id: "81", resourceType: "users", referenceType: "avatar" })
+    ]);
+    expect(fetchMock).toHaveBeenNthCalledWith(6, "/api/files/71/download", {
+      headers: { authorization: "Bearer token" }
+    });
+    await expect(downloaded.text()).resolves.toBe("file-bytes");
+    expect(fetchMock).toHaveBeenNthCalledWith(7, "/api/files/71/preview", {
+      headers: { authorization: "Bearer token" }
+    });
+    await expect(preview.text()).resolves.toBe("file-bytes");
   });
 
   it("creates and updates notification templates through the backend API", async () => {

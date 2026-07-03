@@ -63,7 +63,7 @@ function createOperation(entry: BaseApiPermissionManifestEntry): OpenApiOperatio
       : entry.description,
     ...(entry.public ? {} : { security: [{ bearerAuth: [] }] }),
     ...(parameters.length === 0 ? {} : { parameters }),
-    ...(requestSchemaName ? { requestBody: createJsonRequestBody(requestSchemaName) } : {}),
+    ...(requestSchemaName ? { requestBody: createRequestBody(requestSchemaName) } : {}),
     responses: createStandardResponses(responseSchemaName),
     "x-permission-code": entry.code,
     ...(entry.requiredPermission ? { "x-required-permission": entry.requiredPermission } : {}),
@@ -72,7 +72,18 @@ function createOperation(entry: BaseApiPermissionManifestEntry): OpenApiOperatio
   };
 }
 
-function createJsonRequestBody(schemaName: string): NonNullable<OpenApiOperation["requestBody"]> {
+function createRequestBody(schemaName: string): NonNullable<OpenApiOperation["requestBody"]> {
+  if (schemaName === "FileUploadRequest") {
+    return {
+      required: true,
+      content: {
+        "multipart/form-data": {
+          schema: { $ref: `#/components/schemas/${schemaName}` }
+        }
+      }
+    };
+  }
+
   return {
     required: true,
     content: {

@@ -453,6 +453,18 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
     },
     additionalProperties: false
   },
+  FileUploadRequest: {
+    type: "object",
+    required: ["file"],
+    properties: {
+      file: {
+        type: "string",
+        format: "binary",
+        description: "Uploaded file. Default limit is 50 MB and allowed extensions are enforced by the file service."
+      }
+    },
+    additionalProperties: false
+  },
   CreateNotificationTemplateRequest: {
     type: "object",
     required: ["code", "channel", "locale", "body"],
@@ -564,6 +576,24 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
     items: { type: "object", additionalProperties: true }
   }),
   FileObjectResponse: envelopeSchema({ type: "object", additionalProperties: true, nullable: true }),
+  FileReferenceListResponse: envelopeSchema({
+    type: "array",
+    items: {
+      type: "object",
+      required: ["id", "fileObjectId", "resourceType", "resourceId", "referenceType", "status", "createdAt"],
+      properties: {
+        id: idStringSchema,
+        fileObjectId: idStringSchema,
+        resourceType: { type: "string" },
+        resourceId: { type: "string" },
+        referenceType: { type: "string" },
+        status: { type: "string", enum: ["active", "invalid"] },
+        createdAt: { type: "string", format: "date-time" },
+        createdBy: { ...idStringSchema, nullable: true }
+      },
+      additionalProperties: false
+    }
+  }),
   NotificationListResponse: envelopeSchema({
     type: "array",
     items: { type: "object", additionalProperties: true }

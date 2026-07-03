@@ -33,6 +33,7 @@ export const requestSchemaByOperationCode: Record<string, string> = {
   "api.webhooks.create": "CreateWebhookSubscriptionRequest",
   "api.webhooks.update": "UpdateWebhookSubscriptionRequest",
   "api.logs.export": "CreateLogExportTaskRequest",
+  "api.files.upload": "FileUploadRequest",
   "api.notification-templates.create": "CreateNotificationTemplateRequest",
   "api.notification-templates.update": "UpdateNotificationTemplateRequest",
   "api.scheduled-tasks.create": "CreateScheduledTaskRequest",

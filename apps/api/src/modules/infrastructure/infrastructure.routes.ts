@@ -11,6 +11,7 @@ import { Hono } from "hono";
 import type { AuthContextVariables } from "../../core/auth-context/auth-context";
 import { createKnownError } from "../../core/errors/error-codes";
 import { assertEmptyJsonBody } from "../core-foundation/request-body";
+import { toContentDisposition } from "./file-management";
 import type { InfrastructureServices } from "./infrastructure.service";
 import type { LogType } from "./infrastructure.types";
 
@@ -44,7 +45,43 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
   });
 
   routes.get("/files", async (context) => context.json({ data: await services.listFiles() }));
+  routes.post("/files/upload", async (context) => {
+    const uploaded = await readUploadedFile(context.req);
+    return context.json(
+      {
+        data: await services.uploadFile({
+          ...uploaded,
+          actorId: actorId(context)
+        })
+      },
+      201
+    );
+  });
   routes.get("/files/:id", async (context) => context.json({ data: await services.getFile(context.req.param("id")) }));
+  routes.get("/files/:id/download", async (context) => {
+    const { body, file } = await services.getFileContent(context.req.param("id"), "download");
+    return new Response(toArrayBuffer(body), {
+      status: 200,
+      headers: {
+        "content-type": String(file.contentType),
+        "content-length": String(body.byteLength),
+        "content-disposition": toContentDisposition(String(file.originalName))
+      }
+    });
+  });
+  routes.get("/files/:id/preview", async (context) => {
+    const { body, file } = await services.getFileContent(context.req.param("id"), "preview");
+    return new Response(toArrayBuffer(body), {
+      status: 200,
+      headers: {
+        "content-type": String(file.contentType),
+        "content-length": String(body.byteLength)
+      }
+    });
+  });
+  routes.get("/files/:id/references", async (context) => {
+    return context.json({ data: await services.listFileReferences(context.req.param("id")) });
+  });
   routes.delete("/files/:id", async (context) => {
     await assertEmptyJsonBody(context.req.raw);
     return context.json({ data: await services.deleteFile(context.req.param("id"), actorId(context)) });
@@ -119,4 +156,32 @@ function requireAuth(context: { get: (key: "authContext") => AuthContextVariable
   const auth = context.get("authContext");
   if (!auth) throw createKnownError("AUTH_TOKEN_EXPIRED");
   return auth;
+}
+
+async function readUploadedFile(request: { parseBody: () => Promise<Record<string, FormDataEntryValue | FormDataEntryValue[]>> }) {
+  const body = await request.parseBody();
+  const file = Array.isArray(body.file) ? body.file[0] : body.file;
+  if (!isUploadedFile(file)) throw createKnownError("VALIDATION_INVALID_REQUEST", { field: "file" });
+  return {
+    originalName: file.name,
+    contentType: file.type,
+    body: new Uint8Array(await file.arrayBuffer())
+  };
+}
+
+function isUploadedFile(value: unknown): value is File {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "name" in value &&
+    "type" in value &&
+    "arrayBuffer" in value &&
+    typeof (value as { arrayBuffer?: unknown }).arrayBuffer === "function"
+  );
+}
+
+function toArrayBuffer(body: Uint8Array): ArrayBuffer {
+  const copy = new Uint8Array(body.byteLength);
+  copy.set(body);
+  return copy.buffer;
 }

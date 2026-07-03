@@ -178,6 +178,8 @@ describe("backend core schema", () => {
     expect(postgresql.scheduledJobs.cronExpression.name).toBe("cron_expression");
     expect(sqlite.fileObjects.objectKey.name).toBe("object_key");
     expect(postgresql.fileObjects.objectKey.name).toBe("object_key");
+    expect(sqlite.fileReferences.fileObjectId.name).toBe("file_object_id");
+    expect(postgresql.fileReferences.fileObjectId.name).toBe("file_object_id");
     expect(sqlite.notifications.metadataJson.name).toBe("metadata_json");
     expect(postgresql.notifications.metadataJson.name).toBe("metadata_json");
     expect(sqlite.notificationTemplates.variablesJson.name).toBe("variables_json");
@@ -258,6 +260,7 @@ describe("backend core schema", () => {
       ["eventOutbox", ["event_outbox_status_check"]],
       ["scheduledJobs", ["scheduled_jobs_status_check"]],
       ["fileObjects", ["file_objects_status_check"]],
+      ["fileReferences", ["file_references_status_check"]],
       ["notifications", ["notifications_channel_check", "notifications_status_check"]],
       [
         "notificationTemplates",
@@ -308,6 +311,7 @@ describe("backend core schema", () => {
       ["eventOutbox", ["event_outbox_status_next_run_idx"]],
       ["scheduledJobs", ["scheduled_jobs_code_unique", "scheduled_jobs_next_run_idx"]],
       ["fileObjects", ["file_objects_object_key_unique"]],
+      ["fileReferences", ["file_references_file_idx", "file_references_resource_idx"]],
       ["notifications", ["notifications_user_status_idx"]],
       ["notificationTemplates", ["notification_templates_code_locale_unique"]],
       ["logEntries", ["log_entries_type_occurred_idx"]],

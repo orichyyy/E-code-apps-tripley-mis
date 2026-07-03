@@ -28,11 +28,7 @@ export type OpenApiOperation = {
   }>;
   requestBody?: {
     required: boolean;
-    content: {
-      "application/json": {
-        schema: OpenApiSchema;
-      };
-    };
+    content: Record<string, { schema: OpenApiSchema }>;
   };
   responses: Record<
     string,

@@ -561,4 +561,22 @@ The file management frontend slice completed the following:
 - Preserved the confirmed reference rule by showing referenced and invalid/deleted states without adding business-module-specific reference behavior.
 - Added frontend API/client and component coverage for listing, detail fetch, delete-invalidate requests, and route rendering.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. File upload, download, preview, S3-compatible storage configuration UI, and file-reference listing remain reserved until their concrete backend API contracts are implemented.
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. S3-compatible storage configuration UI and concrete S3 driver wiring remain reserved until their package/configuration contracts are confirmed.
+
+## File Management Runtime Progress
+
+The file management runtime slice completed the following:
+
+- Added SQLite/PostgreSQL migrations and Drizzle schema for `file_references`.
+- Added file permissions and API permission metadata for upload, download, image preview, and reference viewing.
+- Added backend APIs:
+  - `POST /api/files/upload`
+  - `GET /api/files/:id/download`
+  - `GET /api/files/:id/preview`
+  - `GET /api/files/:id/references`
+- Implemented local filesystem upload through `FileStorageAdapter`, including the confirmed default 50 MB limit and base whitelist.
+- Kept PDF preview out of scope; image preview is supported for image content types.
+- Updated the file management frontend page with upload, download, image preview, and reference display behavior.
+- Added backend route/PostgreSQL persistence tests, SQLite migration coverage, OpenAPI manifest coverage, and frontend API/page tests.
+
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. S3-compatible storage remains reserved until its concrete client package and configuration contract are confirmed.

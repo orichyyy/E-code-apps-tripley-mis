@@ -1,3 +1,4 @@
+import { createLocalFileStorageAdapter, type FileStorageAdapter } from "@web-admin-base/adapters";
 import type {
   CreateExportTaskRequest,
   CreateLogExportTaskRequest,
@@ -7,6 +8,13 @@ import type {
   UpdateScheduledTaskRequest
 } from "@web-admin-base/contracts";
 
+import { createKnownError } from "../../core/errors/error-codes";
+import {
+  createObjectKey,
+  isPreviewableImage,
+  validateUploadInput,
+  type FileUploadInput
+} from "./file-management";
 import { InfrastructureRepository } from "./infrastructure.repository";
 import type { LogType, ScheduledTaskInput } from "./infrastructure.types";
 
@@ -21,14 +29,18 @@ export class InfrastructureServices {
   };
   private sequence = 1;
 
-  constructor(private readonly repository?: InfrastructureRepository) {}
+  constructor(
+    private readonly repository?: InfrastructureRepository,
+    private readonly storage: FileStorageAdapter = createDefaultFileStorage(),
+    private readonly maxFileSizeBytes = readMaxFileSizeBytes()
+  ) {}
 
-  static inMemory(): InfrastructureServices {
-    return new InfrastructureServices();
+  static inMemory(storage?: FileStorageAdapter): InfrastructureServices {
+    return new InfrastructureServices(undefined, storage);
   }
 
-  static database(repository = InfrastructureRepository.fromEnvironment()): InfrastructureServices {
-    return new InfrastructureServices(repository);
+  static database(repository = InfrastructureRepository.fromEnvironment(), storage?: FileStorageAdapter): InfrastructureServices {
+    return new InfrastructureServices(repository, storage);
   }
 
   close(): Promise<void> {
@@ -51,6 +63,45 @@ export class InfrastructureServices {
     return this.repository?.getFile(id) ?? Promise.resolve(this.memory.files.find((file) => file.id === id) ?? null);
   }
 
+  async uploadFile(input: FileUploadInput) {
+    const normalized = validateUploadInput(input, this.maxFileSizeBytes);
+    const objectKey = createObjectKey(normalized.extension);
+    const stored = await this.storage.put(objectKey, input.body, normalized.contentType);
+    const metadata = {
+      objectKey: stored.objectKey,
+      originalName: normalized.originalName,
+      contentType: stored.contentType,
+      extension: normalized.extension,
+      sizeBytes: stored.sizeBytes,
+      storageDriver: "local",
+      actorId: input.actorId
+    };
+    if (this.repository) return this.repository.createFile(metadata);
+    const now = new Date().toISOString();
+    const file = {
+      id: this.nextId(),
+      ...metadata,
+      status: "active",
+      referenced: false,
+      isDeleted: false,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.memory.files.unshift(file);
+    return file;
+  }
+
+  async getFileContent(id: string, mode: "download" | "preview") {
+    const file = await this.getFile(id);
+    if (!file || file.isDeleted || file.status === "invalid") throw createKnownError("FILE_NOT_FOUND");
+    if (mode === "preview" && !isPreviewableImage(String(file.contentType))) {
+      throw createKnownError("FILE_PREVIEW_NOT_SUPPORTED");
+    }
+    const body = await this.storage.get(String(file.objectKey));
+    if (!body) throw createKnownError("FILE_NOT_FOUND");
+    return { file, body };
+  }
+
   deleteFile(id: string, actorId: string | null) {
     if (this.repository) return this.repository.deleteFile(id, actorId);
     const file = this.memory.files.find((item) => item.id === id);
@@ -62,6 +113,10 @@ export class InfrastructureServices {
       deletedAt: new Date().toISOString()
     });
     return Promise.resolve(file);
+  }
+
+  listFileReferences(id: string) {
+    return this.repository?.listFileReferences(id) ?? Promise.resolve([]);
   }
 
   listNotifications(userId: string) {
@@ -185,4 +240,15 @@ export class InfrastructureServices {
     this.sequence += 1;
     return id;
   }
+}
+
+function createDefaultFileStorage(): FileStorageAdapter {
+  return createLocalFileStorageAdapter({
+    rootDirectory: process.env.FILE_STORAGE_ROOT ?? ".web-admin-storage"
+  });
+}
+
+function readMaxFileSizeBytes(): number {
+  const configured = Number(process.env.FILE_MAX_SIZE_BYTES);
+  return Number.isFinite(configured) && configured > 0 ? configured : 50 * 1024 * 1024;
 }

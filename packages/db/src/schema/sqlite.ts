@@ -664,6 +664,25 @@ export const fileObjects = sqliteTable(
   })
 );
 
+export const fileReferences = sqliteTable(
+  "file_references",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    fileObjectId: integer("file_object_id").notNull(),
+    resourceType: text("resource_type").notNull(),
+    resourceId: text("resource_id").notNull(),
+    referenceType: text("reference_type").notNull(),
+    status: text("status", { enum: ["active", "invalid"] }).notNull().default("active"),
+    createdAt: text("created_at").notNull(),
+    createdBy: integer("created_by")
+  },
+  (table) => ({
+    fileIndex: index("file_references_file_idx").on(table.fileObjectId, table.status),
+    resourceIndex: index("file_references_resource_idx").on(table.resourceType, table.resourceId),
+    statusCheck: check("file_references_status_check", sql`${table.status} IN ('active', 'invalid')`)
+  })
+);
+
 export const notifications = sqliteTable(
   "notifications",
   {
@@ -823,6 +842,7 @@ export const sqliteSchema = {
   dictionaryTypes,
   eventOutbox,
   fileObjects,
+  fileReferences,
   i18nMessages,
   importExportTasks,
   locks,

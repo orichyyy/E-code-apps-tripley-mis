@@ -37,6 +37,8 @@ For DB-backed local API behavior:
 set BACKEND_CORE_STORE=database
 set DATABASE_DIALECT=sqlite
 set DATABASE_URL=file:./data/web-admin-base.sqlite
+set FILE_STORAGE_ROOT=./data/files
+set FILE_MAX_SIZE_BYTES=52428800
 pnpm db:migrate
 pnpm dev:api
 ```
