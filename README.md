@@ -6,11 +6,10 @@ Reusable multi-organization admin-system foundation built as a pnpm monorepo.
 
 - `apps/api`: Node.js Hono API with request IDs, auth/session/user/organization/role/permission/menu foundations, OpenAPI JSON, and manifest-based API authorization.
 - `apps/web`: React Vite SPA admin shell using TanStack Router, TanStack Query, TanStack Form, Zod, Zustand, Tailwind CSS, and shadcn/ui.
-- `apps/worker`: Node.js worker skeleton.
-- `apps/worker`: Node.js worker runtime with queue-task and scheduled-task registration boundaries.
+- `apps/worker`: Node.js worker runtime with queue-task/scheduled-task registration, durable queue/scheduler `runOnce`, and optional polling boundaries.
 - `packages/contracts`: Zod contracts, Hono RPC boundary types, permission/route/menu/API manifests, and OpenAPI generation.
 - `packages/db`: Drizzle schemas, SQLite/PostgreSQL migration files, and executable migration runners.
-- `packages/adapters`: adapter interfaces plus in-memory defaults for cache, token store, lock, queue, event bus, rate limit, scheduler, notifications, and local filesystem storage.
+- `packages/adapters`: adapter interfaces plus in-memory defaults, database-backed cache/lock/queue/event-bus/rate-limit/scheduler drivers, token store, notifications, and local filesystem storage.
 - `packages/shared`: shared constants, result types, i18n keys, and utilities.
 
 ## Commands
@@ -25,6 +24,8 @@ pnpm build
 ```
 
 `pnpm db:migrate` runs SQLite migrations with `better-sqlite3` by default. PostgreSQL migrations run when `TEST_DATABASE_URL` or `DATABASE_URL` is provided; `pnpm db:migrate:postgresql` requires one of those variables.
+
+Set `BACKEND_CORE_STORE=database` with `DATABASE_URL` to run DB-backed backend-core persistence and infrastructure services. PostgreSQL remains the supported deployment database; SQLite remains usable for local/demo compatibility.
 
 ## API Documentation
 

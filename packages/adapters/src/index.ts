@@ -1,4 +1,5 @@
 export * from "./cache";
+export * from "./database";
 export * from "./event-bus";
 export * from "./health";
 export * from "./lock";

@@ -440,6 +440,73 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
     },
     additionalProperties: false
   },
+  CreateLogExportTaskRequest: {
+    type: "object",
+    required: ["logType"],
+    properties: {
+      logType: {
+        type: "string",
+        enum: ["login", "operation", "access", "api_call", "exception", "security", "scheduler", "file_operation"]
+      }
+    },
+    additionalProperties: false
+  },
+  CreateNotificationTemplateRequest: {
+    type: "object",
+    required: ["code", "channel", "locale", "body"],
+    properties: {
+      code: { type: "string" },
+      channel: { type: "string", enum: ["in_app", "email", "sms"] },
+      locale: { type: "string" },
+      subject: { type: "string", nullable: true },
+      body: { type: "string" },
+      variables: { type: "array", items: { type: "string" } }
+    },
+    additionalProperties: false
+  },
+  UpdateNotificationTemplateRequest: {
+    type: "object",
+    properties: {
+      code: { type: "string" },
+      channel: { type: "string", enum: ["in_app", "email", "sms"] },
+      locale: { type: "string" },
+      subject: { type: "string", nullable: true },
+      body: { type: "string" },
+      variables: { type: "array", items: { type: "string" } }
+    },
+    additionalProperties: false
+  },
+  CreateScheduledTaskRequest: {
+    type: "object",
+    required: ["code", "cronExpression", "handlerType"],
+    properties: {
+      code: { type: "string" },
+      cronExpression: { type: "string" },
+      handlerType: { type: "string" },
+      payload: { type: "object", additionalProperties: true },
+      enabled: { type: "boolean" }
+    },
+    additionalProperties: false
+  },
+  UpdateScheduledTaskRequest: {
+    type: "object",
+    properties: {
+      code: { type: "string" },
+      cronExpression: { type: "string" },
+      handlerType: { type: "string" },
+      payload: { type: "object", additionalProperties: true },
+      enabled: { type: "boolean" }
+    },
+    additionalProperties: false
+  },
+  CreateExportTaskRequest: {
+    type: "object",
+    required: ["resourceType"],
+    properties: {
+      resourceType: { type: "string" }
+    },
+    additionalProperties: false
+  },
   RoleDataPermission: roleDataPermissionSchema,
   RoleFieldPermission: roleFieldPermissionSchema,
   UserPermissionOverride: userPermissionOverrideSchema,
@@ -483,6 +550,55 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       }
     },
     additionalProperties: false
+  }),
+  LogEntryListResponse: envelopeSchema({
+    type: "array",
+    items: { type: "object", additionalProperties: true }
+  }),
+  FileObjectListResponse: envelopeSchema({
+    type: "array",
+    items: { type: "object", additionalProperties: true }
+  }),
+  FileObjectResponse: envelopeSchema({ type: "object", additionalProperties: true, nullable: true }),
+  NotificationListResponse: envelopeSchema({
+    type: "array",
+    items: { type: "object", additionalProperties: true }
+  }),
+  NotificationStateResponse: envelopeSchema({
+    type: "object",
+    required: ["id", "status"],
+    properties: {
+      id: idStringSchema,
+      status: { type: "string", enum: ["read", "archived", "deleted"] }
+    },
+    additionalProperties: true
+  }),
+  NotificationTemplateListResponse: envelopeSchema({
+    type: "array",
+    items: { type: "object", additionalProperties: true }
+  }),
+  NotificationTemplateResponse: envelopeSchema({
+    type: "object",
+    additionalProperties: true,
+    nullable: true
+  }),
+  ScheduledTaskListResponse: envelopeSchema({
+    type: "array",
+    items: { type: "object", additionalProperties: true }
+  }),
+  ScheduledTaskResponse: envelopeSchema({
+    type: "object",
+    additionalProperties: true,
+    nullable: true
+  }),
+  ImportExportTaskListResponse: envelopeSchema({
+    type: "array",
+    items: { type: "object", additionalProperties: true }
+  }),
+  ImportExportTaskResponse: envelopeSchema({
+    type: "object",
+    additionalProperties: true,
+    nullable: true
   }),
   GenericDataEnvelope: envelopeSchema({ type: "object", additionalProperties: true })
 };

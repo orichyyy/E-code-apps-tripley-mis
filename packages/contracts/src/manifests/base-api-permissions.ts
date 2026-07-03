@@ -684,5 +684,285 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     requiredPermission: "menu:update",
     logLevel: "request",
     public: false
+  },
+  {
+    method: "GET",
+    path: "/api/logs/login",
+    code: "api.logs.login.list",
+    description: "View login logs",
+    module: "logs",
+    requiredPermission: "login-log:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/logs/operation",
+    code: "api.logs.operation.list",
+    description: "View operation logs",
+    module: "logs",
+    requiredPermission: "operation-log:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/logs/access",
+    code: "api.logs.access.list",
+    description: "View access logs",
+    module: "logs",
+    requiredPermission: "access-log:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/logs/api",
+    code: "api.logs.api.list",
+    description: "View API call logs",
+    module: "logs",
+    requiredPermission: "api-log:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/logs/exception",
+    code: "api.logs.exception.list",
+    description: "View exception logs",
+    module: "logs",
+    requiredPermission: "exception-log:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/logs/security",
+    code: "api.logs.security.list",
+    description: "View security logs",
+    module: "logs",
+    requiredPermission: "security-log:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/logs/jobs",
+    code: "api.logs.jobs.list",
+    description: "View scheduler execution logs",
+    module: "logs",
+    requiredPermission: "scheduler-log:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/logs/files",
+    code: "api.logs.files.list",
+    description: "View file operation logs",
+    module: "logs",
+    requiredPermission: "file-log:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/logs/export",
+    code: "api.logs.export",
+    description: "Create async CSV log export task",
+    module: "logs",
+    requiredPermission: "log:export",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/files",
+    code: "api.files.list",
+    description: "View file list",
+    module: "files",
+    requiredPermission: "file:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/files/:id",
+    code: "api.files.detail",
+    description: "View file metadata",
+    module: "files",
+    requiredPermission: "file:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "DELETE",
+    path: "/api/files/:id",
+    code: "api.files.delete",
+    description: "Delete or invalidate file",
+    module: "files",
+    requiredPermission: "file:delete",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/notifications",
+    code: "api.notifications.list",
+    description: "View current user's in-app notifications",
+    module: "notifications",
+    requiredPermission: "notification:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/notifications/:id/read",
+    code: "api.notifications.read",
+    description: "Mark notification read",
+    module: "notifications",
+    requiredPermission: "notification:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/notifications/:id/archive",
+    code: "api.notifications.archive",
+    description: "Archive notification",
+    module: "notifications",
+    requiredPermission: "notification:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "DELETE",
+    path: "/api/notifications/:id",
+    code: "api.notifications.delete",
+    description: "Delete notification",
+    module: "notifications",
+    requiredPermission: "notification:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/notification-templates",
+    code: "api.notification-templates.list",
+    description: "View notification templates",
+    module: "notifications",
+    requiredPermission: "notification-template:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/notification-templates",
+    code: "api.notification-templates.create",
+    description: "Create notification template",
+    module: "notifications",
+    requiredPermission: "notification-template:create",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "PATCH",
+    path: "/api/notification-templates/:id",
+    code: "api.notification-templates.update",
+    description: "Update notification template",
+    module: "notifications",
+    requiredPermission: "notification-template:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/scheduled-tasks",
+    code: "api.scheduled-tasks.list",
+    description: "View scheduled tasks",
+    module: "jobs",
+    requiredPermission: "job:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/scheduled-tasks",
+    code: "api.scheduled-tasks.create",
+    description: "Create scheduled task",
+    module: "jobs",
+    requiredPermission: "job:create",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "PATCH",
+    path: "/api/scheduled-tasks/:id",
+    code: "api.scheduled-tasks.update",
+    description: "Update scheduled task",
+    module: "jobs",
+    requiredPermission: "job:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/scheduled-tasks/:id/enable",
+    code: "api.scheduled-tasks.enable",
+    description: "Enable scheduled task",
+    module: "jobs",
+    requiredPermission: "job:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/scheduled-tasks/:id/disable",
+    code: "api.scheduled-tasks.disable",
+    description: "Disable scheduled task",
+    module: "jobs",
+    requiredPermission: "job:update",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/scheduled-tasks/:id/run",
+    code: "api.scheduled-tasks.run",
+    description: "Manually enqueue scheduled task run",
+    module: "jobs",
+    requiredPermission: "job:run",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/import-export/tasks",
+    code: "api.import-export.tasks.list",
+    description: "View import/export task list",
+    module: "import-export",
+    requiredPermission: "import-export:view",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/import-export/export",
+    code: "api.import-export.export.create",
+    description: "Create async CSV export task",
+    module: "import-export",
+    requiredPermission: "import-export:create",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "GET",
+    path: "/api/import-export/tasks/:id",
+    code: "api.import-export.tasks.detail",
+    description: "View import/export task detail",
+    module: "import-export",
+    requiredPermission: "import-export:view",
+    logLevel: "basic",
+    public: false
   }
 ];

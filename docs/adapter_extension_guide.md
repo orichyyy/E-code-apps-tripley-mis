@@ -14,6 +14,12 @@ Implemented boundaries include:
 - `FileStorageAdapter`
 - `NotificationChannelAdapter`
 
+Implemented v1 drivers include:
+
+- in-memory cache, lock, queue, event bus, rate limit, scheduler, token store, and notifications
+- database cache, rate limit, lease-table lock, queue, event outbox, and scheduler drivers over the v1 infrastructure tables
+- local filesystem storage with temp-file-then-rename writes
+
 ## Rules
 
 - Keep Redis, RabbitMQ, S3, SMTP, and other external drivers optional unless explicitly confirmed.

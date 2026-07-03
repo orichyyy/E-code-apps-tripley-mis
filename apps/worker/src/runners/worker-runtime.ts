@@ -1,4 +1,6 @@
 import type {
+  DatabaseJobSchedulerAdapter,
+  DatabaseQueueAdapter,
   JobSchedulerAdapter,
   QueueAdapter,
   QueueJob,
@@ -10,6 +12,7 @@ import type { WorkerConfig } from "../config/load-config";
 export type WorkerRuntime = {
   readonly name: string;
   start: () => Promise<void>;
+  runOnce: () => Promise<{ queueJobs: number; scheduledJobs: number }>;
   stop: () => Promise<void>;
 };
 
@@ -25,10 +28,13 @@ export type ScheduledWorkerTask = {
 
 export type WorkerRuntimeDependencies = {
   queue?: QueueAdapter;
+  durableQueue?: Pick<DatabaseQueueAdapter, "processReady">;
   scheduler?: JobSchedulerAdapter;
+  durableScheduler?: Pick<DatabaseJobSchedulerAdapter, "processDue">;
   queueTasks?: QueueWorkerTask[];
   scheduledTasks?: ScheduledWorkerTask[];
   log?: (message: string) => void;
+  pollIntervalMs?: number;
 };
 
 export function createWorkerRuntime(
@@ -36,7 +42,9 @@ export function createWorkerRuntime(
   dependencies: WorkerRuntimeDependencies = {}
 ): WorkerRuntime {
   let started = false;
+  let pollTimer: NodeJS.Timeout | null = null;
   const log = dependencies.log ?? console.log;
+  const pollIntervalMs = dependencies.pollIntervalMs ?? 0;
 
   return {
     name: config.workerName,
@@ -49,12 +57,32 @@ export function createWorkerRuntime(
       }
       for (const task of dependencies.scheduledTasks ?? []) {
         if (!dependencies.scheduler) continue;
-        await dependencies.scheduler.register(task.definition, task.handler);
+          await dependencies.scheduler.register(task.definition, task.handler);
+      }
+      if (pollIntervalMs > 0 && (dependencies.durableQueue || dependencies.durableScheduler)) {
+        pollTimer = setInterval(() => {
+          void this.runOnce().catch((error: unknown) => {
+            log(`${config.workerName} worker poll failed: ${error instanceof Error ? error.message : String(error)}`);
+          });
+        }, pollIntervalMs);
       }
       log(`${config.workerName} started`);
     },
+    async runOnce() {
+      const queueJobs = dependencies.durableQueue
+        ? await dependencies.durableQueue.processReady()
+        : 0;
+      const scheduledJobs = dependencies.durableScheduler
+        ? await dependencies.durableScheduler.processDue()
+        : 0;
+      return { queueJobs, scheduledJobs };
+    },
     async stop() {
       if (!started) return;
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
       for (const task of dependencies.scheduledTasks ?? []) {
         if (!dependencies.scheduler) continue;
         await dependencies.scheduler.unregister(task.definition.code);

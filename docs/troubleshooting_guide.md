@@ -38,6 +38,15 @@ pnpm --filter @web-admin-base/api test
 pnpm --filter @web-admin-base/contracts test
 ```
 
+## Infrastructure API Returns Placeholder Data In The Frontend
+
+The frontend calls real APIs for modules whose backend routes are implemented. It falls back to typed placeholder data when:
+
+- no access token is stored in `localStorage`
+- the API is not running
+- the backend route is still listed in `docs/known_gaps.md`
+- the authenticated user lacks the required permission
+
 ## Request ID Issues
 
 The API accepts valid incoming `x-request-id`, generates one when absent, returns it in response headers, and includes it in structured access-log entries.

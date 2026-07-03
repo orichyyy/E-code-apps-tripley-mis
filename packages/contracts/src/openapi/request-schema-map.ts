@@ -21,5 +21,11 @@ export const requestSchemaByOperationCode: Record<string, string> = {
   "api.permissions.user-overrides.update": "UpdateUserPermissionOverridesRequest",
   "api.menus.create": "CreateMenuRequest",
   "api.menus.update": "UpdateMenuRequest",
-  "api.menus.api-bindings.update": "UpdateMenuApiBindingsRequest"
+  "api.menus.api-bindings.update": "UpdateMenuApiBindingsRequest",
+  "api.logs.export": "CreateLogExportTaskRequest",
+  "api.notification-templates.create": "CreateNotificationTemplateRequest",
+  "api.notification-templates.update": "UpdateNotificationTemplateRequest",
+  "api.scheduled-tasks.create": "CreateScheduledTaskRequest",
+  "api.scheduled-tasks.update": "UpdateScheduledTaskRequest",
+  "api.import-export.export.create": "CreateExportTaskRequest"
 };

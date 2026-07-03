@@ -10,3 +10,4 @@ export type LockAdapter = HealthCheckableAdapter & {
 };
 
 export * from "./in-memory-lock";
+export * from "./database-lock";

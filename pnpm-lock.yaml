@@ -157,7 +157,11 @@ importers:
         specifier: ^3.25.67
         version: 3.25.76
 
-  packages/adapters: {}
+  packages/adapters:
+    devDependencies:
+      '@web-admin-base/db':
+        specifier: workspace:*
+        version: link:../db
 
   packages/contracts:
     dependencies:

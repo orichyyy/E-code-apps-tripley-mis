@@ -1,0 +1,104 @@
+import type { DatabaseAdapterExecutor } from "@web-admin-base/adapters";
+import { runPostgresqlMigrations } from "@web-admin-base/db";
+import { describe, expect, it } from "vitest";
+
+import { createApp } from "../src/app";
+import { createInMemoryBackendCoreServices } from "../src/modules/core-foundation/services";
+import { createPostgresqlInfrastructureExecutor } from "../src/modules/infrastructure/infrastructure.executor";
+import { InfrastructureRepository } from "../src/modules/infrastructure/infrastructure.repository";
+import { InfrastructureServices } from "../src/modules/infrastructure/infrastructure.service";
+
+const postgresqlUrl = process.env.TEST_DATABASE_URL;
+
+describe("database-backed infrastructure routes", () => {
+  it.runIf(postgresqlUrl)("persists infrastructure API mutations in PostgreSQL", async () => {
+    const url = getPostgresqlUrl();
+    await runPostgresqlMigrations({ url });
+    const executor = createPostgresqlInfrastructureExecutor(url);
+    const infrastructureServices = InfrastructureServices.database(new InfrastructureRepository(executor));
+    const app = createApp({
+      infrastructureServices,
+      backendCoreServices: createInMemoryBackendCoreServices()
+    });
+
+    try {
+      await clearInfrastructureTables(executor);
+      await initialize(app);
+      const headers = await loginHeaders(app);
+      const createResponse = await app.request("/api/notification-templates", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          code: "db-template",
+          channel: "in_app",
+          locale: "en",
+          body: "Body",
+          variables: []
+        })
+      });
+      const listResponse = await app.request("/api/notification-templates", { headers });
+      const taskResponse = await app.request("/api/import-export/export", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ resourceType: "logs:security" })
+      });
+      const persisted = await executor.all(
+        "SELECT code FROM notification_templates WHERE code = $1",
+        ["db-template"]
+      );
+
+      expect(createResponse.status).toBe(201);
+      expect(listResponse.status).toBe(200);
+      expect(taskResponse.status).toBe(201);
+      expect(persisted).toEqual([expect.objectContaining({ code: "db-template" })]);
+    } finally {
+      await clearInfrastructureTables(executor);
+      await infrastructureServices.close();
+    }
+  });
+});
+
+async function initialize(app: ReturnType<typeof createApp>): Promise<void> {
+  const response = await app.request("/api/initialization/setup", {
+    method: "POST",
+    body: JSON.stringify({
+      organizationName: "Default Organization",
+      organizationCode: "default",
+      adminUsername: "admin",
+      adminDisplayName: "Super Admin",
+      adminEmail: "admin@example.com",
+      adminPhone: "10000000000",
+      adminPassword: "password1"
+    })
+  });
+  expect(response.status).toBe(201);
+}
+
+async function loginHeaders(app: ReturnType<typeof createApp>) {
+  const response = await app.request("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ username: "admin", password: "password1" })
+  });
+  const body = await response.json();
+  expect(response.status).toBe(200);
+  return { authorization: `Bearer ${body.data.accessToken}` };
+}
+
+async function clearInfrastructureTables(executor: DatabaseAdapterExecutor): Promise<void> {
+  for (const table of [
+    "notification_templates",
+    "notifications",
+    "import_export_tasks",
+    "queue_jobs",
+    "scheduled_jobs",
+    "file_objects",
+    "log_entries"
+  ]) {
+    await executor.run(`DELETE FROM ${table}`);
+  }
+}
+
+function getPostgresqlUrl(): string {
+  if (!postgresqlUrl) throw new Error("TEST_DATABASE_URL is required for PostgreSQL API tests.");
+  return postgresqlUrl;
+}

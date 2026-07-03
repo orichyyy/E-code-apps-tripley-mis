@@ -16,3 +16,4 @@ export type EventBusAdapter = HealthCheckableAdapter & {
 };
 
 export * from "./in-process-event-bus";
+export * from "./database-event-bus";

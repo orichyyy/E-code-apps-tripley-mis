@@ -21,11 +21,12 @@ This file records incomplete requirements that must not be claimed complete.
 
 - Durable infrastructure tables now exist for cache, rate limiting, locks, queue jobs, event outbox, scheduled jobs, files, notifications, notification templates, logs, and import/export tasks.
 - Runnable default in-memory adapters now exist for lock, queue, event bus, rate limit, scheduler, and notifications. Local filesystem storage exists and writes through temp-file-then-rename.
-- Database-backed runtime adapter drivers over the new durable infrastructure tables are not complete yet.
-- System configuration, dictionary management, file management, notifications, logs, scheduled tasks, import/export, and i18n management are not complete backend API modules yet.
-- Worker execution now has queue/scheduler registration boundaries, but durable task polling/execution over `queue_jobs` and `scheduled_jobs` is not complete yet.
+- Database-backed runtime adapter drivers now exist for cache, rate limiting, lease-table locks, queue jobs, event outbox, and scheduled jobs.
+- Backend API modules now exist for the implemented durable infrastructure tables: logs, files, in-app notifications, notification templates, scheduled tasks, and import/export task lists.
+- System configuration, dictionary management, i18n management, announcements, webhook subscriptions, SMTP delivery, and S3-compatible storage are not complete backend API modules yet.
+- Worker execution now has queue/scheduler registration boundaries plus durable `runOnce`/polling hooks over database queue and scheduler adapters. Full production task catalogs, cron expression evaluation, timeout enforcement, and dead-letter workflows remain reserved or incomplete.
 - Redis, RabbitMQ, S3-compatible storage, and SMTP remain optional placeholders only; no mandatory dependencies have been added.
-- Frontend pages still use typed placeholder data for modules whose backend APIs are not complete. Real API integration is complete only for backend-core APIs already implemented in prior goals.
+- Frontend pages use real API fetches for implemented infrastructure modules where backend APIs exist. Pages whose backend APIs are still incomplete continue to use typed placeholder data.
 
 ## Validation Gaps
 
@@ -34,4 +35,5 @@ This file records incomplete requirements that must not be claimed complete.
 - PostgreSQL database tests now include role data-permission, role field-permission, and user permission override persistence after reload, plus effective permission behavior after reload.
 - SQLite is executable locally through `better-sqlite3`, including bigint-safe organization path reads at the driver boundary.
 - OpenAPI request/response schemas are explicit for the permission-extension endpoints and effective permission context. Older backend-core endpoints still use the generic success envelope unless they have already been mapped.
-- SQLite and PostgreSQL migrations now include the infrastructure foundation tables. PostgreSQL integration tests for database-backed infrastructure runtime drivers remain pending until those drivers are implemented.
+- SQLite and PostgreSQL migrations now include the infrastructure foundation tables.
+- PostgreSQL integration tests now cover database-backed infrastructure adapter drivers and DB-backed infrastructure API persistence. SQLite adapter smoke coverage remains executable locally.

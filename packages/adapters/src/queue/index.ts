@@ -15,3 +15,4 @@ export type QueueAdapter = HealthCheckableAdapter & {
 };
 
 export * from "./in-memory-queue";
+export * from "./database-queue";

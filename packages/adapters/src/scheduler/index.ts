@@ -12,3 +12,4 @@ export type JobSchedulerAdapter = HealthCheckableAdapter & {
 };
 
 export * from "./in-memory-scheduler";
+export * from "./database-scheduler";

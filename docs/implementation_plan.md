@@ -384,3 +384,29 @@ The remaining-gap implementation pass confirmed the previously blocked infrastru
 - Extended the worker runtime with queue task and scheduled task registration boundaries while keeping the default worker safe to run with no configured tasks.
 
 The next recommended goal is to implement database-backed adapter drivers and backend API modules over these infrastructure tables, then replace frontend placeholders page by page as those APIs become available.
+
+## Infrastructure Durable Adapter and API Progress
+
+The infrastructure gap slice completed the following tested pieces:
+
+- Added database-backed adapter drivers over the existing durable infrastructure tables:
+  - `CacheAdapter` over `cache_entries`
+  - `RateLimitAdapter` over `rate_limit_counters`
+  - `LockAdapter` over `locks` using the confirmed lease-table strategy
+  - `QueueAdapter` over `queue_jobs` with durable claim/complete/fail processing
+  - `EventBusAdapter` over `event_outbox`
+  - `JobSchedulerAdapter` over `scheduled_jobs`
+- Kept existing in-memory adapters available for local/unit tests.
+- Extended the worker runtime with `runOnce()` and optional durable queue/scheduler polling while preserving the existing queue-task and scheduled-task registration behavior.
+- Added backend infrastructure APIs for implemented durable tables:
+  - log listing and async log export task creation
+  - file metadata listing/detail/delete-invalidating
+  - in-app notification listing and read/archive/delete state changes
+  - notification template list/create/update
+  - scheduled task list/create/update/enable/disable/manual run enqueue
+  - import/export task list/detail and async CSV export task creation
+- Added API permission manifest entries and OpenAPI request/response schema mappings for the newly implemented infrastructure APIs.
+- Added PostgreSQL-backed tests for database adapters and DB-backed infrastructure API persistence, with SQLite smoke coverage for adapter compatibility.
+- Replaced frontend typed placeholders with real API fetches for implemented infrastructure pages: files, in-app notifications, scheduler, import/export task list, log pages, and online users. Pages still fall back to typed placeholders when no access token/API response is available.
+
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. The next recommended goal is to add confirmed schemas/APIs for system configuration, dictionaries, i18n management, announcements, webhook subscriptions, and optional external drivers only after their concrete configuration and persistence contracts are confirmed.

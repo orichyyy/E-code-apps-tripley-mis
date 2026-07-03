@@ -58,4 +58,24 @@ describe("worker runtime", () => {
     expect(handledJobs).toEqual([job.id]);
     expect(logs).toEqual(["test-worker started", "test-worker stopped"]);
   });
+
+  it("runs durable queue and scheduler processors", async () => {
+    const runtime = createWorkerRuntime(
+      {
+        nodeEnv: "test",
+        workerName: "durable-worker"
+      },
+      {
+        durableQueue: {
+          processReady: async () => 2
+        },
+        durableScheduler: {
+          processDue: async () => 1
+        },
+        log: () => undefined
+      }
+    );
+
+    await expect(runtime.runOnce()).resolves.toEqual({ queueJobs: 2, scheduledJobs: 1 });
+  });
 });

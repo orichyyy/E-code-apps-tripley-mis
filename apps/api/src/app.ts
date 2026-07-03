@@ -14,6 +14,8 @@ import {
 } from "./modules/core-foundation/services";
 import { createPersistentBackendCoreServices } from "./modules/core-foundation/persistence/persistent-backend-core-services";
 import { createManifestRoutes } from "./modules/manifests/manifest.routes";
+import { createInfrastructureRoutes } from "./modules/infrastructure/infrastructure.routes";
+import { InfrastructureServices } from "./modules/infrastructure/infrastructure.service";
 import {
   createStructuredLoggingMiddleware,
   noopStructuredLogSink,
@@ -26,11 +28,13 @@ type AppBindings = {
 
 export type AppDependencies = {
   backendCoreServices: BackendCoreServices;
+  infrastructureServices?: InfrastructureServices;
   structuredLogSink?: StructuredLogSink;
 };
 
 export function createApp(dependencies: AppDependencies = createDefaultAppDependencies()) {
   const structuredLogSink = dependencies.structuredLogSink ?? noopStructuredLogSink;
+  const infrastructureServices = dependencies.infrastructureServices ?? InfrastructureServices.inMemory();
   const app = new Hono<AppBindings>().basePath("/api");
 
   app.use("*", requestIdMiddleware);
@@ -65,6 +69,7 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
 
   const routedApp = app
     .route("/", createCoreFoundationRoutes(dependencies.backendCoreServices))
+    .route("/", createInfrastructureRoutes(infrastructureServices))
     .route("/", createManifestRoutes());
 
   routedApp.notFound((context) => {
@@ -96,6 +101,7 @@ export type ApiApp = ReturnType<typeof createApp>;
 export function createDefaultAppDependencies(config: ApiConfig = loadApiConfig()): AppDependencies {
   return {
     backendCoreServices: createInMemoryBackendCoreServices(config.backendCore),
+    infrastructureServices: InfrastructureServices.inMemory(),
     structuredLogSink: noopStructuredLogSink
   };
 }
@@ -105,6 +111,7 @@ export async function createDatabaseBackedAppDependencies(
 ): Promise<AppDependencies> {
   return {
     backendCoreServices: await createPersistentBackendCoreServices(config.backendCore),
+    infrastructureServices: InfrastructureServices.database(),
     structuredLogSink: noopStructuredLogSink
   };
 }
