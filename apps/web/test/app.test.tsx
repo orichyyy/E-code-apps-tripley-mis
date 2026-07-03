@@ -97,4 +97,46 @@ describe("web admin frontend", () => {
     expect(screen.getByText("Configured")).toBeInTheDocument();
     expect(screen.queryByText("raw-secret")).not.toBeInTheDocument();
   });
+
+  it("renders notification templates from the backend API", async () => {
+    window.history.pushState(null, "", "/notifications/templates");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [
+            {
+              id: "41",
+              code: "welcome",
+              channel: "in_app",
+              locale: "en",
+              subject: "Welcome",
+              body: "Hello {{userName}}",
+              variables: ["userName"],
+              status: "enabled",
+              createdAt: "2026-07-03T00:00:00.000Z",
+              updatedAt: "2026-07-03T00:00:00.000Z"
+            }
+          ]
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+    useAuthStore.getState().signIn({
+      accessToken: "test-token",
+      user: {
+        id: "1",
+        username: "admin",
+        displayName: "Super Administrator",
+        language: "en",
+        forcePasswordChange: false
+      },
+      permissionCodes: ["notification-template:view", "notification-template:create", "notification-template:update"]
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText("welcome")).toBeInTheDocument();
+    expect(screen.getByText("userName")).toBeInTheDocument();
+    expect(screen.getAllByText("Notification templates").length).toBeGreaterThan(0);
+  });
 });

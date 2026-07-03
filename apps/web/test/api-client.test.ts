@@ -1,11 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  createNotificationTemplate,
+  fetchNotificationTemplates,
+  updateNotificationTemplate
+} from "../src/features/notifications/notification-template-api";
+import {
   createWebhookSubscription,
-  fetchPageDataset,
   fetchWebhookSubscriptions,
   updateWebhookSubscription
-} from "../src/lib/api-client";
+} from "../src/features/notifications/webhook-subscription-api";
+import { fetchPageDataset } from "../src/lib/api-client";
 
 describe("frontend API client", () => {
   afterEach(() => {
@@ -161,6 +166,97 @@ describe("frontend API client", () => {
       }
     ]);
     expect(records[0]).not.toHaveProperty("secret");
+  });
+
+  it("loads notification templates from the backend API", async () => {
+    localStorage.setItem("web-admin.access-token", "token");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [
+            {
+              id: "41",
+              code: "welcome",
+              channel: "in_app",
+              locale: "en",
+              subject: "Welcome",
+              body: "Hello {{userName}}",
+              variables: ["userName"],
+              status: "enabled",
+              createdAt: "2026-07-03T00:00:00.000Z",
+              updatedAt: "2026-07-03T00:00:00.000Z"
+            }
+          ]
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+
+    const records = await fetchNotificationTemplates();
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/notification-templates", {
+      headers: { authorization: "Bearer token" }
+    });
+    expect(records).toEqual([
+      {
+        id: "41",
+        code: "welcome",
+        channel: "in_app",
+        locale: "en",
+        subject: "Welcome",
+        body: "Hello {{userName}}",
+        variables: ["userName"],
+        status: "enabled",
+        createdAt: "2026-07-03T00:00:00.000Z",
+        updatedAt: "2026-07-03T00:00:00.000Z"
+      }
+    ]);
+  });
+
+  it("creates and updates notification templates through the backend API", async () => {
+    localStorage.setItem("web-admin.access-token", "token");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ data: { id: "41" } }), {
+          status: 200,
+          headers: { "content-type": "application/json" }
+        })
+      )
+    );
+
+    await createNotificationTemplate({
+      code: "welcome",
+      channel: "in_app",
+      locale: "en",
+      subject: "Welcome",
+      body: "Hello {{userName}}",
+      variables: ["userName"]
+    });
+    await updateNotificationTemplate("41", { subject: "Welcome back" });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/notification-templates", {
+      method: "POST",
+      body: JSON.stringify({
+        code: "welcome",
+        channel: "in_app",
+        locale: "en",
+        subject: "Welcome",
+        body: "Hello {{userName}}",
+        variables: ["userName"]
+      }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/notification-templates/41", {
+      method: "PATCH",
+      body: JSON.stringify({ subject: "Welcome back" }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
   });
 
   it("creates and updates webhook subscriptions through the backend API", async () => {

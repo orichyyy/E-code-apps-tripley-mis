@@ -49,6 +49,14 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     sortOrder: 140
   },
   {
+    routeCode: "notifications.templates",
+    path: "/notifications/templates",
+    titleI18nKey: "routes.notifications.templates",
+    requiredPermission: "notification-template:view",
+    menuVisible: true,
+    sortOrder: 215
+  },
+  {
     routeCode: "notifications.webhooks",
     path: "/notifications/webhooks",
     titleI18nKey: "routes.notifications.webhooks",

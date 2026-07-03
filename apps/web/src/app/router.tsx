@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { AdminShell, DashboardPage } from "@/components/admin/admin-shell";
 import { ManagementPage } from "@/components/admin/management-page";
 import { PasswordChangePage, ForcedPasswordChangePage, LoginPage } from "@/features/auth/auth-pages";
+import { NotificationTemplatesPage } from "@/features/notifications/notification-templates-page";
 import { WebhookSubscriptionsPage } from "@/features/notifications/webhook-subscriptions-page";
 import { PersonalSettingsPage } from "@/features/account/settings-page";
 import { ProfilePage } from "@/features/account/profile-page";
@@ -79,7 +80,9 @@ const managementRoutes = adminRouteMetadata
       path: route.path,
       component: () => (
         <RoutePermissionGuard requiredPermission={route.requiredPermission}>
-          {route.routeCode === "notifications.webhooks" ? (
+          {route.routeCode === "notifications.templates" ? (
+            <NotificationTemplatesPage route={route} />
+          ) : route.routeCode === "notifications.webhooks" ? (
             <WebhookSubscriptionsPage route={route} />
           ) : (
             <ManagementPage route={route} />

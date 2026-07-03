@@ -6,7 +6,7 @@ import type {
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import type { WebhookSubscription } from "@/lib/api-client";
+import type { WebhookSubscription } from "./webhook-subscription-api";
 import {
   defaultWebhookFormValues,
   toWebhookApiInput,

@@ -482,3 +482,19 @@ The webhook subscription frontend slice completed the following:
 - Added frontend API/client and component coverage for listing, create/update requests, route rendering, and raw-secret non-display.
 
 Remaining base-system gaps are tracked in `docs/known_gaps.md`. Real outbound webhook delivery, retry workers, SMTP, S3-compatible storage, Redis, and RabbitMQ remain optional/reserved until concrete package and runtime contracts are confirmed.
+
+## Notification Template Frontend Progress
+
+The notification template frontend slice completed the following:
+
+- Added the `notifications.templates` frontend route metadata and menu binding under the Notifications group.
+- Added the same notification-template route/menu entry to the contracts base route and menu manifests for backend route/menu synchronization.
+- Added a dedicated notification template management page using TanStack Query for server state and TanStack Form plus Zod for create/edit validation.
+- Wired the page to the existing backend APIs:
+  - `GET /api/notification-templates`
+  - `POST /api/notification-templates`
+  - `PATCH /api/notification-templates/:id`
+- Added list, filter, create, and edit behavior for persisted in-app, email, and reserved SMS template records.
+- Added frontend API/client and component coverage for listing, create/update requests, route rendering, and template variable display.
+
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. SMTP delivery, SMS delivery, real outbound webhook delivery, retry workers, S3-compatible storage, Redis, and RabbitMQ remain optional/reserved until concrete package and runtime contracts are confirmed.

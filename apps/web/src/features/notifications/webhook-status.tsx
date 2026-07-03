@@ -1,6 +1,6 @@
 import { CheckCircle2 } from "lucide-react";
 
-import type { WebhookSubscription } from "@/lib/api-client";
+import type { WebhookSubscription } from "./webhook-subscription-api";
 
 export function WebhookSidePanel() {
   return (

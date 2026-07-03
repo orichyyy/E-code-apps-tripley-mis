@@ -1,66 +1,67 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  createWebhookSubscriptionRequestSchema,
-  updateWebhookSubscriptionRequestSchema,
-  type UpdateWebhookSubscriptionRequest
+  createNotificationTemplateRequestSchema,
+  updateNotificationTemplateRequestSchema,
+  type CreateNotificationTemplateRequest,
+  type UpdateNotificationTemplateRequest
 } from "@web-admin-base/contracts";
 import { AlertCircle, Plus, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  createWebhookSubscription,
-  fetchWebhookSubscriptions,
-  updateWebhookSubscription,
-  type WebhookSubscription
-} from "@/features/notifications/webhook-subscription-api";
 import { hasPermission } from "@/features/permissions/permission-utils";
 import { translate } from "@/i18n/messages";
+import {
+  createNotificationTemplate,
+  fetchNotificationTemplates,
+  updateNotificationTemplate,
+  type NotificationTemplate
+} from "./notification-template-api";
 import type { WebAdminRouteMetadata } from "@/route-metadata";
 import { useAuthStore } from "@/stores/auth.store";
 import { useLayoutStore } from "@/stores/layout.store";
-import { WebhookSubscriptionForm } from "./webhook-subscription-form";
-import { WebhookSubscriptionTable } from "./webhook-subscription-table";
-import { WebhookSidePanel } from "./webhook-status";
+import { NotificationTemplateForm } from "./notification-template-form";
+import { NotificationTemplateSidePanel } from "./notification-template-status";
+import { NotificationTemplateTable } from "./notification-template-table";
 
-type WebhookSubscriptionsPageProps = {
+type NotificationTemplatesPageProps = {
   route: WebAdminRouteMetadata;
 };
 
-export function WebhookSubscriptionsPage({ route }: WebhookSubscriptionsPageProps) {
+export function NotificationTemplatesPage({ route }: NotificationTemplatesPageProps) {
   const language = useLayoutStore((state) => state.language);
   const permissionCodes = useAuthStore((state) => state.permissionCodes);
   const canView = hasPermission(permissionCodes, route.requiredPermission);
-  const canCreate = hasPermission(permissionCodes, "webhook:create");
-  const canUpdate = hasPermission(permissionCodes, "webhook:update");
+  const canCreate = hasPermission(permissionCodes, "notification-template:create");
+  const canUpdate = hasPermission(permissionCodes, "notification-template:update");
   const [keyword, setKeyword] = useState("");
-  const [editing, setEditing] = useState<WebhookSubscription | null>(null);
   const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<NotificationTemplate | null>(null);
   const queryClient = useQueryClient();
   const query = useQuery({
     enabled: canView,
-    queryKey: ["webhook-subscriptions"],
-    queryFn: fetchWebhookSubscriptions
+    queryKey: ["notification-templates"],
+    queryFn: fetchNotificationTemplates
   });
   const createMutation = useMutation({
-    mutationFn: createWebhookSubscription,
+    mutationFn: createNotificationTemplate,
     onSuccess: async () => {
       setCreating(false);
-      await queryClient.invalidateQueries({ queryKey: ["webhook-subscriptions"] });
+      await queryClient.invalidateQueries({ queryKey: ["notification-templates"] });
     }
   });
   const updateMutation = useMutation({
-    mutationFn: ({ id, input }: { id: string; input: UpdateWebhookSubscriptionRequest }) =>
-      updateWebhookSubscription(id, input),
+    mutationFn: ({ id, input }: { id: string; input: UpdateNotificationTemplateRequest }) =>
+      updateNotificationTemplate(id, input),
     onSuccess: async () => {
       setEditing(null);
-      await queryClient.invalidateQueries({ queryKey: ["webhook-subscriptions"] });
+      await queryClient.invalidateQueries({ queryKey: ["notification-templates"] });
     }
   });
   const rows = useMemo(
     () =>
       (query.data ?? []).filter((record) =>
-        [record.name, record.url, record.status, record.eventTypes.join(",")]
+        [record.code, record.channel, record.locale, record.subject ?? "", record.body, record.variables.join(",")]
           .join(" ")
           .toLowerCase()
           .includes(keyword.toLowerCase())
@@ -80,7 +81,7 @@ export function WebhookSubscriptionsPage({ route }: WebhookSubscriptionsPageProp
   return (
     <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_24rem]">
       <div className="space-y-4">
-        <WebhookToolbar
+        <NotificationTemplateToolbar
           canCreate={canCreate}
           language={language}
           onCreate={() => setCreating(true)}
@@ -88,34 +89,28 @@ export function WebhookSubscriptionsPage({ route }: WebhookSubscriptionsPageProp
           route={route}
         />
         <div className="rounded-lg border bg-card shadow-sm">
-          <WebhookFilter keyword={keyword} language={language} onChange={setKeyword} />
-          <WebhookSubscriptionTable
+          <NotificationTemplateFilter keyword={keyword} language={language} onChange={setKeyword} />
+          <NotificationTemplateTable
             canUpdate={canUpdate}
             isError={query.isError}
             isLoading={query.isLoading}
             onEdit={setEditing}
-            onToggle={(record) =>
-              updateMutation.mutate({
-                id: record.id,
-                input: { status: record.status === "enabled" ? "disabled" : "enabled" }
-              })
-            }
             rows={rows}
           />
         </div>
       </div>
-      <WebhookEditorPanel
+      <NotificationTemplateEditorPanel
         creating={creating}
         createPending={createMutation.isPending}
         editing={editing}
         error={createMutation.isError || updateMutation.isError}
         onCancelCreate={() => setCreating(false)}
         onCancelEdit={() => setEditing(null)}
-        onCreate={(input) => createMutation.mutate(createWebhookSubscriptionRequestSchema.parse(input))}
+        onCreate={(input) => createMutation.mutate(createNotificationTemplateRequestSchema.parse(input))}
         onUpdate={(id, input) =>
           updateMutation.mutate({
             id,
-            input: updateWebhookSubscriptionRequestSchema.parse(input)
+            input: updateNotificationTemplateRequestSchema.parse(input)
           })
         }
         updatePending={updateMutation.isPending}
@@ -124,7 +119,7 @@ export function WebhookSubscriptionsPage({ route }: WebhookSubscriptionsPageProp
   );
 }
 
-function WebhookToolbar({
+function NotificationTemplateToolbar({
   canCreate,
   language,
   onCreate,
@@ -142,7 +137,7 @@ function WebhookToolbar({
       <div>
         <h2 className="text-base font-semibold">{translate(language, route.titleI18nKey)}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Manage persisted event subscriptions. Delivery execution remains an optional integration.
+          Manage persisted notification template records for in-app, email, and reserved SMS channels.
         </p>
       </div>
       <div className="flex gap-2">
@@ -161,7 +156,7 @@ function WebhookToolbar({
   );
 }
 
-function WebhookFilter({
+function NotificationTemplateFilter({
   keyword,
   language,
   onChange
@@ -189,7 +184,7 @@ function WebhookFilter({
   );
 }
 
-function WebhookEditorPanel({
+function NotificationTemplateEditorPanel({
   creating,
   createPending,
   editing,
@@ -202,21 +197,21 @@ function WebhookEditorPanel({
 }: {
   creating: boolean;
   createPending: boolean;
-  editing: WebhookSubscription | null;
+  editing: NotificationTemplate | null;
   error: boolean;
   onCancelCreate: () => void;
   onCancelEdit: () => void;
-  onCreate: Parameters<typeof WebhookSubscriptionForm>[0]["onSubmit"];
-  onUpdate: (id: string, input: Parameters<typeof WebhookSubscriptionForm>[0]["onSubmit"] extends (input: infer T) => void ? T : never) => void;
+  onCreate: (input: CreateNotificationTemplateRequest | UpdateNotificationTemplateRequest) => void;
+  onUpdate: (id: string, input: CreateNotificationTemplateRequest | UpdateNotificationTemplateRequest) => void;
   updatePending: boolean;
 }) {
   return (
     <aside className="space-y-4">
       {creating ? (
-        <WebhookSubscriptionForm busy={createPending} mode="create" onCancel={onCancelCreate} onSubmit={onCreate} />
+        <NotificationTemplateForm busy={createPending} mode="create" onCancel={onCancelCreate} onSubmit={onCreate} />
       ) : null}
       {editing ? (
-        <WebhookSubscriptionForm
+        <NotificationTemplateForm
           busy={updatePending}
           initialRecord={editing}
           key={editing.id}
@@ -225,7 +220,7 @@ function WebhookEditorPanel({
           onSubmit={(input) => onUpdate(editing.id, input)}
         />
       ) : null}
-      {!creating && !editing ? <WebhookSidePanel /> : null}
+      {!creating && !editing ? <NotificationTemplateSidePanel /> : null}
       {error ? (
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
           The data could not be loaded.
