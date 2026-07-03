@@ -500,6 +500,22 @@ The announcement frontend slice completed the following:
 
 Remaining base-system gaps are tracked in `docs/known_gaps.md`. Announcement delivery fan-out and concrete organization target references remain reserved until confirmed by the base contract.
 
+## In-App Notification Frontend Progress
+
+The in-app notification frontend slice completed the following:
+
+- Added the `notifications.in-app` route/menu entry to the contracts base route and menu manifests for backend route/menu synchronization.
+- Added a dedicated current-user in-app notification page using TanStack Query for server state.
+- Wired the page to the existing backend APIs:
+  - `GET /api/notifications`
+  - `POST /api/notifications/:id/read`
+  - `POST /api/notifications/:id/archive`
+  - `DELETE /api/notifications/:id`
+- Added list, filter, mark-read, archive, delete, loading, empty, error, and permission-denied behavior.
+- Added frontend API/client and component coverage for listing, state update requests, and route rendering.
+
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. Notification creation and delivery fan-out remain backend/reserved concerns rather than a frontend create flow.
+
 ## Notification Template Frontend Progress
 
 The notification template frontend slice completed the following:

@@ -144,6 +144,50 @@ describe("web admin frontend", () => {
     expect(screen.getAllByText("Announcements").length).toBeGreaterThan(0);
   });
 
+  it("renders in-app notifications from the backend API", async () => {
+    window.history.pushState(null, "", "/notifications/in-app");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [
+            {
+              id: "61",
+              userId: "1",
+              channel: "in_app",
+              title: "Approval needed",
+              body: "Review pending request",
+              status: "unread",
+              metadata: { requestId: "REQ-1" },
+              readAt: null,
+              archivedAt: null,
+              createdAt: "2026-07-03T00:00:00.000Z",
+              updatedAt: "2026-07-03T00:00:00.000Z"
+            }
+          ]
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+    useAuthStore.getState().signIn({
+      accessToken: "test-token",
+      user: {
+        id: "1",
+        username: "admin",
+        displayName: "Super Administrator",
+        language: "en",
+        forcePasswordChange: false
+      },
+      permissionCodes: ["notification:view", "notification:update"]
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText("Approval needed")).toBeInTheDocument();
+    expect(screen.getByText("Review pending request")).toBeInTheDocument();
+    expect(screen.getByText("requestId: REQ-1")).toBeInTheDocument();
+    expect(screen.getAllByText("In-app notifications").length).toBeGreaterThan(0);
+  });
+
   it("renders notification templates from the backend API", async () => {
     window.history.pushState(null, "", "/notifications/templates");
     vi.spyOn(globalThis, "fetch").mockResolvedValue(

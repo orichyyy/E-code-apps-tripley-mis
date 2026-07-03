@@ -119,7 +119,8 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     requiredPermission: "notification:view",
     menuVisible: true,
     group: "notifications",
-    sortOrder: 210
+    sortOrder: 210,
+    actions: [{ code: "notification:update", labelI18nKey: "actions.edit", requiredPermission: "notification:update" }]
   },
   {
     routeCode: "notifications.templates",

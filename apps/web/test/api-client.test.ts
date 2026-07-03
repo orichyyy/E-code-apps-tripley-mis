@@ -8,6 +8,12 @@ import {
   updateAnnouncement
 } from "../src/features/notifications/announcement-api";
 import {
+  archiveNotification,
+  deleteNotification,
+  fetchInAppNotifications,
+  markNotificationRead
+} from "../src/features/notifications/in-app-notification-api";
+import {
   createNotificationTemplate,
   fetchNotificationTemplates,
   updateNotificationTemplate
@@ -203,6 +209,63 @@ describe("frontend API client", () => {
     });
     expect(fetchMock).toHaveBeenNthCalledWith(5, "/api/announcements/21/unpublish", {
       method: "POST",
+      headers: { authorization: "Bearer token" }
+    });
+  });
+
+  it("loads and updates in-app notifications through the backend API", async () => {
+    localStorage.setItem("web-admin.access-token", "token");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            data: [
+              {
+                id: "61",
+                userId: "1",
+                channel: "in_app",
+                title: "Approval needed",
+                body: "Review pending request",
+                status: "unread",
+                metadata: { requestId: "REQ-1" },
+                readAt: null,
+                archivedAt: null,
+                createdAt: "2026-07-03T00:00:00.000Z",
+                updatedAt: "2026-07-03T00:00:00.000Z"
+              }
+            ]
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+    );
+
+    const records = await fetchInAppNotifications();
+    await markNotificationRead("61");
+    await archiveNotification("61");
+    await deleteNotification("61");
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/notifications", {
+      headers: { authorization: "Bearer token" }
+    });
+    expect(records).toEqual([
+      expect.objectContaining({
+        id: "61",
+        title: "Approval needed",
+        status: "unread",
+        metadata: { requestId: "REQ-1" }
+      })
+    ]);
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/notifications/61/read", {
+      method: "POST",
+      headers: { authorization: "Bearer token" }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/notifications/61/archive", {
+      method: "POST",
+      headers: { authorization: "Bearer token" }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(4, "/api/notifications/61", {
+      method: "DELETE",
       headers: { authorization: "Bearer token" }
     });
   });

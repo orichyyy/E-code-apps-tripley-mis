@@ -33,6 +33,7 @@ This file records incomplete requirements that must not be claimed complete.
 - Frontend system configuration and dictionary pages now use real API fetches when an access token is available.
 - i18n message management now has a dedicated frontend route/page wired to the implemented backend APIs. The static English/Chinese UI message bundle remains the local frontend default.
 - Announcement management now has a dedicated frontend route/page wired to the implemented backend APIs. Announcement notification delivery and organization target references remain reserved/unconfirmed.
+- In-app notification management now has a dedicated frontend route/page wired to the implemented backend APIs. Notification creation and delivery fan-out remain backend/reserved concerns.
 - Webhook subscription management now has a frontend route/page wired to the implemented backend APIs. Real outbound delivery remains reserved.
 - Notification template management now has a frontend route/page wired to the implemented backend APIs. SMTP/SMS sending remains reserved.
 

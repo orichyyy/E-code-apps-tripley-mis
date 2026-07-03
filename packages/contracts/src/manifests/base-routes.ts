@@ -65,6 +65,14 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     sortOrder: 200
   },
   {
+    routeCode: "notifications.in-app",
+    path: "/notifications/in-app",
+    titleI18nKey: "routes.notifications.inApp",
+    requiredPermission: "notification:view",
+    menuVisible: true,
+    sortOrder: 210
+  },
+  {
     routeCode: "notifications.templates",
     path: "/notifications/templates",
     titleI18nKey: "routes.notifications.templates",
