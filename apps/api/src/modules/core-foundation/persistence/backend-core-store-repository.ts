@@ -31,6 +31,9 @@ import {
   rolePermissionEffect,
   setSequence,
   stringValue,
+  userPreferenceLanguage,
+  userPreferenceThemeColor,
+  userPreferenceThemeMode,
   userStatus
 } from "./row-values";
 
@@ -64,6 +67,7 @@ export class BackendCoreStoreRepository {
     const store = new InMemoryBackendStore();
     await this.loadOrganizations(store);
     await this.loadUsers(store);
+    await this.loadUserPreferences(store);
     await this.loadRoles(store);
     await this.loadPermissions(store);
     await this.loadApiPermissions(store);
@@ -87,6 +91,7 @@ export class BackendCoreStoreRepository {
       await this.clearTables();
       await this.saveOrganizations(store);
       await this.saveUsers(store);
+      await this.saveUserPreferences(store);
       await this.saveRoles(store);
       await this.savePermissions(store);
       await this.saveApiPermissions(store);
@@ -118,6 +123,7 @@ export class BackendCoreStoreRepository {
       "api_permissions",
       "permissions",
       "roles",
+      "user_preferences",
       "users",
       "organizations"
     ]) {
@@ -182,6 +188,20 @@ export class BackendCoreStoreRepository {
       updatedAt: iso(row.updated_at),
       createdBy: nullableId(row.created_by),
       updatedBy: nullableId(row.updated_by)
+    }));
+  }
+
+  private async loadUserPreferences(store: InMemoryBackendStore): Promise<void> {
+    const rows = await this.executor.all("SELECT * FROM user_preferences ORDER BY id");
+    rows.forEach((row) => store.userPreferences.set(id(row.id), {
+      id: id(row.id),
+      tenantId: nullableId(row.tenant_id),
+      userId: id(row.user_id),
+      language: userPreferenceLanguage(row.language),
+      themeMode: userPreferenceThemeMode(row.theme_mode),
+      themeColor: userPreferenceThemeColor(row.theme_color),
+      pageTabsEnabled: booleanValue(row.page_tabs_enabled),
+      updatedAt: iso(row.updated_at)
     }));
   }
 
@@ -458,6 +478,7 @@ export class BackendCoreStoreRepository {
   private hydrateSequences(store: InMemoryBackendStore): void {
     setSequence(store, "organization", store.organizations);
     setSequence(store, "user", store.users);
+    setSequence(store, "userPreference", store.userPreferences);
     setSequence(store, "role", store.roles);
     setSequence(store, "permission", store.permissions);
     setSequence(store, "apiPermission", store.apiPermissions);
@@ -502,6 +523,16 @@ export class BackendCoreStoreRepository {
       record.passwordChangedAt, record.passwordExpiresAt, record.failedLoginAttempts, record.lockedUntil,
       record.tokenVersion, record.lastLoginAt, record.remark, record.isDeleted, record.deletedAt,
       record.deletedBy, record.createdAt, record.updatedAt, record.createdBy, record.updatedBy
+    ]));
+  }
+
+  private async saveUserPreferences(store: InMemoryBackendStore): Promise<void> {
+    await this.insertMany("user_preferences", [
+      "id", "tenant_id", "user_id", "language", "theme_mode", "theme_color",
+      "page_tabs_enabled", "updated_at"
+    ], [...store.userPreferences.values()].map((record) => [
+      record.id, record.tenantId, record.userId, record.language, record.themeMode,
+      record.themeColor, record.pageTabsEnabled, record.updatedAt
     ]));
   }
 

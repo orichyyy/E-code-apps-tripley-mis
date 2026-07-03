@@ -95,6 +95,31 @@ export const users = sqliteTable(
   })
 );
 
+export const userPreferences = sqliteTable(
+  "user_preferences",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    tenantId: integer("tenant_id"),
+    userId: integer("user_id").notNull(),
+    language: text("language", { enum: ["en", "zh"] }).notNull().default("en"),
+    themeMode: text("theme_mode", { enum: ["light", "dark"] }).notNull().default("light"),
+    themeColor: text("theme_color", { enum: ["blue", "emerald", "violet", "slate"] })
+      .notNull()
+      .default("blue"),
+    pageTabsEnabled: integer("page_tabs_enabled", { mode: "boolean" }).notNull().default(true),
+    updatedAt: text("updated_at").notNull()
+  },
+  (table) => ({
+    userUnique: uniqueIndex("user_preferences_user_unique").on(table.userId),
+    languageCheck: check("user_preferences_language_check", sql`${table.language} IN ('en', 'zh')`),
+    themeModeCheck: check("user_preferences_theme_mode_check", sql`${table.themeMode} IN ('light', 'dark')`),
+    themeColorCheck: check(
+      "user_preferences_theme_color_check",
+      sql`${table.themeColor} IN ('blue', 'emerald', 'violet', 'slate')`
+    )
+  })
+);
+
 export const roles = sqliteTable(
   "roles",
   {
@@ -866,6 +891,7 @@ export const sqliteSchema = {
   systemConfigs,
   systemInitializationState,
   userPermissionOverrides,
+  userPreferences,
   userOrganizationRoles,
   webhookSubscriptions,
   users

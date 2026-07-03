@@ -298,6 +298,36 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
     },
     additionalProperties: false
   },
+  UpdateOwnProfileRequest: {
+    type: "object",
+    properties: {
+      displayName: { type: "string" },
+      email: { type: "string", format: "email" },
+      phone: { type: "string" },
+      avatarFileId: { ...idStringSchema, nullable: true },
+      gender: { type: "string", nullable: true },
+      employeeNumber: { type: "string", nullable: true }
+    },
+    additionalProperties: false
+  },
+  UpdateOwnPreferencesRequest: {
+    type: "object",
+    properties: {
+      language: { type: "string", enum: ["en", "zh"] },
+      themeMode: { type: "string", enum: ["light", "dark"] },
+      themeColor: { type: "string", enum: ["blue", "emerald", "violet", "slate"] },
+      pageTabsEnabled: { type: "boolean" }
+    },
+    additionalProperties: false
+  },
+  UpdateOwnAvatarRequest: {
+    type: "object",
+    required: ["avatarFileId"],
+    properties: {
+      avatarFileId: { ...idStringSchema, nullable: true }
+    },
+    additionalProperties: false
+  },
   ResetPasswordRequest: {
     type: "object",
     required: ["password"],
@@ -535,6 +565,33 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
   UserPermissionOverrideListResponse: envelopeSchema({
     type: "array",
     items: { $ref: "#/components/schemas/UserPermissionOverride" }
+  }),
+  UserPreferences: {
+    type: "object",
+    required: ["id", "tenantId", "userId", "language", "themeMode", "themeColor", "pageTabsEnabled", "updatedAt"],
+    properties: {
+      id: idStringSchema,
+      tenantId: { ...idStringSchema, nullable: true },
+      userId: idStringSchema,
+      language: { type: "string", enum: ["en", "zh"] },
+      themeMode: { type: "string", enum: ["light", "dark"] },
+      themeColor: { type: "string", enum: ["blue", "emerald", "violet", "slate"] },
+      pageTabsEnabled: { type: "boolean" },
+      updatedAt: { type: "string", format: "date-time" }
+    },
+    additionalProperties: false
+  },
+  ProfileResponse: envelopeSchema({
+    type: "object",
+    required: ["user", "preferences"],
+    properties: {
+      user: { type: "object", additionalProperties: true },
+      preferences: { $ref: "#/components/schemas/UserPreferences" }
+    },
+    additionalProperties: false
+  }),
+  UserPreferencesResponse: envelopeSchema({
+    $ref: "#/components/schemas/UserPreferences"
   }),
   ...communicationsComponentSchemas,
   ...systemManagementComponentSchemas,

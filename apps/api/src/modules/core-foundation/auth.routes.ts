@@ -62,7 +62,8 @@ export function createAuthRoutes(services: BackendCoreServices) {
         organizations: result.organizations,
         permissionCodes: result.permissionCodes,
         menus: result.menus,
-        passwordChangeRequired: result.passwordChangeRequired
+        passwordChangeRequired: result.passwordChangeRequired,
+        preferences: result.preferences
       }
     });
   });

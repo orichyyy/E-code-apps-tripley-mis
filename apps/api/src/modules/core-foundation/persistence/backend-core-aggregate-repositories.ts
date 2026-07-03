@@ -9,6 +9,7 @@ import { PermissionMetadataRepository } from "./permission-metadata.repository";
 import { RoleRepository } from "./role.repository";
 import { RouteMetadataRepository } from "./route-metadata.repository";
 import { UserOrganizationRoleRepository } from "./user-organization-role.repository";
+import { UserPreferenceRepository } from "./user-preference.repository";
 import { UserRepository } from "./user.repository";
 
 export class BackendCoreAggregateRepositories {
@@ -21,6 +22,7 @@ export class BackendCoreAggregateRepositories {
   readonly roles: RoleRepository;
   readonly routeMetadata: RouteMetadataRepository;
   readonly userOrganizationRoles: UserOrganizationRoleRepository;
+  readonly userPreferences: UserPreferenceRepository;
   readonly users: UserRepository;
 
   constructor(executor: QueryExecutor) {
@@ -33,12 +35,14 @@ export class BackendCoreAggregateRepositories {
     this.roles = new RoleRepository(executor);
     this.routeMetadata = new RouteMetadataRepository(executor);
     this.userOrganizationRoles = new UserOrganizationRoleRepository(executor);
+    this.userPreferences = new UserPreferenceRepository(executor);
     this.users = new UserRepository(executor);
   }
 
   async replaceAllFromStore(store: InMemoryBackendStore): Promise<void> {
     await this.organizations.replaceFromStore(store);
     await this.users.replaceFromStore(store);
+    await this.userPreferences.replaceFromStore(store);
     await this.roles.replaceFromStore(store);
     await this.permissions.replaceFromStore(store);
     await this.permissionExtensions.replaceFromStore(store);

@@ -7,7 +7,8 @@ import type {
   InitializationStateRecord,
   PermissionRecord,
   RoleDataPermissionRecord,
-  RolePermissionRecord
+  RolePermissionRecord,
+  UserPreferenceRecord
 } from "../domain";
 import type { InMemoryBackendStore } from "../in-memory-store";
 
@@ -108,6 +109,19 @@ export function dataPermissionEffect(value: unknown): RoleDataPermissionRecord["
 export function fieldPermissionEffect(value: unknown): FieldPermissionRuleRecord["effect"] {
   if (value === "hidden" || value === "readonly") return value;
   return "visible";
+}
+
+export function userPreferenceLanguage(value: unknown): UserPreferenceRecord["language"] {
+  return value === "zh" ? "zh" : "en";
+}
+
+export function userPreferenceThemeMode(value: unknown): UserPreferenceRecord["themeMode"] {
+  return value === "dark" ? "dark" : "light";
+}
+
+export function userPreferenceThemeColor(value: unknown): UserPreferenceRecord["themeColor"] {
+  if (value === "emerald" || value === "violet" || value === "slate") return value;
+  return "blue";
 }
 
 export function initializationStatus(value: unknown): InitializationStateRecord["status"] {

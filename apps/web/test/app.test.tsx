@@ -1,12 +1,24 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "../src/app/App";
+import { queryClient } from "../src/queries/query-client";
 import { useAuthStore } from "../src/stores/auth.store";
+import { useLayoutStore } from "../src/stores/layout.store";
 
 describe("web admin frontend", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    queryClient.clear();
+    useAuthStore.getState().signOut();
+    useLayoutStore.setState({
+      pageTabsEnabled: true,
+      darkModeEnabled: false,
+      fullscreenEnabled: false,
+      themeColor: "blue",
+      openTabs: ["/"],
+      language: "en"
+    });
   });
 
   it("renders the login page", async () => {
@@ -39,6 +51,29 @@ describe("web admin frontend", () => {
 
   it("renders personal settings with tab and theme controls", async () => {
     window.history.pushState(null, "", "/account/settings");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+      const method = init?.method ?? "GET";
+      const body = method === "PATCH"
+        ? {
+            data: {
+              id: "1",
+              tenantId: null,
+              userId: "1",
+              language: "zh",
+              themeMode: "dark",
+              themeColor: "emerald",
+              pageTabsEnabled: false,
+              updatedAt: "2026-07-03T00:00:01.000Z"
+            }
+          }
+        : { data: profileFixture() };
+      return Promise.resolve(
+        new Response(JSON.stringify(body), {
+          status: 200,
+          headers: { "content-type": "application/json" }
+        })
+      );
+    });
     useAuthStore.getState().signIn({
       accessToken: "test-token",
       user: {
@@ -54,7 +89,26 @@ describe("web admin frontend", () => {
     render(<App />);
 
     expect(await screen.findByRole("heading", { name: "Personal settings" })).toBeInTheDocument();
-    expect(screen.getByText("Theme color")).toBeInTheDocument();
+    expect(await screen.findByText("Theme color")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Language"), { target: { value: "zh" } });
+    fireEvent.click(screen.getByRole("button", { name: /emerald/i }));
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/profile/preferences", {
+        method: "PATCH",
+        body: JSON.stringify({
+          language: "zh",
+          themeMode: "light",
+          themeColor: "emerald",
+          pageTabsEnabled: true
+        }),
+        headers: {
+          authorization: "Bearer test-token",
+          "content-type": "application/json"
+        }
+      });
+    });
   });
 
   it("renders webhook subscriptions without displaying raw secrets", async () => {
@@ -317,3 +371,28 @@ describe("web admin frontend", () => {
     expect(screen.getAllByText("File management").length).toBeGreaterThan(0);
   });
 });
+
+function profileFixture() {
+  return {
+    user: {
+      id: "1",
+      username: "admin",
+      displayName: "Super Administrator",
+      email: "admin@example.com",
+      phone: "10000000000",
+      avatarFileId: null,
+      gender: null,
+      employeeNumber: null
+    },
+    preferences: {
+      id: "1",
+      tenantId: null,
+      userId: "1",
+      language: "en",
+      themeMode: "light",
+      themeColor: "blue",
+      pageTabsEnabled: true,
+      updatedAt: "2026-07-03T00:00:00.000Z"
+    }
+  };
+}

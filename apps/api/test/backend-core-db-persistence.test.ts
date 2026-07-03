@@ -58,6 +58,21 @@ describe("backend core database persistence", () => {
         expect(setup.data.admin.id).toBe("1");
         expect(login.data.session.id).toBe("1");
 
+        const profilePreferencesResponse = await firstApp.request("/api/profile/preferences", {
+          method: "PATCH",
+          headers: {
+            authorization: `Bearer ${login.data.accessToken}`,
+            "content-type": "application/json"
+          },
+          body: JSON.stringify({
+            language: "zh",
+            themeMode: "dark",
+            themeColor: "violet",
+            pageTabsEnabled: false
+          })
+        });
+        expect(profilePreferencesResponse.status).toBe(200);
+
         await firstServices.close();
         const secondRepository = BackendCoreStoreRepository.fromConfig({
           dialect: "postgresql",
@@ -80,6 +95,10 @@ describe("backend core database persistence", () => {
             headers: { authorization: `Bearer ${login.data.accessToken}` }
           });
           const tree = await treeResponse.json();
+          const profileResponse = await secondApp.request("/api/profile", {
+            headers: { authorization: `Bearer ${login.data.accessToken}` }
+          });
+          const profile = await profileResponse.json();
           const refreshResponse = await secondApp.request("/api/auth/refresh", {
             method: "POST",
             headers: csrfHeaders(setCookie)
@@ -98,6 +117,14 @@ describe("backend core database persistence", () => {
               key: expect.stringContaining("permissions")
             })
           );
+          expect(profileResponse.status).toBe(200);
+          expect(profile.data.preferences).toMatchObject({
+            userId: "1",
+            language: "zh",
+            themeMode: "dark",
+            themeColor: "violet",
+            pageTabsEnabled: false
+          });
           expect(refreshResponse.status).toBe(200);
           expect(refresh.data.accessToken).toEqual(expect.any(String));
         } finally {

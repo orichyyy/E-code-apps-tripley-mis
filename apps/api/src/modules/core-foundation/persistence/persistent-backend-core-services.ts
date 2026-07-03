@@ -16,6 +16,9 @@ import type {
   UpdateMenuRequest,
   UpdateOrganizationDepthConfigRequest,
   UpdateOrganizationRequest,
+  UpdateOwnAvatarRequest,
+  UpdateOwnPreferencesRequest,
+  UpdateOwnProfileRequest,
   UpdateRoleDataPermissionsRequest,
   UpdateRoleFieldPermissionsRequest,
   UpdateRolePermissionsRequest,
@@ -44,6 +47,7 @@ type PersistenceScope =
   | "roles"
   | "routeMetadata"
   | "userOrganizationRoles"
+  | "userPreferences"
   | "users";
 
 export class PersistentBackendCoreServices extends BackendCoreServices {
@@ -124,6 +128,35 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
 
   override listOnlineUsers(filters: OnlineUserListFilters = {}) {
     return this.persistSync(() => super.listOnlineUsers(filters), ["authSessions"]);
+  }
+
+  override async updateOwnProfile(
+    authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
+    input: UpdateOwnProfileRequest
+  ) {
+    return this.persistAfter(() => super.updateOwnProfile(authContext, input), [
+      "users",
+      "userPreferences"
+    ]);
+  }
+
+  override async updateOwnPreferences(
+    authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
+    input: UpdateOwnPreferencesRequest
+  ) {
+    return this.persistAfter(() => super.updateOwnPreferences(authContext, input), [
+      "userPreferences"
+    ]);
+  }
+
+  override async updateOwnAvatar(
+    authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
+    input: UpdateOwnAvatarRequest
+  ) {
+    return this.persistAfter(() => super.updateOwnAvatar(authContext, input), [
+      "users",
+      "userPreferences"
+    ]);
   }
 
   override updateOrganizationDepthConfig(input: UpdateOrganizationDepthConfigRequest) {
@@ -374,6 +407,9 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
         return;
       case "userOrganizationRoles":
         await this.repository.aggregates.userOrganizationRoles.replaceFromStore(store);
+        return;
+      case "userPreferences":
+        await this.repository.aggregates.userPreferences.replaceFromStore(store);
         return;
       case "users":
         await this.repository.aggregates.users.replaceFromStore(store);

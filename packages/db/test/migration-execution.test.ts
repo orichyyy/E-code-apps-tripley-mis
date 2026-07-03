@@ -39,7 +39,8 @@ describe("database migration execution", () => {
         "0003_infrastructure_foundation.sql",
         "0004_system_dictionary_i18n.sql",
         "0005_announcements_webhooks.sql",
-        "0006_file_references.sql"
+        "0006_file_references.sql",
+        "0007_user_preferences.sql"
       ]);
       expect(tables).toContainEqual({ name: "users" });
       expect(tables).toContainEqual({ name: "organizations" });
@@ -54,6 +55,7 @@ describe("database migration execution", () => {
       expect(tables).toContainEqual({ name: "announcements" });
       expect(tables).toContainEqual({ name: "webhook_subscriptions" });
       expect(tables).toContainEqual({ name: "file_references" });
+      expect(tables).toContainEqual({ name: "user_preferences" });
     } finally {
       client.close();
     }
@@ -106,6 +108,7 @@ describe("database migration execution", () => {
              'i18n_messages',
              'announcements',
              'file_references',
+             'user_preferences',
              'webhook_subscriptions'
            )
          ORDER BY table_name`
@@ -117,7 +120,8 @@ describe("database migration execution", () => {
         "0003_infrastructure_foundation.sql",
         "0004_system_dictionary_i18n.sql",
         "0005_announcements_webhooks.sql",
-        "0006_file_references.sql"
+        "0006_file_references.sql",
+        "0007_user_preferences.sql"
       ]);
       expect(result.rows.map((row) => row.table_name)).toEqual([
         "announcements",
@@ -131,6 +135,7 @@ describe("database migration execution", () => {
         "queue_jobs",
         "system_configs",
         "system_initialization_state",
+        "user_preferences",
         "users",
         "webhook_subscriptions"
       ]);

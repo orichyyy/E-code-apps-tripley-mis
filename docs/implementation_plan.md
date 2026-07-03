@@ -580,3 +580,22 @@ The file management runtime slice completed the following:
 - Added backend route/PostgreSQL persistence tests, SQLite migration coverage, OpenAPI manifest coverage, and frontend API/page tests.
 
 Remaining base-system gaps are tracked in `docs/known_gaps.md`. S3-compatible storage remains reserved until its concrete client package and configuration contract are confirmed.
+
+## Personal Center Persistence Progress
+
+The personal center persistence slice completed the following:
+
+- Added SQLite/PostgreSQL migrations and Drizzle schema for `user_preferences`.
+- Added authenticated self-service backend APIs:
+  - `GET /api/profile`
+  - `PATCH /api/profile`
+  - `PATCH /api/profile/preferences`
+  - `POST /api/profile/avatar`
+- Kept the avatar endpoint scoped to changing an existing file id reference; it does not re-upload files.
+- Added API permission manifest entries without RBAC `requiredPermission`, matching the current-user self-service boundary.
+- Added OpenAPI request/response schema coverage for the new profile and preference APIs.
+- Added in-memory route tests and PostgreSQL reload tests for profile preference persistence.
+- Replaced the static personal center and local-only personal settings UI with real API-backed React pages using TanStack Query and TanStack Form plus Zod.
+- Synced saved preferences into Zustand layout/auth state for language, dark mode, theme color, and page-tab behavior.
+
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. Personal avatar upload itself remains part of the existing file upload module; the profile API only stores the selected file reference.

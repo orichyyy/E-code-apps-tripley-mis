@@ -102,6 +102,36 @@ export const updateUserRequestSchema = z
   })
   .strict();
 
+export const userPreferenceLanguageSchema = z.enum(["en", "zh"]);
+export const userPreferenceThemeModeSchema = z.enum(["light", "dark"]);
+export const userPreferenceThemeColorSchema = z.enum(["blue", "emerald", "violet", "slate"]);
+
+export const updateOwnProfileRequestSchema = z
+  .object({
+    displayName: z.string().min(1).optional(),
+    email: z.string().email().optional(),
+    phone: z.string().min(1).optional(),
+    avatarFileId: integerIdStringSchema.nullable().optional(),
+    gender: z.string().min(1).nullable().optional(),
+    employeeNumber: z.string().min(1).nullable().optional()
+  })
+  .strict();
+
+export const updateOwnPreferencesRequestSchema = z
+  .object({
+    language: userPreferenceLanguageSchema.optional(),
+    themeMode: userPreferenceThemeModeSchema.optional(),
+    themeColor: userPreferenceThemeColorSchema.optional(),
+    pageTabsEnabled: z.boolean().optional()
+  })
+  .strict();
+
+export const updateOwnAvatarRequestSchema = z
+  .object({
+    avatarFileId: integerIdStringSchema.nullable()
+  })
+  .strict();
+
 export const resetPasswordRequestSchema = z
   .object({
     password: z.string().min(1)
@@ -234,6 +264,12 @@ export type UpdateOrganizationDepthConfigRequest = z.infer<
 >;
 export type CreateUserRequest = z.infer<typeof createUserRequestSchema>;
 export type UpdateUserRequest = z.infer<typeof updateUserRequestSchema>;
+export type UserPreferenceLanguage = z.infer<typeof userPreferenceLanguageSchema>;
+export type UserPreferenceThemeMode = z.infer<typeof userPreferenceThemeModeSchema>;
+export type UserPreferenceThemeColor = z.infer<typeof userPreferenceThemeColorSchema>;
+export type UpdateOwnProfileRequest = z.infer<typeof updateOwnProfileRequestSchema>;
+export type UpdateOwnPreferencesRequest = z.infer<typeof updateOwnPreferencesRequestSchema>;
+export type UpdateOwnAvatarRequest = z.infer<typeof updateOwnAvatarRequestSchema>;
 export type ResetPasswordRequest = z.infer<typeof resetPasswordRequestSchema>;
 export type AssignUserOrganizationRoleRequest = z.infer<
   typeof assignUserOrganizationRoleRequestSchema

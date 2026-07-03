@@ -24,6 +24,12 @@ import {
   updateWebhookSubscription
 } from "../src/features/notifications/webhook-subscription-api";
 import {
+  fetchProfile,
+  updateOwnAvatar,
+  updateOwnPreferences,
+  updateOwnProfile
+} from "../src/features/account/profile-api";
+import {
   deleteFile,
   downloadFileBlob,
   fetchFileDetail,
@@ -649,6 +655,85 @@ describe("frontend API client", () => {
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/webhooks/31", {
       method: "PATCH",
       body: JSON.stringify({ status: "disabled" }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
+  });
+
+  it("loads and updates the current profile through the backend API", async () => {
+    localStorage.setItem("web-admin.access-token", "token");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            data: {
+              user: {
+                id: "1",
+                username: "admin",
+                displayName: "Super Administrator",
+                email: "admin@example.com",
+                phone: "10000000000",
+                avatarFileId: null,
+                gender: null,
+                employeeNumber: null
+              },
+              preferences: {
+                id: "1",
+                tenantId: null,
+                userId: "1",
+                language: "zh",
+                themeMode: "dark",
+                themeColor: "emerald",
+                pageTabsEnabled: false,
+                updatedAt: "2026-07-03T00:00:00.000Z"
+              }
+            }
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        )
+      )
+    );
+
+    const profile = await fetchProfile();
+    await updateOwnProfile({ displayName: "Admin User" });
+    await updateOwnPreferences({ language: "en", themeMode: "light", themeColor: "blue", pageTabsEnabled: true });
+    await updateOwnAvatar({ avatarFileId: "9" });
+
+    expect(profile.preferences).toMatchObject({
+      language: "zh",
+      themeMode: "dark",
+      themeColor: "emerald",
+      pageTabsEnabled: false
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/profile", {
+      headers: { authorization: "Bearer token" }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/profile", {
+      method: "PATCH",
+      body: JSON.stringify({ displayName: "Admin User" }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/profile/preferences", {
+      method: "PATCH",
+      body: JSON.stringify({
+        language: "en",
+        themeMode: "light",
+        themeColor: "blue",
+        pageTabsEnabled: true
+      }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(4, "/api/profile/avatar", {
+      method: "POST",
+      body: JSON.stringify({ avatarFileId: "9" }),
       headers: {
         authorization: "Bearer token",
         "content-type": "application/json"

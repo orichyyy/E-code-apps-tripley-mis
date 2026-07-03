@@ -130,6 +130,19 @@ describe("backend core schema", () => {
     expect(postgresql.userOrganizationRoles.deletedBy.name).toBe("deleted_by");
   });
 
+  it("keeps user preference columns aligned across dialects", () => {
+    expect(sqlite.userPreferences.userId.name).toBe("user_id");
+    expect(sqlite.userPreferences.language.name).toBe("language");
+    expect(sqlite.userPreferences.themeMode.name).toBe("theme_mode");
+    expect(sqlite.userPreferences.themeColor.name).toBe("theme_color");
+    expect(sqlite.userPreferences.pageTabsEnabled.name).toBe("page_tabs_enabled");
+    expect(postgresql.userPreferences.userId.name).toBe("user_id");
+    expect(postgresql.userPreferences.language.name).toBe("language");
+    expect(postgresql.userPreferences.themeMode.name).toBe("theme_mode");
+    expect(postgresql.userPreferences.themeColor.name).toBe("theme_color");
+    expect(postgresql.userPreferences.pageTabsEnabled.name).toBe("page_tabs_enabled");
+  });
+
   it("keeps API permission metadata columns aligned across SQLite and PostgreSQL", () => {
     expect(sqlite.apiPermissions.module.name).toBe("module");
     expect(sqlite.apiPermissions.requiredPermission.name).toBe("required_permission");
@@ -241,6 +254,14 @@ describe("backend core schema", () => {
         ]
       ],
       ["users", ["users_status_check"]],
+      [
+        "userPreferences",
+        [
+          "user_preferences_language_check",
+          "user_preferences_theme_color_check",
+          "user_preferences_theme_mode_check"
+        ]
+      ],
       ["roles", ["roles_status_check"]],
       ["userOrganizationRoles", ["user_organization_roles_status_check"]],
       ["permissions", ["permissions_status_check", "permissions_type_check"]],
@@ -288,6 +309,7 @@ describe("backend core schema", () => {
         ["organizations_code_unique", "organizations_path_level_idx", "organizations_path_unique"]
       ],
       ["users", ["users_email_unique", "users_phone_unique", "users_username_unique"]],
+      ["userPreferences", ["user_preferences_user_unique"]],
       ["roles", ["roles_code_unique"]],
       ["userOrganizationRoles", ["user_organization_roles_user_org_unique"]],
       ["permissions", ["permissions_code_unique"]],

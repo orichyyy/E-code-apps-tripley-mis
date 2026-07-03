@@ -1,4 +1,8 @@
 export const responseSchemaByOperationCode: Record<string, string> = {
+  "api.profile.view": "ProfileResponse",
+  "api.profile.update": "ProfileResponse",
+  "api.profile.preferences.update": "UserPreferencesResponse",
+  "api.profile.avatar.update": "ProfileResponse",
   "api.context.permissions": "PermissionContextResponse",
   "api.permissions.effective": "PermissionContextResponse",
   "api.roles.data-permissions.view": "RoleDataPermissionListResponse",

@@ -8,6 +8,7 @@ This file records incomplete requirements that must not be claimed complete.
 - PostgreSQL migration execution and PostgreSQL smoke tests use an externally provided `TEST_DATABASE_URL` or `DATABASE_URL`.
 - PostgreSQL tests are skipped when `TEST_DATABASE_URL` is absent in the local environment.
 - DB-backed backend-core persistence now exists behind `BACKEND_CORE_STORE=database` for initialization, auth sessions, refresh tokens, users, organizations, roles, role permissions, permissions, menus, menu/API bindings, route metadata, API permission metadata, and user-organization-role bindings.
+- `user_preferences` now exists in SQLite/PostgreSQL schema and DB-backed backend-core persistence for personal language, theme, theme color, and page-tab preferences.
 - Normal DB-backed backend-core API mutation flows now persist through narrower per-aggregate repositories. A whole-store snapshot save helper remains for test reset and full-store support utilities.
 
 ## Auth and Permission Gaps
@@ -37,6 +38,7 @@ This file records incomplete requirements that must not be claimed complete.
 - In-app notification management now has a dedicated frontend route/page wired to the implemented backend APIs. Notification creation and delivery fan-out remain backend/reserved concerns.
 - Webhook subscription management now has a frontend route/page wired to the implemented backend APIs. Real outbound delivery remains reserved.
 - Notification template management now has a frontend route/page wired to the implemented backend APIs. SMTP/SMS sending remains reserved.
+- Personal center and personal settings now use real authenticated profile APIs for allowed self-profile fields, avatar file-id reference changes, language, theme mode, theme color, and page-tab preference persistence.
 
 ## Validation Gaps
 
@@ -50,3 +52,4 @@ This file records incomplete requirements that must not be claimed complete.
 - SQLite and PostgreSQL migrations now include the announcements and webhook subscription tables.
 - PostgreSQL integration tests now cover database-backed infrastructure adapter drivers and DB-backed infrastructure API persistence. SQLite adapter smoke coverage remains executable locally.
 - PostgreSQL integration tests now cover DB-backed announcement and webhook subscription persistence.
+- PostgreSQL integration tests now cover profile preference persistence after DB-backed reload.

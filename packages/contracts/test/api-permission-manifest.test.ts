@@ -33,7 +33,11 @@ describe("baseApiPermissionManifest", () => {
       "api.auth.current-organization.switch",
       "api.context.organizations.list",
       "api.context.permissions",
-      "api.permissions.effective"
+      "api.permissions.effective",
+      "api.profile.avatar.update",
+      "api.profile.preferences.update",
+      "api.profile.update",
+      "api.profile.view"
     ]);
     const privateRoutesWithoutRequiredPermission = baseApiPermissionManifest
       .filter((entry) => !entry.public && !entry.requiredPermission)
@@ -52,6 +56,16 @@ describe("baseApiPermissionManifest", () => {
         expect.objectContaining({
           method: "GET",
           path: "/api/auth/me",
+          public: false
+        }),
+        expect.objectContaining({
+          method: "GET",
+          path: "/api/profile",
+          public: false
+        }),
+        expect.objectContaining({
+          method: "PATCH",
+          path: "/api/profile/preferences",
           public: false
         }),
         expect.objectContaining({

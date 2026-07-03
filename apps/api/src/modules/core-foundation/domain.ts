@@ -62,6 +62,17 @@ export type UserRecord = AuditFields &
     remark: string | null;
   };
 
+export type UserPreferenceRecord = {
+  id: string;
+  tenantId: string | null;
+  userId: string;
+  language: "en" | "zh";
+  themeMode: "light" | "dark";
+  themeColor: "blue" | "emerald" | "violet" | "slate";
+  pageTabsEnabled: boolean;
+  updatedAt: string;
+};
+
 export type RoleRecord = AuditFields &
   ActorAuditFields &
   SoftDeleteFields & {
@@ -242,6 +253,11 @@ export type PublicOrganizationTreeNode = PublicOrganization & {
 };
 
 export type PublicUser = Omit<UserRecord, "passwordHash">;
+
+export type PublicProfile = {
+  user: PublicUser;
+  preferences: UserPreferenceRecord;
+};
 
 export type PublicMenu = MenuRecord;
 

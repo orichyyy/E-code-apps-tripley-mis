@@ -21,6 +21,9 @@ import type {
   UpdateMenuApiBindingsRequest,
   UpdateMenuRequest,
   UpdateOrganizationRequest,
+  UpdateOwnAvatarRequest,
+  UpdateOwnPreferencesRequest,
+  UpdateOwnProfileRequest,
   UpdateRoleDataPermissionsRequest,
   UpdateRoleFieldPermissionsRequest,
   UpdateRolePermissionsRequest,
@@ -35,6 +38,7 @@ import { InMemoryBackendStore } from "./in-memory-store";
 import { MenuService } from "./menu.service";
 import { OrganizationService } from "./organization.service";
 import { PermissionExtensionService } from "./permission-extension.service";
+import { ProfileService } from "./profile.service";
 import {
   PermissionService,
   type ApiPermissionListFilters,
@@ -59,6 +63,7 @@ export class BackendCoreServices {
   readonly organizations: OrganizationService;
   readonly permissions: PermissionService;
   readonly permissionExtensions: PermissionExtensionService;
+  readonly profile: ProfileService;
   readonly routeMetadata: RouteMetadataService;
   readonly roles: RoleService;
   readonly users: UserService;
@@ -70,6 +75,7 @@ export class BackendCoreServices {
     this.roles = new RoleService(context);
     this.users = new UserService(context);
     this.auth = new AuthService(context);
+    this.profile = new ProfileService(context, this.users);
     this.permissions = new PermissionService(context, context.permissionCache);
     this.permissionExtensions = new PermissionExtensionService(context, this.permissions);
     this.initialization = new InitializationService(
@@ -120,7 +126,8 @@ export class BackendCoreServices {
       organizations: userContext.organizations,
       permissionCodes: userContext.permissionCodes,
       menus: userContext.menus,
-      passwordChangeRequired: userContext.passwordChangeRequired
+      passwordChangeRequired: userContext.passwordChangeRequired,
+      preferences: this.profile.getPreferences(authContext.userId)
     };
   }
 
@@ -165,7 +172,39 @@ export class BackendCoreServices {
       authContext.userId,
       authContext.currentOrganizationId
     );
-    return this.auth.getCurrentUserContext(authContext, permissionContext.permissionCodes);
+    return {
+      ...this.auth.getCurrentUserContext(authContext, permissionContext.permissionCodes),
+      preferences: this.profile.getPreferences(authContext.userId)
+    };
+  }
+
+  getProfile(authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>) {
+    return this.profile.getProfile(authContext);
+  }
+
+  async updateOwnProfile(
+    authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
+    input: UpdateOwnProfileRequest
+  ) {
+    const profile = this.profile.updateProfile(authContext, input);
+    await this.permissions.invalidateUser(authContext.userId);
+    return profile;
+  }
+
+  async updateOwnPreferences(
+    authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
+    input: UpdateOwnPreferencesRequest
+  ) {
+    return this.profile.updatePreferences(authContext, input);
+  }
+
+  async updateOwnAvatar(
+    authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
+    input: UpdateOwnAvatarRequest
+  ) {
+    const profile = this.profile.updateAvatar(authContext, input);
+    await this.permissions.invalidateUser(authContext.userId);
+    return profile;
   }
 
   listCurrentUserOrganizations(authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>) {

@@ -16,6 +16,7 @@ type AuthState = {
   setAccessToken: (accessToken: string | null) => void;
   signIn: (input: { accessToken: string; user: AuthUser; permissionCodes: string[] }) => void;
   signOut: () => void;
+  updateUser: (patch: Partial<AuthUser>) => void;
   setPermissionContext: (input: {
     permissionCodes: string[];
     hiddenFields?: Record<string, string[]>;
@@ -61,6 +62,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
     set({ accessToken: null, user: null, permissionCodes: [], hiddenFields: {} });
   },
+  updateUser: (patch) =>
+    set((state) => ({
+      user: state.user ? { ...state.user, ...patch } : state.user
+    })),
   setPermissionContext: ({ permissionCodes, hiddenFields = {} }) =>
     set({ permissionCodes, hiddenFields }),
   markPasswordChanged: () =>

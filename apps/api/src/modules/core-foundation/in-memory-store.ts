@@ -12,6 +12,7 @@ import type {
   RoleDataPermissionRecord,
   RolePermissionRecord,
   RoleRecord,
+  UserPreferenceRecord,
   UserOrganizationRoleRecord,
   UserPermissionOverrideRecord,
   UserRecord
@@ -31,12 +32,14 @@ type SequenceName =
   | "routeMetadata"
   | "role"
   | "user"
+  | "userPreference"
   | "userPermissionOverride"
   | "userOrganizationRole";
 
 export class InMemoryBackendStore {
   readonly organizations = new Map<string, OrganizationRecord>();
   readonly users = new Map<string, UserRecord>();
+  readonly userPreferences = new Map<string, UserPreferenceRecord>();
   readonly roles = new Map<string, RoleRecord>();
   readonly permissions = new Map<string, PermissionRecord>();
   readonly apiPermissions = new Map<string, ApiPermissionRecord>();

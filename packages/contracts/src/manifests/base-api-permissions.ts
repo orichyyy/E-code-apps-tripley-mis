@@ -177,6 +177,42 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
   },
   {
     method: "GET",
+    path: "/api/profile",
+    code: "api.profile.view",
+    description: "Get current user's personal profile and preferences",
+    module: "profile",
+    logLevel: "basic",
+    public: false
+  },
+  {
+    method: "PATCH",
+    path: "/api/profile",
+    code: "api.profile.update",
+    description: "Update allowed personal profile fields",
+    module: "profile",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "PATCH",
+    path: "/api/profile/preferences",
+    code: "api.profile.preferences.update",
+    description: "Update current user's UI preferences",
+    module: "profile",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "POST",
+    path: "/api/profile/avatar",
+    code: "api.profile.avatar.update",
+    description: "Change current user's avatar file reference",
+    module: "profile",
+    logLevel: "request",
+    public: false
+  },
+  {
+    method: "GET",
     path: "/api/organizations/tree",
     code: "api.organizations.tree",
     description: "View organization tree",

@@ -105,6 +105,29 @@ export const users = pgTable(
   })
 );
 
+export const userPreferences = pgTable(
+  "user_preferences",
+  {
+    id: serial("id").primaryKey(),
+    tenantId: integer("tenant_id"),
+    userId: integer("user_id").notNull(),
+    language: text("language").notNull().default("en"),
+    themeMode: text("theme_mode").notNull().default("light"),
+    themeColor: text("theme_color").notNull().default("blue"),
+    pageTabsEnabled: boolean("page_tabs_enabled").notNull().default(true),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull()
+  },
+  (table) => ({
+    userUnique: uniqueIndex("user_preferences_user_unique").on(table.userId),
+    languageCheck: check("user_preferences_language_check", sql`${table.language} IN ('en', 'zh')`),
+    themeModeCheck: check("user_preferences_theme_mode_check", sql`${table.themeMode} IN ('light', 'dark')`),
+    themeColorCheck: check(
+      "user_preferences_theme_color_check",
+      sql`${table.themeColor} IN ('blue', 'emerald', 'violet', 'slate')`
+    )
+  })
+);
+
 export const roles = pgTable(
   "roles",
   {
@@ -864,6 +887,7 @@ export const postgresqlSchema = {
   systemConfigs,
   systemInitializationState,
   userPermissionOverrides,
+  userPreferences,
   userOrganizationRoles,
   webhookSubscriptions,
   users
