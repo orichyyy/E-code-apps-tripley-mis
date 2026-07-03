@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@web-admin-base/adapters": "workspace:*",
+    "@web-admin-base/contracts": "workspace:*",
     "@web-admin-base/shared": "workspace:*",
     "zod": "^3.25.67"
   }

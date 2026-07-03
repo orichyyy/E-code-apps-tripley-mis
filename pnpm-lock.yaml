@@ -150,6 +150,9 @@ importers:
       '@web-admin-base/adapters':
         specifier: workspace:*
         version: link:../../packages/adapters
+      '@web-admin-base/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@web-admin-base/shared':
         specifier: workspace:*
         version: link:../../packages/shared

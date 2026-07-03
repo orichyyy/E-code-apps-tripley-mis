@@ -614,3 +614,17 @@ The SMTP email notification slice completed the following:
 - Added in-memory route tests, PostgreSQL route tests for DB-backed template lookup, and SMTP adapter protocol tests against a local fake SMTP server.
 
 Remaining base-system gaps are tracked in `docs/known_gaps.md`. SMTP remains optional and disabled unless configured. SMS sending, real outbound webhook delivery, notification fan-out/retry workers, and production delivery retry catalogs remain reserved.
+
+## In-App Notification Dispatch Progress
+
+The in-app notification dispatch slice completed the following:
+
+- Added a shared queue payload contract for `notification.in_app.dispatch` jobs.
+- Added internal infrastructure service support for queue-backed in-app notification creation from enabled `in_app` templates.
+- Added user-recipient fan-out and organization-recipient fan-out boundaries with duplicate recipient normalization.
+- Added worker task registration support for in-app notification dispatch jobs.
+- Added dispatch execution that writes unread in-app notification records for each recipient.
+- Kept public administrator notification creation APIs and frontend create flows out of scope because no base API contract confirms them.
+- Added in-memory service coverage, worker task coverage, and PostgreSQL durable queue/notification persistence coverage.
+
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. Production notification retry catalogs, external webhook delivery, SMS sending, S3-compatible storage, Redis, and RabbitMQ remain reserved or optional until their concrete contracts are confirmed.

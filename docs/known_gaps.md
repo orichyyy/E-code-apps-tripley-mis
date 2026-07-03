@@ -27,7 +27,7 @@ This file records incomplete requirements that must not be claimed complete.
 - System configuration, dictionary management, and i18n management now have database schema, backend APIs, OpenAPI coverage, PostgreSQL tests, and frontend API integration for the implemented pages.
 - Announcements and webhook subscriptions now have database schema, backend APIs, OpenAPI coverage, PostgreSQL tests, and frontend API integration where routes exist.
 - Announcement organization scoping currently stores the confirmed `scope_type` only. A concrete organization target/reference field is not implemented because it has not been confirmed in the base contract.
-- External webhook delivery, retry workers, and S3-compatible storage are not complete concrete drivers yet. SMTP email delivery now has an optional configuration-driven driver and test-send API, but production retry/fan-out workflows remain reserved.
+- External webhook delivery, retry workers, and S3-compatible storage are not complete concrete drivers yet. SMTP email delivery now has an optional configuration-driven driver and test-send API, but production retry workflows remain reserved.
 - Worker execution now has queue/scheduler registration boundaries plus durable `runOnce`/polling hooks over database queue and scheduler adapters. Full production task catalogs, cron expression evaluation, timeout enforcement, and dead-letter workflows remain reserved or incomplete.
 - Redis, RabbitMQ, and S3-compatible storage remain optional placeholders only; no mandatory dependencies have been added. SMTP remains optional and is disabled unless configured.
 - Frontend pages use real API fetches for implemented infrastructure modules where backend APIs exist. Pages whose backend APIs are still incomplete continue to use typed placeholder data.
@@ -35,7 +35,7 @@ This file records incomplete requirements that must not be claimed complete.
 - i18n message management now has a dedicated frontend route/page wired to the implemented backend APIs. The static English/Chinese UI message bundle remains the local frontend default.
 - File management now has backend and frontend support for local-storage upload, metadata list/detail, authenticated download, image preview, reference listing, and delete-invalidate behavior. S3-compatible storage configuration UI and concrete S3 driver wiring remain incomplete because the package/configuration contract is still reserved.
 - Announcement management now has a dedicated frontend route/page wired to the implemented backend APIs. Announcement notification delivery and organization target references remain reserved/unconfirmed.
-- In-app notification management now has a dedicated frontend route/page wired to the implemented backend APIs. Notification creation and delivery fan-out remain backend/reserved concerns.
+- In-app notification management now has a dedicated frontend route/page wired to the implemented backend APIs. Internal in-app notification creation/fan-out now exists through a queue-backed dispatch service and worker task boundary; no public administrator create-notification API or frontend create flow is exposed because it is not confirmed by the base API contract.
 - Webhook subscription management now has a frontend route/page wired to the implemented backend APIs. Real outbound delivery remains reserved.
 - Notification template management now has a frontend route/page wired to the implemented backend APIs. SMTP template test sending is implemented through the backend API; SMS sending remains reserved.
 - Personal center and personal settings now use real authenticated profile APIs for allowed self-profile fields, avatar file-id reference changes, language, theme mode, theme color, and page-tab preference persistence.
@@ -54,3 +54,4 @@ This file records incomplete requirements that must not be claimed complete.
 - PostgreSQL integration tests now cover DB-backed announcement and webhook subscription persistence.
 - PostgreSQL integration tests now cover profile preference persistence after DB-backed reload.
 - PostgreSQL integration tests now cover DB-backed email template lookup for the SMTP test-send API.
+- PostgreSQL integration tests now cover queue-backed in-app notification dispatch into persisted notification records.

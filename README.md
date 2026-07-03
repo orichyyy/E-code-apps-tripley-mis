@@ -29,7 +29,7 @@ Set `BACKEND_CORE_STORE=database` with `DATABASE_URL` to run DB-backed backend-c
 
 Local file storage uses `FILE_STORAGE_ROOT` when provided and falls back to `.web-admin-storage`. Uploads enforce the default 50 MB single-file limit, configurable with `FILE_MAX_SIZE_BYTES`, and the confirmed base whitelist.
 
-Notification templates and webhook subscriptions are persisted for management. SMTP email sending is available as an optional configuration-driven notification channel; SMS sending, real outbound webhook delivery, and delivery retries remain reserved integrations.
+Notification templates and webhook subscriptions are persisted for management. In-app notification creation/fan-out is available through the internal queue-backed dispatch service and worker task boundary. SMTP email sending is available as an optional configuration-driven notification channel; SMS sending, real outbound webhook delivery, and delivery retries remain reserved integrations.
 
 Optional SMTP configuration:
 

@@ -1,4 +1,10 @@
-import type { FileStorageAdapter, NotificationChannelAdapter } from "@web-admin-base/adapters";
+import {
+  createDatabaseQueueAdapter,
+  type FileStorageAdapter,
+  type NotificationChannelAdapter,
+  type QueueAdapter
+} from "@web-admin-base/adapters";
+import type { InAppNotificationDispatchPayload } from "@web-admin-base/contracts";
 import type {
   CreateExportTaskRequest,
   CreateLogExportTaskRequest,
@@ -10,17 +16,20 @@ import type {
 } from "@web-admin-base/contracts";
 
 import { createKnownError } from "../../core/errors/error-codes";
-import { sendTestEmailNotification, type NotificationTemplateRecord } from "./email-notification-sender";
+import type { NotificationTemplateRecord } from "./email-notification-sender";
 import {
   createObjectKey,
   isPreviewableImage,
   validateUploadInput,
   type FileUploadInput
 } from "./file-management";
+import type { EnqueueInAppNotificationInput } from "./in-app-notification-dispatcher";
+import { InfrastructureNotificationService } from "./infrastructure-notification.service";
 import { InfrastructureRepository } from "./infrastructure.repository";
 import {
   createDefaultFileStorage,
   createDefaultNotificationChannel,
+  createDefaultQueue,
   readMaxFileSizeBytes,
   resolveInfrastructureServiceOptions,
   type InfrastructureServiceOptions
@@ -32,18 +41,33 @@ export class InfrastructureServices {
     files: [] as Array<Record<string, unknown> & { id: string }>,
     importExportTasks: [] as Array<Record<string, unknown> & { id: string; resourceType: string; taskType: string }>,
     logs: [] as Array<Record<string, unknown> & { id: string; logType: LogType }>,
-    notifications: [] as Array<Record<string, unknown> & { id: string; status: string }>,
+    notifications: [] as Array<Record<string, unknown> & { id: string; status: string; userId?: string | null }>,
     scheduledTasks: [] as Array<Record<string, unknown> & { id: string; code: string; enabled: boolean }>,
     templates: [] as NotificationTemplateRecord[]
   };
   private sequence = 1;
+  private readonly notificationService: InfrastructureNotificationService;
 
   constructor(
     private readonly repository?: InfrastructureRepository,
     private readonly storage: FileStorageAdapter = createDefaultFileStorage(),
     private readonly maxFileSizeBytes = readMaxFileSizeBytes(),
-    private readonly notificationChannel: NotificationChannelAdapter = createDefaultNotificationChannel()
-  ) {}
+    notificationChannel: NotificationChannelAdapter = createDefaultNotificationChannel(),
+    queue: QueueAdapter = createDefaultQueue(),
+    organizationUserResolver?: (organizationId: string) => Promise<string[]>
+  ) {
+    this.notificationService = new InfrastructureNotificationService({
+      repository,
+      memory: {
+        notifications: this.memory.notifications,
+        templates: this.memory.templates
+      },
+      notificationChannel,
+      queue,
+      nextId: () => this.nextId(),
+      organizationUserResolver
+    });
+  }
 
   static inMemory(options?: FileStorageAdapter | InfrastructureServiceOptions): InfrastructureServices {
     const resolved = resolveInfrastructureServiceOptions(options);
@@ -51,7 +75,9 @@ export class InfrastructureServices {
       undefined,
       resolved.storage,
       resolved.maxFileSizeBytes,
-      resolved.notificationChannel
+      resolved.notificationChannel,
+      resolved.queue,
+      resolved.organizationUserResolver
     );
   }
 
@@ -60,11 +86,14 @@ export class InfrastructureServices {
     options?: FileStorageAdapter | InfrastructureServiceOptions
   ): InfrastructureServices {
     const resolved = resolveInfrastructureServiceOptions(options);
+    const queue = resolved.queue ?? createDatabaseQueueAdapter(repository.executor);
     return new InfrastructureServices(
       repository,
       resolved.storage,
       resolved.maxFileSizeBytes,
-      resolved.notificationChannel
+      resolved.notificationChannel,
+      queue,
+      resolved.organizationUserResolver
     );
   }
 
@@ -145,48 +174,35 @@ export class InfrastructureServices {
   }
 
   listNotifications(userId: string) {
-    return this.repository?.listNotifications(userId) ?? Promise.resolve(this.memory.notifications);
+    return this.notificationService.listNotifications(userId);
   }
 
   updateNotificationStatus(id: string, status: "read" | "archived" | "deleted", actorId: string | null) {
-    if (this.repository) return this.repository.updateNotificationStatus(id, status, actorId);
-    const notification = this.memory.notifications.find((item) => item.id === id);
-    if (notification) notification.status = status;
-    return Promise.resolve(notification ?? { id, status });
+    return this.notificationService.updateNotificationStatus(id, status, actorId);
+  }
+
+  enqueueInAppNotification(input: EnqueueInAppNotificationInput) {
+    return this.notificationService.enqueueInAppNotification(input);
+  }
+
+  dispatchInAppNotificationJob(payload: InAppNotificationDispatchPayload) {
+    return this.notificationService.dispatchInAppNotificationJob(payload);
   }
 
   listNotificationTemplates() {
-    return this.repository?.listNotificationTemplates() ?? Promise.resolve(this.memory.templates);
+    return this.notificationService.listNotificationTemplates();
   }
 
   createNotificationTemplate(input: CreateNotificationTemplateRequest) {
-    if (this.repository) return this.repository.createNotificationTemplate(input);
-    const now = new Date().toISOString();
-    const template = {
-      id: this.nextId(),
-      ...input,
-      subject: input.subject ?? null,
-      status: "enabled",
-      createdAt: now,
-      updatedAt: now
-    };
-    this.memory.templates.unshift(template);
-    return Promise.resolve(template);
+    return this.notificationService.createNotificationTemplate(input);
   }
 
   updateNotificationTemplate(id: string, input: UpdateNotificationTemplateRequest) {
-    if (this.repository) return this.repository.updateNotificationTemplate(id, input);
-    const template = this.memory.templates.find((item) => item.id === id);
-    if (!template) return Promise.resolve(null);
-    Object.assign(template, input, { updatedAt: new Date().toISOString() });
-    return Promise.resolve(template);
+    return this.notificationService.updateNotificationTemplate(id, input);
   }
 
   async sendTestEmail(input: SendTestEmailNotificationRequest) {
-    return sendTestEmailNotification(input, {
-      listTemplates: () => this.listNotificationTemplates(),
-      notificationChannel: this.notificationChannel
-    });
+    return this.notificationService.sendTestEmail(input);
   }
 
   listScheduledTasks() {

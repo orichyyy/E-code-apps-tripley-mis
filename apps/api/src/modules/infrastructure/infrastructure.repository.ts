@@ -12,10 +12,11 @@ import {
   createSqliteInfrastructureExecutor
 } from "./infrastructure.executor";
 import type { StoredFileMetadataInput } from "./file-management";
+import type { InAppNotificationRecordInput } from "./in-app-notification-dispatcher";
 import type { LogType, ScheduledTaskInput } from "./infrastructure.types";
 
 export class InfrastructureRepository {
-  constructor(private readonly executor: DatabaseAdapterExecutor) {}
+  constructor(public readonly executor: DatabaseAdapterExecutor) {}
 
   static fromEnvironment(env: NodeJS.ProcessEnv = process.env): InfrastructureRepository {
     const config = loadDatabaseConfig(env);
@@ -171,6 +172,46 @@ export class InfrastructureRepository {
       );
     }
     return { id, status };
+  }
+
+  async createInAppNotifications(records: InAppNotificationRecordInput[]): Promise<void> {
+    if (records.length === 0) return;
+    const now = nowIso();
+    await this.executor.transaction(async () => {
+      for (const record of records) {
+        await this.executor.run(
+          `INSERT INTO notifications (user_id, channel, title, body, status, metadata_json, is_deleted, created_at, updated_at)
+           VALUES (${this.p(1)}, 'in_app', ${this.p(2)}, ${this.p(3)}, 'unread', ${this.p(4)}, ${this.bool(false)}, ${this.p(5)}, ${this.p(6)})`,
+          [
+            record.userId,
+            record.title,
+            record.body,
+            jsonParam({ ...record.metadata, createdBy: record.createdBy }, this.executor.dialect),
+            now,
+            now
+          ]
+        );
+      }
+    });
+  }
+
+  async listEnabledUserIdsForOrganization(organizationId: string): Promise<string[]> {
+    const rows = await this.executor.all(
+      `SELECT DISTINCT u.id
+       FROM user_organization_roles uor
+       JOIN users u ON u.id = uor.user_id
+       JOIN organizations o ON o.id = uor.organization_id
+       WHERE uor.organization_id = ${this.p(1)}
+       AND uor.status = 'enabled'
+       AND uor.is_deleted = ${this.bool(false)}
+       AND u.status = 'enabled'
+       AND u.is_deleted = ${this.bool(false)}
+       AND o.status = 'enabled'
+       AND o.is_deleted = ${this.bool(false)}
+       ORDER BY u.id ASC`,
+      [organizationId]
+    );
+    return rows.map((row) => String(row.id));
   }
 
   async listNotificationTemplates() {

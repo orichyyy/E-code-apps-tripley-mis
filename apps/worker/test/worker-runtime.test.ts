@@ -4,7 +4,9 @@ import {
   createInMemoryJobSchedulerAdapter,
   createInMemoryQueueAdapter
 } from "@web-admin-base/adapters";
+import { inAppNotificationDispatchJobType } from "@web-admin-base/contracts";
 import { createWorkerRuntime } from "../src/runners/worker-runtime";
+import { createInAppNotificationDispatchTask } from "../src/tasks/in-app-notification-dispatch";
 
 describe("worker runtime", () => {
   it("uses the configured worker name", () => {
@@ -77,5 +79,38 @@ describe("worker runtime", () => {
     );
 
     await expect(runtime.runOnce()).resolves.toEqual({ queueJobs: 2, scheduledJobs: 1 });
+  });
+
+  it("registers the in-app notification dispatch queue task", async () => {
+    const queue = createInMemoryQueueAdapter();
+    const handledTitles: string[] = [];
+    const runtime = createWorkerRuntime(
+      {
+        nodeEnv: "test",
+        workerName: "notification-worker"
+      },
+      {
+        queue,
+        log: () => undefined,
+        queueTasks: [
+          createInAppNotificationDispatchTask(async (payload) => {
+            handledTitles.push(payload.title);
+          })
+        ]
+      }
+    );
+
+    await runtime.start();
+    await queue.enqueue(inAppNotificationDispatchJobType, {
+      recipientUserIds: ["1"],
+      title: "System notice",
+      body: "Body",
+      metadata: {},
+      createdBy: null,
+      enqueuedAt: new Date().toISOString()
+    });
+    await runtime.stop();
+
+    expect(handledTitles).toEqual(["System notice"]);
   });
 });

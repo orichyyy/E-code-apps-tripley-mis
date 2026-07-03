@@ -1,13 +1,17 @@
 import {
   createInMemoryNotificationChannelAdapter,
+  createInMemoryQueueAdapter,
   createLocalFileStorageAdapter,
   type FileStorageAdapter,
-  type NotificationChannelAdapter
+  type NotificationChannelAdapter,
+  type QueueAdapter
 } from "@web-admin-base/adapters";
 
 export type InfrastructureServiceOptions = {
   storage?: FileStorageAdapter;
   notificationChannel?: NotificationChannelAdapter;
+  queue?: QueueAdapter;
+  organizationUserResolver?: (organizationId: string) => Promise<string[]>;
   maxFileSizeBytes?: number;
 };
 
@@ -27,6 +31,10 @@ export function createDefaultFileStorage(): FileStorageAdapter {
 
 export function createDefaultNotificationChannel(): NotificationChannelAdapter {
   return createInMemoryNotificationChannelAdapter();
+}
+
+export function createDefaultQueue(): QueueAdapter {
+  return createInMemoryQueueAdapter();
 }
 
 export function readMaxFileSizeBytes(): number {

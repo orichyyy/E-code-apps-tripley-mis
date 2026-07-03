@@ -16,9 +16,9 @@ export type WorkerRuntime = {
   stop: () => Promise<void>;
 };
 
-export type QueueWorkerTask<TPayload = unknown> = {
+export type QueueWorkerTask = {
   jobType: string;
-  handler: (job: QueueJob<TPayload>) => Promise<void>;
+  handler: (job: QueueJob<unknown>) => Promise<void>;
 };
 
 export type ScheduledWorkerTask = {

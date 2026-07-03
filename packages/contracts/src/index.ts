@@ -5,6 +5,7 @@ export * from "./api-schemas/infrastructure";
 export * from "./api-schemas/system-management";
 export * from "./hono-rpc";
 export * from "./manifests";
+export * from "./notification-jobs";
 export * from "./openapi";
 export * from "./permissions/permission-manifest";
 export * from "./routes/admin-route-metadata";
