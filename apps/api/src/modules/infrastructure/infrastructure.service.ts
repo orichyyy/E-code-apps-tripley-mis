@@ -1,4 +1,5 @@
 import {
+  computeNextCronRun,
   createDatabaseQueueAdapter,
   type FileStorageAdapter,
   type NotificationChannelAdapter,
@@ -223,6 +224,7 @@ export class InfrastructureServices {
       id: this.nextId(),
       ...normalized,
       status: normalized.enabled ? "enabled" : "disabled",
+      nextRunAt: normalized.enabled ? nextScheduledRunOrThrow(normalized.cronExpression, now) : null,
       createdAt: now,
       updatedAt: now
     };
@@ -234,7 +236,12 @@ export class InfrastructureServices {
     if (this.repository) return this.repository.updateScheduledTask(id, input);
     const task = this.memory.scheduledTasks.find((item) => item.id === id);
     if (!task) return Promise.resolve(null);
-    Object.assign(task, input, { updatedAt: new Date().toISOString() });
+    const now = new Date().toISOString();
+    const next = { ...task, ...input };
+    Object.assign(task, input, {
+      nextRunAt: next.enabled ? nextScheduledRunOrThrow(String(next.cronExpression), now) : null,
+      updatedAt: now
+    });
     return Promise.resolve(task);
   }
 
@@ -242,8 +249,10 @@ export class InfrastructureServices {
     if (this.repository) return this.repository.setScheduledTaskStatus(id, enabled);
     const task = this.memory.scheduledTasks.find((item) => item.id === id);
     if (!task) return Promise.resolve(null);
+    const now = new Date().toISOString();
     task.enabled = enabled;
     task.status = enabled ? "enabled" : "disabled";
+    task.nextRunAt = enabled ? nextScheduledRunOrThrow(String(task.cronExpression), now) : null;
     return Promise.resolve(task);
   }
 
@@ -287,5 +296,16 @@ export class InfrastructureServices {
     const id = String(this.sequence);
     this.sequence += 1;
     return id;
+  }
+}
+
+function nextScheduledRunOrThrow(cronExpression: string, nowIsoValue: string): string {
+  try {
+    return computeNextCronRun(cronExpression, new Date(nowIsoValue));
+  } catch (error) {
+    throw createKnownError("VALIDATION_INVALID_REQUEST", {
+      field: "cronExpression",
+      message: error instanceof Error ? error.message : String(error)
+    });
   }
 }

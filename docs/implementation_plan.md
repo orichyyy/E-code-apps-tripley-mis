@@ -640,4 +640,15 @@ The worker runtime wiring slice completed the following:
 - Updated `main.ts` so process shutdown stops the runtime and closes owned database resources.
 - Added worker bootstrap coverage proving a durable queue job is processed into persisted in-app notification records.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. Additional production task catalogs, cron expression evaluation, timeout enforcement, dead-letter workflows, real outbound webhook delivery, SMS sending, S3-compatible storage, Redis, and RabbitMQ remain reserved or optional until their concrete contracts are confirmed.
+## Worker Queue and Scheduler Hardening Progress
+
+The worker hardening slice completed the following:
+
+- Added standard five-field cron expression evaluation for database-backed scheduled jobs and shared it with the infrastructure scheduled-task API.
+- Updated scheduled-task creation, update, enablement, and worker registration so `next_run_at` is computed from the cron expression instead of forcing immediate repeated execution.
+- Added database queue retry defaults using `attempt`, `max_attempts`, and `next_run_at`, with exhausted jobs moved to the existing `dead_letter` status.
+- Added stale running queue-job recovery using the stored lock timestamp and a bounded running timeout.
+- Added scheduler execution claiming with a bounded lease, retry delay handling for failed executions, max-attempt exhaustion per scheduled occurrence, and execution log writes to `log_entries` with `log_type = 'scheduler'`.
+- Added adapter coverage for cron calculation, queue retry/dead-letter status, stale running queue recovery, scheduled success next-run advancement, scheduled failure retry exhaustion, and scheduler execution logs.
+
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. Additional production task catalogs, real outbound webhook delivery, SMS sending, S3-compatible storage, Redis, and RabbitMQ remain reserved or optional until their concrete contracts are confirmed.

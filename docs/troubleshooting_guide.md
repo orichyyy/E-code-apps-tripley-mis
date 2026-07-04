@@ -46,6 +46,10 @@ SMTP sending is disabled unless `SMTP_ENABLED=true`. When enabled, `SMTP_HOST` a
 
 The worker uses `DATABASE_DIALECT` and `DATABASE_URL` to connect to the durable queue and scheduler tables. Run migrations first, then set `WORKER_POLL_INTERVAL_MS` to a positive value for continuous polling. With the default `0`, jobs are processed only when `runOnce()` is called by tests or embedding code.
 
+If a queued job does not run, inspect `queue_jobs.status`, `attempt`, `max_attempts`, `next_run_at`, `locked_by`, `locked_at`, and `last_error`. Jobs left in `running` beyond the worker timeout are recovered on the next poll; jobs that exhaust attempts use the existing `dead_letter` status.
+
+If a scheduled task runs too often or not at all, inspect `scheduled_jobs.cron_expression`, `next_run_at`, `attempt`, `max_attempts`, and `last_error`, then check `log_entries` where `log_type = 'scheduler'` for execution results.
+
 ## Infrastructure API Returns Placeholder Data In The Frontend
 
 The frontend calls real APIs for modules whose backend routes are implemented. It falls back to typed placeholder data when:

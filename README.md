@@ -27,7 +27,7 @@ pnpm build
 
 Set `BACKEND_CORE_STORE=database` with `DATABASE_URL` to run DB-backed backend-core persistence, infrastructure services, and system-management services. PostgreSQL remains the supported deployment database; SQLite remains usable for local/demo compatibility.
 
-The worker uses the same `DATABASE_DIALECT` and `DATABASE_URL` settings for durable queue and scheduler processing. Set `WORKER_POLL_INTERVAL_MS` to a positive value to poll continuously; the default `0` keeps polling disabled for explicit `runOnce()` execution and tests.
+The worker uses the same `DATABASE_DIALECT` and `DATABASE_URL` settings for durable queue and scheduler processing. Set `WORKER_POLL_INTERVAL_MS` to a positive value to poll continuously; the default `0` keeps polling disabled for explicit `runOnce()` execution and tests. Database queue jobs use stored attempts, delayed retry, stale-running recovery, and the existing `dead_letter` status when attempts are exhausted. Scheduled jobs use standard five-field cron expressions, compute `next_run_at`, and write scheduler execution logs.
 
 Local file storage uses `FILE_STORAGE_ROOT` when provided and falls back to `.web-admin-storage`. Uploads enforce the default 50 MB single-file limit, configurable with `FILE_MAX_SIZE_BYTES`, and the confirmed base whitelist.
 

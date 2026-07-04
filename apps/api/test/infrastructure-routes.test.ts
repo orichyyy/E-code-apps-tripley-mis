@@ -166,6 +166,28 @@ describe("infrastructure routes", () => {
       })
     ]);
   });
+
+  it("rejects invalid scheduled-task cron expressions as validation errors", async () => {
+    const app = createApp();
+    await initialize(app);
+    const headers = await loginHeaders(app);
+
+    const response = await app.request("/api/scheduled-tasks", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        code: "invalid-cron",
+        cronExpression: "not-a-cron",
+        handlerType: "cleanup",
+        payload: {},
+        enabled: true
+      })
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toEqual(expect.objectContaining({ code: "VALIDATION_INVALID_REQUEST" }));
+  });
 });
 
 async function initialize(app: ReturnType<typeof createApp>): Promise<void> {

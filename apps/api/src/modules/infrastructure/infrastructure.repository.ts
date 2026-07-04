@@ -1,4 +1,5 @@
 import {
+  computeNextCronRun,
   jsonParam,
   nowIso,
   readJson,
@@ -7,6 +8,7 @@ import {
 } from "@web-admin-base/adapters";
 import { loadDatabaseConfig } from "@web-admin-base/db";
 
+import { createKnownError } from "../../core/errors/error-codes";
 import {
   createPostgresqlInfrastructureExecutor,
   createSqliteInfrastructureExecutor
@@ -299,7 +301,7 @@ export class InfrastructureRepository {
         input.handlerType,
         jsonParam(input.payload, this.executor.dialect),
         input.enabled ? "enabled" : "disabled",
-        now,
+        input.enabled ? nextScheduledRunOrThrow(input.cronExpression, now) : null,
         now,
         now
       ]
@@ -311,15 +313,17 @@ export class InfrastructureRepository {
     const current = (await this.listScheduledTasks()).find((task) => task.id === id);
     if (!current) return null;
     const next = { ...current, ...input };
+    const now = nowIso();
     await this.executor.run(
-      `UPDATE scheduled_jobs SET code = ${this.p(1)}, cron_expression = ${this.p(2)}, handler_type = ${this.p(3)}, payload_json = ${this.p(4)}, status = ${this.p(5)}, updated_at = ${this.p(6)} WHERE id = ${this.p(7)}`,
+      `UPDATE scheduled_jobs SET code = ${this.p(1)}, cron_expression = ${this.p(2)}, handler_type = ${this.p(3)}, payload_json = ${this.p(4)}, status = ${this.p(5)}, next_run_at = ${this.p(6)}, updated_at = ${this.p(7)} WHERE id = ${this.p(8)}`,
       [
         next.code,
         next.cronExpression,
         next.handlerType,
         jsonParam(next.payload, this.executor.dialect),
         next.enabled ? "enabled" : "disabled",
-        nowIso(),
+        next.enabled ? nextScheduledRunOrThrow(next.cronExpression, now) : null,
+        now,
         id
       ]
     );
@@ -327,9 +331,17 @@ export class InfrastructureRepository {
   }
 
   async setScheduledTaskStatus(id: string, enabled: boolean) {
+    const current = (await this.listScheduledTasks()).find((task) => task.id === id);
+    if (!current) return null;
+    const now = nowIso();
     await this.executor.run(
-      `UPDATE scheduled_jobs SET status = ${this.p(1)}, updated_at = ${this.p(2)} WHERE id = ${this.p(3)}`,
-      [enabled ? "enabled" : "disabled", nowIso(), id]
+      `UPDATE scheduled_jobs SET status = ${this.p(1)}, next_run_at = ${this.p(2)}, updated_at = ${this.p(3)} WHERE id = ${this.p(4)}`,
+      [
+        enabled ? "enabled" : "disabled",
+        enabled ? nextScheduledRunOrThrow(current.cronExpression, now) : null,
+        now,
+        id
+      ]
     );
     return (await this.listScheduledTasks()).find((task) => task.id === id) ?? null;
   }
@@ -459,4 +471,15 @@ function nullableString(value: unknown): string | null {
 
 function nullableId(value: unknown): string | null {
   return value === null || value === undefined ? null : String(value);
+}
+
+function nextScheduledRunOrThrow(cronExpression: string, nowIsoValue: string): string {
+  try {
+    return computeNextCronRun(cronExpression, new Date(nowIsoValue));
+  } catch (error) {
+    throw createKnownError("VALIDATION_INVALID_REQUEST", {
+      field: "cronExpression",
+      message: error instanceof Error ? error.message : String(error)
+    });
+  }
 }

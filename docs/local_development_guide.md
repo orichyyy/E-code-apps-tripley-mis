@@ -53,6 +53,7 @@ pnpm dev:worker
 ```
 
 `WORKER_POLL_INTERVAL_MS=0` disables continuous polling and is useful for tests or one-shot `runOnce()` usage.
+Scheduled jobs use standard five-field cron expressions and persist their computed `next_run_at` values in the configured local database. Queue retries and stale-running recovery also use the durable `queue_jobs` table, so run migrations before starting the worker.
 
 For PostgreSQL integration testing, set `TEST_DATABASE_URL` before running `pnpm test`.
 
