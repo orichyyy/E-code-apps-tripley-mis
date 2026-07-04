@@ -24,4 +24,4 @@ Implemented sync endpoints:
 - `POST /api/permissions/api/sync`
 - `POST /api/routes/sync`
 
-The durable DB-backed sync path remains a known gap until database provisioning is confirmed.
+When `BACKEND_CORE_STORE=database` is enabled, these sync endpoints persist through the DB-backed repositories. The default in-memory mode remains process-local and is intended for focused tests and non-persistent demos.

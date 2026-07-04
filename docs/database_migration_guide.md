@@ -7,9 +7,11 @@
 ```text
 packages/db/src/schema/sqlite.ts
 packages/db/src/schema/postgresql.ts
-packages/db/src/migrations/sqlite/0001_backend_core_foundation.sql
-packages/db/src/migrations/postgresql/0001_backend_core_foundation.sql
+packages/db/src/migrations/sqlite/
+packages/db/src/migrations/postgresql/
 ```
+
+Both migration directories currently contain the same ordered base-system slices, from `0001_backend_core_foundation.sql` through `0007_user_preferences.sql`.
 
 No SQL Server v1 schema or migration code is present.
 

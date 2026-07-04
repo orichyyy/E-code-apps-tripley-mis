@@ -700,3 +700,15 @@ The infrastructure OpenAPI coverage slice completed the following:
 - Kept explicitly flexible fields such as `metadata`, scheduled-task `payload`, import/export `errorPreview`, and email template variables as open object/map structures.
 - Added OpenAPI tests that require infrastructure list responses to reference concrete item schemas and verify those item schemas define required fields with `additionalProperties: false`.
 - Updated `docs/known_gaps.md` to remove the infrastructure broad-item response schema debt.
+
+## Local Run Documentation Hardening Progress
+
+The local run documentation slice completed the following:
+
+- Expanded `.env.example` with the currently used DB-backed runtime, worker, file-storage, SMTP, seed, and PostgreSQL test variables.
+- Added a concise persistent SQLite local run path to `README.md` and `docs/local_development_guide.md`.
+- Clarified that the runtime reads process environment variables directly and that `.env.example` is a checklist, not an automatically loaded file.
+- Updated deployment guidance with the PostgreSQL migration/build/start order and the static SPA serving requirement.
+- Updated the database migration guide to describe the current ordered migration directories instead of only the original `0001` migration.
+- Corrected the permission extension guide to reflect that DB-backed permission and route sync endpoints now persist when `BACKEND_CORE_STORE=database`.
+- Reclassified the remaining OpenAPI flexible-map note in `docs/known_gaps.md` as a schema boundary rather than documentation debt.

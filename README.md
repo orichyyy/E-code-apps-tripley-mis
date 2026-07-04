@@ -23,6 +23,19 @@ pnpm db:migrate
 pnpm build
 ```
 
+For a persistent local SQLite run, use `.env.example` as the variable checklist and set the variables in the shell that starts the processes:
+
+```powershell
+$env:BACKEND_CORE_STORE = "database"
+$env:DATABASE_DIALECT = "sqlite"
+$env:DATABASE_URL = "file:./data/web-admin-base.sqlite"
+$env:FILE_STORAGE_ROOT = "./data/files"
+$env:WEB_ADMIN_SEED_ADMIN_PASSWORD = "change-me-local-1"
+pnpm db:migrate
+pnpm seed
+pnpm dev
+```
+
 `pnpm db:migrate` runs SQLite migrations with `better-sqlite3` by default. PostgreSQL migrations run when `TEST_DATABASE_URL` or `DATABASE_URL` is provided; `pnpm db:migrate:postgresql` requires one of those variables.
 
 Set `BACKEND_CORE_STORE=database` with `DATABASE_URL` to run DB-backed backend-core persistence, infrastructure services, and system-management services. PostgreSQL remains the supported deployment database; SQLite remains usable for local/demo compatibility.

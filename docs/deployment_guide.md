@@ -16,6 +16,20 @@ The design supports SQLite for local/demo usage and PostgreSQL for supported dep
 
 The worker uses `DATABASE_DIALECT` and `DATABASE_URL` to create database-backed queue and scheduler adapters. In production, run migrations before starting both API and worker processes.
 
+Minimal deployment order:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm db:migrate:postgresql
+pnpm build
+pnpm --filter @web-admin-base/api start
+pnpm --filter @web-admin-base/worker start
+```
+
+Serve the built SPA from `apps/web/dist` with the deployment platform or a static web server.
+
+Required production environment variables include `BACKEND_CORE_STORE=database`, `DATABASE_DIALECT=postgresql`, `DATABASE_URL`, `JWT_SECRET`, and a positive `WORKER_POLL_INTERVAL_MS` for continuous worker polling.
+
 File upload/download works with local filesystem storage through `FILE_STORAGE_ROOT`. In multi-server deployments this path must be a shared mounted directory if local storage is used; S3-compatible storage remains the recommended production direction once its concrete client/configuration contract is implemented.
 
 SMTP email sending is optional and disabled by default. To enable it, configure `SMTP_ENABLED=true`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, optional `SMTP_USERNAME`/`SMTP_PASSWORD`, and `SMTP_FROM`. Redis, RabbitMQ, S3-compatible storage, and real outbound webhook delivery integrations remain optional placeholders unless explicitly configured in a future slice.
