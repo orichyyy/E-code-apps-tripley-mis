@@ -1,4 +1,5 @@
 import type { OpenApiDocument, OpenApiSchema } from "./types";
+import { backendCoreComponentSchemas } from "./backend-core-schemas";
 import { communicationsComponentSchemas } from "./communications-schemas";
 import { systemManagementComponentSchemas } from "./system-management-schemas";
 
@@ -171,6 +172,7 @@ const effectiveUserPermissionOverrideSchema: OpenApiSchema = {
 export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
   ErrorResponse: errorSchema,
   IdString: idStringSchema,
+  ...backendCoreComponentSchemas,
   InitializationSetupRequest: {
     type: "object",
     required: [

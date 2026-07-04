@@ -119,6 +119,48 @@ describe("OpenAPI document generation", () => {
       }
     });
   });
+
+  it("maps backend-core API responses to named OpenAPI component schemas", () => {
+    const document = createOpenApiDocument();
+    const backendCoreModules = new Set([
+      "initialization",
+      "auth",
+      "organizations",
+      "users",
+      "roles",
+      "permissions",
+      "routes",
+      "menus"
+    ]);
+
+    const backendCoreOperations = baseApiPermissionManifest.filter((entry) =>
+      backendCoreModules.has(entry.module)
+    );
+
+    expect(backendCoreOperations.length).toBeGreaterThan(0);
+    for (const entry of backendCoreOperations) {
+      const path = toOpenApiTestPath(entry.path).replace(/^\/api/, "");
+      const method = entry.method.toLowerCase() as keyof NonNullable<typeof document.paths[string]>;
+      const responseSchema = document.paths[path]?.[method]?.responses["200"]?.content?.["application/json"]?.schema;
+
+      expect(responseSchema, `${entry.code} should use a named response schema`).toMatchObject({
+        $ref: expect.stringMatching(/^#\/components\/schemas\/.+Response$/)
+      });
+    }
+  });
+
+  it("keeps mapped response schema references resolvable", () => {
+    const document = createOpenApiDocument();
+
+    for (const methods of Object.values(document.paths)) {
+      for (const operation of Object.values(methods)) {
+        const schema = operation?.responses["200"]?.content?.["application/json"]?.schema;
+        const schemaName = schema?.$ref?.replace("#/components/schemas/", "");
+        if (!schemaName) continue;
+        expect(document.components.schemas[schemaName], `${schemaName} should exist`).toBeDefined();
+      }
+    }
+  });
 });
 
 function toOpenApiTestPath(path: string) {

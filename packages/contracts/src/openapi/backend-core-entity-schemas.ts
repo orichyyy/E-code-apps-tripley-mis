@@ -1,0 +1,206 @@
+import type { OpenApiDocument, OpenApiSchema } from "./types";
+import {
+  actorAuditProperties,
+  dateTimeSchema,
+  enumSchema,
+  idSchema,
+  nullableDateTimeSchema,
+  nullableIdSchema,
+  nullableStringSchema,
+  softDeleteProperties
+} from "./backend-core-schema-helpers";
+
+const coreAuditProperties: Record<string, OpenApiSchema> = {
+  createdAt: dateTimeSchema,
+  updatedAt: dateTimeSchema
+};
+
+export const backendCoreEntitySchemas: OpenApiDocument["components"]["schemas"] = {
+  InitializationState: {
+    type: "object",
+    required: ["id", "tenantId", "status", "initializedAt", "initializedBy", "version", "createdAt", "updatedAt"],
+    properties: {
+      id: idSchema,
+      tenantId: nullableIdSchema,
+      status: enumSchema(["uninitialized", "initialized"]),
+      initializedAt: nullableDateTimeSchema,
+      initializedBy: nullableIdSchema,
+      version: { type: "string" },
+      ...coreAuditProperties
+    },
+    additionalProperties: false
+  },
+  Organization: {
+    type: "object",
+    required: ["id", "tenantId", "path", "level", "segment", "name", "code", "status", "isDeleted", "createdAt", "updatedAt"],
+    properties: {
+      id: idSchema,
+      tenantId: nullableIdSchema,
+      path: { type: "string" },
+      level: { type: "integer" },
+      segment: { type: "integer" },
+      name: { type: "string" },
+      code: { type: "string" },
+      managerUserId: nullableIdSchema,
+      phone: nullableStringSchema,
+      email: nullableStringSchema,
+      address: nullableStringSchema,
+      sortOrder: { type: "integer" },
+      status: enumSchema(["enabled", "disabled"]),
+      remark: nullableStringSchema,
+      ...softDeleteProperties,
+      ...actorAuditProperties
+    },
+    additionalProperties: false
+  },
+  OrganizationTreeNode: {
+    type: "object",
+    required: ["id", "path", "level", "segment", "name", "code", "status", "children"],
+    properties: {
+      id: idSchema,
+      tenantId: nullableIdSchema,
+      path: { type: "string" },
+      level: { type: "integer" },
+      segment: { type: "integer" },
+      name: { type: "string" },
+      code: { type: "string" },
+      status: enumSchema(["enabled", "disabled"]),
+      children: { type: "array", items: { $ref: "#/components/schemas/OrganizationTreeNode" } }
+    },
+    additionalProperties: true
+  },
+  User: {
+    type: "object",
+    required: ["id", "tenantId", "username", "displayName", "email", "phone", "primaryOrganizationId", "status", "isDeleted", "createdAt", "updatedAt"],
+    properties: {
+      id: idSchema,
+      tenantId: nullableIdSchema,
+      username: { type: "string" },
+      displayName: { type: "string" },
+      email: { type: "string" },
+      phone: { type: "string" },
+      avatarFileId: nullableIdSchema,
+      gender: nullableStringSchema,
+      employeeNumber: nullableStringSchema,
+      primaryOrganizationId: idSchema,
+      status: enumSchema(["enabled", "disabled", "locked"]),
+      firstLoginPasswordChangeRequired: { type: "boolean" },
+      passwordChangedAt: nullableDateTimeSchema,
+      passwordExpiresAt: nullableDateTimeSchema,
+      failedLoginAttempts: { type: "integer" },
+      lockedUntil: nullableDateTimeSchema,
+      tokenVersion: { type: "integer" },
+      lastLoginAt: nullableDateTimeSchema,
+      remark: nullableStringSchema,
+      ...softDeleteProperties,
+      ...actorAuditProperties
+    },
+    additionalProperties: false
+  },
+  AuthSession: {
+    type: "object",
+    required: ["id", "tenantId", "userId", "currentOrganizationId", "status", "expiresAt", "createdAt", "lastSeenAt"],
+    properties: {
+      id: idSchema,
+      tenantId: nullableIdSchema,
+      userId: idSchema,
+      currentOrganizationId: idSchema,
+      status: enumSchema(["active", "revoked", "expired"]),
+      ipAddress: nullableStringSchema,
+      userAgent: nullableStringSchema,
+      expiresAt: dateTimeSchema,
+      revokedAt: nullableDateTimeSchema,
+      createdAt: dateTimeSchema,
+      lastSeenAt: dateTimeSchema
+    },
+    additionalProperties: false
+  },
+  UserOrganizationRole: {
+    type: "object",
+    required: ["id", "tenantId", "userId", "organizationId", "roleId", "isPrimary", "status", "isDeleted", "createdAt", "updatedAt"],
+    properties: {
+      id: idSchema,
+      tenantId: nullableIdSchema,
+      userId: idSchema,
+      organizationId: idSchema,
+      roleId: idSchema,
+      isPrimary: { type: "boolean" },
+      status: enumSchema(["enabled", "disabled"]),
+      ...softDeleteProperties,
+      ...actorAuditProperties
+    },
+    additionalProperties: false
+  },
+  Role: {
+    type: "object",
+    required: ["id", "tenantId", "name", "code", "isBuiltin", "status", "isDeleted", "createdAt", "updatedAt"],
+    properties: {
+      id: idSchema,
+      tenantId: nullableIdSchema,
+      name: { type: "string" },
+      code: { type: "string" },
+      description: nullableStringSchema,
+      dataScopeRuleId: nullableIdSchema,
+      isBuiltin: { type: "boolean" },
+      status: enumSchema(["enabled", "disabled"]),
+      remark: nullableStringSchema,
+      ...softDeleteProperties,
+      ...actorAuditProperties
+    },
+    additionalProperties: false
+  },
+  Permission: {
+    type: "object",
+    required: ["id", "tenantId", "code", "name", "permissionType", "resource", "action", "module", "source", "manifestHash", "status", "createdAt", "updatedAt"],
+    properties: {
+      id: idSchema,
+      tenantId: nullableIdSchema,
+      code: { type: "string" },
+      name: { type: "string" },
+      permissionType: enumSchema(["menu", "page", "action", "api", "data", "field"]),
+      resource: { type: "string" },
+      action: { type: "string" },
+      description: nullableStringSchema,
+      module: { type: "string" },
+      source: { type: "string" },
+      manifestHash: { type: "string" },
+      status: enumSchema(["enabled", "disabled"]),
+      ...coreAuditProperties
+    },
+    additionalProperties: false
+  },
+  ApiPermission: {
+    type: "object",
+    required: ["id", "tenantId", "method", "path", "code", "module", "logLevel", "status", "public", "createdAt", "updatedAt"],
+    properties: {
+      id: idSchema,
+      tenantId: nullableIdSchema,
+      method: { type: "string" },
+      path: { type: "string" },
+      code: { type: "string" },
+      description: nullableStringSchema,
+      module: { type: "string" },
+      requiredPermission: nullableStringSchema,
+      logLevel: enumSchema(["none", "basic", "request", "request_response"]),
+      status: enumSchema(["enabled", "disabled"]),
+      public: { type: "boolean" },
+      ...coreAuditProperties
+    },
+    additionalProperties: false
+  },
+  PermissionTreeNode: {
+    type: "object",
+    required: ["key", "label", "level", "module", "permissions", "children"],
+    properties: {
+      key: { type: "string" },
+      label: { type: "string" },
+      level: enumSchema(["module", "resource", "action"]),
+      module: { type: "string" },
+      resource: { type: "string" },
+      action: { type: "string" },
+      permissions: { type: "array", items: { $ref: "#/components/schemas/Permission" } },
+      children: { type: "array", items: { $ref: "#/components/schemas/PermissionTreeNode" } }
+    },
+    additionalProperties: false
+  }
+};

@@ -29,5 +29,5 @@ This file records incomplete, reserved, or environment-dependent work that must 
 
 ## Documentation and Schema Coverage Debt
 
-- OpenAPI request/response schemas are explicit for newer permission-extension, infrastructure, system-management, communication, file, profile, and SMTP test-send APIs. Some older backend-core endpoints still use the generic success envelope unless they have already been mapped.
+- OpenAPI response schemas are now mapped for backend-core, permission-extension, infrastructure, system-management, communication, file, profile, and SMTP test-send APIs. Some infrastructure response item schemas intentionally remain broad object schemas until those module contracts are narrowed further.
 - Documentation should continue to distinguish optional integrations from completed default runtime behavior when new drivers are added.

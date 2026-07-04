@@ -680,3 +680,13 @@ The verification hardening slice completed the following:
 - Reworked `docs/known_gaps.md` so it records only validation prerequisites, explicit implementation boundaries, reserved optional integrations, and remaining documentation/schema coverage debt.
 
 The system remains free of example business modules and SQL Server runtime/migration support. Remaining optional integrations and unconfirmed contracts are tracked in `docs/known_gaps.md`.
+
+## Backend-Core OpenAPI Response Schema Progress
+
+The backend-core OpenAPI coverage slice completed the following:
+
+- Added focused backend-core OpenAPI schema modules for shared helpers, core entities, and response envelopes instead of expanding the existing large generic schema file.
+- Added named response schemas for initialization, auth/session context, organization, user, user-organization-role binding, role, role permissions, permission metadata, API permission metadata, route metadata, menus, and menu/API bindings.
+- Mapped older backend-core operation codes to named OpenAPI response components so those endpoints no longer fall back to the generic response envelope.
+- Added OpenAPI tests that require backend-core API responses to use named component schemas and verify mapped response references resolve to existing components.
+- Updated `docs/known_gaps.md` to remove the old backend-core generic-envelope gap.
