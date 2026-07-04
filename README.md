@@ -36,6 +36,8 @@ pnpm seed
 pnpm dev
 ```
 
+Relative SQLite paths in root `pnpm` scripts resolve from the original command directory, so run the local commands from the repository root.
+
 `pnpm db:migrate` runs SQLite migrations with `better-sqlite3` by default. PostgreSQL migrations run when `TEST_DATABASE_URL` or `DATABASE_URL` is provided; `pnpm db:migrate:postgresql` requires one of those variables.
 
 Set `BACKEND_CORE_STORE=database` with `DATABASE_URL` to run DB-backed backend-core persistence, infrastructure services, and system-management services. PostgreSQL remains the supported deployment database; SQLite remains usable for local/demo compatibility.

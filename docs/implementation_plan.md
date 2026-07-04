@@ -712,3 +712,14 @@ The local run documentation slice completed the following:
 - Updated the database migration guide to describe the current ordered migration directories instead of only the original `0001` migration.
 - Corrected the permission extension guide to reflect that DB-backed permission and route sync endpoints now persist when `BACKEND_CORE_STORE=database`.
 - Reclassified the remaining OpenAPI flexible-map note in `docs/known_gaps.md` as a schema boundary rather than documentation debt.
+
+## Local End-to-End Smoke Progress
+
+The local smoke slice completed the following:
+
+- Ran a DB-backed SQLite migration and seed flow against `data/smoke-e2e.sqlite`.
+- Fixed relative SQLite file URL resolution so root `pnpm` migration, API, seed, and worker commands resolve the same local database through the original command directory.
+- Added Vite dev-server `/api` proxy support through `VITE_API_PROXY_TARGET` and `WEB_PORT`.
+- Replaced the frontend demo login/password-change stubs with real backend API calls.
+- Updated frontend generic management-page endpoint mapping for users, organizations, roles, permissions, menus, and scheduler logs.
+- Verified live API, live Vite web server, Vite `/api` proxy, login context, OpenAPI, core management APIs, files, announcements, webhooks, logs, scheduled tasks, and import/export task list over HTTP.

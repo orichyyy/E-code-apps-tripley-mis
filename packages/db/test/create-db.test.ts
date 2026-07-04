@@ -1,6 +1,9 @@
+import { join, resolve } from "node:path";
+import { tmpdir } from "node:os";
+
 import { describe, expect, it } from "vitest";
 
-import { createDatabase, createDefaultDatabase } from "../src";
+import { createDatabase, createDefaultDatabase, getSqliteFilename } from "../src";
 
 describe("createDatabase", () => {
   it("requires a configured factory for the selected dialect", () => {
@@ -23,5 +26,14 @@ describe("createDatabase", () => {
 
     expect(handle.dialect).toBe("sqlite");
     expect(handle.client).toBeDefined();
+  });
+
+  it("resolves relative SQLite file URLs from the original command directory", () => {
+    const baseDirectory = join(tmpdir(), "web-admin-base-sqlite-base");
+
+    expect(getSqliteFilename("file:./data/web-admin-base.sqlite", baseDirectory)).toBe(
+      resolve(baseDirectory, "data", "web-admin-base.sqlite")
+    );
+    expect(getSqliteFilename(":memory:", baseDirectory)).toBe(":memory:");
   });
 });

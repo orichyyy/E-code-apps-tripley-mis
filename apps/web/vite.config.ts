@@ -2,8 +2,20 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
+const apiProxyTarget = process.env.VITE_API_PROXY_TARGET ?? `http://localhost:${process.env.API_PORT ?? "3000"}`;
+const webPort = Number(process.env.WEB_PORT ?? "5173");
+
 export default defineConfig({
   plugins: [react(), tsconfigPaths()],
+  server: {
+    port: webPort,
+    proxy: {
+      "/api": {
+        target: apiProxyTarget,
+        changeOrigin: true
+      }
+    }
+  },
   build: {
     rollupOptions: {
       output: {

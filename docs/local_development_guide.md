@@ -32,6 +32,7 @@ pnpm build
 `pnpm db:migrate` runs local SQLite migrations using `better-sqlite3`. Set `TEST_DATABASE_URL` or `DATABASE_URL` to run PostgreSQL migrations as part of the same command; `pnpm db:migrate:postgresql` requires one of those variables.
 
 For a persistent DB-backed local SQLite run, set variables in the shell that starts the apps. `.env.example` is a reference checklist; the current runtime reads process environment variables directly.
+When using root `pnpm` scripts, relative SQLite paths such as `file:./data/web-admin-base.sqlite` resolve from the original command directory, so run the commands from the repository root.
 
 ```powershell
 $env:BACKEND_CORE_STORE = "database"
@@ -39,6 +40,7 @@ $env:DATABASE_DIALECT = "sqlite"
 $env:DATABASE_URL = "file:./data/web-admin-base.sqlite"
 $env:FILE_STORAGE_ROOT = "./data/files"
 $env:FILE_MAX_SIZE_BYTES = "52428800"
+$env:VITE_API_PROXY_TARGET = "http://localhost:3000"
 $env:WEB_ADMIN_SEED_ADMIN_PASSWORD = "change-me-local-1"
 pnpm db:migrate
 pnpm seed

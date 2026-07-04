@@ -115,13 +115,15 @@ function PasswordChangeForm({ forced = false }: { forced?: boolean }) {
   const navigate = useNavigate();
   const language = useLayoutStore((state) => state.language);
   const markPasswordChanged = useAuthStore((state) => state.markPasswordChanged);
+  const signOut = useAuthStore((state) => state.signOut);
   const form = useForm({
     defaultValues: { oldPassword: "", newPassword: "" },
     validators: { onSubmit: passwordSchema },
-    onSubmit: async () => {
-      await changeOwnPassword();
+    onSubmit: async ({ value }) => {
+      await changeOwnPassword(value);
       markPasswordChanged();
-      await navigate({ to: forced ? "/" : "/account/profile" });
+      signOut();
+      await navigate({ to: "/login" });
     }
   });
 

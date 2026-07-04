@@ -1,4 +1,4 @@
-import { internalApiClient, stringField, unwrapRecords } from "./api-request";
+import { internalApiClient, requestJson, stringField, unwrapRecords } from "./api-request";
 
 export type ApiMode = "available-api" | "typed-placeholder";
 
@@ -78,6 +78,11 @@ const routeEndpointByCode: Record<string, string> = {
   "operations.online-users": "/online-users",
   "operations.scheduler": "/scheduled-tasks",
   "operations.import-export": "/import-export/tasks",
+  "system.users": "/users",
+  "system.organizations": "/organizations/tree",
+  "system.roles": "/roles",
+  "system.permissions": "/permissions",
+  "system.menus": "/menus/tree",
   "system.config": "/system-config",
   "system.dictionaries": "/dictionary-types",
   "system.i18nMessages": "/i18n/messages",
@@ -155,21 +160,47 @@ function displayName(routeCode: string, record: Record<string, unknown>): string
 }
 
 export async function loginWithPassword(input: { username: string; password: string }) {
-  await new Promise((resolve) => window.setTimeout(resolve, 10));
+  const envelope = await requestJson<{ data: LoginResponseData }>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+  const data = envelope.data;
+  const preferences = isRecord(data.preferences) ? data.preferences : {};
+
   return {
-    accessToken: `local-demo-token-${input.username}`,
+    accessToken: data.accessToken,
     user: {
-      id: "1",
-      username: input.username,
-      displayName: input.username === "admin" ? "Super Administrator" : input.username,
-      language: "en" as const,
-      forcePasswordChange: input.password === "ChangeMe123"
+      id: stringField(data.user.id, ""),
+      username: stringField(data.user.username, input.username),
+      displayName: stringField(data.user.displayName, stringField(data.user.username, input.username)),
+      language: readLanguage(preferences.language),
+      forcePasswordChange: Boolean(data.passwordChangeRequired)
     },
-    permissionCodes: ["*"]
+    permissionCodes: Array.isArray(data.permissionCodes)
+      ? data.permissionCodes.filter((code): code is string => typeof code === "string")
+      : []
   };
 }
 
-export async function changeOwnPassword() {
-  await new Promise((resolve) => window.setTimeout(resolve, 10));
-  return { ok: true };
+export async function changeOwnPassword(input: { oldPassword: string; newPassword: string }) {
+  return requestJson<{ data: unknown }>("/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+type LoginResponseData = {
+  accessToken: string;
+  user: Record<string, unknown>;
+  passwordChangeRequired?: boolean;
+  permissionCodes?: unknown[];
+  preferences?: unknown;
+};
+
+function readLanguage(value: unknown): "en" | "zh" {
+  return value === "zh" ? "zh" : "en";
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

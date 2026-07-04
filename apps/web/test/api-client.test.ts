@@ -39,7 +39,7 @@ import {
   uploadFile
 } from "../src/features/system/file-api";
 import { fetchI18nMessages, updateI18nMessage } from "../src/features/system/i18n-message-api";
-import { fetchPageDataset } from "../src/lib/api-client";
+import { changeOwnPassword, fetchPageDataset, loginWithPassword } from "../src/lib/api-client";
 
 describe("frontend API client", () => {
   afterEach(() => {
@@ -81,6 +81,67 @@ describe("frontend API client", () => {
         source: "available-api"
       })
     ]);
+  });
+
+  it("logs in and changes passwords through the backend API", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url === "/api/auth/login") {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              data: {
+                accessToken: "real-token",
+                user: {
+                  id: "1",
+                  username: "admin",
+                  displayName: "Super Administrator"
+                },
+                permissionCodes: ["user:view", "role:view"],
+                passwordChangeRequired: true,
+                preferences: { language: "zh" }
+              }
+            }),
+            { status: 200, headers: { "content-type": "application/json" } }
+          )
+        );
+      }
+      return Promise.resolve(
+        new Response(JSON.stringify({ data: { ok: true } }), {
+          status: 200,
+          headers: { "content-type": "application/json" }
+        })
+      );
+    });
+
+    const login = await loginWithPassword({ username: "admin", password: "Admin1234" });
+    localStorage.setItem("web-admin.access-token", login.accessToken);
+    await changeOwnPassword({ oldPassword: "Admin1234", newPassword: "Admin5678" });
+
+    expect(login).toEqual({
+      accessToken: "real-token",
+      user: {
+        id: "1",
+        username: "admin",
+        displayName: "Super Administrator",
+        language: "zh",
+        forcePasswordChange: true
+      },
+      permissionCodes: ["user:view", "role:view"]
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username: "admin", password: "Admin1234" }),
+      headers: { "content-type": "application/json" }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ oldPassword: "Admin1234", newPassword: "Admin5678" }),
+      headers: {
+        authorization: "Bearer real-token",
+        "content-type": "application/json"
+      }
+    });
   });
 
   it("loads system configuration pages from the backend API", async () => {

@@ -1,5 +1,5 @@
 import { mkdirSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, resolve } from "node:path";
 
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
@@ -24,12 +24,16 @@ export function createSqliteClient(url: string): Database.Database {
   return client;
 }
 
-export function getSqliteFilename(url: string): string {
+export function getSqliteFilename(
+  url: string,
+  baseDirectory = process.env.INIT_CWD ?? process.cwd()
+): string {
   if (url === ":memory:" || url === "file::memory:") {
     return ":memory:";
   }
 
-  return url.startsWith("file:") ? url.slice("file:".length) : url;
+  const filename = url.startsWith("file:") ? url.slice("file:".length) : url;
+  return isAbsolute(filename) ? filename : resolve(baseDirectory, filename);
 }
 
 function ensureSqliteDirectory(filename: string): void {
