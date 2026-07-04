@@ -8,7 +8,7 @@ The v1 backend runtime target is Node.js only. Bun, Deno, and SQL Server deploym
 
 - Deploy `apps/api` as the Hono API service.
 - Deploy `apps/web` as the Vite-built SPA.
-- Deploy `apps/worker` separately for durable queue and scheduled-task execution. Configure `WORKER_POLL_INTERVAL_MS` with a positive value for continuous polling. Queue retry state, stale-running recovery, scheduled-task cron `next_run_at`, and scheduler execution logs are stored in the deployment database.
+- Deploy `apps/worker` separately for durable queue and scheduled-task execution. Configure `WORKER_POLL_INTERVAL_MS` with a positive value for continuous polling. Queue retry state, stale-running recovery, scheduled-task cron `next_run_at`, and scheduler execution logs are stored in the deployment database. The default worker catalog processes confirmed base tasks: in-app notification dispatch, manual `scheduled.run`, log retention cleanup, local invalid-file cleanup, CSV log export tasks, and import/export result cleanup.
 
 ## Database
 

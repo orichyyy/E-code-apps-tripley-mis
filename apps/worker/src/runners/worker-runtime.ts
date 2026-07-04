@@ -37,6 +37,7 @@ export type WorkerRuntimeDependencies = {
   scheduledTasks?: ScheduledWorkerTask[];
   log?: (message: string) => void;
   pollIntervalMs?: number;
+  unregisterScheduledTasksOnStop?: boolean;
 };
 
 export function createWorkerRuntime(
@@ -85,9 +86,11 @@ export function createWorkerRuntime(
         clearInterval(pollTimer);
         pollTimer = null;
       }
-      for (const task of dependencies.scheduledTasks ?? []) {
-        if (!dependencies.scheduler) continue;
-        await dependencies.scheduler.unregister(task.definition.code);
+      if (dependencies.unregisterScheduledTasksOnStop) {
+        for (const task of dependencies.scheduledTasks ?? []) {
+          if (!dependencies.scheduler) continue;
+          await dependencies.scheduler.unregister(task.definition.code);
+        }
       }
       started = false;
       log(`${config.workerName} stopped`);

@@ -651,4 +651,17 @@ The worker hardening slice completed the following:
 - Added scheduler execution claiming with a bounded lease, retry delay handling for failed executions, max-attempt exhaustion per scheduled occurrence, and execution log writes to `log_entries` with `log_type = 'scheduler'`.
 - Added adapter coverage for cron calculation, queue retry/dead-letter status, stale running queue recovery, scheduled success next-run advancement, scheduled failure retry exhaustion, and scheduler execution logs.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. Additional production task catalogs, real outbound webhook delivery, SMS sending, S3-compatible storage, Redis, and RabbitMQ remain reserved or optional until their concrete contracts are confirmed.
+## Base Worker Task Catalog Progress
+
+The base worker task catalog slice completed the following:
+
+- Added a default worker task catalog that registers confirmed base queue tasks and scheduled tasks at worker startup.
+- Added `scheduled.run` queue handling so manual scheduled task runs execute registered base handlers by scheduled-task id or handler type.
+- Added log retention cleanup using the confirmed default 90-day retention boundary for all implemented log types.
+- Added local invalid-file cleanup through `FileStorageAdapter.delete`, keeping metadata invalid rather than removing historical records.
+- Added CSV log export execution for confirmed `logs:<logType>` import/export tasks. Export results are stored through `FileStorageAdapter`, persisted in `file_objects`, and linked back to `import_export_tasks`.
+- Added import/export result cleanup for expired result/error files using the existing 30-day result retention boundary.
+- Kept unknown import/export resource types from silently succeeding; unsupported resources are marked failed with an error preview instead of inventing business-module handlers.
+- Added worker integration coverage for CSV log export, manual scheduled runs, log retention cleanup, invalid file cleanup, result cleanup, and default task registration.
+
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. Future business-module task catalogs, real outbound webhook delivery, SMS sending, S3-compatible storage, Redis, and RabbitMQ remain reserved or optional until their concrete contracts are confirmed.

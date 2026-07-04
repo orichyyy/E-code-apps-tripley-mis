@@ -50,6 +50,8 @@ If a queued job does not run, inspect `queue_jobs.status`, `attempt`, `max_attem
 
 If a scheduled task runs too often or not at all, inspect `scheduled_jobs.cron_expression`, `next_run_at`, `attempt`, `max_attempts`, and `last_error`, then check `log_entries` where `log_type = 'scheduler'` for execution results.
 
+If CSV log exports remain pending, confirm the worker is running with the same `DATABASE_URL` and `FILE_STORAGE_ROOT` as the API process. The base worker catalog processes `import_export_tasks` whose `resource_type` is `logs:<logType>` and writes the generated file metadata to `file_objects`.
+
 ## Infrastructure API Returns Placeholder Data In The Frontend
 
 The frontend calls real APIs for modules whose backend routes are implemented. It falls back to typed placeholder data when:

@@ -1,7 +1,8 @@
 import {
   createDatabaseJobSchedulerAdapter,
   createDatabaseQueueAdapter,
-  type DatabaseAdapterExecutor
+  type DatabaseAdapterExecutor,
+  type FileStorageAdapter
 } from "@web-admin-base/adapters";
 
 import type { WorkerConfig } from "./config/load-config";
@@ -9,6 +10,7 @@ import { createWorkerDatabaseExecutor } from "./infra/worker-database-executor";
 import { createWorkerRuntime, type WorkerRuntime } from "./runners/worker-runtime";
 import { createInAppNotificationDispatchTask } from "./tasks/in-app-notification-dispatch";
 import { createDatabaseInAppNotificationDispatchHandler } from "./tasks/in-app-notification-writer";
+import { createBaseWorkerTaskCatalog } from "./tasks/task-catalog";
 
 export type WorkerApplication = {
   runtime: WorkerRuntime;
@@ -18,6 +20,7 @@ export type WorkerApplication = {
 
 export type WorkerApplicationOptions = {
   executor?: DatabaseAdapterExecutor;
+  storage?: FileStorageAdapter;
   log?: (message: string) => void;
 };
 
@@ -29,6 +32,7 @@ export function createWorkerApplication(
   const ownsExecutor = !options.executor;
   const queue = createDatabaseQueueAdapter(executor, { workerId: config.workerName });
   const scheduler = createDatabaseJobSchedulerAdapter(executor);
+  const catalog = createBaseWorkerTaskCatalog(executor, { storage: options.storage });
   const runtime = createWorkerRuntime(config, {
     queue,
     durableQueue: queue,
@@ -37,8 +41,10 @@ export function createWorkerApplication(
     pollIntervalMs: config.pollIntervalMs,
     log: options.log,
     queueTasks: [
-      createInAppNotificationDispatchTask(createDatabaseInAppNotificationDispatchHandler(executor))
-    ]
+      createInAppNotificationDispatchTask(createDatabaseInAppNotificationDispatchHandler(executor)),
+      ...catalog.queueTasks
+    ],
+    scheduledTasks: catalog.scheduledTasks
   });
 
   return {
