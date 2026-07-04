@@ -665,3 +665,18 @@ The base worker task catalog slice completed the following:
 - Added worker integration coverage for CSV log export, manual scheduled runs, log retention cleanup, invalid file cleanup, result cleanup, and default task registration.
 
 Remaining base-system gaps are tracked in `docs/known_gaps.md`. Future business-module task catalogs, real outbound webhook delivery, SMS sending, S3-compatible storage, Redis, and RabbitMQ remain reserved or optional until their concrete contracts are confirmed.
+
+## Final Consistency Hardening Progress
+
+The verification hardening slice completed the following:
+
+- Restored the PostgreSQL verification path using the externally provided `TEST_DATABASE_URL`.
+- Fixed database queue timestamp parameter binding for PostgreSQL by casting timestamp placeholders to `timestamptz` while keeping SQLite placeholder behavior unchanged.
+- Confirmed PostgreSQL migrations apply through `pnpm db:migrate:postgresql`.
+- Confirmed SQLite and PostgreSQL migrations apply through `pnpm db:migrate`.
+- Stabilized frontend app tests by unmounting rendered React trees before resetting shared Zustand state and by returning fresh mocked `Response` objects for repeated API calls.
+- Removed the React `act(...)` warning noise from the frontend app test run.
+- Added Vite manual vendor chunking for React, TanStack, icon, and shared vendor dependencies so the frontend production build no longer emits the single large chunk warning.
+- Reworked `docs/known_gaps.md` so it records only validation prerequisites, explicit implementation boundaries, reserved optional integrations, and remaining documentation/schema coverage debt.
+
+The system remains free of example business modules and SQL Server runtime/migration support. Remaining optional integrations and unconfirmed contracts are tracked in `docs/known_gaps.md`.

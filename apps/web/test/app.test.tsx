@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "../src/app/App";
@@ -8,16 +8,19 @@ import { useLayoutStore } from "../src/stores/layout.store";
 
 describe("web admin frontend", () => {
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
     queryClient.clear();
-    useAuthStore.getState().signOut();
-    useLayoutStore.setState({
-      pageTabsEnabled: true,
-      darkModeEnabled: false,
-      fullscreenEnabled: false,
-      themeColor: "blue",
-      openTabs: ["/"],
-      language: "en"
+    act(() => {
+      useAuthStore.getState().signOut();
+      useLayoutStore.setState({
+        pageTabsEnabled: true,
+        darkModeEnabled: false,
+        fullscreenEnabled: false,
+        themeColor: "blue",
+        openTabs: ["/"],
+        language: "en"
+      });
     });
   });
 
@@ -113,9 +116,9 @@ describe("web admin frontend", () => {
 
   it("renders webhook subscriptions without displaying raw secrets", async () => {
     window.history.pushState(null, "", "/notifications/webhooks");
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
+    vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+      Promise.resolve(
+        jsonResponse({
           data: [
             {
               id: "31",
@@ -129,8 +132,7 @@ describe("web admin frontend", () => {
               updatedAt: "2026-07-03T00:00:00.000Z"
             }
           ]
-        }),
-        { status: 200, headers: { "content-type": "application/json" } }
+        })
       )
     );
     useAuthStore.getState().signIn({
@@ -154,9 +156,9 @@ describe("web admin frontend", () => {
 
   it("renders announcements from the backend API", async () => {
     window.history.pushState(null, "", "/notifications/announcements");
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
+    vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+      Promise.resolve(
+        jsonResponse({
           data: [
             {
               id: "21",
@@ -175,8 +177,7 @@ describe("web admin frontend", () => {
               updatedBy: "1"
             }
           ]
-        }),
-        { status: 200, headers: { "content-type": "application/json" } }
+        })
       )
     );
     useAuthStore.getState().signIn({
@@ -200,9 +201,9 @@ describe("web admin frontend", () => {
 
   it("renders in-app notifications from the backend API", async () => {
     window.history.pushState(null, "", "/notifications/in-app");
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
+    vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+      Promise.resolve(
+        jsonResponse({
           data: [
             {
               id: "61",
@@ -218,8 +219,7 @@ describe("web admin frontend", () => {
               updatedAt: "2026-07-03T00:00:00.000Z"
             }
           ]
-        }),
-        { status: 200, headers: { "content-type": "application/json" } }
+        })
       )
     );
     useAuthStore.getState().signIn({
@@ -244,9 +244,9 @@ describe("web admin frontend", () => {
 
   it("renders notification templates from the backend API", async () => {
     window.history.pushState(null, "", "/notifications/templates");
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
+    vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+      Promise.resolve(
+        jsonResponse({
           data: [
             {
               id: "41",
@@ -261,8 +261,7 @@ describe("web admin frontend", () => {
               updatedAt: "2026-07-03T00:00:00.000Z"
             }
           ]
-        }),
-        { status: 200, headers: { "content-type": "application/json" } }
+        })
       )
     );
     useAuthStore.getState().signIn({
@@ -286,9 +285,9 @@ describe("web admin frontend", () => {
 
   it("renders i18n messages from the backend API", async () => {
     window.history.pushState(null, "", "/system/i18n-messages");
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
+    vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+      Promise.resolve(
+        jsonResponse({
           data: [
             {
               id: "51",
@@ -300,8 +299,7 @@ describe("web admin frontend", () => {
               updatedAt: "2026-07-03T00:00:00.000Z"
             }
           ]
-        }),
-        { status: 200, headers: { "content-type": "application/json" } }
+        })
       )
     );
     useAuthStore.getState().signIn({
@@ -325,9 +323,9 @@ describe("web admin frontend", () => {
 
   it("renders file metadata from the backend API", async () => {
     window.history.pushState(null, "", "/system/files");
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      new Response(
-        JSON.stringify({
+    vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+      Promise.resolve(
+        jsonResponse({
           data: [
             {
               id: "71",
@@ -344,8 +342,7 @@ describe("web admin frontend", () => {
               updatedAt: "2026-07-03T00:00:00.000Z"
             }
           ]
-        }),
-        { status: 200, headers: { "content-type": "application/json" } }
+        })
       )
     );
     useAuthStore.getState().signIn({
@@ -395,4 +392,11 @@ function profileFixture() {
       updatedAt: "2026-07-03T00:00:00.000Z"
     }
   };
+}
+
+function jsonResponse(body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { "content-type": "application/json" }
+  });
 }
