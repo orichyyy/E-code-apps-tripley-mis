@@ -161,6 +161,43 @@ describe("OpenAPI document generation", () => {
       }
     }
   });
+
+  it("documents infrastructure response items with concrete schemas", () => {
+    const document = createOpenApiDocument();
+    const listResponses = [
+      "LogEntryListResponse",
+      "FileObjectListResponse",
+      "FileReferenceListResponse",
+      "NotificationListResponse",
+      "NotificationTemplateListResponse",
+      "ScheduledTaskListResponse",
+      "ImportExportTaskListResponse"
+    ];
+    const itemSchemas = [
+      "LogEntry",
+      "FileObject",
+      "FileReference",
+      "Notification",
+      "NotificationTemplate",
+      "ScheduledTask",
+      "ImportExportTask"
+    ];
+
+    for (const responseName of listResponses) {
+      const responseSchema = document.components.schemas[responseName];
+      expect(responseSchema.properties?.data.items?.$ref, `${responseName} should reference a concrete item`).toMatch(
+        /^#\/components\/schemas\/.+/
+      );
+    }
+
+    for (const schemaName of itemSchemas) {
+      const schema = document.components.schemas[schemaName];
+      expect(schema, `${schemaName} should exist`).toBeDefined();
+      expect(schema.type, `${schemaName} should be an object schema`).toBe("object");
+      expect(schema.required?.length, `${schemaName} should define required fields`).toBeGreaterThan(0);
+      expect(schema.additionalProperties, `${schemaName} should not be a broad object`).toBe(false);
+    }
+  });
 });
 
 function toOpenApiTestPath(path: string) {

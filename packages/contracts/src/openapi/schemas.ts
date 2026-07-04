@@ -1,6 +1,7 @@
 import type { OpenApiDocument, OpenApiSchema } from "./types";
 import { backendCoreComponentSchemas } from "./backend-core-schemas";
 import { communicationsComponentSchemas } from "./communications-schemas";
+import { infrastructureComponentSchemas } from "./infrastructure-schemas";
 import { systemManagementComponentSchemas } from "./system-management-schemas";
 
 export const idStringSchema: OpenApiSchema = {
@@ -607,6 +608,7 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
     $ref: "#/components/schemas/UserPreferences"
   }),
   ...communicationsComponentSchemas,
+  ...infrastructureComponentSchemas,
   ...systemManagementComponentSchemas,
   PermissionContextResponse: envelopeSchema({
     type: "object",
@@ -636,87 +638,6 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       }
     },
     additionalProperties: false
-  }),
-  LogEntryListResponse: envelopeSchema({
-    type: "array",
-    items: { type: "object", additionalProperties: true }
-  }),
-  FileObjectListResponse: envelopeSchema({
-    type: "array",
-    items: { type: "object", additionalProperties: true }
-  }),
-  FileObjectResponse: envelopeSchema({ type: "object", additionalProperties: true, nullable: true }),
-  FileReferenceListResponse: envelopeSchema({
-    type: "array",
-    items: {
-      type: "object",
-      required: ["id", "fileObjectId", "resourceType", "resourceId", "referenceType", "status", "createdAt"],
-      properties: {
-        id: idStringSchema,
-        fileObjectId: idStringSchema,
-        resourceType: { type: "string" },
-        resourceId: { type: "string" },
-        referenceType: { type: "string" },
-        status: { type: "string", enum: ["active", "invalid"] },
-        createdAt: { type: "string", format: "date-time" },
-        createdBy: { ...idStringSchema, nullable: true }
-      },
-      additionalProperties: false
-    }
-  }),
-  NotificationListResponse: envelopeSchema({
-    type: "array",
-    items: { type: "object", additionalProperties: true }
-  }),
-  NotificationStateResponse: envelopeSchema({
-    type: "object",
-    required: ["id", "status"],
-    properties: {
-      id: idStringSchema,
-      status: { type: "string", enum: ["read", "archived", "deleted"] }
-    },
-    additionalProperties: true
-  }),
-  NotificationTemplateListResponse: envelopeSchema({
-    type: "array",
-    items: { type: "object", additionalProperties: true }
-  }),
-  NotificationTemplateResponse: envelopeSchema({
-    type: "object",
-    additionalProperties: true,
-    nullable: true
-  }),
-  EmailNotificationSendResponse: envelopeSchema({
-    type: "object",
-    required: ["channel", "recipient", "templateCode", "locale", "subject", "status", "sentAt"],
-    properties: {
-      channel: { type: "string", enum: ["email"] },
-      recipient: { type: "string", format: "email" },
-      templateCode: { type: "string" },
-      locale: { type: "string" },
-      subject: { type: "string" },
-      status: { type: "string", enum: ["sent"] },
-      sentAt: { type: "string", format: "date-time" }
-    },
-    additionalProperties: false
-  }),
-  ScheduledTaskListResponse: envelopeSchema({
-    type: "array",
-    items: { type: "object", additionalProperties: true }
-  }),
-  ScheduledTaskResponse: envelopeSchema({
-    type: "object",
-    additionalProperties: true,
-    nullable: true
-  }),
-  ImportExportTaskListResponse: envelopeSchema({
-    type: "array",
-    items: { type: "object", additionalProperties: true }
-  }),
-  ImportExportTaskResponse: envelopeSchema({
-    type: "object",
-    additionalProperties: true,
-    nullable: true
   }),
   GenericDataEnvelope: envelopeSchema({ type: "object", additionalProperties: true })
 };

@@ -1,0 +1,185 @@
+import type { OpenApiDocument, OpenApiSchema } from "./types";
+import {
+  arrayEnvelope,
+  dateTimeSchema,
+  enumSchema,
+  envelopeSchema,
+  idSchema,
+  nullableDateTimeSchema,
+  nullableIdSchema,
+  nullableStringSchema,
+  objectEnvelope
+} from "./backend-core-schema-helpers";
+
+const metadataSchema: OpenApiSchema = { type: "object", additionalProperties: true };
+const nullableEntityEnvelope = (schemaRef: string): OpenApiSchema =>
+  envelopeSchema({ anyOf: [{ $ref: `#/components/schemas/${schemaRef}` }, { type: "null" }] });
+
+export const infrastructureComponentSchemas: OpenApiDocument["components"]["schemas"] = {
+  LogEntry: {
+    type: "object",
+    required: ["id", "logType", "level", "message", "traceId", "userId", "ipAddress", "metadata", "occurredAt", "createdAt"],
+    properties: {
+      id: idSchema,
+      logType: enumSchema(["login", "operation", "access", "api_call", "exception", "security", "scheduler", "file_operation"]),
+      level: { type: "string" },
+      message: { type: "string" },
+      traceId: nullableStringSchema,
+      userId: nullableIdSchema,
+      ipAddress: nullableStringSchema,
+      metadata: metadataSchema,
+      occurredAt: dateTimeSchema,
+      createdAt: dateTimeSchema
+    },
+    additionalProperties: false
+  },
+  FileObject: {
+    type: "object",
+    required: ["id", "objectKey", "originalName", "contentType", "extension", "sizeBytes", "storageDriver", "status", "referenced", "isDeleted", "createdAt", "updatedAt"],
+    properties: {
+      id: idSchema,
+      objectKey: { type: "string" },
+      originalName: { type: "string" },
+      contentType: { type: "string" },
+      extension: { type: "string" },
+      sizeBytes: { type: "integer" },
+      storageDriver: { type: "string" },
+      status: enumSchema(["active", "invalid"]),
+      referenced: { type: "boolean" },
+      isDeleted: { type: "boolean" },
+      createdAt: dateTimeSchema,
+      updatedAt: dateTimeSchema,
+      deletedAt: nullableDateTimeSchema,
+      deletedBy: nullableIdSchema
+    },
+    additionalProperties: false
+  },
+  FileReference: {
+    type: "object",
+    required: ["id", "fileObjectId", "resourceType", "resourceId", "referenceType", "status", "createdAt"],
+    properties: {
+      id: idSchema,
+      fileObjectId: idSchema,
+      resourceType: { type: "string" },
+      resourceId: { type: "string" },
+      referenceType: { type: "string" },
+      status: enumSchema(["active", "invalid"]),
+      createdAt: dateTimeSchema,
+      createdBy: nullableIdSchema
+    },
+    additionalProperties: false
+  },
+  Notification: {
+    type: "object",
+    required: ["id", "userId", "channel", "title", "body", "status", "metadata", "readAt", "archivedAt", "createdAt", "updatedAt"],
+    properties: {
+      id: idSchema,
+      userId: nullableIdSchema,
+      channel: enumSchema(["in_app", "email", "sms", "webhook"]),
+      title: { type: "string" },
+      body: { type: "string" },
+      status: enumSchema(["unread", "read", "archived", "deleted"]),
+      metadata: metadataSchema,
+      readAt: nullableDateTimeSchema,
+      archivedAt: nullableDateTimeSchema,
+      createdAt: dateTimeSchema,
+      updatedAt: dateTimeSchema
+    },
+    additionalProperties: false
+  },
+  NotificationTemplate: {
+    type: "object",
+    required: ["id", "code", "channel", "locale", "subject", "body", "variables", "status", "createdAt", "updatedAt"],
+    properties: {
+      id: idSchema,
+      code: { type: "string" },
+      channel: enumSchema(["in_app", "email", "sms"]),
+      locale: { type: "string" },
+      subject: nullableStringSchema,
+      body: { type: "string" },
+      variables: { type: "array", items: { type: "string" } },
+      status: enumSchema(["enabled", "disabled"]),
+      createdAt: dateTimeSchema,
+      updatedAt: dateTimeSchema
+    },
+    additionalProperties: false
+  },
+  ScheduledTask: {
+    type: "object",
+    required: ["id", "code", "cronExpression", "handlerType", "payload", "enabled", "status", "nextRunAt", "attempt", "maxAttempts", "createdAt", "updatedAt"],
+    properties: {
+      id: idSchema,
+      code: { type: "string" },
+      cronExpression: { type: "string" },
+      handlerType: { type: "string" },
+      payload: metadataSchema,
+      enabled: { type: "boolean" },
+      status: enumSchema(["enabled", "disabled"]),
+      lastRunAt: nullableDateTimeSchema,
+      nextRunAt: nullableDateTimeSchema,
+      attempt: { type: "integer" },
+      maxAttempts: { type: "integer" },
+      lastError: nullableStringSchema,
+      createdAt: dateTimeSchema,
+      updatedAt: dateTimeSchema
+    },
+    additionalProperties: false
+  },
+  ImportExportTask: {
+    type: "object",
+    required: ["id", "taskType", "resourceType", "status", "totalRows", "successRows", "failedRows", "errorPreview", "createdAt", "updatedAt"],
+    properties: {
+      id: idSchema,
+      taskType: enumSchema(["import", "export"]),
+      resourceType: { type: "string" },
+      status: enumSchema(["pending", "running", "succeeded", "failed"]),
+      fileObjectId: nullableIdSchema,
+      resultFileObjectId: nullableIdSchema,
+      errorFileObjectId: nullableIdSchema,
+      totalRows: { type: "integer" },
+      successRows: { type: "integer" },
+      failedRows: { type: "integer" },
+      errorPreview: { type: "array", items: metadataSchema },
+      resultExpiresAt: nullableDateTimeSchema,
+      createdAt: dateTimeSchema,
+      updatedAt: dateTimeSchema,
+      createdBy: nullableIdSchema
+    },
+    additionalProperties: false
+  },
+  LogEntryListResponse: arrayEnvelope("LogEntry"),
+  FileObjectListResponse: arrayEnvelope("FileObject"),
+  FileObjectResponse: nullableEntityEnvelope("FileObject"),
+  FileReferenceListResponse: arrayEnvelope("FileReference"),
+  NotificationListResponse: arrayEnvelope("Notification"),
+  NotificationStateResponse: envelopeSchema({
+    type: "object",
+    required: ["id", "status"],
+    properties: {
+      id: idSchema,
+      status: enumSchema(["read", "archived", "deleted"])
+    },
+    additionalProperties: false
+  }),
+  NotificationTemplateListResponse: arrayEnvelope("NotificationTemplate"),
+  NotificationTemplateResponse: nullableEntityEnvelope("NotificationTemplate"),
+  ScheduledTaskListResponse: arrayEnvelope("ScheduledTask"),
+  ScheduledTaskResponse: nullableEntityEnvelope("ScheduledTask"),
+  ImportExportTaskListResponse: arrayEnvelope("ImportExportTask"),
+  ImportExportTaskResponse: nullableEntityEnvelope("ImportExportTask"),
+  EmailNotificationSendResponse: objectEnvelope("EmailNotificationSendResult"),
+  EmailNotificationSendResult: {
+    type: "object",
+    required: ["channel", "recipient", "templateCode", "locale", "subject", "status", "sentAt"],
+    properties: {
+      channel: enumSchema(["email"]),
+      recipient: { type: "string", format: "email" },
+      templateCode: { type: "string" },
+      locale: { type: "string" },
+      subject: { type: "string" },
+      status: enumSchema(["sent"]),
+      sentAt: dateTimeSchema
+    },
+    additionalProperties: false
+  }
+};

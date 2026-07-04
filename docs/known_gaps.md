@@ -29,5 +29,5 @@ This file records incomplete, reserved, or environment-dependent work that must 
 
 ## Documentation and Schema Coverage Debt
 
-- OpenAPI response schemas are now mapped for backend-core, permission-extension, infrastructure, system-management, communication, file, profile, and SMTP test-send APIs. Some infrastructure response item schemas intentionally remain broad object schemas until those module contracts are narrowed further.
+- OpenAPI response schemas are now mapped for backend-core, permission-extension, infrastructure, system-management, communication, file, profile, and SMTP test-send APIs. Infrastructure response item schemas now expose concrete fields; flexible `metadata`, `payload`, `errorPreview`, and template-variable maps remain open objects by design.
 - Documentation should continue to distinguish optional integrations from completed default runtime behavior when new drivers are added.

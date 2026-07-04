@@ -690,3 +690,13 @@ The backend-core OpenAPI coverage slice completed the following:
 - Mapped older backend-core operation codes to named OpenAPI response components so those endpoints no longer fall back to the generic response envelope.
 - Added OpenAPI tests that require backend-core API responses to use named component schemas and verify mapped response references resolve to existing components.
 - Updated `docs/known_gaps.md` to remove the old backend-core generic-envelope gap.
+
+## Infrastructure OpenAPI Response Schema Progress
+
+The infrastructure OpenAPI coverage slice completed the following:
+
+- Added concrete OpenAPI component schemas for log entries, file objects, file references, in-app notifications, notification templates, scheduled tasks, import/export tasks, and SMTP email test-send results.
+- Replaced broad object response items for infrastructure list/detail APIs with named item schemas and nullable entity envelopes where the API can return `null`.
+- Kept explicitly flexible fields such as `metadata`, scheduled-task `payload`, import/export `errorPreview`, and email template variables as open object/map structures.
+- Added OpenAPI tests that require infrastructure list responses to reference concrete item schemas and verify those item schemas define required fields with `additionalProperties: false`.
+- Updated `docs/known_gaps.md` to remove the infrastructure broad-item response schema debt.
