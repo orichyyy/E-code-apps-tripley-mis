@@ -787,3 +787,11 @@ The repeatable local smoke slice completed the following:
 - Ignored generated `.tmp/` and root `data/` smoke artifacts so local validation output is not accidentally committed.
 
 The script keeps optional integrations disabled by default and does not add example business modules or SQL Server support.
+
+## Unified Verification Script Progress
+
+The unified verification slice completed the following:
+
+- Added root `pnpm verify` as the complete local quality gate.
+- Chained format, lint, typecheck, tests, SQLite/PostgreSQL migrations, local smoke, and production build in fail-fast order.
+- Documented the `TEST_DATABASE_URL` / `DATABASE_URL` prerequisite for the PostgreSQL migration step in `README.md` and `docs/local_development_guide.md`.

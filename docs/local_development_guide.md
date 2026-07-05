@@ -22,10 +22,24 @@ pnpm dev:worker
 
 ## Validation
 
+Run the complete local quality gate:
+
 ```bash
+pnpm verify
+```
+
+`pnpm verify` runs format, lint, typecheck, unit/integration tests, SQLite and PostgreSQL migrations, local smoke, and production build. Set `TEST_DATABASE_URL` or `DATABASE_URL` before running it; the PostgreSQL migration step requires one of those variables.
+
+Individual validation commands:
+
+```bash
+pnpm format
 pnpm lint
 pnpm typecheck
 pnpm test
+pnpm db:migrate
+pnpm db:migrate:postgresql
+pnpm smoke:local
 pnpm build
 ```
 

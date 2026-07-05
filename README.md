@@ -16,13 +16,23 @@ Reusable multi-organization admin-system foundation built as a pnpm monorepo.
 
 ```bash
 pnpm install
+pnpm verify
+```
+
+`pnpm verify` runs the complete local quality gate:
+
+```bash
+pnpm format
 pnpm lint
 pnpm typecheck
 pnpm test
 pnpm db:migrate
+pnpm db:migrate:postgresql
 pnpm smoke:local
 pnpm build
 ```
+
+Set `TEST_DATABASE_URL` or `DATABASE_URL` before running `pnpm verify`; the PostgreSQL migration step requires one of those variables.
 
 For a persistent local SQLite run, use `.env.example` as the variable checklist and set the variables in the shell that starts the processes:
 
