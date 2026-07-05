@@ -1,7 +1,7 @@
 import {
   updateRoleDataPermissionsRequestSchema,
   updateRoleFieldPermissionsRequestSchema,
-  updateUserPermissionOverridesRequestSchema
+  updateUserPermissionOverridesRequestSchema,
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
@@ -24,8 +24,8 @@ export function createPermissionExtensionRoutes(services: BackendCoreServices) {
         data: await services.updateRoleDataPermissions(
           context.req.param("id"),
           input,
-          authContext?.userId ?? null
-        )
+          authContext?.userId ?? null,
+        ),
       });
     })
     .get("/roles/:id/field-permissions", (context) => {
@@ -38,12 +38,14 @@ export function createPermissionExtensionRoutes(services: BackendCoreServices) {
         data: await services.updateRoleFieldPermissions(
           context.req.param("id"),
           input,
-          authContext?.userId ?? null
-        )
+          authContext?.userId ?? null,
+        ),
       });
     })
     .get("/permissions/user-overrides/:userId", (context) => {
-      return context.json({ data: services.listUserPermissionOverrides(context.req.param("userId")) });
+      return context.json({
+        data: services.listUserPermissionOverrides(context.req.param("userId")),
+      });
     })
     .put("/permissions/user-overrides/:userId", async (context) => {
       const authContext = context.get("authContext");
@@ -52,8 +54,8 @@ export function createPermissionExtensionRoutes(services: BackendCoreServices) {
         data: await services.updateUserPermissionOverrides(
           context.req.param("userId"),
           input,
-          authContext?.userId ?? null
-        )
+          authContext?.userId ?? null,
+        ),
       });
     });
 }

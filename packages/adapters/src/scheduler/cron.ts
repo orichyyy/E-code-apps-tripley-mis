@@ -41,7 +41,7 @@ function parseCronExpression(cronExpression: string): CronSchedule {
     months: parseField(parts[3] ?? "", 1, 12),
     daysOfWeek: parseField(parts[4] ?? "", 0, 7, normalizeDayOfWeek),
     dayOfMonthWildcard: parts[2] === "*",
-    dayOfWeekWildcard: parts[4] === "*"
+    dayOfWeekWildcard: parts[4] === "*",
   };
 }
 
@@ -49,7 +49,7 @@ function parseField(
   field: string,
   min: number,
   max: number,
-  normalize: (value: number) => number = (value) => value
+  normalize: (value: number) => number = (value) => value,
 ): Set<number> {
   const values = new Set<number>();
   for (const token of field.split(",")) {
@@ -64,12 +64,13 @@ function addToken(
   token: string,
   min: number,
   max: number,
-  normalize: (value: number) => number
+  normalize: (value: number) => number,
 ): void {
   if (!token) throw new Error("Cron field contains an empty token.");
   const [rangeToken, stepToken] = token.split("/");
   const step = stepToken ? Number(stepToken) : 1;
-  if (!Number.isInteger(step) || step <= 0) throw new Error("Cron step must be a positive integer.");
+  if (!Number.isInteger(step) || step <= 0)
+    throw new Error("Cron step must be a positive integer.");
 
   const [start, end] = parseRange(rangeToken ?? "", min, max);
   for (let value = start; value <= end; value += step) {
@@ -115,7 +116,7 @@ function matchesSchedule(date: Date, schedule: CronSchedule): boolean {
 function matchesCronDay(
   schedule: CronSchedule,
   dayOfMonthMatches: boolean,
-  dayOfWeekMatches: boolean
+  dayOfWeekMatches: boolean,
 ): boolean {
   if (schedule.dayOfMonthWildcard && schedule.dayOfWeekWildcard) return true;
   if (schedule.dayOfMonthWildcard) return dayOfWeekMatches;

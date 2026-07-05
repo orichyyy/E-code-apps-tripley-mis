@@ -1,10 +1,20 @@
-import { createRootRoute, createRoute, createRouter, Outlet, useNavigate } from "@tanstack/react-router";
+import {
+  createRootRoute,
+  createRoute,
+  createRouter,
+  Outlet,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 
 import { AdminShell, DashboardPage } from "@/components/admin/admin-shell";
 import { ManagementPage } from "@/components/admin/management-page";
-import { PasswordChangePage, ForcedPasswordChangePage, LoginPage } from "@/features/auth/auth-pages";
+import {
+  PasswordChangePage,
+  ForcedPasswordChangePage,
+  LoginPage,
+} from "@/features/auth/auth-pages";
 import { CoreManagementPage } from "@/features/core-management/core-management-page";
 import { AnnouncementsPage } from "@/features/notifications/announcements-page";
 import { InAppNotificationsPage } from "@/features/notifications/in-app-notifications-page";
@@ -45,7 +55,13 @@ function AdminGuard() {
   return accessToken ? <AdminShell /> : null;
 }
 
-function RoutePermissionGuard({ children, requiredPermission }: { children: ReactNode; requiredPermission?: string }) {
+function RoutePermissionGuard({
+  children,
+  requiredPermission,
+}: {
+  children: ReactNode;
+  requiredPermission?: string;
+}) {
   const permissionCodes = useAuthStore((state) => state.permissionCodes);
   return hasPermission(permissionCodes, requiredPermission) ? (
     <>{children}</>
@@ -57,35 +73,41 @@ function RoutePermissionGuard({ children, requiredPermission }: { children: Reac
 }
 
 const rootRoute = createRootRoute({
-  component: RootLayout
+  component: RootLayout,
 });
 
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/login",
-  component: LoginPage
+  component: LoginPage,
 });
 
 const forcedPasswordChangeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/forced-password-change",
-  component: ForcedPasswordChangePage
+  component: ForcedPasswordChangePage,
 });
 
 const adminLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: "admin",
-  component: AdminGuard
+  component: AdminGuard,
 });
 
 const dashboardRoute = createRoute({
   getParentRoute: () => adminLayoutRoute,
   path: "/",
-  component: DashboardPage
+  component: DashboardPage,
 });
 
 const managementRoutes = adminRouteMetadata
-  .filter((route) => route.path !== "/" && route.routeCode !== "account.profile" && route.routeCode !== "account.password" && route.routeCode !== "account.settings")
+  .filter(
+    (route) =>
+      route.path !== "/" &&
+      route.routeCode !== "account.profile" &&
+      route.routeCode !== "account.password" &&
+      route.routeCode !== "account.settings",
+  )
   .map((route) =>
     createRoute({
       getParentRoute: () => adminLayoutRoute,
@@ -130,26 +152,26 @@ const managementRoutes = adminRouteMetadata
             <ManagementPage route={route} />
           )}
         </RoutePermissionGuard>
-      )
-    })
+      ),
+    }),
   );
 
 const profileRoute = createRoute({
   getParentRoute: () => adminLayoutRoute,
   path: "/account/profile",
-  component: ProfilePage
+  component: ProfilePage,
 });
 
 const passwordRoute = createRoute({
   getParentRoute: () => adminLayoutRoute,
   path: "/account/password",
-  component: PasswordChangePage
+  component: PasswordChangePage,
 });
 
 const settingsRoute = createRoute({
   getParentRoute: () => adminLayoutRoute,
   path: "/account/settings",
-  component: PersonalSettingsPage
+  component: PersonalSettingsPage,
 });
 
 const routeTree = rootRoute.addChildren([
@@ -160,8 +182,8 @@ const routeTree = rootRoute.addChildren([
     ...managementRoutes,
     profileRoute,
     passwordRoute,
-    settingsRoute
-  ])
+    settingsRoute,
+  ]),
 ]);
 
 export const router = createRouter({ routeTree });

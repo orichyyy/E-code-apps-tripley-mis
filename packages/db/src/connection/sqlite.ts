@@ -26,7 +26,7 @@ export function createSqliteClient(url: string): Database.Database {
 
 export function getSqliteFilename(
   url: string,
-  baseDirectory = process.env.INIT_CWD ?? process.cwd()
+  baseDirectory = process.env.INIT_CWD ?? process.cwd(),
 ): string {
   if (url === ":memory:" || url === "file::memory:") {
     return ":memory:";

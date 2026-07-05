@@ -2,7 +2,7 @@ import {
   createWebhookSubscriptionRequestSchema,
   updateWebhookSubscriptionRequestSchema,
   type CreateWebhookSubscriptionRequest,
-  type UpdateWebhookSubscriptionRequest
+  type UpdateWebhookSubscriptionRequest,
 } from "@web-admin-base/contracts";
 import { z } from "zod";
 
@@ -21,7 +21,7 @@ export const webhookFormSchema = z.object({
   url: z.string().url(),
   eventTypesText: z.string(),
   secret: z.string(),
-  status: z.enum(["enabled", "disabled"])
+  status: z.enum(["enabled", "disabled"]),
 });
 
 export const defaultWebhookFormValues: WebhookFormValues = {
@@ -29,18 +29,18 @@ export const defaultWebhookFormValues: WebhookFormValues = {
   url: "",
   eventTypesText: "",
   secret: "",
-  status: "enabled"
+  status: "enabled",
 };
 
 export function toWebhookApiInput(
   value: WebhookFormValues,
-  mode: WebhookFormMode
+  mode: WebhookFormMode,
 ): CreateWebhookSubscriptionRequest | UpdateWebhookSubscriptionRequest {
   const base = {
     name: value.name,
     url: value.url,
     eventTypes: parseEventTypes(value.eventTypesText),
-    status: value.status
+    status: value.status,
   };
   const secret = value.secret.trim();
   const input = secret ? { ...base, secret } : base;

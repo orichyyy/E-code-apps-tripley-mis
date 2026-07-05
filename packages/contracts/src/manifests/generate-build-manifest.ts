@@ -15,7 +15,7 @@ const artifact = {
   apiPermissions: baseApiPermissionManifest,
   routes: baseRouteManifest,
   menus: baseMenuManifest,
-  openapi: createOpenApiDocument()
+  openapi: createOpenApiDocument(),
 };
 
 mkdirSync(dirname(outputPath), { recursive: true });

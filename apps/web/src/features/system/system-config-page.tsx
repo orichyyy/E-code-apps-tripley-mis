@@ -11,11 +11,7 @@ import type { WebAdminRouteMetadata } from "@/route-metadata";
 import { useAuthStore } from "@/stores/auth.store";
 import { useLayoutStore } from "@/stores/layout.store";
 import { SystemConfigForm } from "./system-config-form";
-import {
-  fetchSystemConfigs,
-  updateSystemConfig,
-  type SystemConfig
-} from "./system-management-api";
+import { fetchSystemConfigs, updateSystemConfig, type SystemConfig } from "./system-management-api";
 
 export function SystemConfigPage({ route }: { route: WebAdminRouteMetadata }) {
   const language = useLayoutStore((state) => state.language);
@@ -29,16 +25,20 @@ export function SystemConfigPage({ route }: { route: WebAdminRouteMetadata }) {
   const query = useQuery({
     enabled: canView,
     queryKey: ["system-configs"],
-    queryFn: fetchSystemConfigs
+    queryFn: fetchSystemConfigs,
   });
   const updateMutation = useMutation({
-    mutationFn: ({ key, input }: { key: string; input: UpdateSystemConfigRequest }) => updateSystemConfig(key, input),
+    mutationFn: ({ key, input }: { key: string; input: UpdateSystemConfigRequest }) =>
+      updateSystemConfig(key, input),
     onSuccess: async () => {
       setEditing(null);
       await queryClient.invalidateQueries({ queryKey: ["system-configs"] });
-    }
+    },
   });
-  const groups = useMemo(() => ["all", ...Array.from(new Set((query.data ?? []).map((item) => item.groupKey)))], [query.data]);
+  const groups = useMemo(
+    () => ["all", ...Array.from(new Set((query.data ?? []).map((item) => item.groupKey)))],
+    [query.data],
+  );
   const rows = useMemo(
     () =>
       (query.data ?? []).filter((record) => {
@@ -48,11 +48,13 @@ export function SystemConfigPage({ route }: { route: WebAdminRouteMetadata }) {
           record.groupKey,
           record.description ?? "",
           record.status,
-          String(record.configValue)
-        ].join(" ").toLowerCase();
+          String(record.configValue),
+        ]
+          .join(" ")
+          .toLowerCase();
         return matchesGroup && text.includes(keyword.toLowerCase());
       }),
-    [group, keyword, query.data]
+    [group, keyword, query.data],
   );
 
   if (!canView) return <PermissionDenied language={language} />;
@@ -64,7 +66,8 @@ export function SystemConfigPage({ route }: { route: WebAdminRouteMetadata }) {
           <div>
             <h2 className="text-base font-semibold">{translate(language, route.titleI18nKey)}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Manage confirmed global configuration values. New configuration keys are introduced by backend modules.
+              Manage confirmed global configuration values. New configuration keys are introduced by
+              backend modules.
             </p>
           </div>
           <Button onClick={() => void query.refetch()} size="sm" variant="outline">
@@ -106,7 +109,8 @@ export function SystemConfigPage({ route }: { route: WebAdminRouteMetadata }) {
           <section className="rounded-lg border bg-card p-4 text-sm shadow-sm">
             <h3 className="font-semibold">Configuration boundary</h3>
             <p className="mt-2 text-muted-foreground">
-              This page only edits existing editable global configuration records. Organization-level overrides remain reserved.
+              This page only edits existing editable global configuration records.
+              Organization-level overrides remain reserved.
             </p>
           </section>
         )}
@@ -126,7 +130,7 @@ function SystemConfigFilters({
   keyword,
   onGroupChange,
   onKeywordChange,
-  onReset
+  onReset,
 }: {
   group: string;
   groups: string[];
@@ -173,7 +177,7 @@ function SystemConfigTable({
   isError,
   isLoading,
   onEdit,
-  rows
+  rows,
 }: {
   canUpdate: boolean;
   isError: boolean;
@@ -210,16 +214,22 @@ function SystemConfigTable({
             <tr className="hover:bg-muted/40" key={record.id}>
               <td className="border-b px-4 py-3">
                 <div className="font-medium">{record.configKey}</div>
-                <div className="text-xs text-muted-foreground">{record.description ?? record.groupKey}</div>
+                <div className="text-xs text-muted-foreground">
+                  {record.description ?? record.groupKey}
+                </div>
               </td>
               <td className="max-w-96 border-b px-4 py-3">
-                <span className="block truncate font-mono text-xs">{displayConfigValue(record.configValue)}</span>
+                <span className="block truncate font-mono text-xs">
+                  {displayConfigValue(record.configValue)}
+                </span>
               </td>
               <td className="border-b px-4 py-3 text-muted-foreground">{record.valueType}</td>
               <td className="border-b px-4 py-3">
                 <StatusBadge>{record.status}</StatusBadge>
               </td>
-              <td className="border-b px-4 py-3 text-muted-foreground">{record.updatedAt || "-"}</td>
+              <td className="border-b px-4 py-3 text-muted-foreground">
+                {record.updatedAt || "-"}
+              </td>
               <td className="border-b px-4 py-3">
                 {canUpdate && record.editable ? (
                   <Button onClick={() => onEdit(record)} size="sm" variant="outline">
@@ -245,7 +255,9 @@ function PermissionDenied({ language }: { language: "en" | "zh" }) {
   return (
     <section className="rounded-lg border bg-card p-8 text-center">
       <AlertCircle className="mx-auto size-8 text-destructive" aria-hidden="true" />
-      <h2 className="mt-3 text-base font-semibold">{translate(language, "common.permissionDenied")}</h2>
+      <h2 className="mt-3 text-base font-semibold">
+        {translate(language, "common.permissionDenied")}
+      </h2>
     </section>
   );
 }

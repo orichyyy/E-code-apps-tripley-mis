@@ -1,7 +1,7 @@
 import type { DatabaseAdapterExecutor } from "@web-admin-base/adapters";
 import {
   createInMemoryNotificationChannelAdapter,
-  createLocalFileStorageAdapter
+  createLocalFileStorageAdapter,
 } from "@web-admin-base/adapters";
 import { runPostgresqlMigrations } from "@web-admin-base/db";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -28,12 +28,12 @@ describe("database-backed infrastructure routes", () => {
       new InfrastructureRepository(executor),
       {
         storage: createLocalFileStorageAdapter({ rootDirectory: root }),
-        notificationChannel
-      }
+        notificationChannel,
+      },
     );
     const app = createApp({
       infrastructureServices,
-      backendCoreServices: createInMemoryBackendCoreServices()
+      backendCoreServices: createInMemoryBackendCoreServices(),
     });
 
     try {
@@ -48,14 +48,14 @@ describe("database-backed infrastructure routes", () => {
           channel: "in_app",
           locale: "en",
           body: "Body",
-          variables: []
-        })
+          variables: [],
+        }),
       });
       const listResponse = await app.request("/api/notification-templates", { headers });
       const taskResponse = await app.request("/api/import-export/export", {
         method: "POST",
         headers,
-        body: JSON.stringify({ resourceType: "logs:security" })
+        body: JSON.stringify({ resourceType: "logs:security" }),
       });
       const emailTemplateResponse = await app.request("/api/notification-templates", {
         method: "POST",
@@ -66,8 +66,8 @@ describe("database-backed infrastructure routes", () => {
           locale: "en",
           subject: "Hello {name}",
           body: "Body for {{name}}",
-          variables: ["name"]
-        })
+          variables: ["name"],
+        }),
       });
       const sendEmailResponse = await app.request("/api/notifications/email/test", {
         method: "POST",
@@ -76,12 +76,12 @@ describe("database-backed infrastructure routes", () => {
           templateCode: "db-email-template",
           locale: "en",
           recipient: "ops@example.com",
-          variables: { name: "Ada" }
-        })
+          variables: { name: "Ada" },
+        }),
       });
       const persisted = await executor.all(
         "SELECT code FROM notification_templates WHERE code = $1",
-        ["db-template"]
+        ["db-template"],
       );
 
       expect(createResponse.status).toBe(201);
@@ -94,22 +94,31 @@ describe("database-backed infrastructure routes", () => {
           channel: "email",
           recipient: "ops@example.com",
           subject: "Hello Ada",
-          body: "Body for Ada"
-        })
+          body: "Body for Ada",
+        }),
       ]);
       expect(persisted).toEqual([expect.objectContaining({ code: "db-template" })]);
 
       const form = new FormData();
       form.set("file", new File(["db-file"], "db-file.csv", { type: "text/csv" }));
-      const uploadResponse = await app.request("/api/files/upload", { method: "POST", headers, body: form });
+      const uploadResponse = await app.request("/api/files/upload", {
+        method: "POST",
+        headers,
+        body: form,
+      });
       const uploadBody = await uploadResponse.json();
-      const storedFiles = await executor.all("SELECT original_name, content_type FROM file_objects WHERE id = $1", [
-        uploadBody.data.id
-      ]);
-      const downloadResponse = await app.request(`/api/files/${uploadBody.data.id}/download`, { headers });
+      const storedFiles = await executor.all(
+        "SELECT original_name, content_type FROM file_objects WHERE id = $1",
+        [uploadBody.data.id],
+      );
+      const downloadResponse = await app.request(`/api/files/${uploadBody.data.id}/download`, {
+        headers,
+      });
 
       expect(uploadResponse.status).toBe(201);
-      expect(storedFiles).toEqual([expect.objectContaining({ original_name: "db-file.csv", content_type: "text/csv" })]);
+      expect(storedFiles).toEqual([
+        expect.objectContaining({ original_name: "db-file.csv", content_type: "text/csv" }),
+      ]);
       await expect(downloadResponse.text()).resolves.toBe("db-file");
     } finally {
       await clearInfrastructureTables(executor);
@@ -129,8 +138,8 @@ async function initialize(app: ReturnType<typeof createApp>): Promise<void> {
       adminDisplayName: "Super Admin",
       adminEmail: "admin@example.com",
       adminPhone: "10000000000",
-      adminPassword: "password1"
-    })
+      adminPassword: "password1",
+    }),
   });
   expect(response.status).toBe(201);
 }
@@ -138,7 +147,7 @@ async function initialize(app: ReturnType<typeof createApp>): Promise<void> {
 async function loginHeaders(app: ReturnType<typeof createApp>) {
   const response = await app.request("/api/auth/login", {
     method: "POST",
-    body: JSON.stringify({ username: "admin", password: "password1" })
+    body: JSON.stringify({ username: "admin", password: "password1" }),
   });
   const body = await response.json();
   expect(response.status).toBe(200);
@@ -154,7 +163,7 @@ async function clearInfrastructureTables(executor: DatabaseAdapterExecutor): Pro
     "queue_jobs",
     "scheduled_jobs",
     "file_objects",
-    "log_entries"
+    "log_entries",
   ]) {
     await executor.run(`DELETE FROM ${table}`);
   }

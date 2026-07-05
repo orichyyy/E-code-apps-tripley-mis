@@ -3,19 +3,19 @@ import {
   nowIso,
   readJson,
   type DatabaseAdapterExecutor,
-  type DatabaseRow
+  type DatabaseRow,
 } from "@web-admin-base/adapters";
 import { loadDatabaseConfig } from "@web-admin-base/db";
 import type {
   CreateAnnouncementRequest,
   CreateWebhookSubscriptionRequest,
   UpdateAnnouncementRequest,
-  UpdateWebhookSubscriptionRequest
+  UpdateWebhookSubscriptionRequest,
 } from "@web-admin-base/contracts";
 
 import {
   createPostgresqlInfrastructureExecutor,
-  createSqliteInfrastructureExecutor
+  createSqliteInfrastructureExecutor,
 } from "../infrastructure/infrastructure.executor";
 import type { AnnouncementRecord, WebhookSubscriptionRecord } from "./communications.types";
 
@@ -41,7 +41,7 @@ export class CommunicationsRepository {
         deleted_by, created_at, updated_at, created_by, updated_by
        FROM announcements
        WHERE is_deleted = ${this.bool(false)}
-       ORDER BY updated_at DESC, id DESC LIMIT 200`
+       ORDER BY updated_at DESC, id DESC LIMIT 200`,
     );
     return rows.map(toAnnouncement);
   }
@@ -51,7 +51,7 @@ export class CommunicationsRepository {
     const id = await this.insertAndGetId(
       `INSERT INTO announcements (title, content, scope_type, status, created_at, updated_at, created_by, updated_by)
        VALUES (${this.p(1)}, ${this.p(2)}, ${this.p(3)}, 'draft', ${this.p(4)}, ${this.p(5)}, ${this.p(6)}, ${this.p(7)})`,
-      [input.title, input.content, input.scopeType, now, now, actorId, actorId]
+      [input.title, input.content, input.scopeType, now, now, actorId, actorId],
     );
     return this.getAnnouncement(id);
   }
@@ -64,7 +64,7 @@ export class CommunicationsRepository {
       `UPDATE announcements
        SET title = ${this.p(1)}, content = ${this.p(2)}, scope_type = ${this.p(3)}, updated_at = ${this.p(4)}, updated_by = ${this.p(5)}
        WHERE id = ${this.p(6)} AND is_deleted = ${this.bool(false)}`,
-      [next.title, next.content, next.scopeType, nowIso(), actorId, id]
+      [next.title, next.content, next.scopeType, nowIso(), actorId, id],
     );
     return (await this.listAnnouncements()).find((item) => item.id === id) ?? null;
   }
@@ -75,7 +75,7 @@ export class CommunicationsRepository {
       `UPDATE announcements
        SET status = ${this.p(1)}, published_at = ${this.p(2)}, updated_at = ${this.p(3)}, updated_by = ${this.p(4)}
        WHERE id = ${this.p(5)} AND is_deleted = ${this.bool(false)}`,
-      [published ? "published" : "draft", published ? now : null, now, actorId, id]
+      [published ? "published" : "draft", published ? now : null, now, actorId, id],
     );
     return (await this.listAnnouncements()).find((item) => item.id === id) ?? null;
   }
@@ -86,7 +86,7 @@ export class CommunicationsRepository {
         created_at, updated_at, created_by, updated_by
        FROM webhook_subscriptions
        WHERE is_deleted = ${this.bool(false)}
-       ORDER BY updated_at DESC, id DESC LIMIT 200`
+       ORDER BY updated_at DESC, id DESC LIMIT 200`,
     );
     return rows.map(toWebhookSubscription);
   }
@@ -105,8 +105,8 @@ export class CommunicationsRepository {
         now,
         now,
         actorId,
-        actorId
-      ]
+        actorId,
+      ],
     );
     return this.getWebhook(id);
   }
@@ -127,8 +127,8 @@ export class CommunicationsRepository {
         next.status,
         nowIso(),
         actorId,
-        id
-      ]
+        id,
+      ],
     );
     return (await this.listWebhooks()).find((item) => item.id === id) ?? null;
   }
@@ -137,7 +137,7 @@ export class CommunicationsRepository {
     const rows = await this.executor.all(
       `SELECT id, name, url, event_types, secret, status
        FROM webhook_subscriptions WHERE id = ${this.p(1)} AND is_deleted = ${this.bool(false)} LIMIT 1`,
-      [id]
+      [id],
     );
     const row = rows[0];
     if (!row) return null;
@@ -146,7 +146,7 @@ export class CommunicationsRepository {
       url: String(row.url),
       eventTypes: readJson<string[]>(row.event_types),
       secret: nullableString(row.secret),
-      status: String(row.status) as WebhookSubscriptionRecord["status"]
+      status: String(row.status) as WebhookSubscriptionRecord["status"],
     };
   }
 
@@ -156,7 +156,7 @@ export class CommunicationsRepository {
         deleted_by, created_at, updated_at, created_by, updated_by
        FROM announcements
        WHERE id = ${this.p(1)} AND is_deleted = ${this.bool(false)} LIMIT 1`,
-      [id]
+      [id],
     );
     return rows[0] ? toAnnouncement(rows[0]) : null;
   }
@@ -167,7 +167,7 @@ export class CommunicationsRepository {
         created_at, updated_at, created_by, updated_by
        FROM webhook_subscriptions
        WHERE id = ${this.p(1)} AND is_deleted = ${this.bool(false)} LIMIT 1`,
-      [id]
+      [id],
     );
     return rows[0] ? toWebhookSubscription(rows[0]) : null;
   }
@@ -206,7 +206,7 @@ function toAnnouncement(row: DatabaseRow): AnnouncementRecord {
     createdAt: iso(row.created_at),
     updatedAt: iso(row.updated_at),
     createdBy: nullableId(row.created_by),
-    updatedBy: nullableId(row.updated_by)
+    updatedBy: nullableId(row.updated_by),
   };
 }
 
@@ -225,7 +225,7 @@ function toWebhookSubscription(row: DatabaseRow): WebhookSubscriptionRecord {
     createdAt: iso(row.created_at),
     updatedAt: iso(row.updated_at),
     createdBy: nullableId(row.created_by),
-    updatedBy: nullableId(row.updated_by)
+    updatedBy: nullableId(row.updated_by),
   };
 }
 

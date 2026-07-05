@@ -2,7 +2,7 @@ import type { OpenApiSchema } from "./types";
 
 export const idSchema: OpenApiSchema = {
   type: "string",
-  description: "Database auto-increment ID serialized as a string."
+  description: "Database auto-increment ID serialized as a string.",
 };
 export const nullableIdSchema: OpenApiSchema = { ...idSchema, nullable: true };
 export const dateTimeSchema: OpenApiSchema = { type: "string", format: "date-time" };
@@ -18,7 +18,7 @@ export function envelopeSchema(data: OpenApiSchema): OpenApiSchema {
     type: "object",
     required: ["data"],
     properties: { data },
-    additionalProperties: true
+    additionalProperties: true,
   };
 }
 
@@ -29,7 +29,7 @@ export function objectEnvelope(schemaRef: string): OpenApiSchema {
 export function arrayEnvelope(schemaRef: string): OpenApiSchema {
   return envelopeSchema({
     type: "array",
-    items: { $ref: `#/components/schemas/${schemaRef}` }
+    items: { $ref: `#/components/schemas/${schemaRef}` },
   });
 }
 
@@ -42,9 +42,9 @@ export function pageDataSchema(schemaRef: string): OpenApiSchema {
       page: { type: "integer" },
       pageSize: { type: "integer" },
       total: { type: "integer" },
-      totalPages: { type: "integer" }
+      totalPages: { type: "integer" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   };
 }
 
@@ -56,8 +56,8 @@ export function optionallyPagedEnvelope(schemaRef: string): OpenApiSchema {
   return envelopeSchema({
     anyOf: [
       { type: "array", items: { $ref: `#/components/schemas/${schemaRef}` } },
-      pageDataSchema(schemaRef)
-    ]
+      pageDataSchema(schemaRef),
+    ],
   });
 }
 
@@ -65,11 +65,11 @@ export const actorAuditProperties: Record<string, OpenApiSchema> = {
   createdAt: dateTimeSchema,
   updatedAt: dateTimeSchema,
   createdBy: nullableIdSchema,
-  updatedBy: nullableIdSchema
+  updatedBy: nullableIdSchema,
 };
 
 export const softDeleteProperties: Record<string, OpenApiSchema> = {
   isDeleted: { type: "boolean" },
   deletedAt: nullableDateTimeSchema,
-  deletedBy: nullableIdSchema
+  deletedBy: nullableIdSchema,
 };

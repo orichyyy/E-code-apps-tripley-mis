@@ -31,7 +31,7 @@ export function normalizeError(error: unknown): AppError {
     code: "SYSTEM_INTERNAL_ERROR",
     message: "Unexpected internal error",
     status: 500,
-    category: "system"
+    category: "system",
   });
 }
 
@@ -40,8 +40,8 @@ export function createErrorResponse(error: AppError, requestId: string): ErrorRe
     error: {
       code: error.code,
       message: error.message,
-      ...(error.details === undefined ? {} : { details: error.details })
+      ...(error.details === undefined ? {} : { details: error.details }),
     },
-    requestId
+    requestId,
   };
 }

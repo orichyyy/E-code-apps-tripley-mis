@@ -56,7 +56,7 @@ export function toOption(record: CoreEntity, fallback: string): CoreOption {
   return {
     id: record.id,
     label,
-    code: stringField(record.code, "")
+    code: stringField(record.code, ""),
   };
 }
 
@@ -64,7 +64,10 @@ export function compactPayload(values: CoreFormValues): Record<string, unknown> 
   return Object.fromEntries(
     Object.entries(values)
       .filter(([, value]) => value !== "")
-      .map(([key, value]) => [key, numericKey(key) && typeof value === "string" ? Number(value) : value])
+      .map(([key, value]) => [
+        key,
+        numericKey(key) && typeof value === "string" ? Number(value) : value,
+      ]),
   );
 }
 

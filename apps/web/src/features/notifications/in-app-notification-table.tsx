@@ -21,7 +21,7 @@ export function InAppNotificationTable({
   onArchive,
   onDelete,
   onRead,
-  rows
+  rows,
 }: InAppNotificationTableProps) {
   if (isLoading) {
     return (
@@ -31,9 +31,12 @@ export function InAppNotificationTable({
       </div>
     );
   }
-  if (isError) return <div className="p-8 text-sm text-destructive">The data could not be loaded.</div>;
+  if (isError)
+    return <div className="p-8 text-sm text-destructive">The data could not be loaded.</div>;
   if (rows.length === 0) {
-    return <div className="p-8 text-sm text-muted-foreground">No records match the current filters.</div>;
+    return (
+      <div className="p-8 text-sm text-muted-foreground">No records match the current filters.</div>
+    );
   }
 
   return (
@@ -58,7 +61,9 @@ export function InAppNotificationTable({
               <td className="border-b px-4 py-3">
                 <InAppNotificationStatusBadge status={record.status} />
               </td>
-              <td className="max-w-96 truncate border-b px-4 py-3 text-muted-foreground">{record.body}</td>
+              <td className="max-w-96 truncate border-b px-4 py-3 text-muted-foreground">
+                {record.body}
+              </td>
               <td className="max-w-72 truncate border-b px-4 py-3 text-muted-foreground">
                 {metadataSummary(record.metadata)}
               </td>
@@ -85,7 +90,7 @@ function NotificationRowActions({
   onArchive,
   onDelete,
   onRead,
-  record
+  record,
 }: {
   canUpdate: boolean;
   onArchive: (record: InAppNotification) => void;

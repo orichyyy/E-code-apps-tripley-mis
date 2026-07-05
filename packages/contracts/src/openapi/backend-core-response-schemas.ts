@@ -10,13 +10,26 @@ import {
   objectEnvelope,
   optionallyPagedEnvelope,
   pageEnvelope,
-  softDeleteProperties
+  softDeleteProperties,
 } from "./backend-core-schema-helpers";
 
 export const backendCoreResponseSchemas: OpenApiDocument["components"]["schemas"] = {
   Menu: {
     type: "object",
-    required: ["id", "tenantId", "parentMenuId", "code", "titleI18nKey", "path", "sortOrder", "visible", "status", "isDeleted", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "tenantId",
+      "parentMenuId",
+      "code",
+      "titleI18nKey",
+      "path",
+      "sortOrder",
+      "visible",
+      "status",
+      "isDeleted",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
       id: idSchema,
       tenantId: nullableIdSchema,
@@ -32,9 +45,9 @@ export const backendCoreResponseSchemas: OpenApiDocument["components"]["schemas"
       status: enumSchema(["enabled", "disabled"]),
       ...softDeleteProperties,
       createdAt: dateTimeSchema,
-      updatedAt: dateTimeSchema
+      updatedAt: dateTimeSchema,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   MenuTreeNode: {
     type: "object",
@@ -46,9 +59,9 @@ export const backendCoreResponseSchemas: OpenApiDocument["components"]["schemas"
       path: { type: "string" },
       visible: { type: "boolean" },
       status: enumSchema(["enabled", "disabled"]),
-      children: { type: "array", items: { $ref: "#/components/schemas/MenuTreeNode" } }
+      children: { type: "array", items: { $ref: "#/components/schemas/MenuTreeNode" } },
     },
-    additionalProperties: true
+    additionalProperties: true,
   },
   MenuApiBinding: {
     type: "object",
@@ -58,13 +71,26 @@ export const backendCoreResponseSchemas: OpenApiDocument["components"]["schemas"
       tenantId: nullableIdSchema,
       menuId: idSchema,
       apiPermissionId: idSchema,
-      createdAt: dateTimeSchema
+      createdAt: dateTimeSchema,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   RouteMetadata: {
     type: "object",
-    required: ["id", "tenantId", "routeCode", "path", "titleI18nKey", "metadataJson", "manifestHash", "menuVisible", "sortOrder", "status", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "tenantId",
+      "routeCode",
+      "path",
+      "titleI18nKey",
+      "metadataJson",
+      "manifestHash",
+      "menuVisible",
+      "sortOrder",
+      "status",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
       id: idSchema,
       tenantId: nullableIdSchema,
@@ -79,22 +105,31 @@ export const backendCoreResponseSchemas: OpenApiDocument["components"]["schemas"
       sortOrder: { type: "integer" },
       status: enumSchema(["enabled", "disabled"]),
       createdAt: dateTimeSchema,
-      updatedAt: dateTimeSchema
+      updatedAt: dateTimeSchema,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   InitializationStatusResponse: envelopeSchema({
     type: "object",
     required: ["initialized", "state"],
     properties: {
       initialized: { type: "boolean" },
-      state: { anyOf: [{ $ref: "#/components/schemas/InitializationState" }, { type: "null" }] }
+      state: { anyOf: [{ $ref: "#/components/schemas/InitializationState" }, { type: "null" }] },
     },
-    additionalProperties: false
+    additionalProperties: false,
   }),
   InitializationSetupResponse: envelopeSchema({
     type: "object",
-    required: ["state", "organization", "admin", "roles", "permissions", "apiPermissions", "menus", "routes"],
+    required: [
+      "state",
+      "organization",
+      "admin",
+      "roles",
+      "permissions",
+      "apiPermissions",
+      "menus",
+      "routes",
+    ],
     properties: {
       state: { $ref: "#/components/schemas/InitializationState" },
       organization: { anyOf: [{ $ref: "#/components/schemas/Organization" }, { type: "null" }] },
@@ -104,22 +139,24 @@ export const backendCoreResponseSchemas: OpenApiDocument["components"]["schemas"
       apiPermissions: { type: "array", items: { $ref: "#/components/schemas/ApiPermission" } },
       menus: { type: "array", items: { $ref: "#/components/schemas/Menu" } },
       routes: { type: "array", items: { $ref: "#/components/schemas/RouteMetadata" } },
-      seeded: { type: "boolean" }
+      seeded: { type: "boolean" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   }),
-  AuthLoginResponse: envelopeSchema(authContextDataSchema({
-    accessToken: { type: "string" },
-    refreshTokenCookie: { type: "object", additionalProperties: true }
-  })),
+  AuthLoginResponse: envelopeSchema(
+    authContextDataSchema({
+      accessToken: { type: "string" },
+      refreshTokenCookie: { type: "object", additionalProperties: true },
+    }),
+  ),
   AuthRefreshResponse: envelopeSchema({
     type: "object",
     required: ["accessToken", "session"],
     properties: {
       accessToken: { type: "string" },
-      session: { $ref: "#/components/schemas/AuthSession" }
+      session: { $ref: "#/components/schemas/AuthSession" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   }),
   AuthContextResponse: envelopeSchema(authContextDataSchema()),
   AuthSessionResponse: objectEnvelope("AuthSession"),
@@ -131,9 +168,9 @@ export const backendCoreResponseSchemas: OpenApiDocument["components"]["schemas"
       session: { $ref: "#/components/schemas/AuthSession" },
       currentOrganization: { $ref: "#/components/schemas/Organization" },
       permissionCodes: { type: "array", items: { type: "string" } },
-      menus: { type: "array", items: { $ref: "#/components/schemas/Menu" } }
+      menus: { type: "array", items: { $ref: "#/components/schemas/Menu" } },
     },
-    additionalProperties: false
+    additionalProperties: false,
   }),
   CurrentOrganizationListResponse: arrayEnvelope("Organization"),
   OnlineUserListResponse: optionallyPagedEnvelope("AuthSession"),
@@ -142,9 +179,9 @@ export const backendCoreResponseSchemas: OpenApiDocument["components"]["schemas"
     required: ["maxDepth", "maxSupportedDepth"],
     properties: {
       maxDepth: { type: "integer" },
-      maxSupportedDepth: { type: "integer" }
+      maxSupportedDepth: { type: "integer" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   }),
   OrganizationResponse: objectEnvelope("Organization"),
   OrganizationListResponse: arrayEnvelope("Organization"),
@@ -163,9 +200,9 @@ export const backendCoreResponseSchemas: OpenApiDocument["components"]["schemas"
     required: ["permissions", "apiPermissions"],
     properties: {
       permissions: { type: "array", items: { $ref: "#/components/schemas/Permission" } },
-      apiPermissions: { type: "array", items: { $ref: "#/components/schemas/ApiPermission" } }
+      apiPermissions: { type: "array", items: { $ref: "#/components/schemas/ApiPermission" } },
     },
-    additionalProperties: false
+    additionalProperties: false,
   }),
   ApiPermissionListResponse: optionallyPagedEnvelope("ApiPermission"),
   ApiPermissionSyncResponse: arrayEnvelope("ApiPermission"),
@@ -174,9 +211,9 @@ export const backendCoreResponseSchemas: OpenApiDocument["components"]["schemas"
     required: ["permissions", "apiPermissions"],
     properties: {
       permissions: { type: "array", items: { type: "object", additionalProperties: true } },
-      apiPermissions: { type: "array", items: { type: "object", additionalProperties: true } }
+      apiPermissions: { type: "array", items: { type: "object", additionalProperties: true } },
     },
-    additionalProperties: false
+    additionalProperties: false,
   }),
   MenuTreeResponse: arrayEnvelope("MenuTreeNode"),
   MenuResponse: objectEnvelope("Menu"),
@@ -186,12 +223,12 @@ export const backendCoreResponseSchemas: OpenApiDocument["components"]["schemas"
     properties: {
       menuId: idSchema,
       apiPermissionIds: { type: "array", items: idSchema },
-      bindings: { type: "array", items: { $ref: "#/components/schemas/MenuApiBinding" } }
+      bindings: { type: "array", items: { $ref: "#/components/schemas/MenuApiBinding" } },
     },
-    additionalProperties: false
+    additionalProperties: false,
   }),
   RouteMetadataListResponse: optionallyPagedEnvelope("RouteMetadata"),
-  RouteMetadataSyncResponse: arrayEnvelope("RouteMetadata")
+  RouteMetadataSyncResponse: arrayEnvelope("RouteMetadata"),
 };
 
 function authContextDataSchema(extraProperties: Record<string, OpenApiSchema> = {}): OpenApiSchema {
@@ -205,7 +242,7 @@ function authContextDataSchema(extraProperties: Record<string, OpenApiSchema> = 
       "organizations",
       "permissionCodes",
       "menus",
-      "passwordChangeRequired"
+      "passwordChangeRequired",
     ],
     properties: {
       ...extraProperties,
@@ -216,8 +253,8 @@ function authContextDataSchema(extraProperties: Record<string, OpenApiSchema> = 
       permissionCodes: { type: "array", items: { type: "string" } },
       menus: { type: "array", items: { $ref: "#/components/schemas/Menu" } },
       passwordChangeRequired: { type: "boolean" },
-      preferences: { $ref: "#/components/schemas/UserPreferences" }
+      preferences: { $ref: "#/components/schemas/UserPreferences" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   };
 }

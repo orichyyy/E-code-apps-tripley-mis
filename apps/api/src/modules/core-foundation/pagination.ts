@@ -10,7 +10,7 @@ export type PageResult<T> = {
 
 export function pageItems<T>(
   items: T[],
-  query: { page?: string; pageSize?: string }
+  query: { page?: string; pageSize?: string },
 ): PageResult<T> {
   const page = parsePositiveInteger(query.page ?? "1");
   const pageSize = parsePositiveInteger(query.pageSize ?? "20");
@@ -20,7 +20,7 @@ export function pageItems<T>(
     page,
     pageSize,
     total: items.length,
-    totalPages: Math.ceil(items.length / pageSize)
+    totalPages: Math.ceil(items.length / pageSize),
   };
 }
 

@@ -25,7 +25,7 @@ export type DatabaseJobSchedulerAdapterOptions = {
 
 export function createDatabaseJobSchedulerAdapter(
   executor: DatabaseAdapterExecutor,
-  options: DatabaseJobSchedulerAdapterOptions = {}
+  options: DatabaseJobSchedulerAdapterOptions = {},
 ): DatabaseJobSchedulerAdapter {
   const handlers = new Map<string, Handler>();
   const retryDelaySeconds = options.retryDelaySeconds ?? 60;
@@ -37,26 +37,23 @@ export function createDatabaseJobSchedulerAdapter(
       handlers.set(job.code, handler as Handler);
       const now = nowIso();
       const nextRunAt = computeNextCronRun(job.cronExpression, new Date(now));
-      await executor.run(
-        upsertSql(executor.dialect),
-        [
-          job.code,
-          job.cronExpression,
-          job.code,
-          jsonParam({}, executor.dialect),
-          job.enabled ? "enabled" : "disabled",
-          nextRunAt,
-          now,
-          now
-        ]
-      );
+      await executor.run(upsertSql(executor.dialect), [
+        job.code,
+        job.cronExpression,
+        job.code,
+        jsonParam({}, executor.dialect),
+        job.enabled ? "enabled" : "disabled",
+        nextRunAt,
+        now,
+        now,
+      ]);
     },
     async unregister(jobCode) {
       handlers.delete(jobCode);
-      await executor.run(`UPDATE scheduled_jobs SET status = 'disabled', updated_at = ${p(executor, 1)} WHERE code = ${p(executor, 2)}`, [
-        nowIso(),
-        jobCode
-      ]);
+      await executor.run(
+        `UPDATE scheduled_jobs SET status = 'disabled', updated_at = ${p(executor, 1)} WHERE code = ${p(executor, 2)}`,
+        [nowIso(), jobCode],
+      );
     },
     async processDue(limit = 10) {
       let processed = 0;
@@ -66,7 +63,14 @@ export function createDatabaseJobSchedulerAdapter(
         const handler = handlers.get(job.handlerType) ?? handlers.get(job.code);
         const startedAt = new Date();
         if (!handler) {
-          await markScheduleFailure(executor, job, "No handler registered", retryDelaySeconds, executionLogs, startedAt);
+          await markScheduleFailure(
+            executor,
+            job,
+            "No handler registered",
+            retryDelaySeconds,
+            executionLogs,
+            startedAt,
+          );
           processed += 1;
           continue;
         }
@@ -80,7 +84,7 @@ export function createDatabaseJobSchedulerAdapter(
             error instanceof Error ? error.message : String(error),
             retryDelaySeconds,
             executionLogs,
-            startedAt
+            startedAt,
           );
         }
         processed += 1;
@@ -90,7 +94,7 @@ export function createDatabaseJobSchedulerAdapter(
     async healthCheck() {
       await executor.all("SELECT 1 AS ok");
       return { ok: true };
-    }
+    },
   };
 }
 
@@ -114,13 +118,13 @@ function toScheduledJob(row: DatabaseRow): ScheduledJobRecord {
     handlerType: String(row.handler_type),
     payload: readJson(row.payload_json),
     attempt: Number(row.attempt ?? 0),
-    maxAttempts: Number(row.max_attempts ?? 1)
+    maxAttempts: Number(row.max_attempts ?? 1),
   };
 }
 
 async function claimNextDueJob(
   executor: DatabaseAdapterExecutor,
-  runningTimeoutSeconds: number
+  runningTimeoutSeconds: number,
 ): Promise<ScheduledJobRecord | null> {
   return executor.transaction(async () => {
     const now = nowIso();
@@ -129,14 +133,14 @@ async function claimNextDueJob(
        FROM scheduled_jobs
        WHERE status = 'enabled' AND (next_run_at IS NULL OR next_run_at <= ${p(executor, 1)})
        ORDER BY id ASC LIMIT 1`,
-      [now]
+      [now],
     );
     if (!rows[0]) return null;
     const lockUntil = new Date(Date.now() + runningTimeoutSeconds * 1000).toISOString();
     await executor.run(
       `UPDATE scheduled_jobs SET attempt = attempt + 1, next_run_at = ${p(executor, 1)}, updated_at = ${p(executor, 2)}
        WHERE id = ${p(executor, 3)} AND status = 'enabled'`,
-      [lockUntil, now, rows[0].id]
+      [lockUntil, now, rows[0].id],
     );
     return toScheduledJob({ ...rows[0], attempt: Number(rows[0].attempt ?? 0) + 1 });
   });
@@ -146,14 +150,14 @@ async function markScheduleSuccess(
   executor: DatabaseAdapterExecutor,
   job: ScheduledJobRecord,
   executionLogs: boolean,
-  startedAt: Date
+  startedAt: Date,
 ): Promise<void> {
   const now = nowIso();
   await executor.run(
     `UPDATE scheduled_jobs
      SET last_run_at = ${p(executor, 1)}, next_run_at = ${p(executor, 2)}, attempt = 0, last_error = NULL, updated_at = ${p(executor, 3)}
      WHERE id = ${p(executor, 4)}`,
-    [now, computeNextCronRun(job.cronExpression, new Date(now)), now, job.id]
+    [now, computeNextCronRun(job.cronExpression, new Date(now)), now, job.id],
   );
   if (executionLogs) {
     await writeSchedulerLog(executor, job, "info", "Scheduled job succeeded", startedAt, now);
@@ -166,7 +170,7 @@ async function markScheduleFailure(
   error: string,
   retryDelaySeconds: number,
   executionLogs: boolean,
-  startedAt: Date
+  startedAt: Date,
 ): Promise<void> {
   const now = nowIso();
   const exhausted = job.attempt >= job.maxAttempts;
@@ -177,7 +181,7 @@ async function markScheduleFailure(
     `UPDATE scheduled_jobs
      SET next_run_at = ${p(executor, 1)}, attempt = ${p(executor, 2)}, last_error = ${p(executor, 3)}, updated_at = ${p(executor, 4)}
      WHERE id = ${p(executor, 5)}`,
-    [nextRunAt, exhausted ? 0 : job.attempt, error, now, job.id]
+    [nextRunAt, exhausted ? 0 : job.attempt, error, now, job.id],
   );
   if (executionLogs) {
     await writeSchedulerLog(executor, job, "error", error, startedAt, now);
@@ -190,7 +194,7 @@ async function writeSchedulerLog(
   level: "info" | "error",
   message: string,
   startedAt: Date,
-  finishedAt: string
+  finishedAt: string,
 ): Promise<void> {
   await executor.run(
     `INSERT INTO log_entries (log_type, level, message, metadata_json, occurred_at, created_at)
@@ -205,13 +209,13 @@ async function writeSchedulerLog(
           handlerType: job.handlerType,
           attempt: job.attempt,
           maxAttempts: job.maxAttempts,
-          durationMs: Math.max(0, new Date(finishedAt).getTime() - startedAt.getTime())
+          durationMs: Math.max(0, new Date(finishedAt).getTime() - startedAt.getTime()),
         },
-        executor.dialect
+        executor.dialect,
       ),
       finishedAt,
-      finishedAt
-    ]
+      finishedAt,
+    ],
   );
 }
 

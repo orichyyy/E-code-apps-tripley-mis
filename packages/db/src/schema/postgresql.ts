@@ -10,25 +10,25 @@ import {
   serial,
   text,
   timestamp,
-  uniqueIndex
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull()
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
 };
 
 const softDelete = {
   isDeleted: boolean("is_deleted").notNull().default(false),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
-  deletedBy: integer("deleted_by")
+  deletedBy: integer("deleted_by"),
 };
 
 export const schemaMetadata = pgTable("schema_metadata", {
   id: serial("id").primaryKey(),
   key: text("key").notNull().unique(),
   value: jsonb("value"),
-  ...timestamps
+  ...timestamps,
 });
 
 export const organizations = pgTable(
@@ -51,7 +51,7 @@ export const organizations = pgTable(
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     codeUnique: uniqueIndex("organizations_code_unique").on(table.code),
@@ -60,11 +60,14 @@ export const organizations = pgTable(
     levelCheck: check("organizations_level_check", sql`${table.level} BETWEEN 1 AND 8`),
     rootSegmentCheck: check(
       "organizations_root_segment_check",
-      sql`${table.level} <> 1 OR ${table.segment} BETWEEN 1 AND 127`
+      sql`${table.level} <> 1 OR ${table.segment} BETWEEN 1 AND 127`,
     ),
     segmentCheck: check("organizations_segment_check", sql`${table.segment} BETWEEN 1 AND 255`),
-    statusCheck: check("organizations_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check(
+      "organizations_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const users = pgTable(
@@ -95,14 +98,17 @@ export const users = pgTable(
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     usernameUnique: uniqueIndex("users_username_unique").on(table.username),
     emailUnique: uniqueIndex("users_email_unique").on(table.email),
     phoneUnique: uniqueIndex("users_phone_unique").on(table.phone),
-    statusCheck: check("users_status_check", sql`${table.status} IN ('enabled', 'disabled', 'locked')`)
-  })
+    statusCheck: check(
+      "users_status_check",
+      sql`${table.status} IN ('enabled', 'disabled', 'locked')`,
+    ),
+  }),
 );
 
 export const userPreferences = pgTable(
@@ -115,17 +121,20 @@ export const userPreferences = pgTable(
     themeMode: text("theme_mode").notNull().default("light"),
     themeColor: text("theme_color").notNull().default("blue"),
     pageTabsEnabled: boolean("page_tabs_enabled").notNull().default(true),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull()
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
     userUnique: uniqueIndex("user_preferences_user_unique").on(table.userId),
     languageCheck: check("user_preferences_language_check", sql`${table.language} IN ('en', 'zh')`),
-    themeModeCheck: check("user_preferences_theme_mode_check", sql`${table.themeMode} IN ('light', 'dark')`),
+    themeModeCheck: check(
+      "user_preferences_theme_mode_check",
+      sql`${table.themeMode} IN ('light', 'dark')`,
+    ),
     themeColorCheck: check(
       "user_preferences_theme_color_check",
-      sql`${table.themeColor} IN ('blue', 'emerald', 'violet', 'slate')`
-    )
-  })
+      sql`${table.themeColor} IN ('blue', 'emerald', 'violet', 'slate')`,
+    ),
+  }),
 );
 
 export const roles = pgTable(
@@ -143,12 +152,12 @@ export const roles = pgTable(
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     codeUnique: uniqueIndex("roles_code_unique").on(table.code),
-    statusCheck: check("roles_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check("roles_status_check", sql`${table.status} IN ('enabled', 'disabled')`),
+  }),
 );
 
 export const userOrganizationRoles = pgTable(
@@ -164,18 +173,18 @@ export const userOrganizationRoles = pgTable(
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     userOrgUnique: uniqueIndex("user_organization_roles_user_org_unique").on(
       table.userId,
-      table.organizationId
+      table.organizationId,
     ),
     statusCheck: check(
       "user_organization_roles_status_check",
-      sql`${table.status} IN ('enabled', 'disabled')`
-    )
-  })
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const permissions = pgTable(
@@ -193,16 +202,16 @@ export const permissions = pgTable(
     source: text("source").notNull().default("base_manifest"),
     manifestHash: text("manifest_hash").notNull(),
     status: text("status").notNull().default("enabled"),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     codeUnique: uniqueIndex("permissions_code_unique").on(table.code),
     statusCheck: check("permissions_status_check", sql`${table.status} IN ('enabled', 'disabled')`),
     typeCheck: check(
       "permissions_type_check",
-      sql`${table.permissionType} IN ('menu', 'page', 'action', 'api', 'data', 'field')`
-    )
-  })
+      sql`${table.permissionType} IN ('menu', 'page', 'action', 'api', 'data', 'field')`,
+    ),
+  }),
 );
 
 export const rolePermissions = pgTable(
@@ -214,15 +223,15 @@ export const rolePermissions = pgTable(
     permissionId: integer("permission_id").notNull(),
     effect: text("effect").notNull().default("allow"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull()
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
     rolePermissionUnique: uniqueIndex("role_permissions_role_permission_unique").on(
       table.roleId,
-      table.permissionId
+      table.permissionId,
     ),
-    effectCheck: check("role_permissions_effect_check", sql`${table.effect} IN ('allow', 'deny')`)
-  })
+    effectCheck: check("role_permissions_effect_check", sql`${table.effect} IN ('allow', 'deny')`),
+  }),
 );
 
 export const roleDataPermissions = pgTable(
@@ -237,15 +246,18 @@ export const roleDataPermissions = pgTable(
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     roleDataPermissionUnique: uniqueIndex("role_data_permissions_role_permission_unique").on(
       table.roleId,
-      table.permissionId
+      table.permissionId,
     ),
-    effectCheck: check("role_data_permissions_effect_check", sql`${table.effect} IN ('allow', 'deny')`)
-  })
+    effectCheck: check(
+      "role_data_permissions_effect_check",
+      sql`${table.effect} IN ('allow', 'deny')`,
+    ),
+  }),
 );
 
 export const fieldPermissionRules = pgTable(
@@ -261,21 +273,24 @@ export const fieldPermissionRules = pgTable(
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     targetFieldUnique: uniqueIndex("field_permission_rules_target_field_unique").on(
       table.targetType,
       table.targetId,
       table.resource,
-      table.field
+      table.field,
     ),
-    targetTypeCheck: check("field_permission_rules_target_type_check", sql`${table.targetType} IN ('role')`),
+    targetTypeCheck: check(
+      "field_permission_rules_target_type_check",
+      sql`${table.targetType} IN ('role')`,
+    ),
     effectCheck: check(
       "field_permission_rules_effect_check",
-      sql`${table.effect} IN ('visible', 'hidden', 'readonly')`
-    )
-  })
+      sql`${table.effect} IN ('visible', 'hidden', 'readonly')`,
+    ),
+  }),
 );
 
 export const userPermissionOverrides = pgTable(
@@ -289,15 +304,18 @@ export const userPermissionOverrides = pgTable(
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     userPermissionUnique: uniqueIndex("user_permission_overrides_user_permission_unique").on(
       table.userId,
-      table.permissionId
+      table.permissionId,
     ),
-    effectCheck: check("user_permission_overrides_effect_check", sql`${table.effect} IN ('allow', 'deny')`)
-  })
+    effectCheck: check(
+      "user_permission_overrides_effect_check",
+      sql`${table.effect} IN ('allow', 'deny')`,
+    ),
+  }),
 );
 
 export const menus = pgTable(
@@ -316,13 +334,13 @@ export const menus = pgTable(
     visible: boolean("visible").notNull().default(true),
     status: text("status").notNull().default("enabled"),
     ...softDelete,
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     codeUnique: uniqueIndex("menus_code_unique").on(table.code),
     pathUnique: uniqueIndex("menus_path_unique").on(table.path),
-    statusCheck: check("menus_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check("menus_status_check", sql`${table.status} IN ('enabled', 'disabled')`),
+  }),
 );
 
 export const routeMetadata = pgTable(
@@ -340,12 +358,15 @@ export const routeMetadata = pgTable(
     icon: text("icon"),
     sortOrder: integer("sort_order").notNull().default(0),
     status: text("status").notNull().default("enabled"),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     routeCodeUnique: uniqueIndex("route_metadata_route_code_unique").on(table.routeCode),
-    statusCheck: check("route_metadata_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check(
+      "route_metadata_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const apiPermissions = pgTable(
@@ -362,17 +383,23 @@ export const apiPermissions = pgTable(
     logLevel: text("log_level").notNull().default("basic"),
     public: boolean("public").notNull().default(false),
     status: text("status").notNull().default("enabled"),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     codeUnique: uniqueIndex("api_permissions_code_unique").on(table.code),
-    methodPathUnique: uniqueIndex("api_permissions_method_path_unique").on(table.method, table.path),
+    methodPathUnique: uniqueIndex("api_permissions_method_path_unique").on(
+      table.method,
+      table.path,
+    ),
     logLevelCheck: check(
       "api_permissions_log_level_check",
-      sql`${table.logLevel} IN ('none', 'basic', 'request', 'request_response')`
+      sql`${table.logLevel} IN ('none', 'basic', 'request', 'request_response')`,
     ),
-    statusCheck: check("api_permissions_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check(
+      "api_permissions_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const menuApiBindings = pgTable(
@@ -382,11 +409,11 @@ export const menuApiBindings = pgTable(
     tenantId: integer("tenant_id"),
     menuId: integer("menu_id").notNull(),
     apiPermissionId: integer("api_permission_id").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull()
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
-    bindingUnique: uniqueIndex("menu_api_bindings_unique").on(table.menuId, table.apiPermissionId)
-  })
+    bindingUnique: uniqueIndex("menu_api_bindings_unique").on(table.menuId, table.apiPermissionId),
+  }),
 );
 
 export const authSessions = pgTable(
@@ -404,19 +431,19 @@ export const authSessions = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull()
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
     userActiveIndex: index("auth_sessions_user_active_idx").on(
       table.userId,
       table.revokedAt,
-      table.expiresAt
+      table.expiresAt,
     ),
     statusCheck: check(
       "auth_sessions_status_check",
-      sql`${table.status} IN ('active', 'revoked', 'expired')`
-    )
-  })
+      sql`${table.status} IN ('active', 'revoked', 'expired')`,
+    ),
+  }),
 );
 
 export const refreshTokens = pgTable(
@@ -430,11 +457,11 @@ export const refreshTokens = pgTable(
     tokenVersion: integer("token_version").notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull()
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
-    tokenHashUnique: uniqueIndex("refresh_tokens_hash_unique").on(table.tokenHash)
-  })
+    tokenHashUnique: uniqueIndex("refresh_tokens_hash_unique").on(table.tokenHash),
+  }),
 );
 
 export const systemInitializationState = pgTable(
@@ -446,14 +473,14 @@ export const systemInitializationState = pgTable(
     initializedAt: timestamp("initialized_at", { withTimezone: true }),
     initializedBy: integer("initialized_by"),
     version: text("version").notNull(),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     statusCheck: check(
       "system_initialization_state_status_check",
-      sql`${table.status} IN ('uninitialized', 'initialized')`
-    )
-  })
+      sql`${table.status} IN ('uninitialized', 'initialized')`,
+    ),
+  }),
 );
 
 export const systemConfigs = pgTable(
@@ -468,17 +495,20 @@ export const systemConfigs = pgTable(
     description: text("description"),
     editable: boolean("editable").notNull().default(true),
     status: text("status").notNull().default("enabled"),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull()
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
     keyUnique: uniqueIndex("system_configs_key_unique").on(table.configKey),
     groupIndex: index("system_configs_group_idx").on(table.groupKey),
     valueTypeCheck: check(
       "system_configs_value_type_check",
-      sql`${table.valueType} IN ('string', 'number', 'boolean', 'json')`
+      sql`${table.valueType} IN ('string', 'number', 'boolean', 'json')`,
     ),
-    statusCheck: check("system_configs_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check(
+      "system_configs_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const dictionaryTypes = pgTable(
@@ -489,12 +519,15 @@ export const dictionaryTypes = pgTable(
     code: text("code").notNull(),
     name: text("name").notNull(),
     description: text("description"),
-    status: text("status").notNull().default("enabled")
+    status: text("status").notNull().default("enabled"),
   },
   (table) => ({
     codeUnique: uniqueIndex("dictionary_types_code_unique").on(table.code),
-    statusCheck: check("dictionary_types_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check(
+      "dictionary_types_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const dictionaryItems = pgTable(
@@ -506,16 +539,19 @@ export const dictionaryItems = pgTable(
     itemValue: text("item_value").notNull(),
     labelI18nKey: text("label_i18n_key").notNull(),
     sortOrder: integer("sort_order").notNull().default(0),
-    status: text("status").notNull().default("enabled")
+    status: text("status").notNull().default("enabled"),
   },
   (table) => ({
     typeValueUnique: uniqueIndex("dictionary_items_type_value_unique").on(
       table.typeId,
-      table.itemValue
+      table.itemValue,
     ),
     typeIndex: index("dictionary_items_type_idx").on(table.typeId),
-    statusCheck: check("dictionary_items_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check(
+      "dictionary_items_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const i18nMessages = pgTable(
@@ -527,15 +563,15 @@ export const i18nMessages = pgTable(
     language: text("language").notNull(),
     messageValue: text("message_value").notNull(),
     module: text("module").notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull()
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
     keyLanguageUnique: uniqueIndex("i18n_messages_key_language_unique").on(
       table.messageKey,
-      table.language
+      table.language,
     ),
-    moduleIndex: index("i18n_messages_module_idx").on(table.module)
-  })
+    moduleIndex: index("i18n_messages_module_idx").on(table.module),
+  }),
 );
 
 export const cacheEntries = pgTable(
@@ -545,12 +581,12 @@ export const cacheEntries = pgTable(
     key: text("key").notNull(),
     valueJson: jsonb("value_json").notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     keyUnique: uniqueIndex("cache_entries_key_unique").on(table.key),
-    expiresAtIndex: index("cache_entries_expires_at_idx").on(table.expiresAt)
-  })
+    expiresAtIndex: index("cache_entries_expires_at_idx").on(table.expiresAt),
+  }),
 );
 
 export const rateLimitCounters = pgTable(
@@ -562,15 +598,15 @@ export const rateLimitCounters = pgTable(
     windowSeconds: integer("window_seconds").notNull(),
     count: integer("count").notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     keyWindowUnique: uniqueIndex("rate_limit_counters_key_window_unique").on(
       table.key,
-      table.windowStartsAt
+      table.windowStartsAt,
     ),
-    expiresAtIndex: index("rate_limit_counters_expires_at_idx").on(table.expiresAt)
-  })
+    expiresAtIndex: index("rate_limit_counters_expires_at_idx").on(table.expiresAt),
+  }),
 );
 
 export const locks = pgTable(
@@ -582,12 +618,12 @@ export const locks = pgTable(
     fencingToken: integer("fencing_token").notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     heartbeatAt: timestamp("heartbeat_at", { withTimezone: true }).notNull(),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     keyUnique: uniqueIndex("locks_key_unique").on(table.key),
-    expiresAtIndex: index("locks_expires_at_idx").on(table.expiresAt)
-  })
+    expiresAtIndex: index("locks_expires_at_idx").on(table.expiresAt),
+  }),
 );
 
 export const queueJobs = pgTable(
@@ -605,18 +641,18 @@ export const queueJobs = pgTable(
     lockedAt: timestamp("locked_at", { withTimezone: true }),
     lastError: text("last_error"),
     completedAt: timestamp("completed_at", { withTimezone: true }),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     statusAvailableIndex: index("queue_jobs_status_available_idx").on(
       table.status,
-      table.availableAt
+      table.availableAt,
     ),
     statusCheck: check(
       "queue_jobs_status_check",
-      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed', 'dead_letter')`
-    )
-  })
+      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed', 'dead_letter')`,
+    ),
+  }),
 );
 
 export const eventOutbox = pgTable(
@@ -632,15 +668,15 @@ export const eventOutbox = pgTable(
     lastError: text("last_error"),
     occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
     processedAt: timestamp("processed_at", { withTimezone: true }),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     statusNextRunIndex: index("event_outbox_status_next_run_idx").on(table.status, table.nextRunAt),
     statusCheck: check(
       "event_outbox_status_check",
-      sql`${table.status} IN ('pending', 'published', 'failed', 'dead_letter')`
-    )
-  })
+      sql`${table.status} IN ('pending', 'published', 'failed', 'dead_letter')`,
+    ),
+  }),
 );
 
 export const scheduledJobs = pgTable(
@@ -657,13 +693,16 @@ export const scheduledJobs = pgTable(
     attempt: integer("attempt").notNull().default(0),
     maxAttempts: integer("max_attempts").notNull().default(1),
     lastError: text("last_error"),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     codeUnique: uniqueIndex("scheduled_jobs_code_unique").on(table.code),
     nextRunIndex: index("scheduled_jobs_next_run_idx").on(table.status, table.nextRunAt),
-    statusCheck: check("scheduled_jobs_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check(
+      "scheduled_jobs_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const fileObjects = pgTable(
@@ -681,12 +720,12 @@ export const fileObjects = pgTable(
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     objectKeyUnique: uniqueIndex("file_objects_object_key_unique").on(table.objectKey),
-    statusCheck: check("file_objects_status_check", sql`${table.status} IN ('active', 'invalid')`)
-  })
+    statusCheck: check("file_objects_status_check", sql`${table.status} IN ('active', 'invalid')`),
+  }),
 );
 
 export const fileReferences = pgTable(
@@ -699,13 +738,16 @@ export const fileReferences = pgTable(
     referenceType: text("reference_type").notNull(),
     status: text("status").notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
-    createdBy: integer("created_by")
+    createdBy: integer("created_by"),
   },
   (table) => ({
     fileIndex: index("file_references_file_idx").on(table.fileObjectId, table.status),
     resourceIndex: index("file_references_resource_idx").on(table.resourceType, table.resourceId),
-    statusCheck: check("file_references_status_check", sql`${table.status} IN ('active', 'invalid')`)
-  })
+    statusCheck: check(
+      "file_references_status_check",
+      sql`${table.status} IN ('active', 'invalid')`,
+    ),
+  }),
 );
 
 export const notifications = pgTable(
@@ -721,16 +763,19 @@ export const notifications = pgTable(
     readAt: timestamp("read_at", { withTimezone: true }),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     ...softDelete,
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     userStatusIndex: index("notifications_user_status_idx").on(table.userId, table.status),
-    channelCheck: check("notifications_channel_check", sql`${table.channel} IN ('in_app', 'email', 'webhook', 'sms')`),
+    channelCheck: check(
+      "notifications_channel_check",
+      sql`${table.channel} IN ('in_app', 'email', 'webhook', 'sms')`,
+    ),
     statusCheck: check(
       "notifications_status_check",
-      sql`${table.status} IN ('unread', 'read', 'archived', 'deleted')`
-    )
-  })
+      sql`${table.status} IN ('unread', 'read', 'archived', 'deleted')`,
+    ),
+  }),
 );
 
 export const notificationTemplates = pgTable(
@@ -744,16 +789,22 @@ export const notificationTemplates = pgTable(
     body: text("body").notNull(),
     variablesJson: jsonb("variables_json").notNull(),
     status: text("status").notNull().default("enabled"),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     codeLocaleUnique: uniqueIndex("notification_templates_code_locale_unique").on(
       table.code,
-      table.locale
+      table.locale,
     ),
-    channelCheck: check("notification_templates_channel_check", sql`${table.channel} IN ('in_app', 'email', 'sms')`),
-    statusCheck: check("notification_templates_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    channelCheck: check(
+      "notification_templates_channel_check",
+      sql`${table.channel} IN ('in_app', 'email', 'sms')`,
+    ),
+    statusCheck: check(
+      "notification_templates_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const announcements = pgTable(
@@ -769,16 +820,19 @@ export const announcements = pgTable(
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     statusIndex: index("announcements_status_idx").on(table.status, table.publishedAt),
-    scopeTypeCheck: check("announcements_scope_type_check", sql`${table.scopeType} IN ('system', 'organization')`),
+    scopeTypeCheck: check(
+      "announcements_scope_type_check",
+      sql`${table.scopeType} IN ('system', 'organization')`,
+    ),
     statusCheck: check(
       "announcements_status_check",
-      sql`${table.status} IN ('draft', 'published', 'deleted')`
-    )
-  })
+      sql`${table.status} IN ('draft', 'published', 'deleted')`,
+    ),
+  }),
 );
 
 export const webhookSubscriptions = pgTable(
@@ -794,12 +848,15 @@ export const webhookSubscriptions = pgTable(
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     statusIndex: index("webhook_subscriptions_status_idx").on(table.status),
-    statusCheck: check("webhook_subscriptions_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check(
+      "webhook_subscriptions_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const logEntries = pgTable(
@@ -814,16 +871,19 @@ export const logEntries = pgTable(
     ipAddress: text("ip_address"),
     metadataJson: jsonb("metadata_json").notNull(),
     occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull()
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
     typeOccurredIndex: index("log_entries_type_occurred_idx").on(table.logType, table.occurredAt),
     typeCheck: check(
       "log_entries_type_check",
-      sql`${table.logType} IN ('login', 'operation', 'access', 'api_call', 'exception', 'security', 'scheduler', 'file_operation')`
+      sql`${table.logType} IN ('login', 'operation', 'access', 'api_call', 'exception', 'security', 'scheduler', 'file_operation')`,
     ),
-    levelCheck: check("log_entries_level_check", sql`${table.level} IN ('debug', 'info', 'warn', 'error')`)
-  })
+    levelCheck: check(
+      "log_entries_level_check",
+      sql`${table.level} IN ('debug', 'info', 'warn', 'error')`,
+    ),
+  }),
 );
 
 export const importExportTasks = pgTable(
@@ -842,16 +902,19 @@ export const importExportTasks = pgTable(
     errorPreviewJson: jsonb("error_preview_json").notNull(),
     resultExpiresAt: timestamp("result_expires_at", { withTimezone: true }),
     ...timestamps,
-    createdBy: integer("created_by")
+    createdBy: integer("created_by"),
   },
   (table) => ({
     statusIndex: index("import_export_tasks_status_idx").on(table.status),
-    typeCheck: check("import_export_tasks_type_check", sql`${table.taskType} IN ('import', 'export')`),
+    typeCheck: check(
+      "import_export_tasks_type_check",
+      sql`${table.taskType} IN ('import', 'export')`,
+    ),
     statusCheck: check(
       "import_export_tasks_status_check",
-      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed')`
-    )
-  })
+      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed')`,
+    ),
+  }),
 );
 
 export const postgresqlSchema = {
@@ -890,5 +953,5 @@ export const postgresqlSchema = {
   userPreferences,
   userOrganizationRoles,
   webhookSubscriptions,
-  users
+  users,
 };

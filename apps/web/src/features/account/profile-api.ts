@@ -1,7 +1,7 @@
 import type {
   UpdateOwnAvatarRequest,
   UpdateOwnPreferencesRequest,
-  UpdateOwnProfileRequest
+  UpdateOwnProfileRequest,
 } from "@web-admin-base/contracts";
 
 import { requestJson, stringField } from "@/lib/api-request";
@@ -42,7 +42,7 @@ export async function fetchProfile(): Promise<Profile> {
 export async function updateOwnProfile(input: UpdateOwnProfileRequest) {
   const envelope = await requestJson<{ data?: unknown }>("/profile", {
     method: "PATCH",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
   return toProfile(envelope.data);
 }
@@ -50,7 +50,7 @@ export async function updateOwnProfile(input: UpdateOwnProfileRequest) {
 export async function updateOwnPreferences(input: UpdateOwnPreferencesRequest) {
   const envelope = await requestJson<{ data?: unknown }>("/profile/preferences", {
     method: "PATCH",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
   return toUserPreferences(envelope.data);
 }
@@ -58,7 +58,7 @@ export async function updateOwnPreferences(input: UpdateOwnPreferencesRequest) {
 export async function updateOwnAvatar(input: UpdateOwnAvatarRequest) {
   const envelope = await requestJson<{ data?: unknown }>("/profile/avatar", {
     method: "POST",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
   return toProfile(envelope.data);
 }
@@ -75,9 +75,9 @@ function toProfile(value: unknown): Profile {
       phone: stringField(user.phone, ""),
       avatarFileId: nullableString(user.avatarFileId),
       gender: nullableString(user.gender),
-      employeeNumber: nullableString(user.employeeNumber)
+      employeeNumber: nullableString(user.employeeNumber),
     },
-    preferences: toUserPreferences(record.preferences)
+    preferences: toUserPreferences(record.preferences),
   };
 }
 
@@ -91,7 +91,7 @@ function toUserPreferences(value: unknown): UserPreferences {
     themeMode: record.themeMode === "dark" ? "dark" : "light",
     themeColor: toThemeColor(record.themeColor),
     pageTabsEnabled: record.pageTabsEnabled !== false,
-    updatedAt: stringField(record.updatedAt, "")
+    updatedAt: stringField(record.updatedAt, ""),
   };
 }
 

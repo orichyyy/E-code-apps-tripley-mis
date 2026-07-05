@@ -22,7 +22,7 @@ describe("API configuration", () => {
       PASSWORD_MIN_LENGTH: "12",
       PASSWORD_REQUIRE_LETTERS: "false",
       PASSWORD_REQUIRE_NUMBERS: "true",
-      PASSWORD_PERIODIC_CHANGE_DAYS: "180"
+      PASSWORD_PERIODIC_CHANGE_DAYS: "180",
     });
 
     expect(config).toMatchObject({
@@ -44,16 +44,16 @@ describe("API configuration", () => {
           minLength: 12,
           requireLetters: false,
           requireNumbers: true,
-          periodicChangeDays: 180
-        }
-      }
+          periodicChangeDays: 180,
+        },
+      },
     });
   });
 
   it("uses loaded password policy in default backend core dependencies", async () => {
     const config = loadApiConfig({
       NODE_ENV: "test",
-      PASSWORD_MIN_LENGTH: "12"
+      PASSWORD_MIN_LENGTH: "12",
     });
     const app = createApp(createDefaultAppDependencies(config));
 
@@ -66,8 +66,8 @@ describe("API configuration", () => {
         adminDisplayName: "Super Admin",
         adminEmail: "admin@example.com",
         adminPhone: "10000000000",
-        adminPassword: "password1"
-      })
+        adminPassword: "password1",
+      }),
     });
     const body = await response.json();
 

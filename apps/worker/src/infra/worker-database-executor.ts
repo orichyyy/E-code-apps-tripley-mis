@@ -2,12 +2,14 @@ import type { DatabaseAdapterExecutor, DatabaseRow } from "@web-admin-base/adapt
 import {
   createPostgresqlPool,
   createSqliteClient,
-  type loadDatabaseConfig
+  type loadDatabaseConfig,
 } from "@web-admin-base/db";
 
 export type WorkerDatabaseConfig = ReturnType<typeof loadDatabaseConfig>;
 
-export function createWorkerDatabaseExecutor(config: WorkerDatabaseConfig): DatabaseAdapterExecutor {
+export function createWorkerDatabaseExecutor(
+  config: WorkerDatabaseConfig,
+): DatabaseAdapterExecutor {
   return config.dialect === "postgresql"
     ? createPostgresqlWorkerExecutor(config.url)
     : createSqliteWorkerExecutor(config.url);
@@ -15,7 +17,9 @@ export function createWorkerDatabaseExecutor(config: WorkerDatabaseConfig): Data
 
 function createPostgresqlWorkerExecutor(url: string): DatabaseAdapterExecutor {
   const pool = createPostgresqlPool(url);
-  let activeClient: { query(sql: string, params?: unknown[]): Promise<{ rows: unknown[] }> } | null = null;
+  let activeClient: {
+    query(sql: string, params?: unknown[]): Promise<{ rows: unknown[] }>;
+  } | null = null;
 
   return {
     dialect: "postgresql",
@@ -45,7 +49,7 @@ function createPostgresqlWorkerExecutor(url: string): DatabaseAdapterExecutor {
     },
     async close() {
       await pool.end();
-    }
+    },
   };
 }
 
@@ -85,6 +89,6 @@ function createSqliteWorkerExecutor(url: string): DatabaseAdapterExecutor {
     },
     async close() {
       client.close();
-    }
+    },
   };
 }

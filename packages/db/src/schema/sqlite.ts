@@ -3,20 +3,20 @@ import { check, index, integer, sqliteTable, text, uniqueIndex } from "drizzle-o
 
 const timestamps = {
   createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull()
+  updatedAt: text("updated_at").notNull(),
 };
 
 const softDelete = {
   isDeleted: integer("is_deleted", { mode: "boolean" }).notNull().default(false),
   deletedAt: text("deleted_at"),
-  deletedBy: integer("deleted_by")
+  deletedBy: integer("deleted_by"),
 };
 
 export const schemaMetadata = sqliteTable("schema_metadata", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   key: text("key").notNull().unique(),
   value: text("value", { mode: "json" }),
-  ...timestamps
+  ...timestamps,
 });
 
 export const organizations = sqliteTable(
@@ -34,12 +34,14 @@ export const organizations = sqliteTable(
     email: text("email"),
     address: text("address"),
     sortOrder: integer("sort_order").notNull().default(0),
-    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
+    status: text("status", { enum: ["enabled", "disabled"] })
+      .notNull()
+      .default("enabled"),
     remark: text("remark"),
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     codeUnique: uniqueIndex("organizations_code_unique").on(table.code),
@@ -48,11 +50,14 @@ export const organizations = sqliteTable(
     levelCheck: check("organizations_level_check", sql`${table.level} BETWEEN 1 AND 8`),
     rootSegmentCheck: check(
       "organizations_root_segment_check",
-      sql`${table.level} <> 1 OR ${table.segment} BETWEEN 1 AND 127`
+      sql`${table.level} <> 1 OR ${table.segment} BETWEEN 1 AND 127`,
     ),
     segmentCheck: check("organizations_segment_check", sql`${table.segment} BETWEEN 1 AND 255`),
-    statusCheck: check("organizations_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check(
+      "organizations_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const users = sqliteTable(
@@ -69,9 +74,11 @@ export const users = sqliteTable(
     employeeNumber: text("employee_number"),
     passwordHash: text("password_hash").notNull(),
     primaryOrganizationId: integer("primary_organization_id"),
-    status: text("status", { enum: ["enabled", "disabled", "locked"] }).notNull().default("enabled"),
+    status: text("status", { enum: ["enabled", "disabled", "locked"] })
+      .notNull()
+      .default("enabled"),
     firstLoginPasswordChangeRequired: integer("first_login_password_change_required", {
-      mode: "boolean"
+      mode: "boolean",
     })
       .notNull()
       .default(true),
@@ -85,14 +92,17 @@ export const users = sqliteTable(
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     usernameUnique: uniqueIndex("users_username_unique").on(table.username),
     emailUnique: uniqueIndex("users_email_unique").on(table.email),
     phoneUnique: uniqueIndex("users_phone_unique").on(table.phone),
-    statusCheck: check("users_status_check", sql`${table.status} IN ('enabled', 'disabled', 'locked')`)
-  })
+    statusCheck: check(
+      "users_status_check",
+      sql`${table.status} IN ('enabled', 'disabled', 'locked')`,
+    ),
+  }),
 );
 
 export const userPreferences = sqliteTable(
@@ -101,23 +111,30 @@ export const userPreferences = sqliteTable(
     id: integer("id").primaryKey({ autoIncrement: true }),
     tenantId: integer("tenant_id"),
     userId: integer("user_id").notNull(),
-    language: text("language", { enum: ["en", "zh"] }).notNull().default("en"),
-    themeMode: text("theme_mode", { enum: ["light", "dark"] }).notNull().default("light"),
+    language: text("language", { enum: ["en", "zh"] })
+      .notNull()
+      .default("en"),
+    themeMode: text("theme_mode", { enum: ["light", "dark"] })
+      .notNull()
+      .default("light"),
     themeColor: text("theme_color", { enum: ["blue", "emerald", "violet", "slate"] })
       .notNull()
       .default("blue"),
     pageTabsEnabled: integer("page_tabs_enabled", { mode: "boolean" }).notNull().default(true),
-    updatedAt: text("updated_at").notNull()
+    updatedAt: text("updated_at").notNull(),
   },
   (table) => ({
     userUnique: uniqueIndex("user_preferences_user_unique").on(table.userId),
     languageCheck: check("user_preferences_language_check", sql`${table.language} IN ('en', 'zh')`),
-    themeModeCheck: check("user_preferences_theme_mode_check", sql`${table.themeMode} IN ('light', 'dark')`),
+    themeModeCheck: check(
+      "user_preferences_theme_mode_check",
+      sql`${table.themeMode} IN ('light', 'dark')`,
+    ),
     themeColorCheck: check(
       "user_preferences_theme_color_check",
-      sql`${table.themeColor} IN ('blue', 'emerald', 'violet', 'slate')`
-    )
-  })
+      sql`${table.themeColor} IN ('blue', 'emerald', 'violet', 'slate')`,
+    ),
+  }),
 );
 
 export const roles = sqliteTable(
@@ -130,17 +147,19 @@ export const roles = sqliteTable(
     description: text("description"),
     dataScopeRuleId: integer("data_scope_rule_id"),
     isBuiltin: integer("is_builtin", { mode: "boolean" }).notNull().default(false),
-    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
+    status: text("status", { enum: ["enabled", "disabled"] })
+      .notNull()
+      .default("enabled"),
     remark: text("remark"),
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     codeUnique: uniqueIndex("roles_code_unique").on(table.code),
-    statusCheck: check("roles_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check("roles_status_check", sql`${table.status} IN ('enabled', 'disabled')`),
+  }),
 );
 
 export const userOrganizationRoles = sqliteTable(
@@ -152,22 +171,24 @@ export const userOrganizationRoles = sqliteTable(
     organizationId: integer("organization_id").notNull(),
     roleId: integer("role_id").notNull(),
     isPrimary: integer("is_primary", { mode: "boolean" }).notNull().default(false),
-    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
+    status: text("status", { enum: ["enabled", "disabled"] })
+      .notNull()
+      .default("enabled"),
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     userOrgUnique: uniqueIndex("user_organization_roles_user_org_unique").on(
       table.userId,
-      table.organizationId
+      table.organizationId,
     ),
     statusCheck: check(
       "user_organization_roles_status_check",
-      sql`${table.status} IN ('enabled', 'disabled')`
-    )
-  })
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const permissions = sqliteTable(
@@ -178,7 +199,7 @@ export const permissions = sqliteTable(
     code: text("code").notNull(),
     name: text("name").notNull(),
     permissionType: text("permission_type", {
-      enum: ["menu", "page", "action", "api", "data", "field"]
+      enum: ["menu", "page", "action", "api", "data", "field"],
     }).notNull(),
     resource: text("resource").notNull(),
     action: text("action").notNull(),
@@ -186,17 +207,19 @@ export const permissions = sqliteTable(
     module: text("module").notNull(),
     source: text("source").notNull().default("base_manifest"),
     manifestHash: text("manifest_hash").notNull(),
-    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
-    ...timestamps
+    status: text("status", { enum: ["enabled", "disabled"] })
+      .notNull()
+      .default("enabled"),
+    ...timestamps,
   },
   (table) => ({
     codeUnique: uniqueIndex("permissions_code_unique").on(table.code),
     statusCheck: check("permissions_status_check", sql`${table.status} IN ('enabled', 'disabled')`),
     typeCheck: check(
       "permissions_type_check",
-      sql`${table.permissionType} IN ('menu', 'page', 'action', 'api', 'data', 'field')`
-    )
-  })
+      sql`${table.permissionType} IN ('menu', 'page', 'action', 'api', 'data', 'field')`,
+    ),
+  }),
 );
 
 export const rolePermissions = sqliteTable(
@@ -206,17 +229,19 @@ export const rolePermissions = sqliteTable(
     tenantId: integer("tenant_id"),
     roleId: integer("role_id").notNull(),
     permissionId: integer("permission_id").notNull(),
-    effect: text("effect", { enum: ["allow", "deny"] }).notNull().default("allow"),
+    effect: text("effect", { enum: ["allow", "deny"] })
+      .notNull()
+      .default("allow"),
     createdAt: text("created_at").notNull(),
-    updatedAt: text("updated_at").notNull()
+    updatedAt: text("updated_at").notNull(),
   },
   (table) => ({
     rolePermissionUnique: uniqueIndex("role_permissions_role_permission_unique").on(
       table.roleId,
-      table.permissionId
+      table.permissionId,
     ),
-    effectCheck: check("role_permissions_effect_check", sql`${table.effect} IN ('allow', 'deny')`)
-  })
+    effectCheck: check("role_permissions_effect_check", sql`${table.effect} IN ('allow', 'deny')`),
+  }),
 );
 
 export const roleDataPermissions = sqliteTable(
@@ -226,20 +251,25 @@ export const roleDataPermissions = sqliteTable(
     tenantId: integer("tenant_id"),
     roleId: integer("role_id").notNull(),
     permissionId: integer("permission_id").notNull(),
-    effect: text("effect", { enum: ["allow", "deny"] }).notNull().default("allow"),
+    effect: text("effect", { enum: ["allow", "deny"] })
+      .notNull()
+      .default("allow"),
     ruleJson: text("rule_json", { mode: "json" }).notNull(),
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     roleDataPermissionUnique: uniqueIndex("role_data_permissions_role_permission_unique").on(
       table.roleId,
-      table.permissionId
+      table.permissionId,
     ),
-    effectCheck: check("role_data_permissions_effect_check", sql`${table.effect} IN ('allow', 'deny')`)
-  })
+    effectCheck: check(
+      "role_data_permissions_effect_check",
+      sql`${table.effect} IN ('allow', 'deny')`,
+    ),
+  }),
 );
 
 export const fieldPermissionRules = sqliteTable(
@@ -255,21 +285,24 @@ export const fieldPermissionRules = sqliteTable(
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     targetFieldUnique: uniqueIndex("field_permission_rules_target_field_unique").on(
       table.targetType,
       table.targetId,
       table.resource,
-      table.field
+      table.field,
     ),
-    targetTypeCheck: check("field_permission_rules_target_type_check", sql`${table.targetType} IN ('role')`),
+    targetTypeCheck: check(
+      "field_permission_rules_target_type_check",
+      sql`${table.targetType} IN ('role')`,
+    ),
     effectCheck: check(
       "field_permission_rules_effect_check",
-      sql`${table.effect} IN ('visible', 'hidden', 'readonly')`
-    )
-  })
+      sql`${table.effect} IN ('visible', 'hidden', 'readonly')`,
+    ),
+  }),
 );
 
 export const userPermissionOverrides = sqliteTable(
@@ -283,15 +316,18 @@ export const userPermissionOverrides = sqliteTable(
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     userPermissionUnique: uniqueIndex("user_permission_overrides_user_permission_unique").on(
       table.userId,
-      table.permissionId
+      table.permissionId,
     ),
-    effectCheck: check("user_permission_overrides_effect_check", sql`${table.effect} IN ('allow', 'deny')`)
-  })
+    effectCheck: check(
+      "user_permission_overrides_effect_check",
+      sql`${table.effect} IN ('allow', 'deny')`,
+    ),
+  }),
 );
 
 export const menus = sqliteTable(
@@ -308,15 +344,17 @@ export const menus = sqliteTable(
     icon: text("icon"),
     sortOrder: integer("sort_order").notNull().default(0),
     visible: integer("visible", { mode: "boolean" }).notNull().default(true),
-    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
+    status: text("status", { enum: ["enabled", "disabled"] })
+      .notNull()
+      .default("enabled"),
     ...softDelete,
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     codeUnique: uniqueIndex("menus_code_unique").on(table.code),
     pathUnique: uniqueIndex("menus_path_unique").on(table.path),
-    statusCheck: check("menus_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check("menus_status_check", sql`${table.status} IN ('enabled', 'disabled')`),
+  }),
 );
 
 export const routeMetadata = sqliteTable(
@@ -333,13 +371,18 @@ export const routeMetadata = sqliteTable(
     menuVisible: integer("menu_visible", { mode: "boolean" }).notNull().default(true),
     icon: text("icon"),
     sortOrder: integer("sort_order").notNull().default(0),
-    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
-    ...timestamps
+    status: text("status", { enum: ["enabled", "disabled"] })
+      .notNull()
+      .default("enabled"),
+    ...timestamps,
   },
   (table) => ({
     routeCodeUnique: uniqueIndex("route_metadata_route_code_unique").on(table.routeCode),
-    statusCheck: check("route_metadata_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check(
+      "route_metadata_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const apiPermissions = sqliteTable(
@@ -357,18 +400,26 @@ export const apiPermissions = sqliteTable(
       .notNull()
       .default("basic"),
     public: integer("public", { mode: "boolean" }).notNull().default(false),
-    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
-    ...timestamps
+    status: text("status", { enum: ["enabled", "disabled"] })
+      .notNull()
+      .default("enabled"),
+    ...timestamps,
   },
   (table) => ({
     codeUnique: uniqueIndex("api_permissions_code_unique").on(table.code),
-    methodPathUnique: uniqueIndex("api_permissions_method_path_unique").on(table.method, table.path),
+    methodPathUnique: uniqueIndex("api_permissions_method_path_unique").on(
+      table.method,
+      table.path,
+    ),
     logLevelCheck: check(
       "api_permissions_log_level_check",
-      sql`${table.logLevel} IN ('none', 'basic', 'request', 'request_response')`
+      sql`${table.logLevel} IN ('none', 'basic', 'request', 'request_response')`,
     ),
-    statusCheck: check("api_permissions_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check(
+      "api_permissions_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const menuApiBindings = sqliteTable(
@@ -378,11 +429,11 @@ export const menuApiBindings = sqliteTable(
     tenantId: integer("tenant_id"),
     menuId: integer("menu_id").notNull(),
     apiPermissionId: integer("api_permission_id").notNull(),
-    createdAt: text("created_at").notNull()
+    createdAt: text("created_at").notNull(),
   },
   (table) => ({
-    bindingUnique: uniqueIndex("menu_api_bindings_unique").on(table.menuId, table.apiPermissionId)
-  })
+    bindingUnique: uniqueIndex("menu_api_bindings_unique").on(table.menuId, table.apiPermissionId),
+  }),
 );
 
 export const authSessions = sqliteTable(
@@ -394,25 +445,27 @@ export const authSessions = sqliteTable(
     refreshTokenHash: text("refresh_token_hash").notNull(),
     currentOrganizationId: integer("current_organization_id").notNull(),
     tokenVersion: integer("token_version").notNull(),
-    status: text("status", { enum: ["active", "revoked", "expired"] }).notNull().default("active"),
+    status: text("status", { enum: ["active", "revoked", "expired"] })
+      .notNull()
+      .default("active"),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
     expiresAt: text("expires_at").notNull(),
     revokedAt: text("revoked_at"),
     createdAt: text("created_at").notNull(),
-    lastSeenAt: text("last_seen_at").notNull()
+    lastSeenAt: text("last_seen_at").notNull(),
   },
   (table) => ({
     userActiveIndex: index("auth_sessions_user_active_idx").on(
       table.userId,
       table.revokedAt,
-      table.expiresAt
+      table.expiresAt,
     ),
     statusCheck: check(
       "auth_sessions_status_check",
-      sql`${table.status} IN ('active', 'revoked', 'expired')`
-    )
-  })
+      sql`${table.status} IN ('active', 'revoked', 'expired')`,
+    ),
+  }),
 );
 
 export const refreshTokens = sqliteTable(
@@ -426,11 +479,11 @@ export const refreshTokens = sqliteTable(
     tokenVersion: integer("token_version").notNull(),
     expiresAt: text("expires_at").notNull(),
     revokedAt: text("revoked_at"),
-    createdAt: text("created_at").notNull()
+    createdAt: text("created_at").notNull(),
   },
   (table) => ({
-    tokenHashUnique: uniqueIndex("refresh_tokens_hash_unique").on(table.tokenHash)
-  })
+    tokenHashUnique: uniqueIndex("refresh_tokens_hash_unique").on(table.tokenHash),
+  }),
 );
 
 export const systemInitializationState = sqliteTable(
@@ -442,14 +495,14 @@ export const systemInitializationState = sqliteTable(
     initializedAt: text("initialized_at"),
     initializedBy: integer("initialized_by"),
     version: text("version").notNull(),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     statusCheck: check(
       "system_initialization_state_status_check",
-      sql`${table.status} IN ('uninitialized', 'initialized')`
-    )
-  })
+      sql`${table.status} IN ('uninitialized', 'initialized')`,
+    ),
+  }),
 );
 
 export const systemConfigs = sqliteTable(
@@ -463,18 +516,23 @@ export const systemConfigs = sqliteTable(
     groupKey: text("group_key").notNull(),
     description: text("description"),
     editable: integer("editable", { mode: "boolean" }).notNull().default(true),
-    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
-    updatedAt: text("updated_at").notNull()
+    status: text("status", { enum: ["enabled", "disabled"] })
+      .notNull()
+      .default("enabled"),
+    updatedAt: text("updated_at").notNull(),
   },
   (table) => ({
     keyUnique: uniqueIndex("system_configs_key_unique").on(table.configKey),
     groupIndex: index("system_configs_group_idx").on(table.groupKey),
     valueTypeCheck: check(
       "system_configs_value_type_check",
-      sql`${table.valueType} IN ('string', 'number', 'boolean', 'json')`
+      sql`${table.valueType} IN ('string', 'number', 'boolean', 'json')`,
     ),
-    statusCheck: check("system_configs_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check(
+      "system_configs_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const dictionaryTypes = sqliteTable(
@@ -485,12 +543,17 @@ export const dictionaryTypes = sqliteTable(
     code: text("code").notNull(),
     name: text("name").notNull(),
     description: text("description"),
-    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled")
+    status: text("status", { enum: ["enabled", "disabled"] })
+      .notNull()
+      .default("enabled"),
   },
   (table) => ({
     codeUnique: uniqueIndex("dictionary_types_code_unique").on(table.code),
-    statusCheck: check("dictionary_types_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check(
+      "dictionary_types_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const dictionaryItems = sqliteTable(
@@ -502,16 +565,21 @@ export const dictionaryItems = sqliteTable(
     itemValue: text("item_value").notNull(),
     labelI18nKey: text("label_i18n_key").notNull(),
     sortOrder: integer("sort_order").notNull().default(0),
-    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled")
+    status: text("status", { enum: ["enabled", "disabled"] })
+      .notNull()
+      .default("enabled"),
   },
   (table) => ({
     typeValueUnique: uniqueIndex("dictionary_items_type_value_unique").on(
       table.typeId,
-      table.itemValue
+      table.itemValue,
     ),
     typeIndex: index("dictionary_items_type_idx").on(table.typeId),
-    statusCheck: check("dictionary_items_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check(
+      "dictionary_items_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const i18nMessages = sqliteTable(
@@ -523,15 +591,15 @@ export const i18nMessages = sqliteTable(
     language: text("language").notNull(),
     messageValue: text("message_value").notNull(),
     module: text("module").notNull(),
-    updatedAt: text("updated_at").notNull()
+    updatedAt: text("updated_at").notNull(),
   },
   (table) => ({
     keyLanguageUnique: uniqueIndex("i18n_messages_key_language_unique").on(
       table.messageKey,
-      table.language
+      table.language,
     ),
-    moduleIndex: index("i18n_messages_module_idx").on(table.module)
-  })
+    moduleIndex: index("i18n_messages_module_idx").on(table.module),
+  }),
 );
 
 export const cacheEntries = sqliteTable(
@@ -541,12 +609,12 @@ export const cacheEntries = sqliteTable(
     key: text("key").notNull(),
     valueJson: text("value_json", { mode: "json" }).notNull(),
     expiresAt: text("expires_at"),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     keyUnique: uniqueIndex("cache_entries_key_unique").on(table.key),
-    expiresAtIndex: index("cache_entries_expires_at_idx").on(table.expiresAt)
-  })
+    expiresAtIndex: index("cache_entries_expires_at_idx").on(table.expiresAt),
+  }),
 );
 
 export const rateLimitCounters = sqliteTable(
@@ -558,15 +626,15 @@ export const rateLimitCounters = sqliteTable(
     windowSeconds: integer("window_seconds").notNull(),
     count: integer("count").notNull(),
     expiresAt: text("expires_at").notNull(),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     keyWindowUnique: uniqueIndex("rate_limit_counters_key_window_unique").on(
       table.key,
-      table.windowStartsAt
+      table.windowStartsAt,
     ),
-    expiresAtIndex: index("rate_limit_counters_expires_at_idx").on(table.expiresAt)
-  })
+    expiresAtIndex: index("rate_limit_counters_expires_at_idx").on(table.expiresAt),
+  }),
 );
 
 export const locks = sqliteTable(
@@ -578,12 +646,12 @@ export const locks = sqliteTable(
     fencingToken: integer("fencing_token").notNull(),
     expiresAt: text("expires_at").notNull(),
     heartbeatAt: text("heartbeat_at").notNull(),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     keyUnique: uniqueIndex("locks_key_unique").on(table.key),
-    expiresAtIndex: index("locks_expires_at_idx").on(table.expiresAt)
-  })
+    expiresAtIndex: index("locks_expires_at_idx").on(table.expiresAt),
+  }),
 );
 
 export const queueJobs = sqliteTable(
@@ -603,18 +671,18 @@ export const queueJobs = sqliteTable(
     lockedAt: text("locked_at"),
     lastError: text("last_error"),
     completedAt: text("completed_at"),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     statusAvailableIndex: index("queue_jobs_status_available_idx").on(
       table.status,
-      table.availableAt
+      table.availableAt,
     ),
     statusCheck: check(
       "queue_jobs_status_check",
-      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed', 'dead_letter')`
-    )
-  })
+      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed', 'dead_letter')`,
+    ),
+  }),
 );
 
 export const eventOutbox = sqliteTable(
@@ -632,15 +700,15 @@ export const eventOutbox = sqliteTable(
     lastError: text("last_error"),
     occurredAt: text("occurred_at").notNull(),
     processedAt: text("processed_at"),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     statusNextRunIndex: index("event_outbox_status_next_run_idx").on(table.status, table.nextRunAt),
     statusCheck: check(
       "event_outbox_status_check",
-      sql`${table.status} IN ('pending', 'published', 'failed', 'dead_letter')`
-    )
-  })
+      sql`${table.status} IN ('pending', 'published', 'failed', 'dead_letter')`,
+    ),
+  }),
 );
 
 export const scheduledJobs = sqliteTable(
@@ -651,19 +719,24 @@ export const scheduledJobs = sqliteTable(
     cronExpression: text("cron_expression").notNull(),
     handlerType: text("handler_type").notNull(),
     payloadJson: text("payload_json", { mode: "json" }).notNull(),
-    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
+    status: text("status", { enum: ["enabled", "disabled"] })
+      .notNull()
+      .default("enabled"),
     lastRunAt: text("last_run_at"),
     nextRunAt: text("next_run_at"),
     attempt: integer("attempt").notNull().default(0),
     maxAttempts: integer("max_attempts").notNull().default(1),
     lastError: text("last_error"),
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     codeUnique: uniqueIndex("scheduled_jobs_code_unique").on(table.code),
     nextRunIndex: index("scheduled_jobs_next_run_idx").on(table.status, table.nextRunAt),
-    statusCheck: check("scheduled_jobs_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check(
+      "scheduled_jobs_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const fileObjects = sqliteTable(
@@ -676,17 +749,19 @@ export const fileObjects = sqliteTable(
     extension: text("extension").notNull(),
     sizeBytes: integer("size_bytes").notNull(),
     storageDriver: text("storage_driver").notNull(),
-    status: text("status", { enum: ["active", "invalid"] }).notNull().default("active"),
+    status: text("status", { enum: ["active", "invalid"] })
+      .notNull()
+      .default("active"),
     referenced: integer("referenced", { mode: "boolean" }).notNull().default(false),
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     objectKeyUnique: uniqueIndex("file_objects_object_key_unique").on(table.objectKey),
-    statusCheck: check("file_objects_status_check", sql`${table.status} IN ('active', 'invalid')`)
-  })
+    statusCheck: check("file_objects_status_check", sql`${table.status} IN ('active', 'invalid')`),
+  }),
 );
 
 export const fileReferences = sqliteTable(
@@ -697,15 +772,20 @@ export const fileReferences = sqliteTable(
     resourceType: text("resource_type").notNull(),
     resourceId: text("resource_id").notNull(),
     referenceType: text("reference_type").notNull(),
-    status: text("status", { enum: ["active", "invalid"] }).notNull().default("active"),
+    status: text("status", { enum: ["active", "invalid"] })
+      .notNull()
+      .default("active"),
     createdAt: text("created_at").notNull(),
-    createdBy: integer("created_by")
+    createdBy: integer("created_by"),
   },
   (table) => ({
     fileIndex: index("file_references_file_idx").on(table.fileObjectId, table.status),
     resourceIndex: index("file_references_resource_idx").on(table.resourceType, table.resourceId),
-    statusCheck: check("file_references_status_check", sql`${table.status} IN ('active', 'invalid')`)
-  })
+    statusCheck: check(
+      "file_references_status_check",
+      sql`${table.status} IN ('active', 'invalid')`,
+    ),
+  }),
 );
 
 export const notifications = sqliteTable(
@@ -723,16 +803,19 @@ export const notifications = sqliteTable(
     readAt: text("read_at"),
     archivedAt: text("archived_at"),
     ...softDelete,
-    ...timestamps
+    ...timestamps,
   },
   (table) => ({
     userStatusIndex: index("notifications_user_status_idx").on(table.userId, table.status),
-    channelCheck: check("notifications_channel_check", sql`${table.channel} IN ('in_app', 'email', 'webhook', 'sms')`),
+    channelCheck: check(
+      "notifications_channel_check",
+      sql`${table.channel} IN ('in_app', 'email', 'webhook', 'sms')`,
+    ),
     statusCheck: check(
       "notifications_status_check",
-      sql`${table.status} IN ('unread', 'read', 'archived', 'deleted')`
-    )
-  })
+      sql`${table.status} IN ('unread', 'read', 'archived', 'deleted')`,
+    ),
+  }),
 );
 
 export const notificationTemplates = sqliteTable(
@@ -745,17 +828,25 @@ export const notificationTemplates = sqliteTable(
     subject: text("subject"),
     body: text("body").notNull(),
     variablesJson: text("variables_json", { mode: "json" }).notNull(),
-    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
-    ...timestamps
+    status: text("status", { enum: ["enabled", "disabled"] })
+      .notNull()
+      .default("enabled"),
+    ...timestamps,
   },
   (table) => ({
     codeLocaleUnique: uniqueIndex("notification_templates_code_locale_unique").on(
       table.code,
-      table.locale
+      table.locale,
     ),
-    channelCheck: check("notification_templates_channel_check", sql`${table.channel} IN ('in_app', 'email', 'sms')`),
-    statusCheck: check("notification_templates_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    channelCheck: check(
+      "notification_templates_channel_check",
+      sql`${table.channel} IN ('in_app', 'email', 'sms')`,
+    ),
+    statusCheck: check(
+      "notification_templates_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const announcements = sqliteTable(
@@ -766,21 +857,26 @@ export const announcements = sqliteTable(
     title: text("title").notNull(),
     content: text("content").notNull(),
     scopeType: text("scope_type", { enum: ["system", "organization"] }).notNull(),
-    status: text("status", { enum: ["draft", "published", "deleted"] }).notNull().default("draft"),
+    status: text("status", { enum: ["draft", "published", "deleted"] })
+      .notNull()
+      .default("draft"),
     publishedAt: text("published_at"),
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     statusIndex: index("announcements_status_idx").on(table.status, table.publishedAt),
-    scopeTypeCheck: check("announcements_scope_type_check", sql`${table.scopeType} IN ('system', 'organization')`),
+    scopeTypeCheck: check(
+      "announcements_scope_type_check",
+      sql`${table.scopeType} IN ('system', 'organization')`,
+    ),
     statusCheck: check(
       "announcements_status_check",
-      sql`${table.status} IN ('draft', 'published', 'deleted')`
-    )
-  })
+      sql`${table.status} IN ('draft', 'published', 'deleted')`,
+    ),
+  }),
 );
 
 export const webhookSubscriptions = sqliteTable(
@@ -792,16 +888,21 @@ export const webhookSubscriptions = sqliteTable(
     url: text("url").notNull(),
     eventTypes: text("event_types", { mode: "json" }).notNull(),
     secret: text("secret"),
-    status: text("status", { enum: ["enabled", "disabled"] }).notNull().default("enabled"),
+    status: text("status", { enum: ["enabled", "disabled"] })
+      .notNull()
+      .default("enabled"),
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
-    updatedBy: integer("updated_by")
+    updatedBy: integer("updated_by"),
   },
   (table) => ({
     statusIndex: index("webhook_subscriptions_status_idx").on(table.status),
-    statusCheck: check("webhook_subscriptions_status_check", sql`${table.status} IN ('enabled', 'disabled')`)
-  })
+    statusCheck: check(
+      "webhook_subscriptions_status_check",
+      sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
 );
 
 export const logEntries = sqliteTable(
@@ -816,16 +917,19 @@ export const logEntries = sqliteTable(
     ipAddress: text("ip_address"),
     metadataJson: text("metadata_json", { mode: "json" }).notNull(),
     occurredAt: text("occurred_at").notNull(),
-    createdAt: text("created_at").notNull()
+    createdAt: text("created_at").notNull(),
   },
   (table) => ({
     typeOccurredIndex: index("log_entries_type_occurred_idx").on(table.logType, table.occurredAt),
     typeCheck: check(
       "log_entries_type_check",
-      sql`${table.logType} IN ('login', 'operation', 'access', 'api_call', 'exception', 'security', 'scheduler', 'file_operation')`
+      sql`${table.logType} IN ('login', 'operation', 'access', 'api_call', 'exception', 'security', 'scheduler', 'file_operation')`,
     ),
-    levelCheck: check("log_entries_level_check", sql`${table.level} IN ('debug', 'info', 'warn', 'error')`)
-  })
+    levelCheck: check(
+      "log_entries_level_check",
+      sql`${table.level} IN ('debug', 'info', 'warn', 'error')`,
+    ),
+  }),
 );
 
 export const importExportTasks = sqliteTable(
@@ -846,16 +950,19 @@ export const importExportTasks = sqliteTable(
     errorPreviewJson: text("error_preview_json", { mode: "json" }).notNull(),
     resultExpiresAt: text("result_expires_at"),
     ...timestamps,
-    createdBy: integer("created_by")
+    createdBy: integer("created_by"),
   },
   (table) => ({
     statusIndex: index("import_export_tasks_status_idx").on(table.status),
-    typeCheck: check("import_export_tasks_type_check", sql`${table.taskType} IN ('import', 'export')`),
+    typeCheck: check(
+      "import_export_tasks_type_check",
+      sql`${table.taskType} IN ('import', 'export')`,
+    ),
     statusCheck: check(
       "import_export_tasks_status_check",
-      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed')`
-    )
-  })
+      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed')`,
+    ),
+  }),
 );
 
 export const sqliteSchema = {
@@ -894,5 +1001,5 @@ export const sqliteSchema = {
   userPreferences,
   userOrganizationRoles,
   webhookSubscriptions,
-  users
+  users,
 };

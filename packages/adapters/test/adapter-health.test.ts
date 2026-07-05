@@ -12,7 +12,7 @@ describe("adapter interfaces", () => {
         return null;
       },
       async set() {},
-      async delete() {}
+      async delete() {},
     };
 
     await expect(cache.healthCheck()).resolves.toEqual({ ok: true });

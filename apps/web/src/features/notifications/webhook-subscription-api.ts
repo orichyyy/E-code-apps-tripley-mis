@@ -1,6 +1,6 @@
 import type {
   CreateWebhookSubscriptionRequest,
-  UpdateWebhookSubscriptionRequest
+  UpdateWebhookSubscriptionRequest,
 } from "@web-admin-base/contracts";
 
 import { requestJson, stringField, unwrapRecords } from "@/lib/api-request";
@@ -24,14 +24,17 @@ export async function fetchWebhookSubscriptions(): Promise<WebhookSubscription[]
 export async function createWebhookSubscription(input: CreateWebhookSubscriptionRequest) {
   return requestJson<{ data: WebhookSubscription }>("/webhooks", {
     method: "POST",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 }
 
-export async function updateWebhookSubscription(id: string, input: UpdateWebhookSubscriptionRequest) {
+export async function updateWebhookSubscription(
+  id: string,
+  input: UpdateWebhookSubscriptionRequest,
+) {
   return requestJson<{ data: WebhookSubscription }>(`/webhooks/${id}`, {
     method: "PATCH",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 }
 
@@ -46,6 +49,6 @@ function toWebhookSubscription(record: Record<string, unknown>): WebhookSubscrip
     secretConfigured: record.secretConfigured === true,
     status: record.status === "disabled" ? "disabled" : "enabled",
     createdAt: stringField(record.createdAt, ""),
-    updatedAt: stringField(record.updatedAt, "")
+    updatedAt: stringField(record.updatedAt, ""),
   };
 }

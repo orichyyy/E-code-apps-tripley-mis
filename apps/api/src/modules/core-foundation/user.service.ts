@@ -2,22 +2,20 @@ import type {
   AssignUserOrganizationRoleRequest,
   CreateUserRequest,
   ResetPasswordRequest,
-  UpdateUserRequest
+  UpdateUserRequest,
 } from "@web-admin-base/contracts";
 
 import { createKnownError, type KnownErrorCode } from "../../core/errors/error-codes";
 import { addDaysUtc, nowUtc, toUtcIso } from "../../core/time/utc";
 import { hashPassword } from "../../infra/security/password-hash";
-import {
-  validatePasswordComplexity
-} from "../../infra/security/password-policy";
+import { validatePasswordComplexity } from "../../infra/security/password-policy";
 import type { PublicUser, UserOrganizationRoleRecord, UserRecord } from "./domain";
 import type { BackendCoreContext } from "./service-context";
 import {
   requireEnabledOrganization,
   requireEnabledRole,
   requireIntegerIdString,
-  requireUser
+  requireUser,
 } from "./store-guards";
 import { toPublicUser } from "./serializers";
 
@@ -43,7 +41,7 @@ export class UserService {
       .filter(
         (user) =>
           filters.organizationId === undefined ||
-          this.hasUsableOrganizationBinding(user.id, filters.organizationId)
+          this.hasUsableOrganizationBinding(user.id, filters.organizationId),
       )
       .filter((user) => keyword === undefined || matchesUserKeyword(user, keyword))
       .map(toPublicUser);
@@ -53,23 +51,22 @@ export class UserService {
     return toPublicUser(requireUser(this.context.store, id));
   }
 
-  async create(
-    input: CreateUserRequest,
-    actorId: string | null = null
-  ): Promise<PublicUser> {
+  async create(input: CreateUserRequest, actorId: string | null = null): Promise<PublicUser> {
     return toPublicUser(await this.createRecord(input, actorId));
   }
 
-  async createRecord(
-    input: CreateUserRequest,
-    actorId: string | null = null
-  ): Promise<UserRecord> {
+  async createRecord(input: CreateUserRequest, actorId: string | null = null): Promise<UserRecord> {
     requireEnabledOrganization(this.context.store, input.primaryOrganizationId);
     requireEnabledRole(this.context.store, input.roleId);
     this.ensureUniqueUser(input.username, input.email, input.phone);
-    const passwordResult = validatePasswordComplexity(input.password, this.context.config.passwordPolicy);
+    const passwordResult = validatePasswordComplexity(
+      input.password,
+      this.context.config.passwordPolicy,
+    );
     if (!passwordResult.valid) {
-      throw createKnownError((passwordResult.reasons[0] ?? "VALIDATION_PASSWORD_POLICY") as KnownErrorCode);
+      throw createKnownError(
+        (passwordResult.reasons[0] ?? "VALIDATION_PASSWORD_POLICY") as KnownErrorCode,
+      );
     }
 
     const now = nowUtc();
@@ -88,7 +85,9 @@ export class UserService {
       status: "enabled",
       firstLoginPasswordChangeRequired: true,
       passwordChangedAt: toUtcIso(now),
-      passwordExpiresAt: toUtcIso(addDaysUtc(now, this.context.config.passwordPolicy.periodicChangeDays)),
+      passwordExpiresAt: toUtcIso(
+        addDaysUtc(now, this.context.config.passwordPolicy.periodicChangeDays),
+      ),
       failedLoginAttempts: 0,
       lockedUntil: null,
       tokenVersion: 0,
@@ -100,18 +99,14 @@ export class UserService {
       createdAt: toUtcIso(now),
       updatedAt: toUtcIso(now),
       createdBy: actorId,
-      updatedBy: actorId
+      updatedBy: actorId,
     };
     this.context.store.users.set(user.id, user);
     this.bindToOrganization(user.id, input.primaryOrganizationId, input.roleId, true, actorId);
     return user;
   }
 
-  update(
-    id: string,
-    input: UpdateUserRequest,
-    actorId: string | null = null
-  ): PublicUser {
+  update(id: string, input: UpdateUserRequest, actorId: string | null = null): PublicUser {
     const user = requireUser(this.context.store, id);
     this.ensureUniqueUserUpdate(user, input);
     if (input.primaryOrganizationId !== undefined) {
@@ -139,7 +134,7 @@ export class UserService {
   setStatus(
     id: string,
     status: "enabled" | "disabled" | "locked",
-    actorId: string | null = null
+    actorId: string | null = null,
   ): PublicUser {
     const user = requireUser(this.context.store, id);
     const previousStatus = user.status;
@@ -165,7 +160,7 @@ export class UserService {
   async resetPassword(
     id: string,
     input: ResetPasswordRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ): Promise<PublicUser> {
     const result = validatePasswordComplexity(input.password, this.context.config.passwordPolicy);
     if (!result.valid) {
@@ -176,7 +171,9 @@ export class UserService {
     const now = nowUtc();
     user.passwordHash = await hashPassword(input.password);
     user.passwordChangedAt = toUtcIso(now);
-    user.passwordExpiresAt = toUtcIso(addDaysUtc(now, this.context.config.passwordPolicy.periodicChangeDays));
+    user.passwordExpiresAt = toUtcIso(
+      addDaysUtc(now, this.context.config.passwordPolicy.periodicChangeDays),
+    );
     user.firstLoginPasswordChangeRequired = true;
     user.tokenVersion += 1;
     user.updatedAt = toUtcIso(now);
@@ -200,7 +197,7 @@ export class UserService {
   assignOrganizationRole(
     userId: string,
     input: AssignUserOrganizationRoleRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ): UserOrganizationRoleRecord {
     const user = requireUser(this.context.store, userId);
     requireEnabledOrganization(this.context.store, input.organizationId);
@@ -210,21 +207,21 @@ export class UserService {
       input.organizationId,
       input.roleId,
       user.primaryOrganizationId === input.organizationId,
-      actorId
+      actorId,
     );
   }
 
   listOrganizationRoles(userId: string): UserOrganizationRoleRecord[] {
     requireUser(this.context.store, userId);
     return [...this.context.store.userOrganizationRoles.values()].filter(
-      (binding) => binding.userId === userId && !binding.isDeleted
+      (binding) => binding.userId === userId && !binding.isDeleted,
     );
   }
 
   removeOrganizationRole(
     userId: string,
     organizationId: string,
-    deletedBy: string | null = null
+    deletedBy: string | null = null,
   ): { removed: boolean } {
     const user = requireUser(this.context.store, userId);
     requireIntegerIdString(organizationId);
@@ -232,7 +229,7 @@ export class UserService {
       (candidate) =>
         candidate.userId === userId &&
         candidate.organizationId === organizationId &&
-        !candidate.isDeleted
+        !candidate.isDeleted,
     );
     if (bindings.length === 0) return { removed: false };
     if (
@@ -259,10 +256,10 @@ export class UserService {
     organizationId: string,
     roleId: string,
     isPrimary: boolean,
-    actorId: string | null = null
+    actorId: string | null = null,
   ): UserOrganizationRoleRecord {
     const existingBindings = [...this.context.store.userOrganizationRoles.values()].filter(
-      (binding) => binding.userId === userId && binding.organizationId === organizationId
+      (binding) => binding.userId === userId && binding.organizationId === organizationId,
     );
     const existing =
       existingBindings.find((binding) => !binding.isDeleted && binding.status === "enabled") ??
@@ -277,12 +274,7 @@ export class UserService {
       existing.deletedBy = null;
       existing.updatedAt = now;
       existing.updatedBy = actorId;
-      this.softDeleteDuplicateOrganizationBindings(
-        existingBindings,
-        existing.id,
-        now,
-        actorId
-      );
+      this.softDeleteDuplicateOrganizationBindings(existingBindings, existing.id, now, actorId);
       if (isPrimary) this.markPrimaryOrganization(userId, organizationId, actorId);
       return existing;
     }
@@ -302,7 +294,7 @@ export class UserService {
       createdAt: now,
       updatedAt: now,
       createdBy: actorId,
-      updatedBy: actorId
+      updatedBy: actorId,
     };
     this.context.store.userOrganizationRoles.set(binding.id, binding);
     if (isPrimary) this.markPrimaryOrganization(userId, organizationId, actorId);
@@ -313,7 +305,7 @@ export class UserService {
     bindings: UserOrganizationRoleRecord[],
     retainedBindingId: string,
     deletedAt: string,
-    deletedBy: string | null
+    deletedBy: string | null,
   ): void {
     for (const binding of bindings) {
       if (binding.id === retainedBindingId || binding.isDeleted) continue;
@@ -330,7 +322,7 @@ export class UserService {
   private markPrimaryOrganization(
     userId: string,
     organizationId: string,
-    actorId: string | null = null
+    actorId: string | null = null,
   ): void {
     const now = toUtcIso(nowUtc());
     for (const binding of this.context.store.userOrganizationRoles.values()) {
@@ -344,7 +336,7 @@ export class UserService {
   private softDeleteUserOrganizationRoles(
     userId: string,
     deletedAt: string,
-    deletedBy: string | null
+    deletedBy: string | null,
   ): void {
     for (const binding of this.context.store.userOrganizationRoles.values()) {
       if (binding.userId !== userId || binding.isDeleted) continue;
@@ -364,7 +356,7 @@ export class UserService {
         candidate.userId === userId &&
         candidate.organizationId === organizationId &&
         !candidate.isDeleted &&
-        candidate.status === "enabled"
+        candidate.status === "enabled",
     );
     if (!binding) throw createKnownError("VALIDATION_INVALID_REQUEST");
     const role = this.context.store.roles.get(binding.roleId);
@@ -379,7 +371,7 @@ export class UserService {
         candidate.userId === userId &&
         candidate.organizationId === organizationId &&
         !candidate.isDeleted &&
-        candidate.status === "enabled"
+        candidate.status === "enabled",
     );
     if (!binding) return false;
     const role = this.context.store.roles.get(binding.roleId);
@@ -415,11 +407,7 @@ function isUserStatus(status: string): status is UserRecord["status"] {
 }
 
 function matchesUserKeyword(user: UserRecord, keyword: string): boolean {
-  return [
-    user.username,
-    user.displayName,
-    user.email,
-    user.phone,
-    user.employeeNumber ?? ""
-  ].some((value) => value.toLocaleLowerCase().includes(keyword));
+  return [user.username, user.displayName, user.email, user.phone, user.employeeNumber ?? ""].some(
+    (value) => value.toLocaleLowerCase().includes(keyword),
+  );
 }

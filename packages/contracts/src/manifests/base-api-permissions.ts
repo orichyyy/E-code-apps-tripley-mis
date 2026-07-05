@@ -19,7 +19,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Health check",
     module: "observability",
     logLevel: "none",
-    public: true
+    public: true,
   },
   {
     method: "GET",
@@ -28,7 +28,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Metrics endpoint placeholder",
     module: "observability",
     logLevel: "none",
-    public: true
+    public: true,
   },
   {
     method: "GET",
@@ -37,7 +37,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "OpenAPI document for implemented APIs",
     module: "documentation",
     logLevel: "none",
-    public: true
+    public: true,
   },
   {
     method: "GET",
@@ -46,7 +46,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Check initialization status",
     module: "initialization",
     logLevel: "basic",
-    public: true
+    public: true,
   },
   {
     method: "POST",
@@ -55,7 +55,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Run first-start initialization setup",
     module: "initialization",
     logLevel: "request",
-    public: true
+    public: true,
   },
   {
     method: "GET",
@@ -64,7 +64,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "PRD-compatible initialization status alias",
     module: "initialization",
     logLevel: "basic",
-    public: true
+    public: true,
   },
   {
     method: "POST",
@@ -73,7 +73,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "PRD-compatible first-start initialization alias",
     module: "initialization",
     logLevel: "request",
-    public: true
+    public: true,
   },
   {
     method: "POST",
@@ -82,7 +82,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Username and password login",
     module: "auth",
     logLevel: "request",
-    public: true
+    public: true,
   },
   {
     method: "POST",
@@ -91,7 +91,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Refresh access token from refresh-token cookie",
     module: "auth",
     logLevel: "basic",
-    public: true
+    public: true,
   },
   {
     method: "GET",
@@ -100,7 +100,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Get current user profile, organization context, and permissions summary",
     module: "auth",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -109,7 +109,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Logout and revoke current session",
     module: "auth",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -118,7 +118,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Change current user's password",
     module: "auth",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -127,7 +127,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Switch current organization and refresh permission context",
     module: "auth",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -136,7 +136,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Switch current organization and refresh permission context",
     module: "auth",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -145,7 +145,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "List organizations available to the current user",
     module: "auth",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -154,7 +154,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Get current permission and menu context",
     module: "auth",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -163,7 +163,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Get effective permissions for the current user context",
     module: "auth",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -173,7 +173,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "auth",
     requiredPermission: "online-user:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -182,7 +182,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Get current user's personal profile and preferences",
     module: "profile",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "PATCH",
@@ -191,7 +191,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Update allowed personal profile fields",
     module: "profile",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "PATCH",
@@ -200,7 +200,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Update current user's UI preferences",
     module: "profile",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -209,7 +209,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     description: "Change current user's avatar file reference",
     module: "profile",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -219,7 +219,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "organizations",
     requiredPermission: "organization:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -229,7 +229,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "organizations",
     requiredPermission: "organization:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "PATCH",
@@ -239,7 +239,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "organizations",
     requiredPermission: "organization:depth:configure",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -249,7 +249,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "organizations",
     requiredPermission: "organization:create",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -259,7 +259,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "organizations",
     requiredPermission: "organization:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "PATCH",
@@ -269,7 +269,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "organizations",
     requiredPermission: "organization:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -279,7 +279,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "organizations",
     requiredPermission: "organization:disable",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -289,7 +289,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "organizations",
     requiredPermission: "organization:enable",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "DELETE",
@@ -299,7 +299,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "organizations",
     requiredPermission: "organization:delete",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -309,7 +309,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "users",
     requiredPermission: "user:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -319,7 +319,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "users",
     requiredPermission: "user:create",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -329,7 +329,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "users",
     requiredPermission: "user:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "PATCH",
@@ -339,7 +339,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "users",
     requiredPermission: "user:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -349,7 +349,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "users",
     requiredPermission: "user:disable",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -359,7 +359,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "users",
     requiredPermission: "user:enable",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -369,7 +369,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "users",
     requiredPermission: "user:lock",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -379,7 +379,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "users",
     requiredPermission: "user:unlock",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -389,7 +389,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "users",
     requiredPermission: "user:password:reset",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "DELETE",
@@ -399,7 +399,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "users",
     requiredPermission: "user:delete",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -409,7 +409,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "users",
     requiredPermission: "user:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -419,7 +419,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "users",
     requiredPermission: "user:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "DELETE",
@@ -429,7 +429,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "users",
     requiredPermission: "user:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -439,7 +439,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "roles",
     requiredPermission: "role:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -449,7 +449,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "roles",
     requiredPermission: "role:create",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -459,7 +459,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "roles",
     requiredPermission: "role:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "PATCH",
@@ -469,7 +469,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "roles",
     requiredPermission: "role:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -479,7 +479,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "roles",
     requiredPermission: "role:status:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -489,7 +489,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "roles",
     requiredPermission: "role:status:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "DELETE",
@@ -499,7 +499,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "roles",
     requiredPermission: "role:delete",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -509,7 +509,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "roles",
     requiredPermission: "role:copy",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -519,7 +519,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "roles",
     requiredPermission: "role:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "PUT",
@@ -529,7 +529,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "roles",
     requiredPermission: "role:permissions:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -539,7 +539,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "roles",
     requiredPermission: "role:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "PUT",
@@ -549,7 +549,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "roles",
     requiredPermission: "role:permissions:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -559,7 +559,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "roles",
     requiredPermission: "role:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "PUT",
@@ -569,7 +569,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "roles",
     requiredPermission: "role:permissions:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -579,7 +579,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "permissions",
     requiredPermission: "permission:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -589,7 +589,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "permissions",
     requiredPermission: "permission:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -599,7 +599,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "permissions",
     requiredPermission: "permission:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "PUT",
@@ -609,7 +609,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "permissions",
     requiredPermission: "permission:sync",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -619,7 +619,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "permissions",
     requiredPermission: "permission:sync",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -629,7 +629,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "permissions",
     requiredPermission: "permission:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -639,7 +639,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "permissions",
     requiredPermission: "permission:api:sync",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -649,7 +649,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "permissions",
     requiredPermission: "permission:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -659,7 +659,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "routes",
     requiredPermission: "route:manifest:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -669,7 +669,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "routes",
     requiredPermission: "route:sync",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -679,7 +679,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "menus",
     requiredPermission: "menu:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -689,7 +689,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "menus",
     requiredPermission: "menu:create",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "PATCH",
@@ -699,7 +699,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "menus",
     requiredPermission: "menu:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "DELETE",
@@ -709,7 +709,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "menus",
     requiredPermission: "menu:delete",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "PUT",
@@ -719,7 +719,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "menus",
     requiredPermission: "menu:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -729,7 +729,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "system-config",
     requiredPermission: "system-config:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "PATCH",
@@ -739,7 +739,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "system-config",
     requiredPermission: "system-config:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -749,7 +749,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "dictionaries",
     requiredPermission: "dictionary:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -759,7 +759,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "dictionaries",
     requiredPermission: "dictionary:create",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "PATCH",
@@ -769,7 +769,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "dictionaries",
     requiredPermission: "dictionary:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -779,7 +779,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "dictionaries",
     requiredPermission: "dictionary:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -789,7 +789,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "dictionaries",
     requiredPermission: "dictionary:create",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "PATCH",
@@ -799,7 +799,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "dictionaries",
     requiredPermission: "dictionary:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -809,7 +809,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "i18n",
     requiredPermission: "i18n:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "PATCH",
@@ -819,7 +819,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "i18n",
     requiredPermission: "i18n:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -829,7 +829,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "logs",
     requiredPermission: "login-log:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -839,7 +839,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "logs",
     requiredPermission: "operation-log:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -849,7 +849,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "logs",
     requiredPermission: "access-log:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -859,7 +859,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "logs",
     requiredPermission: "api-log:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -869,7 +869,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "logs",
     requiredPermission: "exception-log:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -879,7 +879,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "logs",
     requiredPermission: "security-log:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -889,7 +889,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "logs",
     requiredPermission: "scheduler-log:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -899,7 +899,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "logs",
     requiredPermission: "file-log:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -909,7 +909,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "logs",
     requiredPermission: "log:export",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -919,7 +919,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "files",
     requiredPermission: "file:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -929,7 +929,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "files",
     requiredPermission: "file:upload",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -939,7 +939,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "files",
     requiredPermission: "file:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -949,7 +949,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "files",
     requiredPermission: "file:download",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -959,7 +959,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "files",
     requiredPermission: "file:preview",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -969,7 +969,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "files",
     requiredPermission: "file:references:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "DELETE",
@@ -979,7 +979,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "files",
     requiredPermission: "file:delete",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -989,7 +989,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "announcements",
     requiredPermission: "announcement:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -999,7 +999,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "announcements",
     requiredPermission: "announcement:create",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "PATCH",
@@ -1009,7 +1009,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "announcements",
     requiredPermission: "announcement:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -1019,7 +1019,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "announcements",
     requiredPermission: "announcement:publish",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -1029,7 +1029,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "announcements",
     requiredPermission: "announcement:publish",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -1039,7 +1039,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "notifications",
     requiredPermission: "notification:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -1049,7 +1049,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "notifications",
     requiredPermission: "notification:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -1059,7 +1059,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "notifications",
     requiredPermission: "notification:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "DELETE",
@@ -1069,7 +1069,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "notifications",
     requiredPermission: "notification:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -1079,7 +1079,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "notifications",
     requiredPermission: "notification-template:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -1089,7 +1089,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "notifications",
     requiredPermission: "notification-template:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -1099,7 +1099,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "notifications",
     requiredPermission: "notification-template:create",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "PATCH",
@@ -1109,7 +1109,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "notifications",
     requiredPermission: "notification-template:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -1119,7 +1119,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "webhooks",
     requiredPermission: "webhook:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -1129,7 +1129,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "webhooks",
     requiredPermission: "webhook:create",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "PATCH",
@@ -1139,7 +1139,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "webhooks",
     requiredPermission: "webhook:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -1149,7 +1149,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "jobs",
     requiredPermission: "job:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -1159,7 +1159,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "jobs",
     requiredPermission: "job:create",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "PATCH",
@@ -1169,7 +1169,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "jobs",
     requiredPermission: "job:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -1179,7 +1179,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "jobs",
     requiredPermission: "job:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -1189,7 +1189,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "jobs",
     requiredPermission: "job:update",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -1199,7 +1199,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "jobs",
     requiredPermission: "job:run",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -1209,7 +1209,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "import-export",
     requiredPermission: "import-export:view",
     logLevel: "basic",
-    public: false
+    public: false,
   },
   {
     method: "POST",
@@ -1219,7 +1219,7 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "import-export",
     requiredPermission: "import-export:create",
     logLevel: "request",
-    public: false
+    public: false,
   },
   {
     method: "GET",
@@ -1229,6 +1229,6 @@ export const baseApiPermissionManifest: BaseApiPermissionManifestEntry[] = [
     module: "import-export",
     requiredPermission: "import-export:view",
     logLevel: "basic",
-    public: false
-  }
+    public: false,
+  },
 ];

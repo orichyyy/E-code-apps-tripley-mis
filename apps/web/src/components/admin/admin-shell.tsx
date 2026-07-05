@@ -13,7 +13,7 @@ import {
   Menu,
   Moon,
   Settings,
-  Sun
+  Sun,
 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -30,7 +30,7 @@ const groupLabels: Record<AdminRouteGroup, string> = {
   notifications: "nav.notifications",
   operations: "nav.operations",
   logs: "nav.logs",
-  account: "nav.account"
+  account: "nav.account",
 };
 
 const groupIcons = {
@@ -38,7 +38,7 @@ const groupIcons = {
   notifications: Bell,
   operations: BriefcaseBusiness,
   logs: FileClock,
-  account: CircleUserRound
+  account: CircleUserRound,
 } satisfies Record<AdminRouteGroup, typeof Settings>;
 
 export function AdminShell() {
@@ -65,13 +65,16 @@ export function AdminShell() {
   }, [addTab, location.pathname]);
 
   const visibleRoutes = adminRouteMetadata.filter(
-    (route) => route.menuVisible && hasPermission(permissionCodes, route.requiredPermission)
+    (route) => route.menuVisible && hasPermission(permissionCodes, route.requiredPermission),
   );
-  const groupedRoutes = visibleRoutes.reduce<Record<string, typeof visibleRoutes>>((groups, route) => {
-    const group = route.group ?? "system";
-    groups[group] = [...(groups[group] ?? []), route];
-    return groups;
-  }, {});
+  const groupedRoutes = visibleRoutes.reduce<Record<string, typeof visibleRoutes>>(
+    (groups, route) => {
+      const group = route.group ?? "system";
+      groups[group] = [...(groups[group] ?? []), route];
+      return groups;
+    },
+    {},
+  );
 
   return (
     <main className="flex min-h-dvh bg-muted/35 text-foreground">
@@ -118,11 +121,17 @@ export function AdminShell() {
       <section className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-16 items-center justify-between border-b bg-background px-5">
           <div className="min-w-0">
-            <nav className="text-xs text-muted-foreground" aria-label={translate(language, "layout.breadcrumb")}>
-              {translate(language, "app.name")} / {currentRoute ? translate(language, currentRoute.titleI18nKey) : ""}
+            <nav
+              className="text-xs text-muted-foreground"
+              aria-label={translate(language, "layout.breadcrumb")}
+            >
+              {translate(language, "app.name")} /{" "}
+              {currentRoute ? translate(language, currentRoute.titleI18nKey) : ""}
             </nav>
             <h1 className="truncate text-lg font-semibold">
-              {currentRoute ? translate(language, currentRoute.titleI18nKey) : translate(language, "routes.dashboard")}
+              {currentRoute
+                ? translate(language, currentRoute.titleI18nKey)
+                : translate(language, "routes.dashboard")}
             </h1>
           </div>
           <div className="flex items-center gap-2">
@@ -177,7 +186,11 @@ export function AdminShell() {
               const tabRoute = adminRouteMetadata.find((route) => route.path === tab);
               return (
                 <div className="flex items-center rounded-md border bg-card" key={tab}>
-                  <Link activeOptions={{ exact: true }} className="px-3 py-1.5 text-xs [&.active]:font-semibold" to={tab}>
+                  <Link
+                    activeOptions={{ exact: true }}
+                    className="px-3 py-1.5 text-xs [&.active]:font-semibold"
+                    to={tab}
+                  >
                     {translate(language, tabRoute?.titleI18nKey ?? "routes.dashboard")}
                   </Link>
                   {tab !== "/" ? (
@@ -210,7 +223,7 @@ export function DashboardPage() {
       {[
         { label: "System routes", value: String(adminRouteMetadata.length), icon: BookOpen },
         { label: "Permission-aware pages", value: "24", icon: KeyRound },
-        { label: "Current organization", value: "Main", icon: ChevronsLeftRight }
+        { label: "Current organization", value: "Main", icon: ChevronsLeftRight },
       ].map((item) => {
         const Icon = item.icon;
         return (

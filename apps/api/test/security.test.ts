@@ -4,7 +4,7 @@ import { serializeId } from "../src/core/ids";
 import { hashPassword, verifyPassword } from "../src/infra/security/password-hash";
 import {
   defaultPasswordPolicy,
-  validatePasswordComplexity
+  validatePasswordComplexity,
 } from "../src/infra/security/password-policy";
 import { signAccessToken, verifyAccessToken } from "../src/infra/security/jwt";
 
@@ -17,10 +17,10 @@ describe("backend security foundation", () => {
   it("enforces the default password complexity policy", () => {
     expect(validatePasswordComplexity("password", defaultPasswordPolicy)).toMatchObject({
       valid: false,
-      reasons: ["PASSWORD_REQUIRES_NUMBER"]
+      reasons: ["PASSWORD_REQUIRES_NUMBER"],
     });
     expect(validatePasswordComplexity("password1", defaultPasswordPolicy)).toMatchObject({
-      valid: true
+      valid: true,
     });
   });
 
@@ -41,21 +41,23 @@ describe("backend security foundation", () => {
         currentOrganizationId: "1",
         tokenVersion: 0,
         iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + 60
+        exp: Math.floor(Date.now() / 1000) + 60,
       },
       {
         issuer: "web-admin-base",
-        secret: "test-secret"
-      }
+        secret: "test-secret",
+      },
     );
     const payload = decodeJwtPayload(token);
 
-    expect(verifyAccessToken(token, { issuer: "web-admin-base", secret: "test-secret" })).toMatchObject({
+    expect(
+      verifyAccessToken(token, { issuer: "web-admin-base", secret: "test-secret" }),
+    ).toMatchObject({
       sub: "1",
       sid: "1",
       username: "admin",
       currentOrganizationId: "1",
-      tokenVersion: 0
+      tokenVersion: 0,
     });
     expect(payload).toMatchObject({ token_version: 0 });
     expect(payload).not.toHaveProperty("tokenVersion");
@@ -70,16 +72,17 @@ describe("backend security foundation", () => {
         currentOrganizationId: "1",
         tokenVersion: 0,
         iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + 60
+        exp: Math.floor(Date.now() / 1000) + 60,
       },
       {
         issuer: "web-admin-base",
-        secret: "test-secret"
-      }
+        secret: "test-secret",
+      },
     );
 
-    expect(() => verifyAccessToken(token, { issuer: "web-admin-base", secret: "test-secret" }))
-      .toThrow("Invalid JWT claims");
+    expect(() =>
+      verifyAccessToken(token, { issuer: "web-admin-base", secret: "test-secret" }),
+    ).toThrow("Invalid JWT claims");
   });
 });
 

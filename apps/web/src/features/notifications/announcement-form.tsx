@@ -1,5 +1,8 @@
 import { useForm } from "@tanstack/react-form";
-import type { CreateAnnouncementRequest, UpdateAnnouncementRequest } from "@web-admin-base/contracts";
+import type {
+  CreateAnnouncementRequest,
+  UpdateAnnouncementRequest,
+} from "@web-admin-base/contracts";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -8,7 +11,7 @@ import {
   announcementFormSchema,
   defaultAnnouncementFormValues,
   toAnnouncementApiInput,
-  type AnnouncementFormMode
+  type AnnouncementFormMode,
 } from "./announcement-model";
 
 type AnnouncementFormProps = {
@@ -19,23 +22,31 @@ type AnnouncementFormProps = {
   onSubmit: (input: CreateAnnouncementRequest | UpdateAnnouncementRequest) => void;
 };
 
-export function AnnouncementForm({ busy, initialRecord, mode, onCancel, onSubmit }: AnnouncementFormProps) {
+export function AnnouncementForm({
+  busy,
+  initialRecord,
+  mode,
+  onCancel,
+  onSubmit,
+}: AnnouncementFormProps) {
   const initialValues = initialRecord
     ? {
         title: initialRecord.title,
         content: initialRecord.content,
-        scopeType: initialRecord.scopeType
+        scopeType: initialRecord.scopeType,
       }
     : defaultAnnouncementFormValues;
   const form = useForm({
     defaultValues: initialValues,
     validators: { onSubmit: announcementFormSchema },
-    onSubmit: ({ value }) => onSubmit(toAnnouncementApiInput(value, mode))
+    onSubmit: ({ value }) => onSubmit(toAnnouncementApiInput(value, mode)),
   });
 
   return (
     <section className="rounded-lg border bg-card p-4 shadow-sm">
-      <h3 className="text-sm font-semibold">{mode === "create" ? "Create announcement" : "Edit announcement"}</h3>
+      <h3 className="text-sm font-semibold">
+        {mode === "create" ? "Create announcement" : "Edit announcement"}
+      </h3>
       <form
         className="mt-4 space-y-4"
         onSubmit={(event) => {
@@ -65,7 +76,9 @@ export function AnnouncementForm({ busy, initialRecord, mode, onCancel, onSubmit
               <select
                 className="mt-2 h-10 w-full rounded-md border bg-background px-3"
                 onBlur={field.handleBlur}
-                onChange={(event) => field.handleChange(event.target.value as "system" | "organization")}
+                onChange={(event) =>
+                  field.handleChange(event.target.value as "system" | "organization")
+                }
                 value={field.state.value}
               >
                 <option value="system">System</option>

@@ -12,7 +12,7 @@ import {
   archiveNotification,
   deleteNotification,
   fetchInAppNotifications,
-  markNotificationRead
+  markNotificationRead,
 } from "./in-app-notification-api";
 import { InAppNotificationSidePanel } from "./in-app-notification-status";
 import { InAppNotificationTable } from "./in-app-notification-table";
@@ -31,22 +31,22 @@ export function InAppNotificationsPage({ route }: InAppNotificationsPageProps) {
   const query = useQuery({
     enabled: canView,
     queryKey: ["in-app-notifications"],
-    queryFn: fetchInAppNotifications
+    queryFn: fetchInAppNotifications,
   });
   const invalidateNotifications = async () => {
     await queryClient.invalidateQueries({ queryKey: ["in-app-notifications"] });
   };
   const readMutation = useMutation({
     mutationFn: markNotificationRead,
-    onSuccess: invalidateNotifications
+    onSuccess: invalidateNotifications,
   });
   const archiveMutation = useMutation({
     mutationFn: archiveNotification,
-    onSuccess: invalidateNotifications
+    onSuccess: invalidateNotifications,
   });
   const deleteMutation = useMutation({
     mutationFn: deleteNotification,
-    onSuccess: invalidateNotifications
+    onSuccess: invalidateNotifications,
   });
   const rows = useMemo(
     () =>
@@ -54,16 +54,18 @@ export function InAppNotificationsPage({ route }: InAppNotificationsPageProps) {
         [record.title, record.body, record.status, record.channel, JSON.stringify(record.metadata)]
           .join(" ")
           .toLowerCase()
-          .includes(keyword.toLowerCase())
+          .includes(keyword.toLowerCase()),
       ),
-    [keyword, query.data]
+    [keyword, query.data],
   );
 
   if (!canView) {
     return (
       <section className="rounded-lg border bg-card p-8 text-center">
         <AlertCircle className="mx-auto size-8 text-destructive" aria-hidden="true" />
-        <h2 className="mt-3 text-base font-semibold">{translate(language, "common.permissionDenied")}</h2>
+        <h2 className="mt-3 text-base font-semibold">
+          {translate(language, "common.permissionDenied")}
+        </h2>
       </section>
     );
   }
@@ -81,7 +83,12 @@ export function InAppNotificationsPage({ route }: InAppNotificationsPageProps) {
           <InAppNotificationsFilter keyword={keyword} language={language} onChange={setKeyword} />
           <InAppNotificationTable
             canUpdate={canUpdate}
-            isError={query.isError || readMutation.isError || archiveMutation.isError || deleteMutation.isError}
+            isError={
+              query.isError ||
+              readMutation.isError ||
+              archiveMutation.isError ||
+              deleteMutation.isError
+            }
             isLoading={query.isLoading}
             onArchive={(record) => archiveMutation.mutate(record.id)}
             onDelete={(record) => deleteMutation.mutate(record.id)}
@@ -99,7 +106,7 @@ function InAppNotificationsToolbar({
   language,
   onRefresh,
   route,
-  unreadCount
+  unreadCount,
 }: {
   language: "en" | "zh";
   onRefresh: () => void;
@@ -128,7 +135,7 @@ function InAppNotificationsToolbar({
 function InAppNotificationsFilter({
   keyword,
   language,
-  onChange
+  onChange,
 }: {
   keyword: string;
   language: "en" | "zh";

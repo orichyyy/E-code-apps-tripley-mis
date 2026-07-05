@@ -8,28 +8,31 @@ export function createDatabaseCacheAdapter(executor: DatabaseAdapterExecutor): C
       const now = nowIso();
       const rows = await executor.all(
         `SELECT value_json FROM cache_entries WHERE key = ${p(executor.dialect, 1)} AND (expires_at IS NULL OR expires_at > ${p(executor.dialect, 2)})`,
-        [key, now]
+        [key, now],
       );
       if (!rows[0]) return null;
       return readJson(rows[0].value_json);
     },
     async set(key, value, options) {
       const now = nowIso();
-      const expiresAt = options?.ttlSeconds ? new Date(Date.now() + options.ttlSeconds * 1000).toISOString() : null;
+      const expiresAt = options?.ttlSeconds
+        ? new Date(Date.now() + options.ttlSeconds * 1000).toISOString()
+        : null;
       await executor.run(
         upsertSql(executor.dialect),
-        [key, jsonParam(value, executor.dialect), expiresAt, now, now].map(param)
+        [key, jsonParam(value, executor.dialect), expiresAt, now, now].map(param),
       );
     },
     async delete(key) {
-      await executor.run(`DELETE FROM cache_entries WHERE key = ${executor.dialect === "postgresql" ? "$1" : "?"}`, [
-        key
-      ]);
+      await executor.run(
+        `DELETE FROM cache_entries WHERE key = ${executor.dialect === "postgresql" ? "$1" : "?"}`,
+        [key],
+      );
     },
     async healthCheck() {
       await executor.all("SELECT 1 AS ok");
       return { ok: true };
-    }
+    },
   };
 }
 

@@ -22,15 +22,15 @@ export function createInMemoryLockAdapter(): LockAdapter {
       const owner = randomUUID();
       locks.set(key, {
         owner,
-        expiresAt: now + (options.ttlSeconds ?? 30) * 1000
+        expiresAt: now + (options.ttlSeconds ?? 30) * 1000,
       });
 
       return {
         key,
         async release() {
           if (locks.get(key)?.owner === owner) locks.delete(key);
-        }
+        },
       };
-    }
+    },
   };
 }

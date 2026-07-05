@@ -11,7 +11,7 @@ export type WorkerTaskLogInput = {
 
 export async function writeWorkerTaskLog(
   executor: DatabaseAdapterExecutor,
-  input: WorkerTaskLogInput
+  input: WorkerTaskLogInput,
 ): Promise<void> {
   const occurredAt = now();
   await executor.run(
@@ -22,7 +22,7 @@ export async function writeWorkerTaskLog(
       input.message,
       json(executor, { taskCode: input.taskCode, ...input.metadata }),
       occurredAt,
-      occurredAt
-    ]
+      occurredAt,
+    ],
   );
 }

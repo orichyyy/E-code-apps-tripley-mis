@@ -3,7 +3,7 @@ import {
   createDictionaryItemRequestSchema,
   createDictionaryTypeRequestSchema,
   type CreateDictionaryItemRequest,
-  type CreateDictionaryTypeRequest
+  type CreateDictionaryTypeRequest,
 } from "@web-admin-base/contracts";
 import { Loader2 } from "lucide-react";
 
@@ -26,25 +26,39 @@ type DictionaryItemFormProps = {
   onSubmit: (input: CreateDictionaryItemRequest) => void;
 };
 
-export function DictionaryTypeForm({ busy, initialRecord, mode, onCancel, onSubmit }: DictionaryTypeFormProps) {
+export function DictionaryTypeForm({
+  busy,
+  initialRecord,
+  mode,
+  onCancel,
+  onSubmit,
+}: DictionaryTypeFormProps) {
   const form = useForm({
     defaultValues: {
       code: initialRecord?.code ?? "",
       name: initialRecord?.name ?? "",
       description: initialRecord?.description ?? "",
-      status: initialRecord?.status === "disabled" ? "disabled" : "enabled"
+      status: initialRecord?.status === "disabled" ? "disabled" : "enabled",
     },
-    onSubmit: ({ value }) => onSubmit(createDictionaryTypeRequestSchema.parse({
-      code: value.code,
-      name: value.name,
-      description: value.description || null,
-      status: value.status
-    }))
+    onSubmit: ({ value }) =>
+      onSubmit(
+        createDictionaryTypeRequestSchema.parse({
+          code: value.code,
+          name: value.name,
+          description: value.description || null,
+          status: value.status,
+        }),
+      ),
   });
 
   return (
-    <form className="rounded-lg border bg-card p-4 text-sm shadow-sm" onSubmit={submitForm(form.handleSubmit)}>
-      <h3 className="font-semibold">{mode === "create" ? "Create dictionary type" : "Edit dictionary type"}</h3>
+    <form
+      className="rounded-lg border bg-card p-4 text-sm shadow-sm"
+      onSubmit={submitForm(form.handleSubmit)}
+    >
+      <h3 className="font-semibold">
+        {mode === "create" ? "Create dictionary type" : "Edit dictionary type"}
+      </h3>
       <div className="mt-4 flex flex-col gap-3">
         <form.Field name="code">
           {(field) => <TextInput disabled={busy} field={field} label="Code" />}
@@ -64,25 +78,39 @@ export function DictionaryTypeForm({ busy, initialRecord, mode, onCancel, onSubm
   );
 }
 
-export function DictionaryItemForm({ busy, initialRecord, mode, onCancel, onSubmit }: DictionaryItemFormProps) {
+export function DictionaryItemForm({
+  busy,
+  initialRecord,
+  mode,
+  onCancel,
+  onSubmit,
+}: DictionaryItemFormProps) {
   const form = useForm({
     defaultValues: {
       itemValue: initialRecord?.itemValue ?? "",
       labelI18nKey: initialRecord?.labelI18nKey ?? "",
       sortOrder: String(initialRecord?.sortOrder ?? 0),
-      status: initialRecord?.status === "disabled" ? "disabled" : "enabled"
+      status: initialRecord?.status === "disabled" ? "disabled" : "enabled",
     },
-    onSubmit: ({ value }) => onSubmit(createDictionaryItemRequestSchema.parse({
-      itemValue: value.itemValue,
-      labelI18nKey: value.labelI18nKey,
-      sortOrder: Number(value.sortOrder),
-      status: value.status
-    }))
+    onSubmit: ({ value }) =>
+      onSubmit(
+        createDictionaryItemRequestSchema.parse({
+          itemValue: value.itemValue,
+          labelI18nKey: value.labelI18nKey,
+          sortOrder: Number(value.sortOrder),
+          status: value.status,
+        }),
+      ),
   });
 
   return (
-    <form className="rounded-lg border bg-card p-4 text-sm shadow-sm" onSubmit={submitForm(form.handleSubmit)}>
-      <h3 className="font-semibold">{mode === "create" ? "Create dictionary item" : "Edit dictionary item"}</h3>
+    <form
+      className="rounded-lg border bg-card p-4 text-sm shadow-sm"
+      onSubmit={submitForm(form.handleSubmit)}
+    >
+      <h3 className="font-semibold">
+        {mode === "create" ? "Create dictionary item" : "Edit dictionary item"}
+      </h3>
       <div className="mt-4 flex flex-col gap-3">
         <form.Field name="itemValue">
           {(field) => <TextInput disabled={busy} field={field} label="Item value" />}
@@ -106,7 +134,7 @@ function TextInput({
   disabled,
   field,
   label,
-  type = "text"
+  type = "text",
 }: {
   disabled: boolean;
   field: {
@@ -134,7 +162,7 @@ function TextInput({
 
 function StatusInput({
   disabled,
-  field
+  field,
 }: {
   disabled: boolean;
   field: {
@@ -148,7 +176,9 @@ function StatusInput({
       <select
         className="rounded-md border bg-background px-3 py-2 outline-none"
         disabled={disabled}
-        onChange={(event) => field.handleChange(event.target.value === "disabled" ? "disabled" : "enabled")}
+        onChange={(event) =>
+          field.handleChange(event.target.value === "disabled" ? "disabled" : "enabled")
+        }
         value={field.state.value}
       >
         <option value="enabled">enabled</option>

@@ -4,7 +4,7 @@ import type {
   JobSchedulerAdapter,
   QueueAdapter,
   QueueJob,
-  ScheduledJobDefinition
+  ScheduledJobDefinition,
 } from "@web-admin-base/adapters";
 
 import type { WorkerConfig } from "../config/load-config";
@@ -42,7 +42,7 @@ export type WorkerRuntimeDependencies = {
 
 export function createWorkerRuntime(
   config: WorkerRuntimeConfig,
-  dependencies: WorkerRuntimeDependencies = {}
+  dependencies: WorkerRuntimeDependencies = {},
 ): WorkerRuntime {
   let started = false;
   let pollTimer: NodeJS.Timeout | null = null;
@@ -65,7 +65,9 @@ export function createWorkerRuntime(
       if (pollIntervalMs > 0 && (dependencies.durableQueue || dependencies.durableScheduler)) {
         pollTimer = setInterval(() => {
           void this.runOnce().catch((error: unknown) => {
-            log(`${config.workerName} worker poll failed: ${error instanceof Error ? error.message : String(error)}`);
+            log(
+              `${config.workerName} worker poll failed: ${error instanceof Error ? error.message : String(error)}`,
+            );
           });
         }, pollIntervalMs);
       }
@@ -94,6 +96,6 @@ export function createWorkerRuntime(
       }
       started = false;
       log(`${config.workerName} stopped`);
-    }
+    },
   };
 }

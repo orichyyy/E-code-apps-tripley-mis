@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import {
   defaultBackendCoreConfig,
-  type BackendCoreConfig
+  type BackendCoreConfig,
 } from "../modules/core-foundation/service-context";
 
 const booleanStringSchema = z
@@ -11,7 +11,7 @@ const booleanStringSchema = z
 
 const optionalNonEmptyStringSchema = z.preprocess(
   (value) => (typeof value === "string" && value.trim().length === 0 ? null : value),
-  z.string().min(1).nullable().default(null)
+  z.string().min(1).nullable().default(null),
 );
 
 const apiConfigSchema = z.object({
@@ -25,7 +25,7 @@ const apiConfigSchema = z.object({
       secure: booleanStringSchema.default("false"),
       username: optionalNonEmptyStringSchema.default(null),
       password: optionalNonEmptyStringSchema.default(null),
-      from: optionalNonEmptyStringSchema.default(null)
+      from: optionalNonEmptyStringSchema.default(null),
     })
     .superRefine((smtp, context) => {
       if (!smtp.enabled) return;
@@ -33,14 +33,14 @@ const apiConfigSchema = z.object({
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["host"],
-          message: "SMTP_HOST is required when SMTP_ENABLED is true."
+          message: "SMTP_HOST is required when SMTP_ENABLED is true.",
         });
       }
       if (!smtp.from) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["from"],
-          message: "SMTP_FROM is required when SMTP_ENABLED is true."
+          message: "SMTP_FROM is required when SMTP_ENABLED is true.",
         });
       }
     }),
@@ -57,15 +57,18 @@ const apiConfigSchema = z.object({
       .int()
       .positive()
       .default(defaultBackendCoreConfig.refreshTokenTtlDays),
-    refreshTokenCookiePath: z.string().min(1).default(defaultBackendCoreConfig.refreshTokenCookiePath),
+    refreshTokenCookiePath: z
+      .string()
+      .min(1)
+      .default(defaultBackendCoreConfig.refreshTokenCookiePath),
     refreshTokenCookieSameSite: z
       .enum(["Strict", "Lax", "None"])
       .default(defaultBackendCoreConfig.refreshTokenCookieSameSite),
     refreshTokenCookieSecure: booleanStringSchema.default(
-      defaultBackendCoreConfig.refreshTokenCookieSecure ? "true" : "false"
+      defaultBackendCoreConfig.refreshTokenCookieSecure ? "true" : "false",
     ),
     refreshTokenCookieDomain: optionalNonEmptyStringSchema.default(
-      defaultBackendCoreConfig.refreshTokenCookieDomain
+      defaultBackendCoreConfig.refreshTokenCookieDomain,
     ),
     failedLoginMaxAttempts: z.coerce
       .number()
@@ -90,18 +93,18 @@ const apiConfigSchema = z.object({
         .positive()
         .default(defaultBackendCoreConfig.passwordPolicy.minLength),
       requireLetters: booleanStringSchema.default(
-        defaultBackendCoreConfig.passwordPolicy.requireLetters ? "true" : "false"
+        defaultBackendCoreConfig.passwordPolicy.requireLetters ? "true" : "false",
       ),
       requireNumbers: booleanStringSchema.default(
-        defaultBackendCoreConfig.passwordPolicy.requireNumbers ? "true" : "false"
+        defaultBackendCoreConfig.passwordPolicy.requireNumbers ? "true" : "false",
       ),
       periodicChangeDays: z.coerce
         .number()
         .int()
         .nonnegative()
-        .default(defaultBackendCoreConfig.passwordPolicy.periodicChangeDays)
-    })
-  })
+        .default(defaultBackendCoreConfig.passwordPolicy.periodicChangeDays),
+    }),
+  }),
 });
 
 export type ApiConfig = Omit<z.infer<typeof apiConfigSchema>, "backendCore"> & {
@@ -119,7 +122,7 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       secure: env.SMTP_SECURE,
       username: env.SMTP_USERNAME,
       password: env.SMTP_PASSWORD,
-      from: env.SMTP_FROM
+      from: env.SMTP_FROM,
     },
     backendCore: {
       jwtSecret: env.JWT_SECRET,
@@ -137,8 +140,8 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
         minLength: env.PASSWORD_MIN_LENGTH,
         requireLetters: env.PASSWORD_REQUIRE_LETTERS,
         requireNumbers: env.PASSWORD_REQUIRE_NUMBERS,
-        periodicChangeDays: env.PASSWORD_PERIODIC_CHANGE_DAYS
-      }
-    }
+        periodicChangeDays: env.PASSWORD_PERIODIC_CHANGE_DAYS,
+      },
+    },
   }) as ApiConfig;
 }

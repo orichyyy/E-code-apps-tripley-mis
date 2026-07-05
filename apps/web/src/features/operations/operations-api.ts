@@ -1,7 +1,7 @@
 import type {
   CreateExportTaskRequest,
   CreateScheduledTaskRequest,
-  UpdateScheduledTaskRequest
+  UpdateScheduledTaskRequest,
 } from "@web-admin-base/contracts";
 
 import { requestJson, unwrapRecords } from "@/lib/api-request";
@@ -11,7 +11,7 @@ import {
   nullableString,
   numberValue,
   objectValue,
-  stringValue
+  stringValue,
 } from "./record-utils";
 
 export type OnlineUser = {
@@ -78,26 +78,29 @@ export async function fetchScheduledTasks(): Promise<ScheduledTask[]> {
 export async function createScheduledTask(input: CreateScheduledTaskRequest) {
   return requestJson<{ data: ScheduledTask }>("/scheduled-tasks", {
     method: "POST",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 }
 
 export async function updateScheduledTask(id: string, input: UpdateScheduledTaskRequest) {
   return requestJson<{ data: ScheduledTask | null }>(`/scheduled-tasks/${id}`, {
     method: "PATCH",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 }
 
 export async function setScheduledTaskStatus(id: string, enabled: boolean) {
-  return requestJson<{ data: ScheduledTask | null }>(`/scheduled-tasks/${id}/${enabled ? "enable" : "disable"}`, {
-    method: "POST"
-  });
+  return requestJson<{ data: ScheduledTask | null }>(
+    `/scheduled-tasks/${id}/${enabled ? "enable" : "disable"}`,
+    {
+      method: "POST",
+    },
+  );
 }
 
 export async function runScheduledTask(id: string) {
   return requestJson<{ data: ScheduledTask | null }>(`/scheduled-tasks/${id}/run`, {
-    method: "POST"
+    method: "POST",
   });
 }
 
@@ -114,7 +117,7 @@ export async function fetchImportExportTask(id: string): Promise<ImportExportTas
 export async function createExportTask(input: CreateExportTaskRequest) {
   return requestJson<{ data: ImportExportTask }>("/import-export/export", {
     method: "POST",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 }
 
@@ -123,16 +126,25 @@ function toOnlineUser(record: Record<string, unknown>): OnlineUser {
     id: stringValue(record.id, stringValue(record.sessionId)),
     userId: stringValue(record.userId),
     username: stringValue(record.username, stringValue(record.userName)),
-    displayName: stringValue(record.displayName, stringValue(record.name, stringValue(record.username))),
+    displayName: stringValue(
+      record.displayName,
+      stringValue(record.name, stringValue(record.username)),
+    ),
     organizationId: stringValue(record.organizationId, stringValue(record.currentOrganizationId)),
-    organizationName: stringValue(record.organizationName, stringValue(record.currentOrganizationName)),
+    organizationName: stringValue(
+      record.organizationName,
+      stringValue(record.currentOrganizationName),
+    ),
     ipAddress: nullableString(record.ipAddress),
     userAgent: nullableString(record.userAgent),
-    currentOrganizationId: stringValue(record.currentOrganizationId, stringValue(record.organizationId)),
+    currentOrganizationId: stringValue(
+      record.currentOrganizationId,
+      stringValue(record.organizationId),
+    ),
     createdAt: stringValue(record.createdAt),
     lastSeenAt: stringValue(record.lastSeenAt, stringValue(record.updatedAt)),
     expiresAt: stringValue(record.expiresAt),
-    status: stringValue(record.status, "active")
+    status: stringValue(record.status, "active"),
   };
 }
 
@@ -151,7 +163,7 @@ function toScheduledTask(record: Record<string, unknown>): ScheduledTask {
     maxAttempts: numberValue(record.maxAttempts),
     lastError: nullableString(record.lastError),
     createdAt: stringValue(record.createdAt),
-    updatedAt: stringValue(record.updatedAt)
+    updatedAt: stringValue(record.updatedAt),
   };
 }
 
@@ -171,6 +183,6 @@ function toImportExportTask(record: Record<string, unknown>): ImportExportTask {
     resultExpiresAt: nullableString(record.resultExpiresAt),
     createdAt: stringValue(record.createdAt),
     updatedAt: stringValue(record.updatedAt),
-    createdBy: nullableString(record.createdBy)
+    createdBy: nullableString(record.createdBy),
   };
 }

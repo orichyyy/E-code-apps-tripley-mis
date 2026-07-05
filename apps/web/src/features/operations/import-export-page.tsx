@@ -26,12 +26,12 @@ export function ImportExportPage({ route }: { route: WebAdminRouteMetadata }) {
   const query = useQuery({
     enabled: canView,
     queryKey: ["import-export-tasks"],
-    queryFn: fetchImportExportTasks
+    queryFn: fetchImportExportTasks,
   });
   const detailQuery = useQuery({
     enabled: canView && selectedId !== null,
     queryKey: ["import-export-task", selectedId],
-    queryFn: () => fetchImportExportTask(String(selectedId))
+    queryFn: () => fetchImportExportTask(String(selectedId)),
   });
   const createMutation = useMutation({
     mutationFn: createExportTask,
@@ -39,7 +39,7 @@ export function ImportExportPage({ route }: { route: WebAdminRouteMetadata }) {
       setCreating(false);
       setSelectedId(envelope.data.id);
       await queryClient.invalidateQueries({ queryKey: ["import-export-tasks"] });
-    }
+    },
   });
   const rows = useMemo(
     () =>
@@ -47,9 +47,9 @@ export function ImportExportPage({ route }: { route: WebAdminRouteMetadata }) {
         [record.taskType, record.resourceType, record.status, record.createdBy ?? ""]
           .join(" ")
           .toLowerCase()
-          .includes(keyword.toLowerCase())
+          .includes(keyword.toLowerCase()),
       ),
-    [keyword, query.data]
+    [keyword, query.data],
   );
 
   if (!canView) return <PermissionDenied language={language} />;
@@ -107,7 +107,9 @@ export function ImportExportPage({ route }: { route: WebAdminRouteMetadata }) {
           <ExportTaskForm
             busy={createMutation.isPending}
             onCancel={() => setCreating(false)}
-            onSubmit={(resourceType) => createMutation.mutate(createExportTaskRequestSchema.parse({ resourceType }))}
+            onSubmit={(resourceType) =>
+              createMutation.mutate(createExportTaskRequestSchema.parse({ resourceType }))
+            }
           />
         ) : (
           <ImportExportDetail isLoading={detailQuery.isLoading} task={detailQuery.data ?? null} />
@@ -126,7 +128,9 @@ function PermissionDenied({ language }: { language: "en" | "zh" }) {
   return (
     <section className="rounded-lg border bg-card p-8 text-center">
       <AlertCircle className="mx-auto size-8 text-destructive" aria-hidden="true" />
-      <h2 className="mt-3 text-base font-semibold">{translate(language, "common.permissionDenied")}</h2>
+      <h2 className="mt-3 text-base font-semibold">
+        {translate(language, "common.permissionDenied")}
+      </h2>
     </section>
   );
 }

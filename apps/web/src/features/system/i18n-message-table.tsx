@@ -11,7 +11,13 @@ type I18nMessageTableProps = {
   rows: I18nMessage[];
 };
 
-export function I18nMessageTable({ canUpdate, isError, isLoading, onEdit, rows }: I18nMessageTableProps) {
+export function I18nMessageTable({
+  canUpdate,
+  isError,
+  isLoading,
+  onEdit,
+  rows,
+}: I18nMessageTableProps) {
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 p-8 text-sm text-muted-foreground">
@@ -20,9 +26,12 @@ export function I18nMessageTable({ canUpdate, isError, isLoading, onEdit, rows }
       </div>
     );
   }
-  if (isError) return <div className="p-8 text-sm text-destructive">The data could not be loaded.</div>;
+  if (isError)
+    return <div className="p-8 text-sm text-destructive">The data could not be loaded.</div>;
   if (rows.length === 0) {
-    return <div className="p-8 text-sm text-muted-foreground">No records match the current filters.</div>;
+    return (
+      <div className="p-8 text-sm text-muted-foreground">No records match the current filters.</div>
+    );
   }
 
   return (

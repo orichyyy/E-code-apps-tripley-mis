@@ -10,13 +10,16 @@ export function createInMemoryNotificationChannelAdapter(): NotificationChannelA
       return { ok: true };
     },
     async send(message) {
-      messages.push({ ...message, metadata: message.metadata ? { ...message.metadata } : undefined });
+      messages.push({
+        ...message,
+        metadata: message.metadata ? { ...message.metadata } : undefined,
+      });
     },
     listMessages() {
       return messages.map((message) => ({
         ...message,
-        metadata: message.metadata ? { ...message.metadata } : undefined
+        metadata: message.metadata ? { ...message.metadata } : undefined,
       }));
-    }
+    },
   };
 }

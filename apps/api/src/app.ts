@@ -1,7 +1,7 @@
 import {
   createInMemoryNotificationChannelAdapter,
   createSmtpNotificationChannelAdapter,
-  type NotificationChannelAdapter
+  type NotificationChannelAdapter,
 } from "@web-admin-base/adapters";
 import { createOpenApiDocument, healthResponseSchema } from "@web-admin-base/contracts";
 import { Hono } from "hono";
@@ -17,7 +17,7 @@ import { CommunicationsServices } from "./modules/communications/communications.
 import { createCoreFoundationRoutes } from "./modules/core-foundation/core-foundation.routes";
 import {
   createInMemoryBackendCoreServices,
-  type BackendCoreServices
+  type BackendCoreServices,
 } from "./modules/core-foundation/services";
 import { createPersistentBackendCoreServices } from "./modules/core-foundation/persistence/persistent-backend-core-services";
 import { createManifestRoutes } from "./modules/manifests/manifest.routes";
@@ -28,7 +28,7 @@ import { SystemManagementServices } from "./modules/system-management/system-man
 import {
   createStructuredLoggingMiddleware,
   noopStructuredLogSink,
-  type StructuredLogSink
+  type StructuredLogSink,
 } from "./observability/structured-logging";
 
 type AppBindings = {
@@ -45,8 +45,10 @@ export type AppDependencies = {
 
 export function createApp(dependencies: AppDependencies = createDefaultAppDependencies()) {
   const structuredLogSink = dependencies.structuredLogSink ?? noopStructuredLogSink;
-  const communicationsServices = dependencies.communicationsServices ?? CommunicationsServices.inMemory();
-  const infrastructureServices = dependencies.infrastructureServices ?? InfrastructureServices.inMemory();
+  const communicationsServices =
+    dependencies.communicationsServices ?? CommunicationsServices.inMemory();
+  const infrastructureServices =
+    dependencies.infrastructureServices ?? InfrastructureServices.inMemory();
   const systemManagementServices =
     dependencies.systemManagementServices ?? SystemManagementServices.inMemory();
   const app = new Hono<AppBindings>().basePath("/api");
@@ -61,8 +63,8 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
         status: "ok",
         service: "api",
         requestId: context.get("requestId"),
-        timestamp: new Date().toISOString()
-      })
+        timestamp: new Date().toISOString(),
+      }),
     );
   });
 
@@ -72,8 +74,8 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
         status: "reserved",
         service: "api",
         requestId: context.get("requestId"),
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   });
 
@@ -93,11 +95,11 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
       {
         error: {
           code: "SYSTEM_NOT_FOUND",
-          message: "Route not found"
+          message: "Route not found",
         },
-        requestId: context.get("requestId")
+        requestId: context.get("requestId"),
       },
-      404
+      404,
     );
   });
 
@@ -105,7 +107,7 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
     const appError = normalizeError(error);
     return context.json(
       createErrorResponse(appError, context.get("requestId")),
-      appError.status as ContentfulStatusCode
+      appError.status as ContentfulStatusCode,
     );
   });
 
@@ -119,24 +121,24 @@ export function createDefaultAppDependencies(config: ApiConfig = loadApiConfig()
     backendCoreServices: createInMemoryBackendCoreServices(config.backendCore),
     communicationsServices: CommunicationsServices.inMemory(),
     infrastructureServices: InfrastructureServices.inMemory({
-      notificationChannel: createNotificationChannel(config)
+      notificationChannel: createNotificationChannel(config),
     }),
     systemManagementServices: SystemManagementServices.inMemory(),
-    structuredLogSink: noopStructuredLogSink
+    structuredLogSink: noopStructuredLogSink,
   };
 }
 
 export async function createDatabaseBackedAppDependencies(
-  config: ApiConfig = loadApiConfig()
+  config: ApiConfig = loadApiConfig(),
 ): Promise<AppDependencies> {
   return {
     backendCoreServices: await createPersistentBackendCoreServices(config.backendCore),
     communicationsServices: CommunicationsServices.database(),
     infrastructureServices: InfrastructureServices.database(undefined, {
-      notificationChannel: createNotificationChannel(config)
+      notificationChannel: createNotificationChannel(config),
     }),
     systemManagementServices: SystemManagementServices.database(),
-    structuredLogSink: noopStructuredLogSink
+    structuredLogSink: noopStructuredLogSink,
   };
 }
 
@@ -151,6 +153,6 @@ function createNotificationChannel(config: ApiConfig): NotificationChannelAdapte
     secure: config.smtp.secure,
     username: config.smtp.username,
     password: config.smtp.password,
-    from: config.smtp.from
+    from: config.smtp.from,
   });
 }

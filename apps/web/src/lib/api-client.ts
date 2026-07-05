@@ -27,7 +27,7 @@ const baseRecords: TableRecord[] = [
     status: "enabled",
     owner: "Super Administrator",
     updatedAt: "2026-07-03T00:00:00Z",
-    source: "typed-placeholder"
+    source: "typed-placeholder",
   },
   {
     id: "2",
@@ -36,8 +36,8 @@ const baseRecords: TableRecord[] = [
     status: "enabled",
     owner: "System",
     updatedAt: "2026-07-03T00:00:00Z",
-    source: "typed-placeholder"
-  }
+    source: "typed-placeholder",
+  },
 ];
 
 const liveCoreRoutePrefixes = [
@@ -46,7 +46,7 @@ const liveCoreRoutePrefixes = [
   "system.roles",
   "system.permissions",
   "system.menus",
-  "operations.online-users"
+  "operations.online-users",
 ];
 
 export async function fetchPageDataset(routeCode: string): Promise<PageDataset> {
@@ -69,8 +69,8 @@ export async function fetchPageDataset(routeCode: string): Promise<PageDataset> 
       id: `${routeCode}-${record.id}`,
       name: routeCode.includes("logs") ? `${record.name} event` : record.name,
       code: `${routeCode}:${record.code}`,
-      source: mode
-    }))
+      source: mode,
+    })),
   };
 }
 
@@ -98,25 +98,26 @@ const routeEndpointByCode: Record<string, string> = {
   "logs.exception": "/logs/exception",
   "logs.security": "/logs/security",
   "logs.scheduler": "/logs/jobs",
-  "logs.files": "/logs/files"
+  "logs.files": "/logs/files",
 };
 
 async function fetchLiveDataset(routeCode: string, endpoint: string): Promise<PageDataset | null> {
-  const token = typeof localStorage === "undefined" ? null : localStorage.getItem("web-admin.access-token");
+  const token =
+    typeof localStorage === "undefined" ? null : localStorage.getItem("web-admin.access-token");
   if (!token) return null;
 
   try {
     const response = await fetch(`${internalApiClient.basePath}${endpoint}`, {
       headers: {
-        authorization: `Bearer ${token}`
-      }
+        authorization: `Bearer ${token}`,
+      },
     });
     if (!response.ok) return null;
     const envelope = (await response.json()) as { data?: unknown };
     return {
       mode: "available-api",
       hiddenFields: [],
-      records: toRecords(routeCode, unwrapRecords(envelope.data))
+      records: toRecords(routeCode, unwrapRecords(envelope.data)),
     };
   } catch {
     return null;
@@ -128,18 +129,27 @@ function toRecords(routeCode: string, records: Array<Record<string, unknown>>): 
     id: stringField(record.id, `${routeCode}-${index + 1}`),
     name: displayName(routeCode, record),
     code: stringField(
-      record.code ?? record.configKey ?? record.itemValue ?? record.messageKey ?? record.logType ?? record.resourceType ?? record.channel,
-      routeCode
+      record.code ??
+        record.configKey ??
+        record.itemValue ??
+        record.messageKey ??
+        record.logType ??
+        record.resourceType ??
+        record.channel,
+      routeCode,
     ),
     status: stringField(record.status ?? record.level ?? record.enabled, "active"),
-    owner: stringField(record.owner ?? record.userId ?? record.createdBy ?? record.handlerType, "System"),
+    owner: stringField(
+      record.owner ?? record.userId ?? record.createdBy ?? record.handlerType,
+      "System",
+    ),
     updatedAt: stringField(record.updatedAt ?? record.createdAt ?? record.occurredAt, ""),
     source: "available-api",
     ...Object.fromEntries(
       Object.entries(record)
         .filter(([, value]) => typeof value === "string")
-        .map(([key, value]) => [key, value])
-    )
+        .map(([key, value]) => [key, value]),
+    ),
   }));
 }
 
@@ -155,14 +165,14 @@ function displayName(routeCode: string, record: Record<string, unknown>): string
       record.messageKey ??
       record.code ??
       record.resourceType,
-    routeCode
+    routeCode,
   );
 }
 
 export async function loginWithPassword(input: { username: string; password: string }) {
   const envelope = await requestJson<{ data: LoginResponseData }>("/auth/login", {
     method: "POST",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
   const data = envelope.data;
   const preferences = isRecord(data.preferences) ? data.preferences : {};
@@ -172,20 +182,23 @@ export async function loginWithPassword(input: { username: string; password: str
     user: {
       id: stringField(data.user.id, ""),
       username: stringField(data.user.username, input.username),
-      displayName: stringField(data.user.displayName, stringField(data.user.username, input.username)),
+      displayName: stringField(
+        data.user.displayName,
+        stringField(data.user.username, input.username),
+      ),
       language: readLanguage(preferences.language),
-      forcePasswordChange: Boolean(data.passwordChangeRequired)
+      forcePasswordChange: Boolean(data.passwordChangeRequired),
     },
     permissionCodes: Array.isArray(data.permissionCodes)
       ? data.permissionCodes.filter((code): code is string => typeof code === "string")
-      : []
+      : [],
   };
 }
 
 export async function changeOwnPassword(input: { oldPassword: string; newPassword: string }) {
   return requestJson<{ data: unknown }>("/auth/change-password", {
     method: "POST",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 }
 

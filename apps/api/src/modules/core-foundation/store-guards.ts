@@ -23,7 +23,7 @@ export function requireOrganization(store: InMemoryBackendStore, id: string): Or
 
 export function requireEnabledOrganization(
   store: InMemoryBackendStore,
-  id: string
+  id: string,
 ): OrganizationRecord {
   const organization = requireOrganization(store, id);
   if (organization.status === "disabled") throw createKnownError("BUSINESS_ORG_DISABLED");

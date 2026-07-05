@@ -1,18 +1,19 @@
 import type { HonoRpcClientContract } from "@web-admin-base/contracts";
 
 export const internalApiClient = {
-  basePath: "/api"
+  basePath: "/api",
 } satisfies HonoRpcClientContract;
 
 export async function requestJson<T>(endpoint: string, init: RequestInit = {}): Promise<T> {
-  const token = typeof localStorage === "undefined" ? null : localStorage.getItem("web-admin.access-token");
+  const token =
+    typeof localStorage === "undefined" ? null : localStorage.getItem("web-admin.access-token");
   const response = await fetch(`${internalApiClient.basePath}${endpoint}`, {
     ...init,
     headers: {
       ...(init.body ? { "content-type": "application/json" } : {}),
       ...(token ? { authorization: `Bearer ${token}` } : {}),
-      ...init.headers
-    }
+      ...init.headers,
+    },
   });
   if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
   return (await response.json()) as T;

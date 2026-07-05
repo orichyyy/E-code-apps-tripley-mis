@@ -13,7 +13,9 @@ export type QueryExecutor = {
 
 export function createPostgresqlExecutor(url: string): QueryExecutor {
   const pool = createPostgresqlPool(url);
-  let activeClient: { query(sql: string, params?: unknown[]): Promise<{ rows: unknown[] }> } | null = null;
+  let activeClient: {
+    query(sql: string, params?: unknown[]): Promise<{ rows: unknown[] }>;
+  } | null = null;
 
   return {
     dialect: "postgresql",
@@ -46,7 +48,7 @@ export function createPostgresqlExecutor(url: string): QueryExecutor {
     },
     async close() {
       await pool.end();
-    }
+    },
   };
 }
 
@@ -87,6 +89,6 @@ export function createSqliteExecutor(url: string): QueryExecutor {
     },
     async close() {
       client.close();
-    }
+    },
   };
 }

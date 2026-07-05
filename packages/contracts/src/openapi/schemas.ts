@@ -6,7 +6,7 @@ import { systemManagementComponentSchemas } from "./system-management-schemas";
 
 export const idStringSchema: OpenApiSchema = {
   type: "string",
-  description: "Database auto-increment ID serialized as a string."
+  description: "Database auto-increment ID serialized as a string.",
 };
 
 export const errorSchema: OpenApiSchema = {
@@ -19,20 +19,20 @@ export const errorSchema: OpenApiSchema = {
       properties: {
         code: { type: "string" },
         message: { type: "string" },
-        details: { type: "object", additionalProperties: true }
+        details: { type: "object", additionalProperties: true },
       },
-      additionalProperties: false
+      additionalProperties: false,
     },
-    requestId: { type: "string" }
+    requestId: { type: "string" },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 const envelopeSchema = (data: OpenApiSchema): OpenApiSchema => ({
   type: "object",
   required: ["data"],
   properties: { data },
-  additionalProperties: true
+  additionalProperties: true,
 });
 
 const auditSchemaProperties: Record<string, OpenApiSchema> = {
@@ -42,7 +42,7 @@ const auditSchemaProperties: Record<string, OpenApiSchema> = {
   updatedBy: { ...idStringSchema, nullable: true },
   isDeleted: { type: "boolean" },
   deletedAt: { type: "string", format: "date-time", nullable: true },
-  deletedBy: { ...idStringSchema, nullable: true }
+  deletedBy: { ...idStringSchema, nullable: true },
 };
 
 const roleDataPermissionSchema: OpenApiSchema = {
@@ -61,7 +61,7 @@ const roleDataPermissionSchema: OpenApiSchema = {
     "createdAt",
     "updatedAt",
     "createdBy",
-    "updatedBy"
+    "updatedBy",
   ],
   properties: {
     id: idStringSchema,
@@ -71,9 +71,9 @@ const roleDataPermissionSchema: OpenApiSchema = {
     permissionCode: { type: "string" },
     effect: { type: "string", enum: ["allow", "deny"] },
     rule: { type: "object", additionalProperties: true },
-    ...auditSchemaProperties
+    ...auditSchemaProperties,
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 const roleFieldPermissionSchema: OpenApiSchema = {
@@ -92,7 +92,7 @@ const roleFieldPermissionSchema: OpenApiSchema = {
     "createdAt",
     "updatedAt",
     "createdBy",
-    "updatedBy"
+    "updatedBy",
   ],
   properties: {
     id: idStringSchema,
@@ -102,9 +102,9 @@ const roleFieldPermissionSchema: OpenApiSchema = {
     resource: { type: "string" },
     field: { type: "string" },
     effect: { type: "string", enum: ["visible", "hidden", "readonly"] },
-    ...auditSchemaProperties
+    ...auditSchemaProperties,
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 const userPermissionOverrideSchema: OpenApiSchema = {
@@ -122,7 +122,7 @@ const userPermissionOverrideSchema: OpenApiSchema = {
     "createdAt",
     "updatedAt",
     "createdBy",
-    "updatedBy"
+    "updatedBy",
   ],
   properties: {
     id: idStringSchema,
@@ -131,9 +131,9 @@ const userPermissionOverrideSchema: OpenApiSchema = {
     permissionId: idStringSchema,
     permissionCode: { type: "string" },
     effect: { type: "string", enum: ["allow", "deny"] },
-    ...auditSchemaProperties
+    ...auditSchemaProperties,
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 const effectiveDataPermissionSchema: OpenApiSchema = {
@@ -143,9 +143,9 @@ const effectiveDataPermissionSchema: OpenApiSchema = {
     roleId: idStringSchema,
     permissionCode: { type: "string" },
     effect: { type: "string", enum: ["allow", "deny"] },
-    rule: { type: "object", additionalProperties: true }
+    rule: { type: "object", additionalProperties: true },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 const effectiveFieldPermissionSchema: OpenApiSchema = {
@@ -155,9 +155,9 @@ const effectiveFieldPermissionSchema: OpenApiSchema = {
     roleId: idStringSchema,
     resource: { type: "string" },
     field: { type: "string" },
-    effect: { type: "string", enum: ["visible", "hidden", "readonly"] }
+    effect: { type: "string", enum: ["visible", "hidden", "readonly"] },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 const effectiveUserPermissionOverrideSchema: OpenApiSchema = {
@@ -165,9 +165,9 @@ const effectiveUserPermissionOverrideSchema: OpenApiSchema = {
   required: ["permissionCode", "effect"],
   properties: {
     permissionCode: { type: "string" },
-    effect: { type: "string", enum: ["allow", "deny"] }
+    effect: { type: "string", enum: ["allow", "deny"] },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
@@ -183,7 +183,7 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       "adminDisplayName",
       "adminEmail",
       "adminPhone",
-      "adminPassword"
+      "adminPassword",
     ],
     properties: {
       organizationName: { type: "string" },
@@ -192,38 +192,38 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       adminDisplayName: { type: "string" },
       adminEmail: { type: "string", format: "email" },
       adminPhone: { type: "string" },
-      adminPassword: { type: "string", format: "password" }
+      adminPassword: { type: "string", format: "password" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   LoginRequest: {
     type: "object",
     required: ["username", "password"],
     properties: {
       username: { type: "string" },
-      password: { type: "string", format: "password" }
+      password: { type: "string", format: "password" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   LogoutRequest: {
     type: "object",
     properties: { sessionId: idStringSchema },
-    additionalProperties: false
+    additionalProperties: false,
   },
   ChangePasswordRequest: {
     type: "object",
     required: ["oldPassword", "newPassword"],
     properties: {
       oldPassword: { type: "string", format: "password" },
-      newPassword: { type: "string", format: "password" }
+      newPassword: { type: "string", format: "password" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   SwitchCurrentOrganizationRequest: {
     type: "object",
     required: ["organizationId"],
     properties: { organizationId: idStringSchema },
-    additionalProperties: false
+    additionalProperties: false,
   },
   CreateOrganizationRequest: {
     type: "object",
@@ -237,9 +237,9 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       email: { type: "string", format: "email" },
       address: { type: "string" },
       sortOrder: { type: "integer" },
-      remark: { type: "string" }
+      remark: { type: "string" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateOrganizationRequest: {
     type: "object",
@@ -251,15 +251,15 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       email: { type: "string", format: "email", nullable: true },
       address: { type: "string", nullable: true },
       sortOrder: { type: "integer" },
-      remark: { type: "string", nullable: true }
+      remark: { type: "string", nullable: true },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateOrganizationDepthConfigRequest: {
     type: "object",
     required: ["maxDepth"],
     properties: { maxDepth: { type: "integer" } },
-    additionalProperties: false
+    additionalProperties: false,
   },
   CreateUserRequest: {
     type: "object",
@@ -270,7 +270,7 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       "phone",
       "password",
       "primaryOrganizationId",
-      "roleId"
+      "roleId",
     ],
     properties: {
       username: { type: "string" },
@@ -282,9 +282,9 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       employeeNumber: { type: "string" },
       password: { type: "string", format: "password" },
       primaryOrganizationId: idStringSchema,
-      roleId: idStringSchema
+      roleId: idStringSchema,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateUserRequest: {
     type: "object",
@@ -297,9 +297,9 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       gender: { type: "string", nullable: true },
       employeeNumber: { type: "string", nullable: true },
       primaryOrganizationId: idStringSchema,
-      remark: { type: "string", nullable: true }
+      remark: { type: "string", nullable: true },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateOwnProfileRequest: {
     type: "object",
@@ -309,9 +309,9 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       phone: { type: "string" },
       avatarFileId: { ...idStringSchema, nullable: true },
       gender: { type: "string", nullable: true },
-      employeeNumber: { type: "string", nullable: true }
+      employeeNumber: { type: "string", nullable: true },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateOwnPreferencesRequest: {
     type: "object",
@@ -319,32 +319,32 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       language: { type: "string", enum: ["en", "zh"] },
       themeMode: { type: "string", enum: ["light", "dark"] },
       themeColor: { type: "string", enum: ["blue", "emerald", "violet", "slate"] },
-      pageTabsEnabled: { type: "boolean" }
+      pageTabsEnabled: { type: "boolean" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateOwnAvatarRequest: {
     type: "object",
     required: ["avatarFileId"],
     properties: {
-      avatarFileId: { ...idStringSchema, nullable: true }
+      avatarFileId: { ...idStringSchema, nullable: true },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   ResetPasswordRequest: {
     type: "object",
     required: ["password"],
     properties: { password: { type: "string", format: "password" } },
-    additionalProperties: false
+    additionalProperties: false,
   },
   AssignUserOrganizationRoleRequest: {
     type: "object",
     required: ["organizationId", "roleId"],
     properties: {
       organizationId: idStringSchema,
-      roleId: idStringSchema
+      roleId: idStringSchema,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   CreateRoleRequest: {
     type: "object",
@@ -353,9 +353,9 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       name: { type: "string" },
       code: { type: "string" },
       description: { type: "string" },
-      remark: { type: "string" }
+      remark: { type: "string" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateRoleRequest: {
     type: "object",
@@ -363,17 +363,17 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       name: { type: "string" },
       code: { type: "string" },
       description: { type: "string", nullable: true },
-      remark: { type: "string", nullable: true }
+      remark: { type: "string", nullable: true },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateRolePermissionsRequest: {
     type: "object",
     required: ["permissionCodes"],
     properties: {
-      permissionCodes: { type: "array", items: { type: "string" } }
+      permissionCodes: { type: "array", items: { type: "string" } },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateRoleDataPermissionsRequest: {
     type: "object",
@@ -387,13 +387,13 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
           properties: {
             permissionCode: { type: "string" },
             effect: { type: "string", enum: ["allow", "deny"] },
-            rule: { type: "object", additionalProperties: true }
+            rule: { type: "object", additionalProperties: true },
           },
-          additionalProperties: false
-        }
-      }
+          additionalProperties: false,
+        },
+      },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateRoleFieldPermissionsRequest: {
     type: "object",
@@ -407,13 +407,13 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
           properties: {
             resource: { type: "string" },
             field: { type: "string" },
-            effect: { type: "string", enum: ["visible", "hidden", "readonly"] }
+            effect: { type: "string", enum: ["visible", "hidden", "readonly"] },
           },
-          additionalProperties: false
-        }
-      }
+          additionalProperties: false,
+        },
+      },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateUserPermissionOverridesRequest: {
     type: "object",
@@ -426,13 +426,13 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
           required: ["permissionCode", "effect"],
           properties: {
             permissionCode: { type: "string" },
-            effect: { type: "string", enum: ["allow", "deny"] }
+            effect: { type: "string", enum: ["allow", "deny"] },
           },
-          additionalProperties: false
-        }
-      }
+          additionalProperties: false,
+        },
+      },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   CreateMenuRequest: {
     type: "object",
@@ -447,9 +447,9 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       icon: { type: "string" },
       sortOrder: { type: "integer" },
       visible: { type: "boolean" },
-      status: { type: "string", enum: ["enabled", "disabled"] }
+      status: { type: "string", enum: ["enabled", "disabled"] },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateMenuRequest: {
     type: "object",
@@ -463,17 +463,17 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       icon: { type: "string", nullable: true },
       sortOrder: { type: "integer" },
       visible: { type: "boolean" },
-      status: { type: "string", enum: ["enabled", "disabled"] }
+      status: { type: "string", enum: ["enabled", "disabled"] },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateMenuApiBindingsRequest: {
     type: "object",
     required: ["apiPermissionIds"],
     properties: {
-      apiPermissionIds: { type: "array", items: idStringSchema }
+      apiPermissionIds: { type: "array", items: idStringSchema },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   CreateLogExportTaskRequest: {
     type: "object",
@@ -481,10 +481,19 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
     properties: {
       logType: {
         type: "string",
-        enum: ["login", "operation", "access", "api_call", "exception", "security", "scheduler", "file_operation"]
-      }
+        enum: [
+          "login",
+          "operation",
+          "access",
+          "api_call",
+          "exception",
+          "security",
+          "scheduler",
+          "file_operation",
+        ],
+      },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   FileUploadRequest: {
     type: "object",
@@ -493,10 +502,11 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       file: {
         type: "string",
         format: "binary",
-        description: "Uploaded file. Default limit is 50 MB and allowed extensions are enforced by the file service."
-      }
+        description:
+          "Uploaded file. Default limit is 50 MB and allowed extensions are enforced by the file service.",
+      },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   CreateNotificationTemplateRequest: {
     type: "object",
@@ -507,9 +517,9 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       locale: { type: "string" },
       subject: { type: "string", nullable: true },
       body: { type: "string" },
-      variables: { type: "array", items: { type: "string" } }
+      variables: { type: "array", items: { type: "string" } },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateNotificationTemplateRequest: {
     type: "object",
@@ -519,9 +529,9 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       locale: { type: "string" },
       subject: { type: "string", nullable: true },
       body: { type: "string" },
-      variables: { type: "array", items: { type: "string" } }
+      variables: { type: "array", items: { type: "string" } },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   SendTestEmailNotificationRequest: {
     type: "object",
@@ -530,9 +540,9 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       templateCode: { type: "string" },
       locale: { type: "string" },
       recipient: { type: "string", format: "email" },
-      variables: { type: "object", additionalProperties: true }
+      variables: { type: "object", additionalProperties: true },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   CreateScheduledTaskRequest: {
     type: "object",
@@ -542,9 +552,9 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       cronExpression: { type: "string" },
       handlerType: { type: "string" },
       payload: { type: "object", additionalProperties: true },
-      enabled: { type: "boolean" }
+      enabled: { type: "boolean" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateScheduledTaskRequest: {
     type: "object",
@@ -553,36 +563,45 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       cronExpression: { type: "string" },
       handlerType: { type: "string" },
       payload: { type: "object", additionalProperties: true },
-      enabled: { type: "boolean" }
+      enabled: { type: "boolean" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   CreateExportTaskRequest: {
     type: "object",
     required: ["resourceType"],
     properties: {
-      resourceType: { type: "string" }
+      resourceType: { type: "string" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   RoleDataPermission: roleDataPermissionSchema,
   RoleFieldPermission: roleFieldPermissionSchema,
   UserPermissionOverride: userPermissionOverrideSchema,
   RoleDataPermissionListResponse: envelopeSchema({
     type: "array",
-    items: { $ref: "#/components/schemas/RoleDataPermission" }
+    items: { $ref: "#/components/schemas/RoleDataPermission" },
   }),
   RoleFieldPermissionListResponse: envelopeSchema({
     type: "array",
-    items: { $ref: "#/components/schemas/RoleFieldPermission" }
+    items: { $ref: "#/components/schemas/RoleFieldPermission" },
   }),
   UserPermissionOverrideListResponse: envelopeSchema({
     type: "array",
-    items: { $ref: "#/components/schemas/UserPermissionOverride" }
+    items: { $ref: "#/components/schemas/UserPermissionOverride" },
   }),
   UserPreferences: {
     type: "object",
-    required: ["id", "tenantId", "userId", "language", "themeMode", "themeColor", "pageTabsEnabled", "updatedAt"],
+    required: [
+      "id",
+      "tenantId",
+      "userId",
+      "language",
+      "themeMode",
+      "themeColor",
+      "pageTabsEnabled",
+      "updatedAt",
+    ],
     properties: {
       id: idStringSchema,
       tenantId: { ...idStringSchema, nullable: true },
@@ -591,21 +610,21 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       themeMode: { type: "string", enum: ["light", "dark"] },
       themeColor: { type: "string", enum: ["blue", "emerald", "violet", "slate"] },
       pageTabsEnabled: { type: "boolean" },
-      updatedAt: { type: "string", format: "date-time" }
+      updatedAt: { type: "string", format: "date-time" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   ProfileResponse: envelopeSchema({
     type: "object",
     required: ["user", "preferences"],
     properties: {
       user: { type: "object", additionalProperties: true },
-      preferences: { $ref: "#/components/schemas/UserPreferences" }
+      preferences: { $ref: "#/components/schemas/UserPreferences" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   }),
   UserPreferencesResponse: envelopeSchema({
-    $ref: "#/components/schemas/UserPreferences"
+    $ref: "#/components/schemas/UserPreferences",
   }),
   ...communicationsComponentSchemas,
   ...infrastructureComponentSchemas,
@@ -618,7 +637,7 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       "menus",
       "dataPermissions",
       "fieldPermissions",
-      "userPermissionOverrides"
+      "userPermissionOverrides",
     ],
     properties: {
       currentOrganization: { type: "object", additionalProperties: true },
@@ -626,18 +645,18 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       menus: { type: "array", items: { type: "object", additionalProperties: true } },
       dataPermissions: {
         type: "array",
-        items: effectiveDataPermissionSchema
+        items: effectiveDataPermissionSchema,
       },
       fieldPermissions: {
         type: "array",
-        items: effectiveFieldPermissionSchema
+        items: effectiveFieldPermissionSchema,
       },
       userPermissionOverrides: {
         type: "array",
-        items: effectiveUserPermissionOverrideSchema
-      }
+        items: effectiveUserPermissionOverrideSchema,
+      },
     },
-    additionalProperties: false
+    additionalProperties: false,
   }),
-  GenericDataEnvelope: envelopeSchema({ type: "object", additionalProperties: true })
+  GenericDataEnvelope: envelopeSchema({ type: "object", additionalProperties: true }),
 };

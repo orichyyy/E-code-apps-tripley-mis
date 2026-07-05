@@ -28,7 +28,9 @@ export async function waitForHttp(url: string, label: string): Promise<void> {
     await sleep(500);
   }
 
-  throw new Error(`${label} did not become ready. ${String(lastError)}\n${await serviceLogSummary()}`);
+  throw new Error(
+    `${label} did not become ready. ${String(lastError)}\n${await serviceLogSummary()}`,
+  );
 }
 
 export async function runAuthenticatedChecks(): Promise<void> {
@@ -54,25 +56,29 @@ export async function runBrowserSmoke(): Promise<void> {
       "Dictionary management",
       "Task scheduler",
       "API call logs",
-      "Personal settings"
+      "Personal settings",
     ]) {
       const count = await page.getByRole("link", { name: label }).count();
       if (count < 1) throw new Error(`Expected visible menu link: ${label}`);
     }
 
     await page.getByRole("link", { name: "System configuration" }).click();
-    await page.getByRole("heading", { name: "System configuration", level: 1 }).waitFor({ state: "visible" });
+    await page
+      .getByRole("heading", { name: "System configuration", level: 1 })
+      .waitFor({ state: "visible" });
     await assertSingleActiveSidebarLink();
   } finally {
     await browser.close();
   }
 
   async function assertSingleActiveSidebarLink(): Promise<void> {
-    const activeSidebarLinks = await page.locator("nav[aria-label='Primary'] a.active").evaluateAll((links) =>
-      links.map((link) => link.textContent?.trim()).filter(Boolean)
-    );
+    const activeSidebarLinks = await page
+      .locator("nav[aria-label='Primary'] a.active")
+      .evaluateAll((links) => links.map((link) => link.textContent?.trim()).filter(Boolean));
     if (activeSidebarLinks.length !== 1 || activeSidebarLinks[0] !== "System configuration") {
-      throw new Error(`Expected only System configuration active, got ${activeSidebarLinks.join(", ")}`);
+      throw new Error(
+        `Expected only System configuration active, got ${activeSidebarLinks.join(", ")}`,
+      );
     }
   }
 }
@@ -81,13 +87,13 @@ async function loginThroughWebProxy(): Promise<LoginResponse["data"]> {
   const response = await fetch(`http://localhost:${webPort}/api/auth/login`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ username: adminUsername, password: adminPassword })
+    body: JSON.stringify({ username: adminUsername, password: adminPassword }),
   });
   if (!response.ok) {
     throw new Error(`Login failed with HTTP ${response.status}: ${await response.text()}`);
   }
 
-  const body = await response.json() as LoginResponse;
+  const body = (await response.json()) as LoginResponse;
   if (!body.data.accessToken) {
     throw new Error("Login response did not include an access token.");
   }
@@ -105,7 +111,7 @@ async function runApiChecks(accessToken: string): Promise<void> {
   const failures: string[] = [];
   for (const endpoint of apiChecks) {
     const response = await fetch(`http://localhost:${webPort}/api${endpoint}`, {
-      headers: { authorization: `Bearer ${accessToken}` }
+      headers: { authorization: `Bearer ${accessToken}` },
     });
     if (!response.ok) failures.push(`${endpoint} -> HTTP ${response.status}`);
   }
@@ -117,21 +123,25 @@ async function runApiChecks(accessToken: string): Promise<void> {
 
 async function launchBrowser(): Promise<import("playwright").Browser> {
   const configuredChannel = process.env.SMOKE_BROWSER_CHANNEL;
-  const attempts = configuredChannel ? [{ channel: configuredChannel }] : [{ channel: "chrome" }, { channel: "msedge" }, {}];
+  const attempts = configuredChannel
+    ? [{ channel: configuredChannel }]
+    : [{ channel: "chrome" }, { channel: "msedge" }, {}];
   const errors: string[] = [];
 
   for (const attempt of attempts) {
     try {
       return await chromium.launch({ ...attempt, headless: true });
     } catch (error) {
-      errors.push(`${attempt.channel ?? "bundled chromium"}: ${error instanceof Error ? error.message : String(error)}`);
+      errors.push(
+        `${attempt.channel ?? "bundled chromium"}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   throw new Error(
     "Browser smoke could not launch a browser. Install Chrome/Edge, set SMOKE_BROWSER_CHANNEL, " +
-    "or run `pnpm exec playwright install chromium`.\n" +
-    errors.join("\n")
+      "or run `pnpm exec playwright install chromium`.\n" +
+      errors.join("\n"),
   );
 }
 

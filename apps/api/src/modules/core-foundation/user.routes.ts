@@ -2,7 +2,7 @@ import {
   assignUserOrganizationRoleRequestSchema,
   createUserRequestSchema,
   resetPasswordRequestSchema,
-  updateUserRequestSchema
+  updateUserRequestSchema,
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
@@ -21,23 +21,29 @@ export function createUserRoutes(services: BackendCoreServices) {
 
   routes.get("/users", (context) => {
     return context.json({
-      data: pageItems(services.listUsers({
-        keyword: context.req.query("keyword"),
-        organizationId: context.req.query("organizationId"),
-        status: context.req.query("status") as UserListFilters["status"] | undefined
-      }), {
-        page: context.req.query("page"),
-        pageSize: context.req.query("pageSize")
-      })
+      data: pageItems(
+        services.listUsers({
+          keyword: context.req.query("keyword"),
+          organizationId: context.req.query("organizationId"),
+          status: context.req.query("status") as UserListFilters["status"] | undefined,
+        }),
+        {
+          page: context.req.query("page"),
+          pageSize: context.req.query("pageSize"),
+        },
+      ),
     });
   });
 
   routes.post("/users", async (context) => {
     const authContext = context.get("authContext");
     const input = createUserRequestSchema.parse(await context.req.json());
-    return context.json({
-      data: await services.createUser(input, authContext?.userId ?? null)
-    }, 201);
+    return context.json(
+      {
+        data: await services.createUser(input, authContext?.userId ?? null),
+      },
+      201,
+    );
   });
 
   routes.get("/users/:id", (context) => {
@@ -48,7 +54,7 @@ export function createUserRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     const input = updateUserRequestSchema.parse(await context.req.json());
     return context.json({
-      data: await services.updateUser(context.req.param("id"), input, authContext?.userId ?? null)
+      data: await services.updateUser(context.req.param("id"), input, authContext?.userId ?? null),
     });
   });
 
@@ -56,7 +62,11 @@ export function createUserRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     await assertEmptyJsonBody(context.req.raw);
     return context.json({
-      data: await services.setUserStatus(context.req.param("id"), "disabled", authContext?.userId ?? null)
+      data: await services.setUserStatus(
+        context.req.param("id"),
+        "disabled",
+        authContext?.userId ?? null,
+      ),
     });
   });
 
@@ -64,7 +74,11 @@ export function createUserRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     await assertEmptyJsonBody(context.req.raw);
     return context.json({
-      data: await services.setUserStatus(context.req.param("id"), "enabled", authContext?.userId ?? null)
+      data: await services.setUserStatus(
+        context.req.param("id"),
+        "enabled",
+        authContext?.userId ?? null,
+      ),
     });
   });
 
@@ -72,7 +86,11 @@ export function createUserRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     await assertEmptyJsonBody(context.req.raw);
     return context.json({
-      data: await services.setUserStatus(context.req.param("id"), "locked", authContext?.userId ?? null)
+      data: await services.setUserStatus(
+        context.req.param("id"),
+        "locked",
+        authContext?.userId ?? null,
+      ),
     });
   });
 
@@ -80,7 +98,11 @@ export function createUserRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     await assertEmptyJsonBody(context.req.raw);
     return context.json({
-      data: await services.setUserStatus(context.req.param("id"), "enabled", authContext?.userId ?? null)
+      data: await services.setUserStatus(
+        context.req.param("id"),
+        "enabled",
+        authContext?.userId ?? null,
+      ),
     });
   });
 
@@ -91,8 +113,8 @@ export function createUserRoutes(services: BackendCoreServices) {
       data: await services.resetUserPassword(
         context.req.param("id"),
         input,
-        authContext?.userId ?? null
-      )
+        authContext?.userId ?? null,
+      ),
     });
   });
 
@@ -100,7 +122,7 @@ export function createUserRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     await assertEmptyJsonBody(context.req.raw);
     return context.json({
-      data: await services.deleteUser(context.req.param("id"), authContext?.userId ?? null)
+      data: await services.deleteUser(context.req.param("id"), authContext?.userId ?? null),
     });
   });
 
@@ -115,8 +137,8 @@ export function createUserRoutes(services: BackendCoreServices) {
       data: await services.assignUserOrganizationRole(
         context.req.param("id"),
         input,
-        authContext?.userId ?? null
-      )
+        authContext?.userId ?? null,
+      ),
     });
   });
 
@@ -127,8 +149,8 @@ export function createUserRoutes(services: BackendCoreServices) {
       data: await services.removeUserOrganizationRole(
         context.req.param("id"),
         context.req.param("organizationId"),
-        authContext?.userId ?? null
-      )
+        authContext?.userId ?? null,
+      ),
     });
   });
 

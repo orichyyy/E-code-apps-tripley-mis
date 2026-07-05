@@ -15,8 +15,8 @@ async function setupInitializedApp(app = createApp()) {
       adminDisplayName: "Super Admin",
       adminEmail: "admin@example.com",
       adminPhone: "10000000000",
-      adminPassword: "password1"
-    })
+      adminPassword: "password1",
+    }),
   });
   const setup = await setupResponse.json();
   return { app, setup };
@@ -26,7 +26,7 @@ async function loginAsAdmin(app: ReturnType<typeof createApp>) {
   const loginResponse = await app.request("/api/auth/login", {
     method: "POST",
     headers: { "user-agent": "vitest" },
-    body: JSON.stringify({ username: "admin", password: "password1" })
+    body: JSON.stringify({ username: "admin", password: "password1" }),
   });
   const login = await loginResponse.json();
   const setCookie = loginResponse.headers.get("set-cookie") ?? "";
@@ -35,12 +35,12 @@ async function loginAsAdmin(app: ReturnType<typeof createApp>) {
     loginResponse,
     setCookie,
     authHeaders: {
-      authorization: `Bearer ${login.data.accessToken}`
+      authorization: `Bearer ${login.data.accessToken}`,
     },
     csrfAuthHeaders: {
       authorization: `Bearer ${login.data.accessToken}`,
-      ...csrfHeaders(setCookie)
-    }
+      ...csrfHeaders(setCookie),
+    },
   };
 }
 
@@ -49,17 +49,17 @@ function csrfHeaders(setCookieHeader: string): { cookie: string; "x-csrf-token":
   const csrfToken = readSetCookieValue(setCookieHeader, "csrf_token");
   return {
     cookie: `refresh_token=${refreshToken}; csrf_token=${csrfToken}`,
-    "x-csrf-token": csrfToken
+    "x-csrf-token": csrfToken,
   };
 }
 
 function authAndCsrfHeaders(
   authorization: string,
-  setCookieHeader: string
+  setCookieHeader: string,
 ): { authorization: string; cookie: string; "x-csrf-token": string } {
   return {
     authorization,
-    ...csrfHeaders(setCookieHeader)
+    ...csrfHeaders(setCookieHeader),
   };
 }
 
@@ -86,18 +86,18 @@ describe("backend core foundation routes", () => {
           resource: "user",
           action: "view",
           source: "base_manifest",
-          manifestHash: expect.stringMatching(/^[a-f0-9]{64}$/)
-        })
-      ])
+          manifestHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+        }),
+      ]),
     );
     expect(setup.data.apiPermissions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           id: expect.any(String),
           code: "api.auth.login",
-          path: "/api/auth/login"
-        })
-      ])
+          path: "/api/auth/login",
+        }),
+      ]),
     );
     expect(setup.data.roles).toEqual(
       expect.arrayContaining([
@@ -105,9 +105,9 @@ describe("backend core foundation routes", () => {
           code: "super_admin",
           description: "Built-in role",
           isBuiltin: true,
-          dataScopeRuleId: null
-        })
-      ])
+          dataScopeRuleId: null,
+        }),
+      ]),
     );
     expect(status.data.initialized).toBe(true);
   });
@@ -125,8 +125,8 @@ describe("backend core foundation routes", () => {
         adminDisplayName: "Alias Admin",
         adminEmail: "alias-admin@example.com",
         adminPhone: "10000000001",
-        adminPassword: "password1"
-      })
+        adminPassword: "password1",
+      }),
     });
     const setup = await setupResponse.json();
     const finalStatusResponse = await app.request("/api/setup/status");
@@ -140,8 +140,8 @@ describe("backend core foundation routes", () => {
         adminDisplayName: "Duplicate Admin",
         adminEmail: "duplicate-admin@example.com",
         adminPhone: "10000000002",
-        adminPassword: "password1"
-      })
+        adminPassword: "password1",
+      }),
     });
     const duplicate = await duplicateResponse.json();
 
@@ -166,8 +166,8 @@ describe("backend core foundation routes", () => {
         adminDisplayName: "Super Admin",
         adminEmail: "admin@example.com",
         adminPhone: "10000000000",
-        adminPassword: "password"
-      })
+        adminPassword: "password",
+      }),
     });
     const setup = await setupResponse.json();
     const statusResponse = await app.request("/api/initialization/status");
@@ -182,7 +182,7 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp();
     const { login, loginResponse, authHeaders } = await loginAsAdmin(app);
     const onlineUsersResponse = await app.request("/api/online-users", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const onlineUsers = await onlineUsersResponse.json();
 
@@ -197,11 +197,11 @@ describe("backend core foundation routes", () => {
     expect(login.data.session).not.toHaveProperty("tokenVersion");
     expect(login.data.currentOrganization).toMatchObject({ id: "1", code: "default" });
     expect(login.data.organizations).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: "1", code: "default" })])
+      expect.arrayContaining([expect.objectContaining({ id: "1", code: "default" })]),
     );
     expect(login.data.permissionCodes).toEqual(expect.arrayContaining(["user:view", "role:view"]));
     expect(login.data.menus).toEqual(
-      expect.arrayContaining([expect.objectContaining({ code: "system.users" })])
+      expect.arrayContaining([expect.objectContaining({ code: "system.users" })]),
     );
     expect(login.data.passwordChangeRequired).toBe(false);
     expect(onlineUsers.data).toHaveLength(1);
@@ -216,11 +216,11 @@ describe("backend core foundation routes", () => {
     await loginAsAdmin(app);
 
     const filteredResponse = await app.request("/api/online-users?userId=1&organizationId=1", {
-      headers: firstLogin.authHeaders
+      headers: firstLogin.authHeaders,
     });
     const filtered = await filteredResponse.json();
     const pagedResponse = await app.request("/api/online-users?userId=1&page=1&pageSize=1", {
-      headers: firstLogin.authHeaders
+      headers: firstLogin.authHeaders,
     });
     const paged = await pagedResponse.json();
 
@@ -228,17 +228,17 @@ describe("backend core foundation routes", () => {
     expect(filtered.data).toHaveLength(2);
     expect(filtered.data).toEqual([
       expect.objectContaining({ userId: "1", currentOrganizationId: "1" }),
-      expect.objectContaining({ userId: "1", currentOrganizationId: "1" })
+      expect.objectContaining({ userId: "1", currentOrganizationId: "1" }),
     ]);
     expect(pagedResponse.status).toBe(200);
     expect(paged.data).toMatchObject({
       page: 1,
       pageSize: 1,
       total: 2,
-      totalPages: 2
+      totalPages: 2,
     });
     expect(paged.data.items).toEqual([
-      expect.objectContaining({ userId: "1", currentOrganizationId: "1" })
+      expect.objectContaining({ userId: "1", currentOrganizationId: "1" }),
     ]);
   });
 
@@ -247,15 +247,15 @@ describe("backend core foundation routes", () => {
     const { authHeaders } = await loginAsAdmin(app);
 
     const userResponse = await app.request("/api/online-users?userId=not-an-id", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const userBody = await userResponse.json();
     const organizationResponse = await app.request("/api/online-users?organizationId=0", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const organizationBody = await organizationResponse.json();
     const pageResponse = await app.request("/api/online-users?pageSize=0", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const pageBody = await pageResponse.json();
 
@@ -274,12 +274,12 @@ describe("backend core foundation routes", () => {
     await new Promise((resolve) => setTimeout(resolve, 5));
     await app.request("/api/auth/me", { headers: authHeaders });
     const onlineUsersResponse = await app.request("/api/online-users", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const onlineUsers = await onlineUsersResponse.json();
 
     expect(new Date(onlineUsers.data[0].lastSeenAt).getTime()).toBeGreaterThan(
-      new Date(login.data.session.lastSeenAt).getTime()
+      new Date(login.data.session.lastSeenAt).getTime(),
     );
   });
 
@@ -296,46 +296,46 @@ describe("backend core foundation routes", () => {
         phone: "10000000014",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
 
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "disable-token-user", password: "password1" })
+      body: JSON.stringify({ username: "disable-token-user", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     await app.request("/api/auth/change-password", {
       method: "POST",
       headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
-      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "disable-token-user", password: "password2" })
+      body: JSON.stringify({ username: "disable-token-user", password: "password2" }),
     });
     const login = await loginResponse.json();
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
     await app.request(`/api/users/${login.data.user.id}/disable`, {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     await app.request(`/api/users/${login.data.user.id}/enable`, {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
 
     const oldAccessResponse = await app.request("/api/auth/me", {
-      headers: { authorization: `Bearer ${login.data.accessToken}` }
+      headers: { authorization: `Bearer ${login.data.accessToken}` },
     });
     const oldAccess = await oldAccessResponse.json();
     const oldRefreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: csrfHeaders(cookie)
+      headers: csrfHeaders(cookie),
     });
     const oldRefresh = await oldRefreshResponse.json();
     const onlineUsersResponse = await app.request("/api/online-users", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const onlineUsers = await onlineUsersResponse.json();
 
@@ -345,7 +345,7 @@ describe("backend core foundation routes", () => {
     expect(oldRefreshResponse.status).toBe(401);
     expect(oldRefresh.error.code).toBe("AUTH_TOKEN_INVALIDATED");
     expect(onlineUsers.data).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ userId: login.data.user.id })])
+      expect.arrayContaining([expect.objectContaining({ userId: login.data.user.id })]),
     );
   });
 
@@ -362,43 +362,43 @@ describe("backend core foundation routes", () => {
         phone: "10000000017",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
 
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "lock-token-user", password: "password1" })
+      body: JSON.stringify({ username: "lock-token-user", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     await app.request("/api/auth/change-password", {
       method: "POST",
       headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
-      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "lock-token-user", password: "password2" })
+      body: JSON.stringify({ username: "lock-token-user", password: "password2" }),
     });
     const login = await loginResponse.json();
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
     const lockResponse = await app.request(`/api/users/${login.data.user.id}/lock`, {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const locked = await lockResponse.json();
     await app.request(`/api/users/${login.data.user.id}/unlock`, {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
 
     const oldAccessResponse = await app.request("/api/auth/me", {
-      headers: { authorization: `Bearer ${login.data.accessToken}` }
+      headers: { authorization: `Bearer ${login.data.accessToken}` },
     });
     const oldAccess = await oldAccessResponse.json();
     const oldRefreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: csrfHeaders(cookie)
+      headers: csrfHeaders(cookie),
     });
     const oldRefresh = await oldRefreshResponse.json();
 
@@ -423,45 +423,45 @@ describe("backend core foundation routes", () => {
         phone: "10000000015",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "delete-token-user", password: "password1" })
+      body: JSON.stringify({ username: "delete-token-user", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     await app.request("/api/auth/change-password", {
       method: "POST",
       headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
-      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "delete-token-user", password: "password2" })
+      body: JSON.stringify({ username: "delete-token-user", password: "password2" }),
     });
     const login = await loginResponse.json();
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
 
     const deleteResponse = await app.request(`/api/users/${login.data.user.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const deleted = await deleteResponse.json();
     const oldAccessResponse = await app.request("/api/auth/me", {
-      headers: { authorization: `Bearer ${login.data.accessToken}` }
+      headers: { authorization: `Bearer ${login.data.accessToken}` },
     });
     const oldAccess = await oldAccessResponse.json();
     const oldRefreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: csrfHeaders(cookie)
+      headers: csrfHeaders(cookie),
     });
     const oldRefresh = await oldRefreshResponse.json();
 
     expect(deleted.data).toMatchObject({
       id: login.data.user.id,
       isDeleted: true,
-      tokenVersion: login.data.user.tokenVersion + 1
+      tokenVersion: login.data.user.tokenVersion + 1,
     });
     expect(oldAccessResponse.status).toBe(401);
     expect(oldAccess.error.code).toBe("AUTH_TOKEN_INVALIDATED");
@@ -482,22 +482,22 @@ describe("backend core foundation routes", () => {
         phone: "10000000019",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "deleted-login-user", password: "password1" })
+      body: JSON.stringify({ username: "deleted-login-user", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
 
     await app.request(`/api/users/${firstLogin.data.user.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const deletedLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "deleted-login-user", password: "password1" })
+      body: JSON.stringify({ username: "deleted-login-user", password: "password1" }),
     });
     const deletedLogin = await deletedLoginResponse.json();
 
@@ -518,23 +518,23 @@ describe("backend core foundation routes", () => {
         phone: "10000000016",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const user = await userResponse.json();
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "reset-token-user", password: "password1" })
+      body: JSON.stringify({ username: "reset-token-user", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     await app.request("/api/auth/change-password", {
       method: "POST",
       headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
-      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "reset-token-user", password: "password2" })
+      body: JSON.stringify({ username: "reset-token-user", password: "password2" }),
     });
     const login = await loginResponse.json();
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
@@ -542,20 +542,20 @@ describe("backend core foundation routes", () => {
     const resetResponse = await app.request(`/api/users/${user.data.id}/reset-password`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ password: "password3" })
+      body: JSON.stringify({ password: "password3" }),
     });
     const reset = await resetResponse.json();
     const oldAccessResponse = await app.request("/api/auth/me", {
-      headers: { authorization: `Bearer ${login.data.accessToken}` }
+      headers: { authorization: `Bearer ${login.data.accessToken}` },
     });
     const oldAccess = await oldAccessResponse.json();
     const oldRefreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: csrfHeaders(cookie)
+      headers: csrfHeaders(cookie),
     });
     const oldRefresh = await oldRefreshResponse.json();
     const onlineUsersResponse = await app.request("/api/online-users", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const onlineUsers = await onlineUsersResponse.json();
 
@@ -563,14 +563,14 @@ describe("backend core foundation routes", () => {
     expect(reset.data).toMatchObject({
       id: user.data.id,
       firstLoginPasswordChangeRequired: true,
-      tokenVersion: login.data.user.tokenVersion + 1
+      tokenVersion: login.data.user.tokenVersion + 1,
     });
     expect(oldAccessResponse.status).toBe(401);
     expect(oldAccess.error.code).toBe("AUTH_TOKEN_INVALIDATED");
     expect(oldRefreshResponse.status).toBe(401);
     expect(oldRefresh.error.code).toBe("AUTH_TOKEN_INVALIDATED");
     expect(onlineUsers.data).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ userId: user.data.id })])
+      expect.arrayContaining([expect.objectContaining({ userId: user.data.id })]),
     );
   });
 
@@ -589,11 +589,11 @@ describe("backend core foundation routes", () => {
     expect(body.data.session).not.toHaveProperty("tokenVersion");
     expect(body.data.currentOrganization.id).toBe("1");
     expect(body.data.organizations).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: "1" })])
+      expect.arrayContaining([expect.objectContaining({ id: "1" })]),
     );
     expect(body.data.permissionCodes).toEqual(expect.arrayContaining(["user:view", "role:view"]));
     expect(body.data.menus).toEqual(
-      expect.arrayContaining([expect.objectContaining({ code: "system.users" })])
+      expect.arrayContaining([expect.objectContaining({ code: "system.users" })]),
     );
     expect(body.data.passwordChangeRequired).toBe(false);
   });
@@ -604,7 +604,7 @@ describe("backend core foundation routes", () => {
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" }),
     });
     const child = await childResponse.json();
     await app.request("/api/users", {
@@ -617,29 +617,29 @@ describe("backend core foundation routes", () => {
         phone: "10000000012",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "context-org-user", password: "password1" })
+      body: JSON.stringify({ username: "context-org-user", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     await app.request("/api/auth/change-password", {
       method: "POST",
       headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
-      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "context-org-user", password: "password2" })
+      body: JSON.stringify({ username: "context-org-user", password: "password2" }),
     });
     const login = await loginResponse.json();
 
     const adminResponse = await app.request("/api/context/organizations", { headers: authHeaders });
     const adminOrganizations = await adminResponse.json();
     const userResponse = await app.request("/api/context/organizations", {
-      headers: { authorization: `Bearer ${login.data.accessToken}` }
+      headers: { authorization: `Bearer ${login.data.accessToken}` },
     });
     const userOrganizations = await userResponse.json();
 
@@ -647,8 +647,8 @@ describe("backend core foundation routes", () => {
     expect(adminOrganizations.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: "1" }),
-        expect.objectContaining({ id: child.data.id })
-      ])
+        expect.objectContaining({ id: child.data.id }),
+      ]),
     );
     expect(userResponse.status).toBe(200);
     expect(userOrganizations.data).toEqual([expect.objectContaining({ id: "1" })]);
@@ -660,7 +660,7 @@ describe("backend core foundation routes", () => {
     const response = await app.request("/api/context/permissions", { headers: authHeaders });
     const body = await response.json();
     const effectiveResponse = await app.request("/api/permissions/effective", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const effective = await effectiveResponse.json();
 
@@ -668,10 +668,12 @@ describe("backend core foundation routes", () => {
     expect(body.data.currentOrganization.id).toBe("1");
     expect(body.data.permissionCodes).toEqual(expect.arrayContaining(["menu:view", "user:view"]));
     expect(body.data.menus).toEqual(
-      expect.arrayContaining([expect.objectContaining({ code: "system.users" })])
+      expect.arrayContaining([expect.objectContaining({ code: "system.users" })]),
     );
     expect(effectiveResponse.status).toBe(200);
-    expect(effective.data.permissionCodes).toEqual(expect.arrayContaining(["menu:view", "user:view"]));
+    expect(effective.data.permissionCodes).toEqual(
+      expect.arrayContaining(["menu:view", "user:view"]),
+    );
   });
 
   it("updates permission extension records and invalidates effective permission cache", async () => {
@@ -680,7 +682,7 @@ describe("backend core foundation routes", () => {
     await app.request("/api/roles/2/permissions", {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["user:view"] })
+      body: JSON.stringify({ permissionCodes: ["user:view"] }),
     });
     const userResponse = await app.request("/api/users", {
       method: "POST",
@@ -692,23 +694,23 @@ describe("backend core foundation routes", () => {
         phone: "10000000031",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "2"
-      })
+        roleId: "2",
+      }),
     });
     const user = await userResponse.json();
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "permission-extension-user", password: "password1" })
+      body: JSON.stringify({ username: "permission-extension-user", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     await app.request("/api/auth/change-password", {
       method: "POST",
       headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
-      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "permission-extension-user", password: "password2" })
+      body: JSON.stringify({ username: "permission-extension-user", password: "password2" }),
     });
     const login = await loginResponse.json();
     const userHeaders = { authorization: `Bearer ${login.data.accessToken}` };
@@ -723,27 +725,31 @@ describe("backend core foundation routes", () => {
           {
             permissionCode: "user:view",
             effect: "allow",
-            rule: { scope: "current_organization" }
-          }
-        ]
-      })
+            rule: { scope: "current_organization" },
+          },
+        ],
+      }),
     });
     const dataRulesResponse = await app.request("/api/roles/2/data-permissions", {
-      headers: authHeaders
+      headers: authHeaders,
     });
-    const afterDataResponse = await app.request("/api/context/permissions", { headers: userHeaders });
+    const afterDataResponse = await app.request("/api/context/permissions", {
+      headers: userHeaders,
+    });
     const afterData = await afterDataResponse.json();
     const fieldResponse = await app.request("/api/roles/2/field-permissions", {
       method: "PUT",
       headers: authHeaders,
       body: JSON.stringify({
-        rules: [{ resource: "user", field: "email", effect: "hidden" }]
-      })
+        rules: [{ resource: "user", field: "email", effect: "hidden" }],
+      }),
     });
     const fieldRulesResponse = await app.request("/api/roles/2/field-permissions", {
-      headers: authHeaders
+      headers: authHeaders,
     });
-    const afterFieldResponse = await app.request("/api/context/permissions", { headers: userHeaders });
+    const afterFieldResponse = await app.request("/api/context/permissions", {
+      headers: userHeaders,
+    });
     const afterField = await afterFieldResponse.json();
     const overrideResponse = await app.request(`/api/permissions/user-overrides/${user.data.id}`, {
       method: "PUT",
@@ -751,14 +757,16 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         overrides: [
           { permissionCode: "user:view", effect: "deny" },
-          { permissionCode: "role:view", effect: "allow" }
-        ]
-      })
+          { permissionCode: "role:view", effect: "allow" },
+        ],
+      }),
     });
     const overridesResponse = await app.request(`/api/permissions/user-overrides/${user.data.id}`, {
-      headers: authHeaders
+      headers: authHeaders,
     });
-    const effectiveResponse = await app.request("/api/permissions/effective", { headers: userHeaders });
+    const effectiveResponse = await app.request("/api/permissions/effective", {
+      headers: userHeaders,
+    });
     const effective = await effectiveResponse.json();
 
     expect(cachedResponse.status).toBe(200);
@@ -770,13 +778,13 @@ describe("backend core foundation routes", () => {
         roleId: "2",
         permissionCode: "user:view",
         effect: "allow",
-        rule: { scope: "current_organization" }
-      })
+        rule: { scope: "current_organization" },
+      }),
     ]);
     expect(fieldResponse.status).toBe(200);
     expect(fieldRulesResponse.status).toBe(200);
     expect(afterField.data.fieldPermissions).toEqual([
-      expect.objectContaining({ roleId: "2", resource: "user", field: "email", effect: "hidden" })
+      expect.objectContaining({ roleId: "2", resource: "user", field: "email", effect: "hidden" }),
     ]);
     expect(overrideResponse.status).toBe(200);
     expect(overridesResponse.status).toBe(200);
@@ -784,8 +792,8 @@ describe("backend core foundation routes", () => {
     expect(effective.data.userPermissionOverrides).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ permissionCode: "user:view", effect: "deny" }),
-        expect.objectContaining({ permissionCode: "role:view", effect: "allow" })
-      ])
+        expect.objectContaining({ permissionCode: "role:view", effect: "allow" }),
+      ]),
     );
   });
 
@@ -793,12 +801,12 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
     const refreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: csrfHeaders(cookie)
+      headers: csrfHeaders(cookie),
     });
     const refresh = await refreshResponse.json();
 
@@ -813,7 +821,7 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const login = await loginResponse.json();
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
@@ -821,13 +829,13 @@ describe("backend core foundation routes", () => {
     await new Promise((resolve) => setTimeout(resolve, 5));
     const refreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: csrfHeaders(cookie)
+      headers: csrfHeaders(cookie),
     });
     const refresh = await refreshResponse.json();
 
     expect(refreshResponse.status).toBe(200);
     expect(new Date(refresh.data.session.lastSeenAt).getTime()).toBeGreaterThan(
-      new Date(login.data.session.lastSeenAt).getTime()
+      new Date(login.data.session.lastSeenAt).getTime(),
     );
   });
 
@@ -835,7 +843,7 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
 
@@ -843,8 +851,8 @@ describe("backend core foundation routes", () => {
       method: "POST",
       headers: {
         authorization: "Bearer not-a-valid-access-token",
-        ...csrfHeaders(cookie)
-      }
+        ...csrfHeaders(cookie),
+      },
     });
     const refresh = await refreshResponse.json();
 
@@ -857,14 +865,14 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
 
     const refreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
       headers: csrfHeaders(cookie),
-      body: JSON.stringify({ refreshToken: "client-provided-token" })
+      body: JSON.stringify({ refreshToken: "client-provided-token" }),
     });
     const refresh = await refreshResponse.json();
 
@@ -876,7 +884,7 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp();
     const response = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: { cookie: "refresh_token=%; csrf_token=test-csrf", "x-csrf-token": "test-csrf" }
+      headers: { cookie: "refresh_token=%; csrf_token=test-csrf", "x-csrf-token": "test-csrf" },
     });
     const body = await response.json();
 
@@ -890,12 +898,12 @@ describe("backend core foundation routes", () => {
       refreshTokenCookiePath: "/api/custom-refresh",
       refreshTokenCookieSameSite: "None",
       refreshTokenCookieSecure: true,
-      refreshTokenCookieDomain: "admin.example.com"
+      refreshTokenCookieDomain: "admin.example.com",
     });
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const login = await loginResponse.json();
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
@@ -913,7 +921,7 @@ describe("backend core foundation routes", () => {
       secure: true,
       domain: "admin.example.com",
       path: "/api/custom-refresh",
-      maxAgeSeconds: 172800
+      maxAgeSeconds: 172800,
     });
   });
 
@@ -930,23 +938,23 @@ describe("backend core foundation routes", () => {
         phone: "10000000010",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "refresh-disabled", password: "password1" })
+      body: JSON.stringify({ username: "refresh-disabled", password: "password1" }),
     });
     const login = await loginResponse.json();
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
     await app.request(`/api/users/${login.data.user.id}/disable`, {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
 
     const refreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: csrfHeaders(cookie)
+      headers: csrfHeaders(cookie),
     });
     const refresh = await refreshResponse.json();
 
@@ -958,18 +966,18 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const login = await loginResponse.json();
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
     await app.request("/api/organizations/1/disable", {
       method: "POST",
-      headers: { authorization: `Bearer ${login.data.accessToken}` }
+      headers: { authorization: `Bearer ${login.data.accessToken}` },
     });
 
     const refreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: csrfHeaders(cookie)
+      headers: csrfHeaders(cookie),
     });
     const refresh = await refreshResponse.json();
 
@@ -981,7 +989,7 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const login = await loginResponse.json();
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
@@ -992,24 +1000,24 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: "1",
         name: "Deleted Session Organization",
-        code: "deleted-session-organization"
-      })
+        code: "deleted-session-organization",
+      }),
     });
     const child = await childResponse.json();
     const switchResponse = await app.request("/api/context/current-organization", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id })
+      body: JSON.stringify({ organizationId: child.data.id }),
     });
     const switched = await switchResponse.json();
 
     await app.request(`/api/organizations/${child.data.id}`, {
       method: "DELETE",
-      headers: { authorization: `Bearer ${switched.data.accessToken}` }
+      headers: { authorization: `Bearer ${switched.data.accessToken}` },
     });
     const refreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: csrfHeaders(cookie)
+      headers: csrfHeaders(cookie),
     });
     const refresh = await refreshResponse.json();
 
@@ -1021,53 +1029,53 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp();
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     const firstHeaders = { authorization: `Bearer ${firstLogin.data.accessToken}` };
     const alternateResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: firstHeaders,
-      body: JSON.stringify({ name: "Online Alternate", code: "online-alternate" })
+      body: JSON.stringify({ name: "Online Alternate", code: "online-alternate" }),
     });
     const alternate = await alternateResponse.json();
     const secondLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const secondLogin = await secondLoginResponse.json();
     const secondSwitchResponse = await app.request("/api/context/current-organization", {
       method: "POST",
       headers: { authorization: `Bearer ${secondLogin.data.accessToken}` },
-      body: JSON.stringify({ organizationId: alternate.data.id })
+      body: JSON.stringify({ organizationId: alternate.data.id }),
     });
     const secondSwitch = await secondSwitchResponse.json();
     const alternateHeaders = { authorization: `Bearer ${secondSwitch.data.accessToken}` };
     const beforeDisableResponse = await app.request("/api/online-users", {
-      headers: alternateHeaders
+      headers: alternateHeaders,
     });
     const beforeDisable = await beforeDisableResponse.json();
 
     await app.request("/api/organizations/1/disable", {
       method: "POST",
-      headers: alternateHeaders
+      headers: alternateHeaders,
     });
     const afterDisableResponse = await app.request("/api/online-users", {
-      headers: alternateHeaders
+      headers: alternateHeaders,
     });
     const afterDisable = await afterDisableResponse.json();
 
     expect(beforeDisable.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: firstLogin.data.session.id }),
-        expect.objectContaining({ id: secondSwitch.data.session.id })
-      ])
+        expect.objectContaining({ id: secondSwitch.data.session.id }),
+      ]),
     );
     expect(afterDisable.data).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: firstLogin.data.session.id })])
+      expect.arrayContaining([expect.objectContaining({ id: firstLogin.data.session.id })]),
     );
     expect(afterDisable.data).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: secondSwitch.data.session.id })])
+      expect.arrayContaining([expect.objectContaining({ id: secondSwitch.data.session.id })]),
     );
   });
 
@@ -1075,58 +1083,58 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp();
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     const firstHeaders = { authorization: `Bearer ${firstLogin.data.accessToken}` };
     const alternateResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: firstHeaders,
-      body: JSON.stringify({ name: "Deleted Online Alternate", code: "deleted-online-alternate" })
+      body: JSON.stringify({ name: "Deleted Online Alternate", code: "deleted-online-alternate" }),
     });
     const alternate = await alternateResponse.json();
     await app.request(`/api/users/${firstLogin.data.user.id}/organizations`, {
       method: "POST",
       headers: firstHeaders,
-      body: JSON.stringify({ organizationId: alternate.data.id, roleId: "1" })
+      body: JSON.stringify({ organizationId: alternate.data.id, roleId: "1" }),
     });
     const secondLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const secondLogin = await secondLoginResponse.json();
     const secondSwitchResponse = await app.request("/api/context/current-organization", {
       method: "POST",
       headers: { authorization: `Bearer ${secondLogin.data.accessToken}` },
-      body: JSON.stringify({ organizationId: alternate.data.id })
+      body: JSON.stringify({ organizationId: alternate.data.id }),
     });
     const secondSwitch = await secondSwitchResponse.json();
     const alternateHeaders = { authorization: `Bearer ${secondSwitch.data.accessToken}` };
     const beforeDeleteResponse = await app.request("/api/online-users", {
-      headers: alternateHeaders
+      headers: alternateHeaders,
     });
     const beforeDelete = await beforeDeleteResponse.json();
 
     await app.request("/api/organizations/1", {
       method: "DELETE",
-      headers: alternateHeaders
+      headers: alternateHeaders,
     });
     const afterDeleteResponse = await app.request("/api/online-users", {
-      headers: alternateHeaders
+      headers: alternateHeaders,
     });
     const afterDelete = await afterDeleteResponse.json();
 
     expect(beforeDelete.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: firstLogin.data.session.id }),
-        expect.objectContaining({ id: secondSwitch.data.session.id })
-      ])
+        expect.objectContaining({ id: secondSwitch.data.session.id }),
+      ]),
     );
     expect(afterDelete.data).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: firstLogin.data.session.id })])
+      expect.arrayContaining([expect.objectContaining({ id: firstLogin.data.session.id })]),
     );
     expect(afterDelete.data).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: secondSwitch.data.session.id })])
+      expect.arrayContaining([expect.objectContaining({ id: secondSwitch.data.session.id })]),
     );
   });
 
@@ -1134,7 +1142,7 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const login = await loginResponse.json();
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
@@ -1142,12 +1150,12 @@ describe("backend core foundation routes", () => {
     const logoutResponse = await app.request("/api/auth/logout", {
       method: "POST",
       headers: authAndCsrfHeaders(`Bearer ${login.data.accessToken}`, cookie),
-      body: JSON.stringify({ sessionId: login.data.session.id })
+      body: JSON.stringify({ sessionId: login.data.session.id }),
     });
     const logout = await logoutResponse.json();
     const refreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: csrfHeaders(cookie)
+      headers: csrfHeaders(cookie),
     });
     const refresh = await refreshResponse.json();
 
@@ -1166,17 +1174,17 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const login = await loginResponse.json();
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
 
     const logoutResponse = await app.request("/api/auth/logout", {
       method: "POST",
-      headers: authAndCsrfHeaders(`Bearer ${login.data.accessToken}`, cookie)
+      headers: authAndCsrfHeaders(`Bearer ${login.data.accessToken}`, cookie),
     });
     const oldTokenResponse = await app.request("/api/auth/me", {
-      headers: { authorization: `Bearer ${login.data.accessToken}` }
+      headers: { authorization: `Bearer ${login.data.accessToken}` },
     });
     const oldToken = await oldTokenResponse.json();
 
@@ -1189,7 +1197,7 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp();
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const login = await loginResponse.json();
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
@@ -1197,7 +1205,7 @@ describe("backend core foundation routes", () => {
     const response = await app.request("/api/auth/logout", {
       method: "POST",
       headers: authAndCsrfHeaders(`Bearer ${login.data.accessToken}`, cookie),
-      body: JSON.stringify({ sessionId: "999" })
+      body: JSON.stringify({ sessionId: "999" }),
     });
     const body = await response.json();
 
@@ -1214,37 +1222,39 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: "1",
         name: "Child Organization",
-        code: "child"
-      })
+        code: "child",
+      }),
     });
     const child = await childResponse.json();
     const alternateResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ name: "Alternate Root", code: "alternate-root" })
+      body: JSON.stringify({ name: "Alternate Root", code: "alternate-root" }),
     });
     const alternate = await alternateResponse.json();
     const switchResponse = await app.request("/api/context/current-organization", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: alternate.data.id })
+      body: JSON.stringify({ organizationId: alternate.data.id }),
     });
     const switched = await switchResponse.json();
     const alternateHeaders = { authorization: `Bearer ${switched.data.accessToken}` };
     const disabledResponse = await app.request("/api/organizations/1/disable", {
       method: "POST",
-      headers: alternateHeaders
+      headers: alternateHeaders,
     });
     const disabled = await disabledResponse.json();
-    const treeResponse = await app.request("/api/organizations/tree", { headers: alternateHeaders });
+    const treeResponse = await app.request("/api/organizations/tree", {
+      headers: alternateHeaders,
+    });
     const tree = await treeResponse.json();
     const detailResponse = await app.request(`/api/organizations/${child.data.id}`, {
-      headers: alternateHeaders
+      headers: alternateHeaders,
     });
     const detail = await detailResponse.json();
     const enableChildResponse = await app.request(`/api/organizations/${child.data.id}/enable`, {
       method: "POST",
-      headers: alternateHeaders
+      headers: alternateHeaders,
     });
     const enableChild = await enableChildResponse.json();
 
@@ -1253,8 +1263,8 @@ describe("backend core foundation routes", () => {
     expect(disabled.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: "1", status: "disabled" }),
-        expect.objectContaining({ id: "2", status: "disabled" })
-      ])
+        expect.objectContaining({ id: "2", status: "disabled" }),
+      ]),
     );
     expect(treeResponse.status).toBe(200);
     expect(tree.data).toEqual(
@@ -1263,10 +1273,10 @@ describe("backend core foundation routes", () => {
           id: "1",
           status: "disabled",
           children: expect.arrayContaining([
-            expect.objectContaining({ id: child.data.id, status: "disabled", children: [] })
-          ])
-        })
-      ])
+            expect.objectContaining({ id: child.data.id, status: "disabled", children: [] }),
+          ]),
+        }),
+      ]),
     );
     expect(detailResponse.status).toBe(200);
     expect(detail.data).toMatchObject({ id: child.data.id, status: "disabled" });
@@ -1287,8 +1297,8 @@ describe("backend core foundation routes", () => {
         managerUserId: setup.data.admin.id,
         phone: "10000000099",
         email: "org@example.com",
-        address: "100 Admin Road"
-      })
+        address: "100 Admin Road",
+      }),
     });
     const created = await createResponse.json();
 
@@ -1299,8 +1309,8 @@ describe("backend core foundation routes", () => {
         managerUserId: null,
         phone: "10000000100",
         email: null,
-        address: "200 Admin Road"
-      })
+        address: "200 Admin Road",
+      }),
     });
     const updated = await updateResponse.json();
 
@@ -1309,14 +1319,14 @@ describe("backend core foundation routes", () => {
       managerUserId: setup.data.admin.id,
       phone: "10000000099",
       email: "org@example.com",
-      address: "100 Admin Road"
+      address: "100 Admin Road",
     });
     expect(updateResponse.status).toBe(200);
     expect(updated.data).toMatchObject({
       managerUserId: null,
       phone: "10000000100",
       email: null,
-      address: "200 Admin Road"
+      address: "200 Admin Road",
     });
   });
 
@@ -1329,14 +1339,14 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: "1",
         name: "No Move Child",
-        code: "no-move-child"
-      })
+        code: "no-move-child",
+      }),
     });
     const child = await childResponse.json();
     const alternateRootResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ name: "No Move Root", code: "no-move-root" })
+      body: JSON.stringify({ name: "No Move Root", code: "no-move-root" }),
     });
     const alternateRoot = await alternateRootResponse.json();
 
@@ -1345,12 +1355,12 @@ describe("backend core foundation routes", () => {
       headers: authHeaders,
       body: JSON.stringify({
         parentOrganizationId: alternateRoot.data.id,
-        name: "Moved Child"
-      })
+        name: "Moved Child",
+      }),
     });
     const move = await moveResponse.json();
     const detailResponse = await app.request(`/api/organizations/${child.data.id}`, {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const detail = await detailResponse.json();
 
@@ -1361,7 +1371,7 @@ describe("backend core foundation routes", () => {
       name: "No Move Child",
       level: 2,
       segment: child.data.segment,
-      path: child.data.path
+      path: child.data.path,
     });
   });
 
@@ -1374,8 +1384,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: "1",
         name: "Manager Guard",
-        code: "manager-guard"
-      })
+        code: "manager-guard",
+      }),
     });
     const organization = await organizationResponse.json();
     const userResponse = await app.request("/api/users", {
@@ -1388,13 +1398,13 @@ describe("backend core foundation routes", () => {
         phone: "10000000024",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const user = await userResponse.json();
     await app.request(`/api/users/${user.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
 
     const missingCreateResponse = await app.request("/api/organizations", {
@@ -1404,14 +1414,14 @@ describe("backend core foundation routes", () => {
         parentOrganizationId: "1",
         name: "Missing Manager",
         code: "missing-manager",
-        managerUserId: "999"
-      })
+        managerUserId: "999",
+      }),
     });
     const missingCreate = await missingCreateResponse.json();
     const deletedUpdateResponse = await app.request(`/api/organizations/${organization.data.id}`, {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ managerUserId: user.data.id })
+      body: JSON.stringify({ managerUserId: user.data.id }),
     });
     const deletedUpdate = await deletedUpdateResponse.json();
 
@@ -1425,25 +1435,25 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
     const configResponse = await app.request("/api/organizations/config/depth", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const config = await configResponse.json();
     const updateResponse = await app.request("/api/organizations/config/depth", {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ maxDepth: 2 })
+      body: JSON.stringify({ maxDepth: 2 }),
     });
     const update = await updateResponse.json();
     const invalidResponse = await app.request("/api/organizations/config/depth", {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ maxDepth: 9 })
+      body: JSON.stringify({ maxDepth: 9 }),
     });
     const invalid = await invalidResponse.json();
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Depth Child", code: "depth-child" })
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Depth Child", code: "depth-child" }),
     });
     const child = await childResponse.json();
     const tooDeepResponse = await app.request("/api/organizations", {
@@ -1452,8 +1462,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: child.data.id,
         name: "Too Deep",
-        code: "too-deep"
-      })
+        code: "too-deep",
+      }),
     });
     const tooDeep = await tooDeepResponse.json();
 
@@ -1474,22 +1484,22 @@ describe("backend core foundation routes", () => {
     const alternateResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ name: "Alternate Root", code: "alternate-root" })
+      body: JSON.stringify({ name: "Alternate Root", code: "alternate-root" }),
     });
     const alternate = await alternateResponse.json();
     await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: alternate.data.id, roleId: "1" })
+      body: JSON.stringify({ organizationId: alternate.data.id, roleId: "1" }),
     });
     await app.request("/api/organizations/1/disable", {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
 
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const login = await loginResponse.json();
 
@@ -1503,13 +1513,21 @@ describe("backend core foundation routes", () => {
     const primaryResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Deleted Primary", code: "deleted-primary" })
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Deleted Primary",
+        code: "deleted-primary",
+      }),
     });
     const primary = await primaryResponse.json();
     const alternateResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Deleted Fallback", code: "deleted-fallback" })
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Deleted Fallback",
+        code: "deleted-fallback",
+      }),
     });
     const alternate = await alternateResponse.json();
     const userResponse = await app.request("/api/users", {
@@ -1522,23 +1540,23 @@ describe("backend core foundation routes", () => {
         phone: "10000000021",
         password: "password1",
         primaryOrganizationId: primary.data.id,
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const user = await userResponse.json();
     await app.request(`/api/users/${user.data.id}/organizations`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: alternate.data.id, roleId: "3" })
+      body: JSON.stringify({ organizationId: alternate.data.id, roleId: "3" }),
     });
     await app.request(`/api/organizations/${primary.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
 
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "primary-deleted-user", password: "password1" })
+      body: JSON.stringify({ username: "primary-deleted-user", password: "password1" }),
     });
     const login = await loginResponse.json();
 
@@ -1552,12 +1570,12 @@ describe("backend core foundation routes", () => {
     const { authHeaders } = await loginAsAdmin(app);
     await app.request("/api/organizations/1/disable", {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
 
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const login = await loginResponse.json();
 
@@ -1571,14 +1589,14 @@ describe("backend core foundation routes", () => {
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" }),
     });
     const child = await childResponse.json();
 
     const response = await app.request(`/api/organizations/${child.data.id}`, {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ code: "default" })
+      body: JSON.stringify({ code: "default" }),
     });
     const body = await response.json();
 
@@ -1591,7 +1609,7 @@ describe("backend core foundation routes", () => {
     const { authHeaders } = await loginAsAdmin(app);
 
     const organizationResponse = await app.request("/api/organizations/999", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const organization = await organizationResponse.json();
     const userResponse = await app.request("/api/users/999", { headers: authHeaders });
@@ -1620,16 +1638,16 @@ describe("backend core foundation routes", () => {
         phone: "10000000100",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
 
     const usersResponse = await app.request("/api/users?page=1&pageSize=1", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const users = await usersResponse.json();
     const rolesResponse = await app.request("/api/roles?page=2&pageSize=1", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const roles = await rolesResponse.json();
 
@@ -1638,7 +1656,7 @@ describe("backend core foundation routes", () => {
       page: 1,
       pageSize: 1,
       total: 2,
-      totalPages: 2
+      totalPages: 2,
     });
     expect(users.data.items).toHaveLength(1);
     expect(users.data.items[0].id).toBe("1");
@@ -1647,7 +1665,7 @@ describe("backend core foundation routes", () => {
       page: 2,
       pageSize: 1,
       total: 3,
-      totalPages: 3
+      totalPages: 3,
     });
     expect(roles.data.items).toHaveLength(1);
     expect(roles.data.items[0].id).toBe("2");
@@ -1667,11 +1685,9 @@ describe("backend core foundation routes", () => {
       page: 1,
       pageSize: 20,
       total: 1,
-      totalPages: 1
+      totalPages: 1,
     });
-    expect(users.data.items).toEqual([
-      expect.objectContaining({ id: "1", username: "admin" })
-    ]);
+    expect(users.data.items).toEqual([expect.objectContaining({ id: "1", username: "admin" })]);
     expect(users.data.items[0]).not.toHaveProperty("password");
     expect(users.data.items[0]).not.toHaveProperty("passwordHash");
     expect(rolesResponse.status).toBe(200);
@@ -1679,14 +1695,14 @@ describe("backend core foundation routes", () => {
       page: 1,
       pageSize: 20,
       total: 3,
-      totalPages: 1
+      totalPages: 1,
     });
     expect(roles.data.items).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: "1", code: "super_admin" }),
         expect.objectContaining({ id: "2", code: "organization_admin" }),
-        expect.objectContaining({ id: "3", code: "normal_user" })
-      ])
+        expect.objectContaining({ id: "3", code: "normal_user" }),
+      ]),
     );
   });
 
@@ -1696,7 +1712,11 @@ describe("backend core foundation routes", () => {
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Filter Child", code: "filter-child" })
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Filter Child",
+        code: "filter-child",
+      }),
     });
     const child = await childResponse.json();
     const createResponse = await app.request("/api/users", {
@@ -1709,18 +1729,18 @@ describe("backend core foundation routes", () => {
         phone: "10000000101",
         password: "password1",
         primaryOrganizationId: child.data.id,
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const created = await createResponse.json();
     await app.request(`/api/users/${created.data.id}/disable`, {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
 
     const response = await app.request(
       `/api/users?keyword=filtered&status=disabled&organizationId=${child.data.id}&page=1&pageSize=10`,
-      { headers: authHeaders }
+      { headers: authHeaders },
     );
     const body = await response.json();
 
@@ -1729,15 +1749,15 @@ describe("backend core foundation routes", () => {
       page: 1,
       pageSize: 10,
       total: 1,
-      totalPages: 1
+      totalPages: 1,
     });
     expect(body.data.items).toEqual([
       expect.objectContaining({
         id: created.data.id,
         username: "filtered-user",
         status: "disabled",
-        primaryOrganizationId: child.data.id
-      })
+        primaryOrganizationId: child.data.id,
+      }),
     ]);
   });
 
@@ -1750,18 +1770,18 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         name: "Filtered Role",
         code: "filtered_role",
-        description: "Role list filter target"
-      })
+        description: "Role list filter target",
+      }),
     });
     const created = await createResponse.json();
     await app.request(`/api/roles/${created.data.id}/disable`, {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
 
     const response = await app.request(
       "/api/roles?keyword=filter%20target&status=disabled&page=1&pageSize=10",
-      { headers: authHeaders }
+      { headers: authHeaders },
     );
     const body = await response.json();
 
@@ -1770,14 +1790,14 @@ describe("backend core foundation routes", () => {
       page: 1,
       pageSize: 10,
       total: 1,
-      totalPages: 1
+      totalPages: 1,
     });
     expect(body.data.items).toEqual([
       expect.objectContaining({
         id: created.data.id,
         code: "filtered_role",
-        status: "disabled"
-      })
+        status: "disabled",
+      }),
     ]);
   });
 
@@ -1786,19 +1806,19 @@ describe("backend core foundation routes", () => {
     const { authHeaders } = await loginAsAdmin(app);
 
     const userStatusResponse = await app.request("/api/users?status=archived", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const userStatus = await userStatusResponse.json();
     const userPageResponse = await app.request("/api/users?page=0", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const userPage = await userPageResponse.json();
     const roleStatusResponse = await app.request("/api/roles?status=locked", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const roleStatus = await roleStatusResponse.json();
     const rolePageResponse = await app.request("/api/roles?pageSize=0", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const rolePage = await rolePageResponse.json();
 
@@ -1818,7 +1838,7 @@ describe("backend core foundation routes", () => {
     const resetResponse = await app.request(`/api/users/${setup.data.admin.id}/reset-password`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ password: "password2" })
+      body: JSON.stringify({ password: "password2" }),
     });
     const reset = await resetResponse.json();
 
@@ -1835,11 +1855,11 @@ describe("backend core foundation routes", () => {
     const response = await app.request(`/api/users/${setup.data.admin.id}/reset-password`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ password: "password" })
+      body: JSON.stringify({ password: "password" }),
     });
     const body = await response.json();
     const unchangedResponse = await app.request(`/api/users/${setup.data.admin.id}`, {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const unchanged = await unchangedResponse.json();
 
@@ -1865,8 +1885,8 @@ describe("backend core foundation routes", () => {
         employeeNumber: "EMP-001",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const created = await createResponse.json();
 
@@ -1876,8 +1896,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         avatarFileId: null,
         gender: null,
-        employeeNumber: "EMP-002"
-      })
+        employeeNumber: "EMP-002",
+      }),
     });
     const updated = await updateResponse.json();
 
@@ -1885,13 +1905,13 @@ describe("backend core foundation routes", () => {
     expect(created.data).toMatchObject({
       avatarFileId: "99",
       gender: "unspecified",
-      employeeNumber: "EMP-001"
+      employeeNumber: "EMP-001",
     });
     expect(updateResponse.status).toBe(200);
     expect(updated.data).toMatchObject({
       avatarFileId: null,
       gender: null,
-      employeeNumber: "EMP-002"
+      employeeNumber: "EMP-002",
     });
   });
 
@@ -1908,25 +1928,25 @@ describe("backend core foundation routes", () => {
         phone: "10000000025",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const created = await createResponse.json();
 
     const statusResponse = await app.request(`/api/users/${created.data.id}`, {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ status: "disabled" })
+      body: JSON.stringify({ status: "disabled" }),
     });
     const status = await statusResponse.json();
     const passwordResponse = await app.request(`/api/users/${created.data.id}`, {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ password: "password2" })
+      body: JSON.stringify({ password: "password2" }),
     });
     const password = await passwordResponse.json();
     const detailResponse = await app.request(`/api/users/${created.data.id}`, {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const detail = await detailResponse.json();
 
@@ -1937,7 +1957,7 @@ describe("backend core foundation routes", () => {
     expect(detail.data).toMatchObject({
       id: created.data.id,
       status: "enabled",
-      tokenVersion: 0
+      tokenVersion: 0,
     });
   });
 
@@ -1951,8 +1971,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         name: "Strict Organization",
         code: "strict-organization",
-        parentId: "1"
-      })
+        parentId: "1",
+      }),
     });
     const organization = await organizationResponse.json();
 
@@ -1967,8 +1987,8 @@ describe("backend core foundation routes", () => {
         password: "password1",
         primaryOrganizationId: "1",
         roleId: "3",
-        status: "disabled"
-      })
+        status: "disabled",
+      }),
     });
     const user = await userResponse.json();
 
@@ -1978,8 +1998,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         organizationId: "1",
         roleId: "2",
-        isPrimary: true
-      })
+        isPrimary: true,
+      }),
     });
     const binding = await bindingResponse.json();
 
@@ -1990,8 +2010,8 @@ describe("backend core foundation routes", () => {
         code: "strict-menu",
         titleI18nKey: "menu.strict",
         path: "/strict",
-        permissionId: "1"
-      })
+        permissionId: "1",
+      }),
     });
     const menu = await menuResponse.json();
 
@@ -2012,42 +2032,42 @@ describe("backend core foundation routes", () => {
     const userStatusResponse = await app.request("/api/users/1/disable", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ status: "disabled" })
+      body: JSON.stringify({ status: "disabled" }),
     });
     const userStatus = await userStatusResponse.json();
 
     const organizationStatusResponse = await app.request("/api/organizations/1/disable", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ cascade: true })
+      body: JSON.stringify({ cascade: true }),
     });
     const organizationStatus = await organizationStatusResponse.json();
 
     const roleStatusResponse = await app.request("/api/roles/2/disable", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ status: "disabled" })
+      body: JSON.stringify({ status: "disabled" }),
     });
     const roleStatus = await roleStatusResponse.json();
 
     const roleCopyResponse = await app.request("/api/roles/2/copy", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ code: "unconfirmed-copy-code" })
+      body: JSON.stringify({ code: "unconfirmed-copy-code" }),
     });
     const roleCopy = await roleCopyResponse.json();
 
     const permissionsSyncResponse = await app.request("/api/permissions/sync", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ force: true })
+      body: JSON.stringify({ force: true }),
     });
     const permissionsSync = await permissionsSyncResponse.json();
 
     const routesSyncResponse = await app.request("/api/routes/sync", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ source: "client" })
+      body: JSON.stringify({ source: "client" }),
     });
     const routesSync = await routesSyncResponse.json();
 
@@ -2057,7 +2077,7 @@ describe("backend core foundation routes", () => {
       roleStatusResponse,
       roleCopyResponse,
       permissionsSyncResponse,
-      routesSyncResponse
+      routesSyncResponse,
     ]) {
       expect(response.status).toBe(400);
     }
@@ -2067,7 +2087,7 @@ describe("backend core foundation routes", () => {
       roleStatus,
       roleCopy,
       permissionsSync,
-      routesSync
+      routesSync,
     ]) {
       expect(body.error.code).toBe("VALIDATION_INVALID_REQUEST");
     }
@@ -2087,28 +2107,28 @@ describe("backend core foundation routes", () => {
         phone: "10000000005",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const created = await createResponse.json();
 
     await app.request(`/api/users/${created.data.id}/lock`, {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const lockedLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "locked-user", password: "password1" })
+      body: JSON.stringify({ username: "locked-user", password: "password1" }),
     });
     const lockedLogin = await lockedLoginResponse.json();
 
     await app.request(`/api/users/${created.data.id}/unlock`, {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const unlockedLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "locked-user", password: "password1" })
+      body: JSON.stringify({ username: "locked-user", password: "password1" }),
     });
 
     expect(lockedLoginResponse.status).toBe(423);
@@ -2130,8 +2150,8 @@ describe("backend core foundation routes", () => {
         phone: "10000000006",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const secondResponse = await app.request("/api/users", {
       method: "POST",
@@ -2143,27 +2163,27 @@ describe("backend core foundation routes", () => {
         phone: "10000000007",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const second = await secondResponse.json();
 
     const duplicateUsernameResponse = await app.request(`/api/users/${second.data.id}`, {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ username: "first-user" })
+      body: JSON.stringify({ username: "first-user" }),
     });
     const duplicateUsername = await duplicateUsernameResponse.json();
     const duplicateEmailResponse = await app.request(`/api/users/${second.data.id}`, {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ email: "first-user@example.com" })
+      body: JSON.stringify({ email: "first-user@example.com" }),
     });
     const duplicateEmail = await duplicateEmailResponse.json();
     const duplicatePhoneResponse = await app.request(`/api/users/${second.data.id}`, {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ phone: "10000000006" })
+      body: JSON.stringify({ phone: "10000000006" }),
     });
     const duplicatePhone = await duplicatePhoneResponse.json();
 
@@ -2181,18 +2201,18 @@ describe("backend core foundation routes", () => {
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" }),
     });
     const child = await childResponse.json();
     await app.request(`/api/organizations/${child.data.id}/disable`, {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
 
     const response = await app.request("/api/users/1", {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ primaryOrganizationId: child.data.id })
+      body: JSON.stringify({ primaryOrganizationId: child.data.id }),
     });
     const body = await response.json();
 
@@ -2206,12 +2226,16 @@ describe("backend core foundation routes", () => {
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Disabled Child", code: "disabled-child" })
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Disabled Child",
+        code: "disabled-child",
+      }),
     });
     const child = await childResponse.json();
     await app.request(`/api/organizations/${child.data.id}/disable`, {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
 
     const createUserResponse = await app.request("/api/users", {
@@ -2224,14 +2248,14 @@ describe("backend core foundation routes", () => {
         phone: "10000000123",
         password: "password1",
         primaryOrganizationId: child.data.id,
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const createUser = await createUserResponse.json();
     const assignResponse = await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" }),
     });
     const assign = await assignResponse.json();
 
@@ -2250,14 +2274,14 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: "1",
         name: "Disabled Parent",
-        code: "disabled-parent"
-      })
+        code: "disabled-parent",
+      }),
     });
     const parent = await parentResponse.json();
 
     await app.request(`/api/organizations/${parent.data.id}/disable`, {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
@@ -2265,8 +2289,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: parent.data.id,
         name: "Rejected Child",
-        code: "rejected-child"
-      })
+        code: "rejected-child",
+      }),
     });
     const child = await childResponse.json();
 
@@ -2280,12 +2304,12 @@ describe("backend core foundation routes", () => {
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Role Child", code: "role-child" })
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Role Child", code: "role-child" }),
     });
     const child = await childResponse.json();
     await app.request("/api/roles/3/disable", {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
 
     const createUserResponse = await app.request("/api/users", {
@@ -2298,14 +2322,14 @@ describe("backend core foundation routes", () => {
         phone: "10000000124",
         password: "password1",
         primaryOrganizationId: child.data.id,
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const createUser = await createUserResponse.json();
     const assignResponse = await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id, roleId: "3" })
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "3" }),
     });
     const assign = await assignResponse.json();
 
@@ -2321,14 +2345,14 @@ describe("backend core foundation routes", () => {
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" }),
     });
     const child = await childResponse.json();
 
     const response = await app.request("/api/users/1", {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ primaryOrganizationId: child.data.id })
+      body: JSON.stringify({ primaryOrganizationId: child.data.id }),
     });
     const body = await response.json();
 
@@ -2342,7 +2366,11 @@ describe("backend core foundation routes", () => {
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Disabled Primary Role", code: "disabled-primary-role" })
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Disabled Primary Role",
+        code: "disabled-primary-role",
+      }),
     });
     const child = await childResponse.json();
     const userResponse = await app.request("/api/users", {
@@ -2355,24 +2383,24 @@ describe("backend core foundation routes", () => {
         phone: "10000000140",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const user = await userResponse.json();
     await app.request(`/api/users/${user.data.id}/organizations`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" }),
     });
     await app.request("/api/roles/2/disable", {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
 
     const response = await app.request(`/api/users/${user.data.id}`, {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ primaryOrganizationId: child.data.id })
+      body: JSON.stringify({ primaryOrganizationId: child.data.id }),
     });
     const body = await response.json();
 
@@ -2387,16 +2415,21 @@ describe("backend core foundation routes", () => {
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Primary Child", code: "primary-child" })
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Primary Child",
+        code: "primary-child",
+      }),
     });
     const child = await childResponse.json();
     await app.request("/api/roles/2/permissions", {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["organization:view"] })
+      body: JSON.stringify({ permissionCodes: ["organization:view"] }),
     });
     const organizationGrant = services["context"].store.rolePermissions.find(
-      (permission) => permission.roleId === "2" && permission.permissionCode === "organization:view"
+      (permission) =>
+        permission.roleId === "2" && permission.permissionCode === "organization:view",
     );
     if (!organizationGrant) throw new Error("Expected organization:view role grant to exist");
     services["context"].store.rolePermissions.push({ ...organizationGrant });
@@ -2410,29 +2443,29 @@ describe("backend core foundation routes", () => {
         phone: "10000000125",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const user = await userResponse.json();
     await app.request(`/api/users/${user.data.id}/organizations`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" }),
     });
 
     const updateResponse = await app.request(`/api/users/${user.data.id}`, {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ primaryOrganizationId: child.data.id })
+      body: JSON.stringify({ primaryOrganizationId: child.data.id }),
     });
     const update = await updateResponse.json();
     const bindingsResponse = await app.request(`/api/users/${user.data.id}/organizations`, {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const bindings = await bindingsResponse.json();
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "primary-update-user", password: "password1" })
+      body: JSON.stringify({ username: "primary-update-user", password: "password1" }),
     });
     const login = await loginResponse.json();
 
@@ -2441,8 +2474,8 @@ describe("backend core foundation routes", () => {
     expect(bindings.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ organizationId: "1", isPrimary: false }),
-        expect.objectContaining({ organizationId: child.data.id, isPrimary: true })
-      ])
+        expect.objectContaining({ organizationId: child.data.id, isPrimary: true }),
+      ]),
     );
     expect(loginResponse.status).toBe(200);
     expect(login.data.currentOrganization.id).toBe(child.data.id);
@@ -2452,7 +2485,7 @@ describe("backend core foundation routes", () => {
   it("locks accounts according to the configured failed-login policy", async () => {
     const services = createInMemoryBackendCoreServices({
       failedLoginMaxAttempts: 2,
-      failedLoginLockMinutes: 30
+      failedLoginLockMinutes: 30,
     });
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
     const originalAdmin = services.getUser("1");
@@ -2460,15 +2493,15 @@ describe("backend core foundation routes", () => {
     await new Promise((resolve) => setTimeout(resolve, 5));
     await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "wrong-password" })
+      body: JSON.stringify({ username: "admin", password: "wrong-password" }),
     });
     await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "wrong-password" })
+      body: JSON.stringify({ username: "admin", password: "wrong-password" }),
     });
     const lockedLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const lockedLogin = await lockedLoginResponse.json();
     const lockedAdmin = services.getUser("1");
@@ -2479,14 +2512,14 @@ describe("backend core foundation routes", () => {
     expect(lockedAdmin.status).toBe("locked");
     expect(lockedAdmin.lockedUntil).toEqual(expect.any(String));
     expect(new Date(lockedAdmin.updatedAt).getTime()).toBeGreaterThan(
-      new Date(originalAdmin.updatedAt).getTime()
+      new Date(originalAdmin.updatedAt).getTime(),
     );
   });
 
   it("invalidates existing sessions when the failed-login policy locks an account", async () => {
     const services = createInMemoryBackendCoreServices({
       failedLoginMaxAttempts: 2,
-      failedLoginLockMinutes: 30
+      failedLoginLockMinutes: 30,
     });
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
     const { authHeaders } = await loginAsAdmin(app);
@@ -2500,42 +2533,42 @@ describe("backend core foundation routes", () => {
         phone: "10000000024",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "failed-lock-session-user", password: "password1" })
+      body: JSON.stringify({ username: "failed-lock-session-user", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     await app.request("/api/auth/change-password", {
       method: "POST",
       headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
-      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "failed-lock-session-user", password: "password2" })
+      body: JSON.stringify({ username: "failed-lock-session-user", password: "password2" }),
     });
     const login = await loginResponse.json();
     const cookie = loginResponse.headers.get("set-cookie") ?? "";
 
     await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "failed-lock-session-user", password: "wrong-password" })
+      body: JSON.stringify({ username: "failed-lock-session-user", password: "wrong-password" }),
     });
     await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "failed-lock-session-user", password: "wrong-password" })
+      body: JSON.stringify({ username: "failed-lock-session-user", password: "wrong-password" }),
     });
     const lockedUser = services.getUser(login.data.user.id);
     const oldAccessResponse = await app.request("/api/auth/me", {
-      headers: { authorization: `Bearer ${login.data.accessToken}` }
+      headers: { authorization: `Bearer ${login.data.accessToken}` },
     });
     const oldAccess = await oldAccessResponse.json();
     const oldRefreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: csrfHeaders(cookie)
+      headers: csrfHeaders(cookie),
     });
     const oldRefresh = await oldRefreshResponse.json();
     const onlineUsersResponse = await app.request("/api/online-users", { headers: authHeaders });
@@ -2544,36 +2577,36 @@ describe("backend core foundation routes", () => {
     expect(lockedUser).toMatchObject({
       status: "locked",
       failedLoginAttempts: 2,
-      tokenVersion: login.data.user.tokenVersion + 1
+      tokenVersion: login.data.user.tokenVersion + 1,
     });
     expect(oldAccessResponse.status).toBe(401);
     expect(oldAccess.error.code).toBe("AUTH_TOKEN_INVALIDATED");
     expect(oldRefreshResponse.status).toBe(423);
     expect(oldRefresh.error.code).toBe("AUTH_ACCOUNT_LOCKED");
     expect(onlineUsers.data).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ userId: login.data.user.id })])
+      expect.arrayContaining([expect.objectContaining({ userId: login.data.user.id })]),
     );
   });
 
   it("clears expired timed failed-login locks before counting new failures", async () => {
     const services = createInMemoryBackendCoreServices({
       failedLoginMaxAttempts: 2,
-      failedLoginLockMinutes: 0
+      failedLoginLockMinutes: 0,
     });
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
 
     await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "wrong-password" })
+      body: JSON.stringify({ username: "admin", password: "wrong-password" }),
     });
     await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "wrong-password" })
+      body: JSON.stringify({ username: "admin", password: "wrong-password" }),
     });
     const lockedAdmin = services.getUser("1");
     const nextFailureResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "wrong-password" })
+      body: JSON.stringify({ username: "admin", password: "wrong-password" }),
     });
     const nextFailure = await nextFailureResponse.json();
     const unlockedAdmin = services.getUser("1");
@@ -2593,11 +2626,11 @@ describe("backend core foundation routes", () => {
     const response = await app.request("/api/roles/1/permissions", {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["user:view", "role:view"] })
+      body: JSON.stringify({ permissionCodes: ["user:view", "role:view"] }),
     });
     const role = await response.json();
     const permissionsResponse = await app.request("/api/roles/1/permissions", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const permissions = await permissionsResponse.json();
 
@@ -2612,17 +2645,17 @@ describe("backend core foundation routes", () => {
     await app.request("/api/roles/1/permissions", {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["user:view", "role:view"] })
+      body: JSON.stringify({ permissionCodes: ["user:view", "role:view"] }),
     });
 
     const response = await app.request("/api/roles/1/permissions", {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["user:view", "not-a-permission"] })
+      body: JSON.stringify({ permissionCodes: ["user:view", "not-a-permission"] }),
     });
     const body = await response.json();
     const permissionsResponse = await app.request("/api/roles/1/permissions", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const permissions = await permissionsResponse.json();
 
@@ -2638,7 +2671,7 @@ describe("backend core foundation routes", () => {
     await app.request("/api/roles/1/permissions", {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["user:view", "role:view"] })
+      body: JSON.stringify({ permissionCodes: ["user:view", "role:view"] }),
     });
     const userViewPermission = services
       .listPermissions()
@@ -2649,11 +2682,11 @@ describe("backend core foundation routes", () => {
     const response = await app.request("/api/roles/1/permissions", {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["user:view"] })
+      body: JSON.stringify({ permissionCodes: ["user:view"] }),
     });
     const body = await response.json();
     const permissionsResponse = await app.request("/api/roles/1/permissions", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const permissions = await permissionsResponse.json();
 
@@ -2667,19 +2700,19 @@ describe("backend core foundation routes", () => {
     const { authHeaders } = await loginAsAdmin(app);
     const response = await app.request("/api/permissions/sync", {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const body = await response.json();
     const secondResponse = await app.request("/api/permissions/sync", {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const secondBody = await secondResponse.json();
     const apiListResponse = await app.request("/api/permissions/api", { headers: authHeaders });
     const apiList = await apiListResponse.json();
     const apiSyncResponse = await app.request("/api/permissions/api/sync", {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const apiSync = await apiSyncResponse.json();
 
@@ -2687,13 +2720,13 @@ describe("backend core foundation routes", () => {
     expect(body.data.permissions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: expect.any(String), code: "permission:sync" }),
-        expect.objectContaining({ id: expect.any(String), code: "permission:api:sync" })
-      ])
+        expect.objectContaining({ id: expect.any(String), code: "permission:api:sync" }),
+      ]),
     );
     expect(body.data.apiPermissions).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: expect.any(String), path: "/api/permissions/sync" })
-      ])
+        expect.objectContaining({ id: expect.any(String), path: "/api/permissions/sync" }),
+      ]),
     );
     expect(secondBody.data.permissions[0].id).toBe(body.data.permissions[0].id);
     expect(secondBody.data.apiPermissions[0].id).toBe(body.data.apiPermissions[0].id);
@@ -2703,9 +2736,9 @@ describe("backend core foundation routes", () => {
         expect.objectContaining({
           id: expect.any(String),
           code: "api.permissions.api.sync",
-          requiredPermission: "permission:api:sync"
-        })
-      ])
+          requiredPermission: "permission:api:sync",
+        }),
+      ]),
     );
     expect(apiSyncResponse.status).toBe(200);
     expect(apiSync.data).toEqual(
@@ -2713,9 +2746,9 @@ describe("backend core foundation routes", () => {
         expect.objectContaining({
           id: expect.any(String),
           code: "api.permissions.api.sync",
-          path: "/api/permissions/api/sync"
-        })
-      ])
+          path: "/api/permissions/api/sync",
+        }),
+      ]),
     );
   });
 
@@ -2725,7 +2758,7 @@ describe("backend core foundation routes", () => {
 
     const response = await app.request(
       "/api/permissions/api?keyword=profile&method=GET&module=auth&status=enabled&public=false",
-      { headers: authHeaders }
+      { headers: authHeaders },
     );
     const body = await response.json();
 
@@ -2737,8 +2770,8 @@ describe("backend core foundation routes", () => {
         path: "/api/auth/me",
         module: "auth",
         status: "enabled",
-        public: false
-      })
+        public: false,
+      }),
     ]);
   });
 
@@ -2747,7 +2780,7 @@ describe("backend core foundation routes", () => {
     const { authHeaders } = await loginAsAdmin(app);
 
     const response = await app.request("/api/permissions/api?logLevel=none", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const body = await response.json();
 
@@ -2755,16 +2788,16 @@ describe("backend core foundation routes", () => {
     expect(body.data).toEqual([
       expect.objectContaining({
         code: "api.health.view",
-        logLevel: "none"
+        logLevel: "none",
       }),
       expect.objectContaining({
         code: "api.metrics.view",
-        logLevel: "none"
+        logLevel: "none",
       }),
       expect.objectContaining({
         code: "api.openapi.view",
-        logLevel: "none"
-      })
+        logLevel: "none",
+      }),
     ]);
   });
 
@@ -2773,7 +2806,7 @@ describe("backend core foundation routes", () => {
     const { authHeaders } = await loginAsAdmin(app);
 
     const response = await app.request("/api/permissions/api?module=users&page=1&pageSize=2", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const body = await response.json();
 
@@ -2782,13 +2815,13 @@ describe("backend core foundation routes", () => {
       page: 1,
       pageSize: 2,
       total: expect.any(Number),
-      totalPages: expect.any(Number)
+      totalPages: expect.any(Number),
     });
     expect(body.data.total).toBeGreaterThanOrEqual(2);
     expect(body.data.items).toHaveLength(2);
     expect(body.data.items).toEqual([
       expect.objectContaining({ module: "users" }),
-      expect.objectContaining({ module: "users" })
+      expect.objectContaining({ module: "users" }),
     ]);
   });
 
@@ -2797,19 +2830,19 @@ describe("backend core foundation routes", () => {
     const { authHeaders } = await loginAsAdmin(app);
 
     const methodResponse = await app.request("/api/permissions/api?method=TRACE", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const methodBody = await methodResponse.json();
     const publicResponse = await app.request("/api/permissions/api?public=maybe", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const publicBody = await publicResponse.json();
     const logLevelResponse = await app.request("/api/permissions/api?logLevel=verbose", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const logLevelBody = await logLevelResponse.json();
     const pageResponse = await app.request("/api/permissions/api?page=0", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const pageBody = await pageResponse.json();
 
@@ -2843,7 +2876,7 @@ describe("backend core foundation routes", () => {
       manifestHash: "obsolete",
       status: "enabled",
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     });
     store.apiPermissions.set("999", {
       id: "999",
@@ -2858,7 +2891,7 @@ describe("backend core foundation routes", () => {
       public: false,
       status: "enabled",
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     });
     const canonicalUsersApiPermission = services
       .listApiPermissions()
@@ -2878,26 +2911,26 @@ describe("backend core foundation routes", () => {
       public: false,
       status: "enabled",
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     });
     store.rolePermissions.push({
       roleId: "2",
       permissionCode: "obsolete:view",
       effect: "allow",
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     });
     store.menuApiBindings.set("999", {
       id: "999",
       tenantId: null,
       menuId: "2",
       apiPermissionId: "999",
-      createdAt: now
+      createdAt: now,
     });
 
     const syncResponse = await app.request("/api/permissions/sync", {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const stalePermission = services
       .listPermissions()
@@ -2911,15 +2944,15 @@ describe("backend core foundation routes", () => {
     const roleUpdateResponse = await app.request("/api/roles/1/permissions", {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["obsolete:view"] })
+      body: JSON.stringify({ permissionCodes: ["obsolete:view"] }),
     });
     const roleUpdate = await roleUpdateResponse.json();
     const configuredResponse = await app.request("/api/roles/2/permissions", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const configured = await configuredResponse.json();
     const staleMenuApiBinding = [...store.menuApiBindings.values()].find(
-      (binding) => binding.apiPermissionId === "999"
+      (binding) => binding.apiPermissionId === "999",
     );
 
     expect(syncResponse.status).toBe(200);
@@ -2930,8 +2963,8 @@ describe("backend core foundation routes", () => {
       expect.objectContaining({
         id: "1000",
         code: "api.users.list",
-        status: "enabled"
-      })
+        status: "enabled",
+      }),
     ]);
     expect(roleUpdateResponse.status).toBe(400);
     expect(roleUpdate.error.code).toBe("PERMISSION_UNKNOWN_CODE");
@@ -2956,9 +2989,9 @@ describe("backend core foundation routes", () => {
           action: "view",
           source: "base_manifest",
           manifestHash: expect.stringMatching(/^[a-f0-9]{64}$/),
-          status: "enabled"
-        })
-      ])
+          status: "enabled",
+        }),
+      ]),
     );
   });
 
@@ -2968,7 +3001,7 @@ describe("backend core foundation routes", () => {
 
     const response = await app.request(
       "/api/permissions?keyword=users&module=users&resource=user&action=view&type=action&source=base_manifest&status=enabled",
-      { headers: authHeaders }
+      { headers: authHeaders },
     );
     const body = await response.json();
 
@@ -2981,8 +3014,8 @@ describe("backend core foundation routes", () => {
         action: "view",
         permissionType: "action",
         source: "base_manifest",
-        status: "enabled"
-      })
+        status: "enabled",
+      }),
     ]);
   });
 
@@ -2991,7 +3024,7 @@ describe("backend core foundation routes", () => {
     const { authHeaders } = await loginAsAdmin(app);
 
     const response = await app.request("/api/permissions?module=users&page=2&pageSize=3", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const body = await response.json();
 
@@ -3000,12 +3033,12 @@ describe("backend core foundation routes", () => {
       page: 2,
       pageSize: 3,
       total: 9,
-      totalPages: 3
+      totalPages: 3,
     });
     expect(body.data.items).toEqual([
       expect.objectContaining({ code: "user:disable" }),
       expect.objectContaining({ code: "user:enable" }),
-      expect.objectContaining({ code: "user:lock" })
+      expect.objectContaining({ code: "user:lock" }),
     ]);
   });
 
@@ -3014,15 +3047,15 @@ describe("backend core foundation routes", () => {
     const { authHeaders } = await loginAsAdmin(app);
 
     const statusResponse = await app.request("/api/permissions?status=archived", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const statusBody = await statusResponse.json();
     const typeResponse = await app.request("/api/permissions?type=button", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const typeBody = await typeResponse.json();
     const pageResponse = await app.request("/api/permissions?pageSize=0", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const pageBody = await pageResponse.json();
 
@@ -3041,29 +3074,31 @@ describe("backend core foundation routes", () => {
     await app.request("/api/roles/2/permissions", {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["user:view", "role:view", "user:view"] })
+      body: JSON.stringify({ permissionCodes: ["user:view", "role:view", "user:view"] }),
     });
-    const { store } = (services as unknown as {
-      context: {
-        store: {
-          rolePermissions: Array<{
-            roleId: string;
-            permissionCode: string;
-            effect: "allow" | "deny";
-            createdAt: string;
-            updatedAt: string;
-          }>;
+    const { store } = (
+      services as unknown as {
+        context: {
+          store: {
+            rolePermissions: Array<{
+              roleId: string;
+              permissionCode: string;
+              effect: "allow" | "deny";
+              createdAt: string;
+              updatedAt: string;
+            }>;
+          };
         };
-      };
-    }).context;
+      }
+    ).context;
     const duplicateGrant = store.rolePermissions.find(
-      (permission) => permission.roleId === "2" && permission.permissionCode === "user:view"
+      (permission) => permission.roleId === "2" && permission.permissionCode === "user:view",
     );
     if (!duplicateGrant) throw new Error("Expected role grant to exist");
     store.rolePermissions.push({ ...duplicateGrant });
 
     const response = await app.request("/api/roles/2/permissions", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const body = await response.json();
 
@@ -3084,8 +3119,8 @@ describe("backend core foundation routes", () => {
         path: "/system/audit",
         requiredPermission: "menu:view",
         sortOrder: 150,
-        visible: false
-      })
+        visible: false,
+      }),
     });
     const created = await createResponse.json();
     const hiddenContextResponse = await app.request("/api/auth/me", { headers: authHeaders });
@@ -3099,15 +3134,15 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         titleI18nKey: "routes.system.auditLogs",
         visible: true,
-        status: "disabled"
-      })
+        status: "disabled",
+      }),
     });
     const updated = await updateResponse.json();
     const contextResponse = await app.request("/api/auth/me", { headers: authHeaders });
     const context = await contextResponse.json();
     const deleteResponse = await app.request(`/api/menus/${created.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const deleted = await deleteResponse.json();
 
@@ -3116,10 +3151,10 @@ describe("backend core foundation routes", () => {
       id: expect.any(String),
       parentMenuId: "2",
       code: "system.audit",
-      visible: false
+      visible: false,
     });
     expect(hiddenContext.data.menus).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ code: "system.audit" })])
+      expect.arrayContaining([expect.objectContaining({ code: "system.audit" })]),
     );
     expect(treeResponse.status).toBe(200);
     expect(tree.data).toEqual(
@@ -3127,24 +3162,24 @@ describe("backend core foundation routes", () => {
         expect.objectContaining({
           code: "system",
           children: expect.arrayContaining([
-            expect.objectContaining({ code: "system.audit", children: [] })
-          ])
-        })
-      ])
+            expect.objectContaining({ code: "system.audit", children: [] }),
+          ]),
+        }),
+      ]),
     );
     expect(updated.data).toMatchObject({
       titleI18nKey: "routes.system.auditLogs",
       visible: true,
-      status: "disabled"
+      status: "disabled",
     });
     expect(context.data.menus).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ code: "system.audit" })])
+      expect.arrayContaining([expect.objectContaining({ code: "system.audit" })]),
     );
     expect(deleted.data).toMatchObject({
       id: created.data.id,
       isDeleted: true,
       deletedAt: expect.any(String),
-      deletedBy: "1"
+      deletedBy: "1",
     });
   });
 
@@ -3153,14 +3188,14 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
     const { authHeaders } = await loginAsAdmin(app);
     const apiPermissionsResponse = await app.request("/api/permissions/api", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const apiPermissions = await apiPermissionsResponse.json();
     const listUsersApi = apiPermissions.data.find(
-      (apiPermission: { code: string }) => apiPermission.code === "api.users.list"
+      (apiPermission: { code: string }) => apiPermission.code === "api.users.list",
     );
     const createUsersApi = apiPermissions.data.find(
-      (apiPermission: { code: string }) => apiPermission.code === "api.users.create"
+      (apiPermission: { code: string }) => apiPermission.code === "api.users.create",
     );
     const menuResponse = await app.request("/api/menus", {
       method: "POST",
@@ -3170,8 +3205,8 @@ describe("backend core foundation routes", () => {
         code: "system.api-bound",
         titleI18nKey: "routes.system.apiBound",
         path: "/system/api-bound",
-        requiredPermission: "menu:view"
-      })
+        requiredPermission: "menu:view",
+      }),
     });
     const menu = await menuResponse.json();
 
@@ -3179,21 +3214,21 @@ describe("backend core foundation routes", () => {
       method: "PUT",
       headers: authHeaders,
       body: JSON.stringify({
-        apiPermissionIds: [listUsersApi.id, createUsersApi.id, listUsersApi.id]
-      })
+        apiPermissionIds: [listUsersApi.id, createUsersApi.id, listUsersApi.id],
+      }),
     });
     const bound = await bindResponse.json();
     services["context"].store.apiPermissions.get(createUsersApi.id)!.status = "disabled";
     const disabledResponse = await app.request(`/api/menus/${menu.data.id}/api-bindings`, {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ apiPermissionIds: [createUsersApi.id] })
+      body: JSON.stringify({ apiPermissionIds: [createUsersApi.id] }),
     });
     const disabled = await disabledResponse.json();
     const invalidResponse = await app.request(`/api/menus/${menu.data.id}/api-bindings`, {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ apiPermissionIds: ["999999"] })
+      body: JSON.stringify({ apiPermissionIds: ["999999"] }),
     });
     const invalid = await invalidResponse.json();
 
@@ -3202,21 +3237,21 @@ describe("backend core foundation routes", () => {
     expect(bindResponse.status).toBe(200);
     expect(bound.data).toMatchObject({
       menuId: menu.data.id,
-      apiPermissionIds: [listUsersApi.id, createUsersApi.id]
+      apiPermissionIds: [listUsersApi.id, createUsersApi.id],
     });
     expect(bound.data.bindings).toEqual([
       expect.objectContaining({
         id: expect.any(String),
         menuId: menu.data.id,
         apiPermissionId: listUsersApi.id,
-        createdAt: expect.any(String)
+        createdAt: expect.any(String),
       }),
       expect.objectContaining({
         id: expect.any(String),
         menuId: menu.data.id,
         apiPermissionId: createUsersApi.id,
-        createdAt: expect.any(String)
-      })
+        createdAt: expect.any(String),
+      }),
     ]);
     expect(disabledResponse.status).toBe(400);
     expect(disabled.error.code).toBe("VALIDATION_INVALID_REQUEST");
@@ -3235,8 +3270,8 @@ describe("backend core foundation routes", () => {
         code: "system.parent",
         titleI18nKey: "routes.system.parent",
         path: "/system/parent",
-        requiredPermission: "menu:view"
-      })
+        requiredPermission: "menu:view",
+      }),
     });
     const parent = await parentResponse.json();
     const childResponse = await app.request("/api/menus", {
@@ -3247,14 +3282,14 @@ describe("backend core foundation routes", () => {
         code: "system.parent.child",
         titleI18nKey: "routes.system.parent.child",
         path: "/system/parent/child",
-        requiredPermission: "menu:view"
-      })
+        requiredPermission: "menu:view",
+      }),
     });
     const child = await childResponse.json();
     const cycleResponse = await app.request(`/api/menus/${parent.data.id}`, {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ parentMenuId: child.data.id })
+      body: JSON.stringify({ parentMenuId: child.data.id }),
     });
     const cycle = await cycleResponse.json();
 
@@ -3275,8 +3310,8 @@ describe("backend core foundation routes", () => {
         code: "system.unknown-permission",
         titleI18nKey: "routes.system.unknownPermission",
         path: "/system/unknown-permission",
-        requiredPermission: "unknown:view"
-      })
+        requiredPermission: "unknown:view",
+      }),
     });
     const unknownPermission = await unknownPermissionResponse.json();
     const unknownRouteResponse = await app.request("/api/menus", {
@@ -3287,8 +3322,8 @@ describe("backend core foundation routes", () => {
         code: "system.unknown-route",
         titleI18nKey: "routes.system.unknownRoute",
         path: "/system/unknown-route",
-        routeCode: "system.unknownRoute"
-      })
+        routeCode: "system.unknownRoute",
+      }),
     });
     const unknownRoute = await unknownRouteResponse.json();
     const createResponse = await app.request("/api/menus", {
@@ -3300,14 +3335,14 @@ describe("backend core foundation routes", () => {
         titleI18nKey: "routes.system.knownReferences",
         path: "/system/known-references",
         requiredPermission: "menu:view",
-        routeCode: "system.menus"
-      })
+        routeCode: "system.menus",
+      }),
     });
     const created = await createResponse.json();
     const updateResponse = await app.request(`/api/menus/${created.data.id}`, {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ routeCode: "system.missing" })
+      body: JSON.stringify({ routeCode: "system.missing" }),
     });
     const update = await updateResponse.json();
 
@@ -3325,7 +3360,7 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
     const { authHeaders } = await loginAsAdmin(app);
     const menuViewPermission = [...services["context"].store.permissions.values()].find(
-      (permission) => permission.code === "menu:view"
+      (permission) => permission.code === "menu:view",
     );
     if (!menuViewPermission) throw new Error("Expected seeded menu:view permission");
     menuViewPermission.status = "disabled";
@@ -3338,14 +3373,14 @@ describe("backend core foundation routes", () => {
         code: "system.disabled-permission",
         titleI18nKey: "routes.system.disabledPermission",
         path: "/system/disabled-permission",
-        requiredPermission: "menu:view"
-      })
+        requiredPermission: "menu:view",
+      }),
     });
     const create = await createResponse.json();
     const updateResponse = await app.request("/api/menus/2", {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ requiredPermission: "menu:view" })
+      body: JSON.stringify({ requiredPermission: "menu:view" }),
     });
     const update = await updateResponse.json();
 
@@ -3360,7 +3395,7 @@ describe("backend core foundation routes", () => {
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
     const { authHeaders } = await loginAsAdmin(app);
     const menuRoute = [...services["context"].store.routeMetadata.values()].find(
-      (route) => route.routeCode === "system.menus"
+      (route) => route.routeCode === "system.menus",
     );
     if (!menuRoute) throw new Error("Expected seeded system.menus route metadata");
     menuRoute.status = "disabled";
@@ -3373,14 +3408,14 @@ describe("backend core foundation routes", () => {
         code: "system.disabled-route",
         titleI18nKey: "routes.system.disabledRoute",
         path: "/system/disabled-route",
-        routeCode: "system.menus"
-      })
+        routeCode: "system.menus",
+      }),
     });
     const create = await createResponse.json();
     const updateResponse = await app.request("/api/menus/2", {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ routeCode: "system.menus" })
+      body: JSON.stringify({ routeCode: "system.menus" }),
     });
     const update = await updateResponse.json();
 
@@ -3402,8 +3437,8 @@ describe("backend core foundation routes", () => {
         code: "system.delete-parent",
         titleI18nKey: "routes.system.deleteParent",
         path: "/system/delete-parent",
-        requiredPermission: "menu:view"
-      })
+        requiredPermission: "menu:view",
+      }),
     });
     const parent = await parentResponse.json();
     const childResponse = await app.request("/api/menus", {
@@ -3414,8 +3449,8 @@ describe("backend core foundation routes", () => {
         code: "system.delete-parent.child",
         titleI18nKey: "routes.system.deleteParent.child",
         path: "/system/delete-parent/child",
-        requiredPermission: "menu:view"
-      })
+        requiredPermission: "menu:view",
+      }),
     });
     const child = await childResponse.json();
     const apiPermission = services
@@ -3425,16 +3460,16 @@ describe("backend core foundation routes", () => {
     await app.request(`/api/menus/${parent.data.id}/api-bindings`, {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ apiPermissionIds: [apiPermission.id] })
+      body: JSON.stringify({ apiPermissionIds: [apiPermission.id] }),
     });
     await app.request(`/api/menus/${child.data.id}/api-bindings`, {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ apiPermissionIds: [apiPermission.id] })
+      body: JSON.stringify({ apiPermissionIds: [apiPermission.id] }),
     });
     const deleteResponse = await app.request(`/api/menus/${parent.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const deleted = await deleteResponse.json();
     const storedMenus = [...services["context"].store.menus.values()];
@@ -3448,7 +3483,7 @@ describe("backend core foundation routes", () => {
     expect(deleted.data).toMatchObject({
       id: parent.data.id,
       isDeleted: true,
-      deletedBy: "1"
+      deletedBy: "1",
     });
     expect(storedMenus).toEqual(
       expect.arrayContaining([
@@ -3456,22 +3491,22 @@ describe("backend core foundation routes", () => {
           id: parent.data.id,
           isDeleted: true,
           status: "disabled",
-          deletedBy: "1"
+          deletedBy: "1",
         }),
         expect.objectContaining({
           id: child.data.id,
           isDeleted: true,
           status: "disabled",
-          deletedBy: "1"
-        })
-      ])
+          deletedBy: "1",
+        }),
+      ]),
     );
     expect(storedBindings).toEqual([]);
     expect(tree.data).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: parent.data.id }),
-        expect.objectContaining({ id: child.data.id })
-      ])
+        expect.objectContaining({ id: child.data.id }),
+      ]),
     );
     expect(JSON.stringify(tree.data)).not.toContain("system.delete-parent.child");
   });
@@ -3486,8 +3521,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: "1",
         name: "Delete Target Organization",
-        code: "delete-target-org"
-      })
+        code: "delete-target-org",
+      }),
     });
     const organization = await organizationResponse.json();
     const userResponse = await app.request("/api/users", {
@@ -3500,8 +3535,8 @@ describe("backend core foundation routes", () => {
         phone: "10000000011",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const user = await userResponse.json();
     const roleResponse = await app.request("/api/roles", {
@@ -3509,8 +3544,8 @@ describe("backend core foundation routes", () => {
       headers: authHeaders,
       body: JSON.stringify({
         name: "Delete Target Role",
-        code: "delete_target_role"
-      })
+        code: "delete_target_role",
+      }),
     });
     const role = await roleResponse.json();
     const menuResponse = await app.request("/api/menus", {
@@ -3521,39 +3556,42 @@ describe("backend core foundation routes", () => {
         code: "system.deleteTarget",
         titleI18nKey: "routes.system.deleteTarget",
         path: "/system/delete-target",
-        requiredPermission: "menu:view"
-      })
+        requiredPermission: "menu:view",
+      }),
     });
     const menu = await menuResponse.json();
 
-    const deletedOrganizationResponse = await app.request(`/api/organizations/${organization.data.id}`, {
-      method: "DELETE",
-      headers: authHeaders
-    });
+    const deletedOrganizationResponse = await app.request(
+      `/api/organizations/${organization.data.id}`,
+      {
+        method: "DELETE",
+        headers: authHeaders,
+      },
+    );
     const deletedUserResponse = await app.request(`/api/users/${user.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const deletedRoleResponse = await app.request(`/api/roles/${role.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const deletedMenuResponse = await app.request(`/api/menus/${menu.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
 
     await expect(deletedOrganizationResponse.json()).resolves.toMatchObject({
-      data: { id: organization.data.id, isDeleted: true, deletedBy: "1" }
+      data: { id: organization.data.id, isDeleted: true, deletedBy: "1" },
     });
     await expect(deletedUserResponse.json()).resolves.toMatchObject({
-      data: { id: user.data.id, isDeleted: true, deletedBy: "1" }
+      data: { id: user.data.id, isDeleted: true, deletedBy: "1" },
     });
     await expect(deletedRoleResponse.json()).resolves.toMatchObject({
-      data: { id: role.data.id, isDeleted: true, deletedBy: "1" }
+      data: { id: role.data.id, isDeleted: true, deletedBy: "1" },
     });
     await expect(deletedMenuResponse.json()).resolves.toMatchObject({
-      data: { id: menu.data.id, isDeleted: true, deletedBy: "1" }
+      data: { id: menu.data.id, isDeleted: true, deletedBy: "1" },
     });
   });
 
@@ -3567,8 +3605,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: "1",
         name: "Delete User Child",
-        code: "delete-user-child"
-      })
+        code: "delete-user-child",
+      }),
     });
     const child = await childResponse.json();
     const userResponse = await app.request("/api/users", {
@@ -3581,22 +3619,22 @@ describe("backend core foundation routes", () => {
         phone: "10000000042",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const user = await userResponse.json();
     await app.request(`/api/users/${user.data.id}/organizations`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" }),
     });
 
     const deleteResponse = await app.request(`/api/users/${user.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const bindings = [...services["context"].store.userOrganizationRoles.values()].filter(
-      (binding) => binding.userId === user.data.id
+      (binding) => binding.userId === user.data.id,
     );
 
     expect(deleteResponse.status).toBe(200);
@@ -3604,8 +3642,8 @@ describe("backend core foundation routes", () => {
     expect(bindings).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ organizationId: "1", isDeleted: true, deletedBy: "1" }),
-        expect.objectContaining({ organizationId: child.data.id, isDeleted: true, deletedBy: "1" })
-      ])
+        expect.objectContaining({ organizationId: child.data.id, isDeleted: true, deletedBy: "1" }),
+      ]),
     );
   });
 
@@ -3615,7 +3653,7 @@ describe("backend core foundation routes", () => {
     const organizationResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ name: "Reusable Organization", code: "reserved-org" })
+      body: JSON.stringify({ name: "Reusable Organization", code: "reserved-org" }),
     });
     const organization = await organizationResponse.json();
     const userResponse = await app.request("/api/users", {
@@ -3628,14 +3666,14 @@ describe("backend core foundation routes", () => {
         phone: "15500000001",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const user = await userResponse.json();
     const roleResponse = await app.request("/api/roles", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ name: "Reserved Role", code: "reserved_role" })
+      body: JSON.stringify({ name: "Reserved Role", code: "reserved_role" }),
     });
     const role = await roleResponse.json();
     const menuResponse = await app.request("/api/menus", {
@@ -3645,32 +3683,32 @@ describe("backend core foundation routes", () => {
         parentMenuId: "2",
         code: "system.reserved",
         titleI18nKey: "routes.system.reserved",
-        path: "/system/reserved"
-      })
+        path: "/system/reserved",
+      }),
     });
     const menu = await menuResponse.json();
 
     await app.request(`/api/organizations/${organization.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     await app.request(`/api/users/${user.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     await app.request(`/api/roles/${role.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     await app.request(`/api/menus/${menu.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
 
     const duplicateOrganizationResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ name: "Duplicate Organization", code: "reserved-org" })
+      body: JSON.stringify({ name: "Duplicate Organization", code: "reserved-org" }),
     });
     const duplicateOrganization = await duplicateOrganizationResponse.json();
     const duplicateUserResponse = await app.request("/api/users", {
@@ -3683,14 +3721,14 @@ describe("backend core foundation routes", () => {
         phone: "15500000002",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const duplicateUser = await duplicateUserResponse.json();
     const duplicateRoleResponse = await app.request("/api/roles", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ name: "Duplicate Role", code: "reserved_role" })
+      body: JSON.stringify({ name: "Duplicate Role", code: "reserved_role" }),
     });
     const duplicateRole = await duplicateRoleResponse.json();
     const duplicateMenuResponse = await app.request("/api/menus", {
@@ -3700,8 +3738,8 @@ describe("backend core foundation routes", () => {
         parentMenuId: "2",
         code: "system.reserved",
         titleI18nKey: "routes.system.reservedDuplicate",
-        path: "/system/reserved-duplicate"
-      })
+        path: "/system/reserved-duplicate",
+      }),
     });
     const duplicateMenu = await duplicateMenuResponse.json();
 
@@ -3724,13 +3762,13 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: "1",
         name: "Reserved Path Child",
-        code: "reserved-path-child"
-      })
+        code: "reserved-path-child",
+      }),
     });
     const firstChild = await firstChildResponse.json();
     await app.request(`/api/organizations/${firstChild.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const secondChildResponse = await app.request("/api/organizations", {
       method: "POST",
@@ -3738,8 +3776,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: "1",
         name: "Replacement Path Child",
-        code: "replacement-path-child"
-      })
+        code: "replacement-path-child",
+      }),
     });
     const secondChild = await secondChildResponse.json();
 
@@ -3758,8 +3796,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: "1",
         name: "Delete Parent Organization",
-        code: "delete-parent-org"
-      })
+        code: "delete-parent-org",
+      }),
     });
     const parent = await parentResponse.json();
     const childResponse = await app.request("/api/organizations", {
@@ -3768,19 +3806,19 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: parent.data.id,
         name: "Delete Child Organization",
-        code: "delete-child-org"
-      })
+        code: "delete-child-org",
+      }),
     });
     const child = await childResponse.json();
     const deleteResponse = await app.request(`/api/organizations/${parent.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const deleted = await deleteResponse.json();
     const treeResponse = await app.request("/api/organizations/tree", { headers: authHeaders });
     const tree = await treeResponse.json();
     const childDetailResponse = await app.request(`/api/organizations/${child.data.id}`, {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const childDetail = await childDetailResponse.json();
 
@@ -3790,13 +3828,13 @@ describe("backend core foundation routes", () => {
     expect(deleted.data).toMatchObject({
       id: parent.data.id,
       isDeleted: true,
-      deletedBy: "1"
+      deletedBy: "1",
     });
     expect(tree.data).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: parent.data.id }),
-        expect.objectContaining({ id: child.data.id })
-      ])
+        expect.objectContaining({ id: child.data.id }),
+      ]),
     );
     expect(JSON.stringify(tree.data)).not.toContain("delete-child-org");
     expect(childDetailResponse.status).toBe(404);
@@ -3813,8 +3851,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: "1",
         name: "Binding Delete Parent",
-        code: "binding-delete-parent"
-      })
+        code: "binding-delete-parent",
+      }),
     });
     const parent = await parentResponse.json();
     const childResponse = await app.request("/api/organizations", {
@@ -3823,8 +3861,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: parent.data.id,
         name: "Binding Delete Child",
-        code: "binding-delete-child"
-      })
+        code: "binding-delete-child",
+      }),
     });
     const child = await childResponse.json();
     const userResponse = await app.request("/api/users", {
@@ -3837,27 +3875,27 @@ describe("backend core foundation routes", () => {
         phone: "10000000043",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const user = await userResponse.json();
     await app.request(`/api/users/${user.data.id}/organizations`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: parent.data.id, roleId: "2" })
+      body: JSON.stringify({ organizationId: parent.data.id, roleId: "2" }),
     });
     await app.request(`/api/users/${user.data.id}/organizations`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" }),
     });
 
     const deleteResponse = await app.request(`/api/organizations/${parent.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const bindings = [...services["context"].store.userOrganizationRoles.values()].filter(
-      (binding) => binding.userId === user.data.id
+      (binding) => binding.userId === user.data.id,
     );
 
     expect(deleteResponse.status).toBe(200);
@@ -3868,15 +3906,15 @@ describe("backend core foundation routes", () => {
           organizationId: parent.data.id,
           isDeleted: true,
           status: "disabled",
-          deletedBy: "1"
+          deletedBy: "1",
         }),
         expect.objectContaining({
           organizationId: child.data.id,
           isDeleted: true,
           status: "disabled",
-          deletedBy: "1"
-        })
-      ])
+          deletedBy: "1",
+        }),
+      ]),
     );
   });
 
@@ -3889,8 +3927,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: "1",
         name: "Disable Parent Organization",
-        code: "disable-parent-org"
-      })
+        code: "disable-parent-org",
+      }),
     });
     const parent = await parentResponse.json();
     const childResponse = await app.request("/api/organizations", {
@@ -3899,17 +3937,17 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: parent.data.id,
         name: "Deleted Before Disable Child",
-        code: "deleted-before-disable-child"
-      })
+        code: "deleted-before-disable-child",
+      }),
     });
     const child = await childResponse.json();
     await app.request(`/api/organizations/${child.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const disableResponse = await app.request(`/api/organizations/${parent.data.id}/disable`, {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const disabled = await disableResponse.json();
 
@@ -3917,10 +3955,10 @@ describe("backend core foundation routes", () => {
     expect(childResponse.status).toBe(201);
     expect(disableResponse.status).toBe(200);
     expect(disabled.data).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: parent.data.id })])
+      expect.arrayContaining([expect.objectContaining({ id: parent.data.id })]),
     );
     expect(disabled.data).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: child.data.id })])
+      expect.arrayContaining([expect.objectContaining({ id: child.data.id })]),
     );
   });
 
@@ -3934,8 +3972,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: "1",
         name: "Audited Organization",
-        code: "audited-org"
-      })
+        code: "audited-org",
+      }),
     });
     const organization = await organizationResponse.json();
     const organizationUpdateResponse = await app.request(
@@ -3943,13 +3981,13 @@ describe("backend core foundation routes", () => {
       {
         method: "PATCH",
         headers: authHeaders,
-        body: JSON.stringify({ name: "Audited Organization Updated" })
-      }
+        body: JSON.stringify({ name: "Audited Organization Updated" }),
+      },
     );
     const organizationUpdate = await organizationUpdateResponse.json();
     const organizationDisableResponse = await app.request(
       `/api/organizations/${organization.data.id}/disable`,
-      { method: "POST", headers: authHeaders }
+      { method: "POST", headers: authHeaders },
     );
     const organizationDisable = await organizationDisableResponse.json();
 
@@ -3963,25 +4001,25 @@ describe("backend core foundation routes", () => {
         phone: "10000000012",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const user = await userResponse.json();
     const userUpdateResponse = await app.request(`/api/users/${user.data.id}`, {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ displayName: "Audited User Updated" })
+      body: JSON.stringify({ displayName: "Audited User Updated" }),
     });
     const userUpdate = await userUpdateResponse.json();
     const userLockResponse = await app.request(`/api/users/${user.data.id}/lock`, {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const userLock = await userLockResponse.json();
     const resetResponse = await app.request(`/api/users/${user.data.id}/reset-password`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ password: "password2" })
+      body: JSON.stringify({ password: "password2" }),
     });
     const reset = await resetResponse.json();
     const roleResponse = await app.request("/api/roles", {
@@ -3990,8 +4028,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         name: "Audited Role",
         code: "audited_role",
-        description: "Audited role description"
-      })
+        description: "Audited role description",
+      }),
     });
     const role = await roleResponse.json();
     const roleUpdateResponse = await app.request(`/api/roles/${role.data.id}`, {
@@ -3999,20 +4037,22 @@ describe("backend core foundation routes", () => {
       headers: authHeaders,
       body: JSON.stringify({
         name: "Audited Role Updated",
-        description: "Updated role description"
-      })
+        description: "Updated role description",
+      }),
     });
     const roleUpdate = await roleUpdateResponse.json();
     const roleDisableResponse = await app.request(`/api/roles/${role.data.id}/disable`, {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const roleDisable = await roleDisableResponse.json();
 
     expect(organization.data).toMatchObject({ createdBy: "1", updatedBy: "1" });
     expect(organizationUpdate.data).toMatchObject({ updatedBy: "1" });
     expect(organizationDisable.data).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: organization.data.id, updatedBy: "1" })])
+      expect.arrayContaining([
+        expect.objectContaining({ id: organization.data.id, updatedBy: "1" }),
+      ]),
     );
     expect(user.data).toMatchObject({ createdBy: "1", updatedBy: "1" });
     expect(userUpdate.data).toMatchObject({ updatedBy: "1" });
@@ -4023,11 +4063,11 @@ describe("backend core foundation routes", () => {
       updatedBy: "1",
       description: "Audited role description",
       isBuiltin: false,
-      dataScopeRuleId: null
+      dataScopeRuleId: null,
     });
     expect(roleUpdate.data).toMatchObject({
       description: "Updated role description",
-      updatedBy: "1"
+      updatedBy: "1",
     });
     expect(roleDisable.data).toMatchObject({ updatedBy: "1" });
   });
@@ -4039,7 +4079,7 @@ describe("backend core foundation routes", () => {
     const manifest = await manifestResponse.json();
     const syncResponse = await app.request("/api/routes/sync", {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const synced = await syncResponse.json();
 
@@ -4053,11 +4093,11 @@ describe("backend core foundation routes", () => {
           metadataJson: {
             menuVisible: true,
             icon: null,
-            sortOrder: 110
+            sortOrder: 110,
           },
-          manifestHash: expect.stringMatching(/^[a-f0-9]{64}$/)
-        })
-      ])
+          manifestHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+        }),
+      ]),
     );
     expect(syncResponse.status).toBe(200);
     expect(synced.data).toEqual(
@@ -4067,11 +4107,11 @@ describe("backend core foundation routes", () => {
           metadataJson: {
             menuVisible: true,
             icon: null,
-            sortOrder: 110
+            sortOrder: 110,
           },
-          manifestHash: expect.stringMatching(/^[a-f0-9]{64}$/)
-        })
-      ])
+          manifestHash: expect.stringMatching(/^[a-f0-9]{64}$/),
+        }),
+      ]),
     );
   });
 
@@ -4081,7 +4121,7 @@ describe("backend core foundation routes", () => {
 
     const response = await app.request(
       "/api/routes/manifest?keyword=users&routeCode=system.users&path=/system/users&requiredPermission=user:view&menuVisible=true&status=enabled",
-      { headers: authHeaders }
+      { headers: authHeaders },
     );
     const body = await response.json();
 
@@ -4092,8 +4132,8 @@ describe("backend core foundation routes", () => {
         path: "/system/users",
         requiredPermission: "user:view",
         menuVisible: true,
-        status: "enabled"
-      })
+        status: "enabled",
+      }),
     ]);
   });
 
@@ -4102,7 +4142,7 @@ describe("backend core foundation routes", () => {
     const { authHeaders } = await loginAsAdmin(app);
 
     const response = await app.request("/api/routes/manifest?menuVisible=true&page=2&pageSize=2", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const body = await response.json();
 
@@ -4111,11 +4151,11 @@ describe("backend core foundation routes", () => {
       page: 2,
       pageSize: 2,
       total: baseRouteManifest.length,
-      totalPages: Math.ceil(baseRouteManifest.length / 2)
+      totalPages: Math.ceil(baseRouteManifest.length / 2),
     });
     expect(body.data.items).toEqual([
       expect.objectContaining({ routeCode: "system.users" }),
-      expect.objectContaining({ routeCode: "system.roles" })
+      expect.objectContaining({ routeCode: "system.roles" }),
     ]);
   });
 
@@ -4124,15 +4164,15 @@ describe("backend core foundation routes", () => {
     const { authHeaders } = await loginAsAdmin(app);
 
     const statusResponse = await app.request("/api/routes/manifest?status=archived", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const statusBody = await statusResponse.json();
     const menuVisibleResponse = await app.request("/api/routes/manifest?menuVisible=maybe", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const menuVisibleBody = await menuVisibleResponse.json();
     const pageResponse = await app.request("/api/routes/manifest?page=0", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const pageBody = await pageResponse.json();
 
@@ -4163,13 +4203,13 @@ describe("backend core foundation routes", () => {
       sortOrder: 999,
       status: "enabled" as const,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
     services["context"].store.routeMetadata.set(staleRoute.id, staleRoute);
 
     const syncResponse = await app.request("/api/routes/sync", {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const synced = await syncResponse.json();
 
@@ -4177,7 +4217,7 @@ describe("backend core foundation routes", () => {
     expect(staleRoute.status).toBe("disabled");
     expect(staleRoute.updatedAt).not.toBe(now);
     expect(synced.data).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ routeCode: "system.obsolete" })])
+      expect.arrayContaining([expect.objectContaining({ routeCode: "system.obsolete" })]),
     );
   });
 
@@ -4200,7 +4240,7 @@ describe("backend core foundation routes", () => {
       sortOrder: 999,
       status: "enabled" as const,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
     services["context"].store.routeMetadata.set(staleRoute.id, staleRoute);
     const menuResponse = await app.request("/api/menus", {
@@ -4212,14 +4252,14 @@ describe("backend core foundation routes", () => {
         titleI18nKey: "routes.system.obsoleteRouteMenu",
         path: "/system/obsolete-route-menu",
         requiredPermission: "menu:view",
-        routeCode: "system.obsolete"
-      })
+        routeCode: "system.obsolete",
+      }),
     });
     const beforeSyncResponse = await app.request("/api/auth/me", { headers: authHeaders });
 
     await app.request("/api/routes/sync", {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const afterSyncResponse = await app.request("/api/auth/me", { headers: authHeaders });
     const menu = await menuResponse.json();
@@ -4229,11 +4269,11 @@ describe("backend core foundation routes", () => {
     expect(menuResponse.status).toBe(201);
     expect(menu.data.routeCode).toBe("system.obsolete");
     expect(beforeSync.data.menus).toEqual(
-      expect.arrayContaining([expect.objectContaining({ code: "system.obsolete-route-menu" })])
+      expect.arrayContaining([expect.objectContaining({ code: "system.obsolete-route-menu" })]),
     );
     expect(staleRoute.status).toBe("disabled");
     expect(afterSync.data.menus).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ code: "system.obsolete-route-menu" })])
+      expect.arrayContaining([expect.objectContaining({ code: "system.obsolete-route-menu" })]),
     );
   });
 
@@ -4244,7 +4284,7 @@ describe("backend core foundation routes", () => {
     const response = await app.request("/api/roles/2", {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ code: "super_admin" })
+      body: JSON.stringify({ code: "super_admin" }),
     });
     const body = await response.json();
 
@@ -4259,7 +4299,7 @@ describe("backend core foundation routes", () => {
     const response = await app.request("/api/roles/2", {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ status: "disabled" })
+      body: JSON.stringify({ status: "disabled" }),
     });
     const body = await response.json();
     const detailResponse = await app.request("/api/roles/2", { headers: authHeaders });
@@ -4278,27 +4318,27 @@ describe("backend core foundation routes", () => {
     await app.request("/api/roles/2/permissions", {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["user:view", "role:view"] })
+      body: JSON.stringify({ permissionCodes: ["user:view", "role:view"] }),
     });
     services["context"].store.rolePermissions.push({
       roleId: "2",
       permissionCode: "user:view",
       effect: "allow",
       createdAt: "2026-01-01T00:00:00.000Z",
-      updatedAt: "2026-01-01T00:00:00.000Z"
+      updatedAt: "2026-01-01T00:00:00.000Z",
     });
     const copyResponse = await app.request("/api/roles/2/copy", {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const copy = await copyResponse.json();
     const secondCopyResponse = await app.request("/api/roles/2/copy", {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const secondCopy = await secondCopyResponse.json();
     const permissionsResponse = await app.request(`/api/roles/${copy.data.id}/permissions`, {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const permissions = await permissionsResponse.json();
 
@@ -4312,7 +4352,7 @@ describe("backend core foundation routes", () => {
       description: "Built-in role",
       isBuiltin: false,
       createdBy: "1",
-      updatedBy: "1"
+      updatedBy: "1",
     });
     expect(secondCopy.data.code).toBe("organization_admin_copy_2");
     expect(permissions.data).toEqual(["user:view", "role:view"]);
@@ -4325,7 +4365,7 @@ describe("backend core foundation routes", () => {
     await app.request("/api/roles/2/permissions", {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["user:view"] })
+      body: JSON.stringify({ permissionCodes: ["user:view"] }),
     });
     await app.request("/api/users", {
       method: "POST",
@@ -4337,22 +4377,22 @@ describe("backend core foundation routes", () => {
         phone: "10000000008",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "2"
-      })
+        roleId: "2",
+      }),
     });
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "role-user", password: "password1" })
+      body: JSON.stringify({ username: "role-user", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     await app.request("/api/auth/change-password", {
       method: "POST",
       headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
-      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "role-user", password: "password2" })
+      body: JSON.stringify({ username: "role-user", password: "password2" }),
     });
     const login = await loginResponse.json();
     const userHeaders = { authorization: `Bearer ${login.data.accessToken}` };
@@ -4379,14 +4419,14 @@ describe("backend core foundation routes", () => {
       headers: authHeaders,
       body: JSON.stringify({
         name: "Deleted Assigned Role",
-        code: "deleted_assigned_role"
-      })
+        code: "deleted_assigned_role",
+      }),
     });
     const role = await roleResponse.json();
     await app.request(`/api/roles/${role.data.id}/permissions`, {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["user:view"] })
+      body: JSON.stringify({ permissionCodes: ["user:view"] }),
     });
     await app.request("/api/users", {
       method: "POST",
@@ -4398,22 +4438,22 @@ describe("backend core foundation routes", () => {
         phone: "10000000020",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: role.data.id
-      })
+        roleId: role.data.id,
+      }),
     });
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "deleted-role-user", password: "password1" })
+      body: JSON.stringify({ username: "deleted-role-user", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     await app.request("/api/auth/change-password", {
       method: "POST",
       headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
-      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "deleted-role-user", password: "password2" })
+      body: JSON.stringify({ username: "deleted-role-user", password: "password2" }),
     });
     const login = await loginResponse.json();
     const userHeaders = { authorization: `Bearer ${login.data.accessToken}` };
@@ -4421,7 +4461,7 @@ describe("backend core foundation routes", () => {
 
     await app.request(`/api/roles/${role.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const afterDeleteResponse = await app.request("/api/users", { headers: userHeaders });
     const afterDelete = await afterDeleteResponse.json();
@@ -4440,14 +4480,14 @@ describe("backend core foundation routes", () => {
       headers: authHeaders,
       body: JSON.stringify({
         name: "Deleted Login Role",
-        code: "deleted_login_role"
-      })
+        code: "deleted_login_role",
+      }),
     });
     const role = await roleResponse.json();
     await app.request(`/api/roles/${role.data.id}/permissions`, {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["user:view"] })
+      body: JSON.stringify({ permissionCodes: ["user:view"] }),
     });
     const userResponse = await app.request("/api/users", {
       method: "POST",
@@ -4459,25 +4499,25 @@ describe("backend core foundation routes", () => {
         phone: "10000000044",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: role.data.id
-      })
+        roleId: role.data.id,
+      }),
     });
     const user = await userResponse.json();
 
     const deleteRoleResponse = await app.request(`/api/roles/${role.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "deleted-login-role-user", password: "password1" })
+      body: JSON.stringify({ username: "deleted-login-role-user", password: "password1" }),
     });
     const login = await loginResponse.json();
     const bindings = [...services["context"].store.userOrganizationRoles.values()].filter(
-      (binding) => binding.userId === user.data.id
+      (binding) => binding.userId === user.data.id,
     );
     const rolePermissions = services["context"].store.rolePermissions.filter(
-      (permission) => permission.roleId === role.data.id
+      (permission) => permission.roleId === role.data.id,
     );
 
     expect(deleteRoleResponse.status).toBe(200);
@@ -4488,8 +4528,8 @@ describe("backend core foundation routes", () => {
         isDeleted: true,
         status: "disabled",
         isPrimary: false,
-        deletedBy: "1"
-      })
+        deletedBy: "1",
+      }),
     ]);
     expect(rolePermissions).toEqual([]);
     expect(loginResponse.status).toBe(403);
@@ -4504,7 +4544,7 @@ describe("backend core foundation routes", () => {
     await app.request("/api/roles/2/permissions", {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["user:view"] })
+      body: JSON.stringify({ permissionCodes: ["user:view"] }),
     });
     await app.request("/api/users", {
       method: "POST",
@@ -4516,8 +4556,8 @@ describe("backend core foundation routes", () => {
         phone: "10000000018",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "2"
-      })
+        roleId: "2",
+      }),
     });
     const userViewPermission = services
       .listPermissions()
@@ -4527,21 +4567,21 @@ describe("backend core foundation routes", () => {
 
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "disabled-permission-user", password: "password1" })
+      body: JSON.stringify({ username: "disabled-permission-user", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     await app.request("/api/auth/change-password", {
       method: "POST",
       headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
-      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "disabled-permission-user", password: "password2" })
+      body: JSON.stringify({ username: "disabled-permission-user", password: "password2" }),
     });
     const login = await loginResponse.json();
     const usersResponse = await app.request("/api/users", {
-      headers: { authorization: `Bearer ${login.data.accessToken}` }
+      headers: { authorization: `Bearer ${login.data.accessToken}` },
     });
     const users = await usersResponse.json();
 
@@ -4557,7 +4597,7 @@ describe("backend core foundation routes", () => {
     await app.request("/api/roles/2/permissions", {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["user:view"] })
+      body: JSON.stringify({ permissionCodes: ["user:view"] }),
     });
     await app.request("/api/users", {
       method: "POST",
@@ -4569,45 +4609,45 @@ describe("backend core foundation routes", () => {
         phone: "10000000009",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "2"
-      })
+        roleId: "2",
+      }),
     });
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "status-user", password: "password1" })
+      body: JSON.stringify({ username: "status-user", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     await app.request("/api/auth/change-password", {
       method: "POST",
       headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
-      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "status-user", password: "password2" })
+      body: JSON.stringify({ username: "status-user", password: "password2" }),
     });
     const login = await loginResponse.json();
     const userHeaders = { authorization: `Bearer ${login.data.accessToken}` };
 
     const disableResponse = await app.request("/api/roles/2/disable", {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const disabledUserResponse = await app.request("/api/users", { headers: userHeaders });
     const enableResponse = await app.request("/api/roles/2/enable", {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const enabledUserResponse = await app.request("/api/users", { headers: userHeaders });
 
     expect(disableResponse.status).toBe(200);
     await expect(disableResponse.json()).resolves.toMatchObject({
-      data: { id: "2", status: "disabled" }
+      data: { id: "2", status: "disabled" },
     });
     expect(disabledUserResponse.status).toBe(403);
     expect(enableResponse.status).toBe(200);
     await expect(enableResponse.json()).resolves.toMatchObject({
-      data: { id: "2", status: "enabled" }
+      data: { id: "2", status: "enabled" },
     });
     expect(enabledUserResponse.status).toBe(200);
   });
@@ -4619,56 +4659,62 @@ describe("backend core foundation routes", () => {
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" }),
     });
     const child = await childResponse.json();
 
     const assignResponse = await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" }),
     });
     const assign = await assignResponse.json();
-    const assignedChildBinding = services["context"].store.userOrganizationRoles.get(assign.data.id);
-    if (!assignedChildBinding) throw new Error("Expected assigned child organization binding to exist");
+    const assignedChildBinding = services["context"].store.userOrganizationRoles.get(
+      assign.data.id,
+    );
+    if (!assignedChildBinding)
+      throw new Error("Expected assigned child organization binding to exist");
     const duplicateAssignedBindingId = services["context"].store.nextId("userOrganizationRole");
     services["context"].store.userOrganizationRoles.set(duplicateAssignedBindingId, {
       ...assignedChildBinding,
       id: duplicateAssignedBindingId,
       roleId: "3",
       createdAt: assignedChildBinding.updatedAt,
-      updatedAt: assignedChildBinding.updatedAt
+      updatedAt: assignedChildBinding.updatedAt,
     });
     const listResponse = await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const list = await listResponse.json();
     const primaryBinding = list.data.find(
-      (binding: { organizationId: string }) => binding.organizationId === "1"
+      (binding: { organizationId: string }) => binding.organizationId === "1",
     );
     const removeResponse = await app.request(
       `/api/users/${setup.data.admin.id}/organizations/${child.data.id}`,
-      { method: "DELETE", headers: authHeaders }
+      { method: "DELETE", headers: authHeaders },
     );
     const remove = await removeResponse.json();
-    const listAfterRemoveResponse = await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
-      headers: authHeaders
-    });
+    const listAfterRemoveResponse = await app.request(
+      `/api/users/${setup.data.admin.id}/organizations`,
+      {
+        headers: authHeaders,
+      },
+    );
     const listAfterRemove = await listAfterRemoveResponse.json();
     const activeChildBindingIdsAfterRemove = [
-      ...services["context"].store.userOrganizationRoles.values()
+      ...services["context"].store.userOrganizationRoles.values(),
     ]
       .filter(
         (binding) =>
           binding.userId === setup.data.admin.id &&
           binding.organizationId === child.data.id &&
-          !binding.isDeleted
+          !binding.isDeleted,
       )
       .map((binding) => binding.id);
     const reassignResponse = await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" }),
     });
     const reassign = await reassignResponse.json();
     const childBinding = services["context"].store.userOrganizationRoles.get(reassign.data.id);
@@ -4679,32 +4725,32 @@ describe("backend core foundation routes", () => {
       id: duplicateBindingId,
       roleId: "3",
       createdAt: childBinding.updatedAt,
-      updatedAt: childBinding.updatedAt
+      updatedAt: childBinding.updatedAt,
     });
     const repairDuplicateResponse = await app.request(
       `/api/users/${setup.data.admin.id}/organizations`,
       {
         method: "POST",
         headers: authHeaders,
-        body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
-      }
+        body: JSON.stringify({ organizationId: child.data.id, roleId: "2" }),
+      },
     );
     const listAfterDuplicateRepairResponse = await app.request(
       `/api/users/${setup.data.admin.id}/organizations`,
-      { headers: authHeaders }
+      { headers: authHeaders },
     );
     const listAfterDuplicateRepair = await listAfterDuplicateRepairResponse.json();
     const childBindingsAfterRepair = listAfterDuplicateRepair.data.filter(
-      (binding: { organizationId: string }) => binding.organizationId === child.data.id
+      (binding: { organizationId: string }) => binding.organizationId === child.data.id,
     );
     const primaryUpdateResponse = await app.request(`/api/users/${setup.data.admin.id}`, {
       method: "PATCH",
       headers: authHeaders,
-      body: JSON.stringify({ primaryOrganizationId: child.data.id })
+      body: JSON.stringify({ primaryOrganizationId: child.data.id }),
     });
     const listAfterPrimaryUpdateResponse = await app.request(
       `/api/users/${setup.data.admin.id}/organizations`,
-      { headers: authHeaders }
+      { headers: authHeaders },
     );
     const listAfterPrimaryUpdate = await listAfterPrimaryUpdateResponse.json();
 
@@ -4715,13 +4761,13 @@ describe("backend core foundation routes", () => {
       isPrimary: false,
       status: "enabled",
       createdBy: "1",
-      updatedBy: "1"
+      updatedBy: "1",
     });
     expect(listResponse.status).toBe(200);
     expect(primaryBinding).toMatchObject({
       organizationId: "1",
       isPrimary: true,
-      status: "enabled"
+      status: "enabled",
     });
     expect(list.data).toEqual(
       expect.arrayContaining([
@@ -4730,14 +4776,14 @@ describe("backend core foundation routes", () => {
           organizationId: child.data.id,
           roleId: "2",
           isPrimary: false,
-          status: "enabled"
-        })
-      ])
+          status: "enabled",
+        }),
+      ]),
     );
     expect(remove.data.removed).toBe(true);
     expect(activeChildBindingIdsAfterRemove).toEqual([]);
     expect(listAfterRemove.data).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ organizationId: child.data.id })])
+      expect.arrayContaining([expect.objectContaining({ organizationId: child.data.id })]),
     );
     expect(reassign.data).toMatchObject({
       id: assign.data.id,
@@ -4748,7 +4794,7 @@ describe("backend core foundation routes", () => {
       status: "enabled",
       isDeleted: false,
       deletedAt: null,
-      deletedBy: null
+      deletedBy: null,
     });
     expect(repairDuplicateResponse.status).toBe(200);
     expect(childBindingsAfterRepair).toEqual([
@@ -4757,15 +4803,15 @@ describe("backend core foundation routes", () => {
         organizationId: child.data.id,
         roleId: "2",
         isDeleted: false,
-        status: "enabled"
-      })
+        status: "enabled",
+      }),
     ]);
     expect(primaryUpdateResponse.status).toBe(200);
     expect(listAfterPrimaryUpdate.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ organizationId: "1", isPrimary: false, updatedBy: "1" }),
-        expect.objectContaining({ organizationId: child.data.id, isPrimary: true, updatedBy: "1" })
-      ])
+        expect.objectContaining({ organizationId: child.data.id, isPrimary: true, updatedBy: "1" }),
+      ]),
     );
   });
 
@@ -4783,45 +4829,47 @@ describe("backend core foundation routes", () => {
         email: "primary-binding-user@example.com",
         phone: "555-3700",
         primaryOrganizationId: "1",
-        roleId: "2"
-      })
+        roleId: "2",
+      }),
     });
     const created = await createResponse.json();
     const originalBindingResponse = await app.request(
       `/api/users/${created.data.id}/organizations`,
-      { headers: authHeaders }
+      { headers: authHeaders },
     );
     const originalBindings = await originalBindingResponse.json();
     const originalPrimary = originalBindings.data.find(
-      (binding: { organizationId: string }) => binding.organizationId === "1"
+      (binding: { organizationId: string }) => binding.organizationId === "1",
     );
     const originalPrimaryRecord = services["context"].store.userOrganizationRoles.get(
-      originalPrimary.id
+      originalPrimary.id,
     );
     if (!originalPrimaryRecord) throw new Error("Expected original primary binding to exist");
     const duplicateBindingId = services["context"].store.nextId("userOrganizationRole");
     services["context"].store.userOrganizationRoles.set(duplicateBindingId, {
       ...originalPrimaryRecord,
       id: duplicateBindingId,
-      roleId: "3"
+      roleId: "3",
     });
 
     const reassignResponse = await app.request(`/api/users/${created.data.id}/organizations`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: "1", roleId: "3" })
+      body: JSON.stringify({ organizationId: "1", roleId: "3" }),
     });
     const reassigned = await reassignResponse.json();
     const listResponse = await app.request(`/api/users/${created.data.id}/organizations`, {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const list = await listResponse.json();
-    const activePrimaryBindings = [...services["context"].store.userOrganizationRoles.values()].filter(
+    const activePrimaryBindings = [
+      ...services["context"].store.userOrganizationRoles.values(),
+    ].filter(
       (binding) =>
         binding.userId === created.data.id &&
         binding.organizationId === "1" &&
         binding.isPrimary &&
-        !binding.isDeleted
+        !binding.isDeleted,
     );
 
     expect(createResponse.status).toBe(201);
@@ -4833,7 +4881,7 @@ describe("backend core foundation routes", () => {
       roleId: "3",
       isPrimary: true,
       status: "enabled",
-      updatedBy: "1"
+      updatedBy: "1",
     });
     expect(list.data).toEqual([
       expect.objectContaining({
@@ -4841,8 +4889,8 @@ describe("backend core foundation routes", () => {
         organizationId: "1",
         roleId: "3",
         isPrimary: true,
-        isDeleted: false
-      })
+        isDeleted: false,
+      }),
     ]);
     expect(activePrimaryBindings.map((binding) => binding.id)).toEqual([originalPrimary.id]);
   });
@@ -4851,10 +4899,10 @@ describe("backend core foundation routes", () => {
     const { app, setup } = await setupInitializedApp();
     const { authHeaders } = await loginAsAdmin(app);
 
-    const response = await app.request(
-      `/api/users/${setup.data.admin.id}/organizations/1`,
-      { method: "DELETE", headers: authHeaders }
-    );
+    const response = await app.request(`/api/users/${setup.data.admin.id}/organizations/1`, {
+      method: "DELETE",
+      headers: authHeaders,
+    });
     const body = await response.json();
 
     expect(response.status).toBe(400);
@@ -4867,14 +4915,14 @@ describe("backend core foundation routes", () => {
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" }),
     });
     const child = await childResponse.json();
 
     await app.request("/api/roles/2/permissions", {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["organization:view"] })
+      body: JSON.stringify({ permissionCodes: ["organization:view"] }),
     });
     const userResponse = await app.request("/api/users", {
       method: "POST",
@@ -4886,28 +4934,28 @@ describe("backend core foundation routes", () => {
         phone: "10000000011",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const user = await userResponse.json();
     await app.request(`/api/users/${user.data.id}/organizations`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" }),
     });
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "switch-user", password: "password1" })
+      body: JSON.stringify({ username: "switch-user", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     await app.request("/api/auth/change-password", {
       method: "POST",
       headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
-      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "switch-user", password: "password2" })
+      body: JSON.stringify({ username: "switch-user", password: "password2" }),
     });
     const login = await loginResponse.json();
     const userHeaders = { authorization: `Bearer ${login.data.accessToken}` };
@@ -4915,16 +4963,16 @@ describe("backend core foundation routes", () => {
     const switchResponse = await app.request("/api/context/current-organization", {
       method: "POST",
       headers: userHeaders,
-      body: JSON.stringify({ organizationId: child.data.id })
+      body: JSON.stringify({ organizationId: child.data.id }),
     });
     const switched = await switchResponse.json();
     const refreshedHeaders = {
-      authorization: `Bearer ${switched.data.accessToken}`
+      authorization: `Bearer ${switched.data.accessToken}`,
     };
     const oldTokenResponse = await app.request("/api/users", { headers: userHeaders });
     const oldToken = await oldTokenResponse.json();
     const organizationResponse = await app.request("/api/organizations/tree", {
-      headers: refreshedHeaders
+      headers: refreshedHeaders,
     });
     const usersResponse = await app.request("/api/users", { headers: refreshedHeaders });
     const users = await usersResponse.json();
@@ -4934,10 +4982,10 @@ describe("backend core foundation routes", () => {
     expect(switched.data.currentOrganization.id).toBe(child.data.id);
     expect(switched.data.permissionCodes).toEqual(["organization:view"]);
     expect(switched.data.menus).toEqual(
-      expect.arrayContaining([expect.objectContaining({ code: "system.organizations" })])
+      expect.arrayContaining([expect.objectContaining({ code: "system.organizations" })]),
     );
     expect(switched.data.menus).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ code: "system.users" })])
+      expect.arrayContaining([expect.objectContaining({ code: "system.users" })]),
     );
     expect(oldTokenResponse.status).toBe(401);
     expect(oldToken.error.code).toBe("AUTH_TOKEN_INVALIDATED");
@@ -4955,8 +5003,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: "1",
         name: "Removed Binding Child",
-        code: "removed-binding-child"
-      })
+        code: "removed-binding-child",
+      }),
     });
     const child = await childResponse.json();
     const userResponse = await app.request("/api/users", {
@@ -4969,34 +5017,34 @@ describe("backend core foundation routes", () => {
         phone: "10000000045",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const user = await userResponse.json();
     await app.request(`/api/users/${user.data.id}/organizations`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" }),
     });
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "removed-binding-user", password: "password1" })
+      body: JSON.stringify({ username: "removed-binding-user", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     await app.request("/api/auth/change-password", {
       method: "POST",
       headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
-      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "removed-binding-user", password: "password2" })
+      body: JSON.stringify({ username: "removed-binding-user", password: "password2" }),
     });
     const login = await loginResponse.json();
     const switchResponse = await app.request("/api/context/current-organization", {
       method: "POST",
       headers: { authorization: `Bearer ${login.data.accessToken}` },
-      body: JSON.stringify({ organizationId: child.data.id })
+      body: JSON.stringify({ organizationId: child.data.id }),
     });
     const switched = await switchResponse.json();
     const childHeaders = { authorization: `Bearer ${switched.data.accessToken}` };
@@ -5005,13 +5053,13 @@ describe("backend core foundation routes", () => {
 
     await app.request(`/api/users/${user.data.id}/organizations/${child.data.id}`, {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const staleAccessResponse = await app.request("/api/auth/me", { headers: childHeaders });
     const staleAccess = await staleAccessResponse.json();
     const staleRefreshResponse = await app.request("/api/auth/refresh", {
       method: "POST",
-      headers: csrfHeaders(loginResponse.headers.get("set-cookie") ?? "")
+      headers: csrfHeaders(loginResponse.headers.get("set-cookie") ?? ""),
     });
     const staleRefresh = await staleRefreshResponse.json();
     const afterRemoveResponse = await app.request("/api/online-users", { headers: authHeaders });
@@ -5019,14 +5067,14 @@ describe("backend core foundation routes", () => {
 
     expect(setup.data.admin.id).toBe("1");
     expect(beforeRemove.data).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: switched.data.session.id })])
+      expect.arrayContaining([expect.objectContaining({ id: switched.data.session.id })]),
     );
     expect(staleAccessResponse.status).toBe(403);
     expect(staleAccess.error.code).toBe("PERMISSION_DENIED");
     expect(staleRefreshResponse.status).toBe(403);
     expect(staleRefresh.error.code).toBe("PERMISSION_DENIED");
     expect(afterRemove.data).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: switched.data.session.id })])
+      expect.arrayContaining([expect.objectContaining({ id: switched.data.session.id })]),
     );
   });
 
@@ -5036,34 +5084,34 @@ describe("backend core foundation routes", () => {
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" }),
     });
     const child = await childResponse.json();
 
     await app.request("/api/roles/2/permissions", {
       method: "PUT",
       headers: authHeaders,
-      body: JSON.stringify({ permissionCodes: ["organization:view"] })
+      body: JSON.stringify({ permissionCodes: ["organization:view"] }),
     });
 
     const switchResponse = await app.request("/api/context/current-organization", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id })
+      body: JSON.stringify({ organizationId: child.data.id }),
     });
     const switched = await switchResponse.json();
     const refreshedHeaders = {
-      authorization: `Bearer ${switched.data.accessToken}`
+      authorization: `Bearer ${switched.data.accessToken}`,
     };
     const usersResponse = await app.request("/api/users", { headers: refreshedHeaders });
 
     expect(switchResponse.status).toBe(200);
     expect(switched.data.currentOrganization.id).toBe(child.data.id);
     expect(switched.data.permissionCodes).toEqual(
-      expect.arrayContaining(["organization:view", "user:view", "role:view"])
+      expect.arrayContaining(["organization:view", "user:view", "role:view"]),
     );
     expect(switched.data.menus).toEqual(
-      expect.arrayContaining([expect.objectContaining({ code: "system.users" })])
+      expect.arrayContaining([expect.objectContaining({ code: "system.users" })]),
     );
     expect(usersResponse.status).toBe(200);
   });
@@ -5074,23 +5122,27 @@ describe("backend core foundation routes", () => {
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Unbound Child", code: "unbound-child" })
+      body: JSON.stringify({
+        parentOrganizationId: "1",
+        name: "Unbound Child",
+        code: "unbound-child",
+      }),
     });
     const child = await childResponse.json();
     const switchResponse = await app.request("/api/context/current-organization", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id })
+      body: JSON.stringify({ organizationId: child.data.id }),
     });
     const switched = await switchResponse.json();
     const childHeaders = {
-      authorization: `Bearer ${switched.data.accessToken}`
+      authorization: `Bearer ${switched.data.accessToken}`,
     };
     const beforeDisableResponse = await app.request("/api/users", { headers: childHeaders });
 
     const disableResponse = await app.request("/api/roles/1/disable", {
       method: "POST",
-      headers: childHeaders
+      headers: childHeaders,
     });
     const afterDisableResponse = await app.request("/api/users", { headers: childHeaders });
     const afterDisable = await afterDisableResponse.json();
@@ -5112,8 +5164,8 @@ describe("backend core foundation routes", () => {
       body: JSON.stringify({
         parentOrganizationId: "1",
         name: "Manifest Sync Child",
-        code: "manifest-sync-child"
-      })
+        code: "manifest-sync-child",
+      }),
     });
     const child = await childResponse.json();
     const userViewPermission = services
@@ -5125,7 +5177,7 @@ describe("backend core foundation routes", () => {
     const switchResponse = await app.request("/api/context/current-organization", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id })
+      body: JSON.stringify({ organizationId: child.data.id }),
     });
     const switched = await switchResponse.json();
     const childHeaders = { authorization: `Bearer ${switched.data.accessToken}` };
@@ -5133,10 +5185,10 @@ describe("backend core foundation routes", () => {
     const cached = await cachedResponse.json();
     const syncResponse = await app.request("/api/permissions/sync", {
       method: "POST",
-      headers: childHeaders
+      headers: childHeaders,
     });
     const refreshedResponse = await app.request("/api/context/permissions", {
-      headers: childHeaders
+      headers: childHeaders,
     });
     const refreshed = await refreshedResponse.json();
 
@@ -5152,14 +5204,14 @@ describe("backend core foundation routes", () => {
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" }),
     });
     const child = await childResponse.json();
 
     const switchResponse = await app.request("/api/auth/current-organization", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id })
+      body: JSON.stringify({ organizationId: child.data.id }),
     });
     const switched = await switchResponse.json();
 
@@ -5174,23 +5226,23 @@ describe("backend core foundation routes", () => {
     const childResponse = await app.request("/api/organizations", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" })
+      body: JSON.stringify({ parentOrganizationId: "1", name: "Child", code: "child" }),
     });
     const child = await childResponse.json();
     await app.request(`/api/users/${setup.data.admin.id}/organizations`, {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" })
+      body: JSON.stringify({ organizationId: child.data.id, roleId: "2" }),
     });
     await app.request(`/api/organizations/${child.data.id}/disable`, {
       method: "POST",
-      headers: authHeaders
+      headers: authHeaders,
     });
 
     const switchResponse = await app.request("/api/context/current-organization", {
       method: "POST",
       headers: authHeaders,
-      body: JSON.stringify({ organizationId: child.data.id })
+      body: JSON.stringify({ organizationId: child.data.id }),
     });
     const body = await switchResponse.json();
 
@@ -5209,8 +5261,8 @@ describe("backend core foundation routes", () => {
         adminDisplayName: "Super Admin",
         adminEmail: "not-an-email",
         adminPhone: "10000000000",
-        adminPassword: "password1"
-      })
+        adminPassword: "password1",
+      }),
     });
     const body = await response.json();
 
@@ -5223,7 +5275,7 @@ describe("backend core foundation routes", () => {
     const response = await app.request("/api/auth/login", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: "{"
+      body: "{",
     });
     const body = await response.json();
 
@@ -5236,25 +5288,25 @@ describe("backend core foundation routes", () => {
     const { authHeaders } = await loginAsAdmin(app);
 
     const organizationResponse = await app.request("/api/organizations/not-an-id", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const organizationBody = await organizationResponse.json();
     const userResponse = await app.request("/api/users/not-an-id", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const userBody = await userResponse.json();
     const roleResponse = await app.request("/api/roles/not-an-id", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const roleBody = await roleResponse.json();
     const menuResponse = await app.request("/api/menus/not-an-id", {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const menuBody = await menuResponse.json();
     const bindingResponse = await app.request("/api/users/1/organizations/not-an-id", {
       method: "DELETE",
-      headers: authHeaders
+      headers: authHeaders,
     });
     const bindingBody = await bindingResponse.json();
 
@@ -5277,7 +5329,7 @@ describe("backend core foundation routes", () => {
     const response = await app.request("/api/auth/logout", {
       method: "POST",
       headers: csrfAuthHeaders,
-      body: JSON.stringify({ sessionId: "not-an-id" })
+      body: JSON.stringify({ sessionId: "not-an-id" }),
     });
     const body = await response.json();
 
@@ -5296,8 +5348,8 @@ describe("backend core foundation routes", () => {
         adminDisplayName: "Super Admin",
         adminEmail: "admin2@example.com",
         adminPhone: "10000000001",
-        adminPassword: "password1"
-      })
+        adminPassword: "password1",
+      }),
     });
     const body = await response.json();
 
@@ -5308,7 +5360,7 @@ describe("backend core foundation routes", () => {
   it("returns stable not-found errors without parsing stale bearer tokens", async () => {
     const app = createApp();
     const response = await app.request("/api/not-a-route", {
-      headers: { authorization: "Bearer not-a-valid-access-token" }
+      headers: { authorization: "Bearer not-a-valid-access-token" },
     });
     const body = await response.json();
 
@@ -5339,31 +5391,31 @@ describe("backend core foundation routes", () => {
         phone: "10000000002",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
 
     const normalLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "normal", password: "password1" })
+      body: JSON.stringify({ username: "normal", password: "password1" }),
     });
     const normalLogin = await normalLoginResponse.json();
     await app.request("/api/auth/change-password", {
       method: "POST",
       headers: {
-        authorization: `Bearer ${normalLogin.data.accessToken}`
+        authorization: `Bearer ${normalLogin.data.accessToken}`,
       },
-      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" }),
     });
     const updatedNormalLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "normal", password: "password2" })
+      body: JSON.stringify({ username: "normal", password: "password2" }),
     });
     const updatedNormalLogin = await updatedNormalLoginResponse.json();
     const response = await app.request("/api/users", {
       headers: {
-        authorization: `Bearer ${updatedNormalLogin.data.accessToken}`
-      }
+        authorization: `Bearer ${updatedNormalLogin.data.accessToken}`,
+      },
     });
     const body = await response.json();
 
@@ -5385,27 +5437,27 @@ describe("backend core foundation routes", () => {
         phone: "10000000023",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
 
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "online-denied", password: "password1" })
+      body: JSON.stringify({ username: "online-denied", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     await app.request("/api/auth/change-password", {
       method: "POST",
       headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
-      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "online-denied", password: "password2" })
+      body: JSON.stringify({ username: "online-denied", password: "password2" }),
     });
     const login = await loginResponse.json();
     const response = await app.request("/api/online-users", {
-      headers: { authorization: `Bearer ${login.data.accessToken}` }
+      headers: { authorization: `Bearer ${login.data.accessToken}` },
     });
     const body = await response.json();
 
@@ -5427,35 +5479,35 @@ describe("backend core foundation routes", () => {
         phone: "10000000003",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
 
     const firstLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "new-user", password: "password1" })
+      body: JSON.stringify({ username: "new-user", password: "password1" }),
     });
     const firstLogin = await firstLoginResponse.json();
     const blockedResponse = await app.request("/api/users", {
-      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` }
+      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
     });
     const blocked = await blockedResponse.json();
     const changePasswordResponse = await app.request("/api/auth/change-password", {
       method: "POST",
       headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
-      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" })
+      body: JSON.stringify({ oldPassword: "password1", newPassword: "password2" }),
     });
     const changedUser = await changePasswordResponse.json();
     const oldTokenResponse = await app.request("/api/users", {
-      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` }
+      headers: { authorization: `Bearer ${firstLogin.data.accessToken}` },
     });
     const oldToken = await oldTokenResponse.json();
     const oldPasswordLoginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "new-user", password: "password1" })
+      body: JSON.stringify({ username: "new-user", password: "password1" }),
     });
     const onlineUsersResponse = await app.request("/api/online-users", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const onlineUsers = await onlineUsersResponse.json();
 
@@ -5469,7 +5521,7 @@ describe("backend core foundation routes", () => {
     expect(oldToken.error.code).toBe("AUTH_TOKEN_INVALIDATED");
     expect(oldPasswordLoginResponse.status).toBe(401);
     expect(onlineUsers.data).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ userId: firstLogin.data.user.id })])
+      expect.arrayContaining([expect.objectContaining({ userId: firstLogin.data.user.id })]),
     );
   });
 
@@ -5487,16 +5539,16 @@ describe("backend core foundation routes", () => {
         phone: "10000000004",
         password: "password1",
         primaryOrganizationId: "1",
-        roleId: "3"
-      })
+        roleId: "3",
+      }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "context-user", password: "password1" })
+      body: JSON.stringify({ username: "context-user", password: "password1" }),
     });
     const login = await loginResponse.json();
     const response = await app.request("/api/auth/me", {
-      headers: { authorization: `Bearer ${login.data.accessToken}` }
+      headers: { authorization: `Bearer ${login.data.accessToken}` },
     });
     const body = await response.json();
 
@@ -5509,8 +5561,8 @@ describe("backend core foundation routes", () => {
     const services = createInMemoryBackendCoreServices({
       passwordPolicy: {
         ...defaultPasswordPolicy,
-        periodicChangeDays: 0
-      }
+        periodicChangeDays: 0,
+      },
     });
     const { app } = await setupInitializedApp(createApp({ backendCoreServices: services }));
     const { authHeaders } = await loginAsAdmin(app);
@@ -5525,4 +5577,3 @@ describe("backend core foundation routes", () => {
 function setupResponseStatus(setup: { data: { state: { status: string } } }) {
   return setup.data.state.status;
 }
-

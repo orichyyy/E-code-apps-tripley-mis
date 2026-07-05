@@ -27,7 +27,7 @@ export function DictionaryItemsPanel({
   onRefresh,
   onStatus,
   rows,
-  selectedType
+  selectedType,
 }: DictionaryItemsPanelProps) {
   return (
     <div className="flex flex-col gap-4">
@@ -36,7 +36,9 @@ export function DictionaryItemsPanel({
           <div>
             <h3 className="text-base font-semibold">{selectedType?.name ?? "Dictionary items"}</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              {selectedType ? selectedType.description ?? selectedType.code : "Select a dictionary type to manage items."}
+              {selectedType
+                ? (selectedType.description ?? selectedType.code)
+                : "Select a dictionary type to manage items."}
             </p>
           </div>
           <div className="flex gap-2">
@@ -75,7 +77,7 @@ function DictionaryItemTable({
   onEdit,
   onStatus,
   rows,
-  selectedType
+  selectedType,
 }: {
   canUpdate: boolean;
   isError: boolean;
@@ -127,7 +129,9 @@ function DictionaryItemTable({
                   ) : null}
                   {canUpdate ? (
                     <Button
-                      onClick={() => onStatus(record, record.status === "enabled" ? "disabled" : "enabled")}
+                      onClick={() =>
+                        onStatus(record, record.status === "enabled" ? "disabled" : "enabled")
+                      }
                       size="sm"
                       variant="ghost"
                     >

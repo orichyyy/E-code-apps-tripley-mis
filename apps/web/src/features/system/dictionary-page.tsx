@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   CreateDictionaryItemRequest,
-  CreateDictionaryTypeRequest
+  CreateDictionaryTypeRequest,
 } from "@web-admin-base/contracts";
 import { AlertCircle, Plus, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -23,7 +23,7 @@ import {
   updateDictionaryItem,
   updateDictionaryType,
   type DictionaryItem,
-  type DictionaryType
+  type DictionaryType,
 } from "./system-management-api";
 
 type EditorState =
@@ -46,13 +46,13 @@ export function DictionaryPage({ route }: { route: WebAdminRouteMetadata }) {
   const typesQuery = useQuery({
     enabled: canView,
     queryKey: ["dictionary-types"],
-    queryFn: fetchDictionaryTypes
+    queryFn: fetchDictionaryTypes,
   });
   const selectedType = (typesQuery.data ?? []).find((type) => type.id === selectedTypeId) ?? null;
   const itemsQuery = useQuery({
     enabled: canView && selectedTypeId !== null,
     queryKey: ["dictionary-items", selectedTypeId],
-    queryFn: () => fetchDictionaryItems(String(selectedTypeId))
+    queryFn: () => fetchDictionaryItems(String(selectedTypeId)),
   });
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export function DictionaryPage({ route }: { route: WebAdminRouteMetadata }) {
       setSelectedTypeId(result.data.id);
       setEditor(null);
       await invalidateTypes();
-    }
+    },
   });
   const updateTypeMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: Partial<CreateDictionaryTypeRequest> }) =>
@@ -79,7 +79,7 @@ export function DictionaryPage({ route }: { route: WebAdminRouteMetadata }) {
     onSuccess: async () => {
       setEditor(null);
       await invalidateTypes();
-    }
+    },
   });
   const createItemMutation = useMutation({
     mutationFn: ({ typeId, input }: { typeId: string; input: CreateDictionaryItemRequest }) =>
@@ -87,7 +87,7 @@ export function DictionaryPage({ route }: { route: WebAdminRouteMetadata }) {
     onSuccess: async () => {
       setEditor(null);
       await invalidateItems();
-    }
+    },
   });
   const updateItemMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: Partial<CreateDictionaryItemRequest> }) =>
@@ -95,15 +95,18 @@ export function DictionaryPage({ route }: { route: WebAdminRouteMetadata }) {
     onSuccess: async () => {
       setEditor(null);
       await invalidateItems();
-    }
+    },
   });
 
   const filteredTypes = useMemo(
     () =>
       (typesQuery.data ?? []).filter((record) =>
-        [record.code, record.name, record.description ?? "", record.status].join(" ").toLowerCase().includes(keyword.toLowerCase())
+        [record.code, record.name, record.description ?? "", record.status]
+          .join(" ")
+          .toLowerCase()
+          .includes(keyword.toLowerCase()),
       ),
-    [keyword, typesQuery.data]
+    [keyword, typesQuery.data],
   );
 
   if (!canView) return <PermissionDenied language={language} />;
@@ -126,7 +129,9 @@ export function DictionaryPage({ route }: { route: WebAdminRouteMetadata }) {
           onEdit={(record) => setEditor({ kind: "type-edit", record })}
           onKeywordChange={setKeyword}
           onSelect={(record) => setSelectedTypeId(record.id)}
-          onStatus={(record, status) => updateTypeMutation.mutate({ id: record.id, input: { status } })}
+          onStatus={(record, status) =>
+            updateTypeMutation.mutate({ id: record.id, input: { status } })
+          }
           rows={filteredTypes}
           selectedId={selectedTypeId}
         />
@@ -139,14 +144,26 @@ export function DictionaryPage({ route }: { route: WebAdminRouteMetadata }) {
         onCreate={() => setEditor({ kind: "item-create" })}
         onEdit={(record) => setEditor({ kind: "item-edit", record })}
         onRefresh={() => void itemsQuery.refetch()}
-        onStatus={(record, status) => updateItemMutation.mutate({ id: record.id, input: { status } })}
+        onStatus={(record, status) =>
+          updateItemMutation.mutate({ id: record.id, input: { status } })
+        }
         rows={itemsQuery.data ?? []}
         selectedType={selectedType}
       />
       <DictionaryEditorPanel
-        busy={createTypeMutation.isPending || updateTypeMutation.isPending || createItemMutation.isPending || updateItemMutation.isPending}
+        busy={
+          createTypeMutation.isPending ||
+          updateTypeMutation.isPending ||
+          createItemMutation.isPending ||
+          updateItemMutation.isPending
+        }
         editor={editor}
-        error={createTypeMutation.isError || updateTypeMutation.isError || createItemMutation.isError || updateItemMutation.isError}
+        error={
+          createTypeMutation.isError ||
+          updateTypeMutation.isError ||
+          createItemMutation.isError ||
+          updateItemMutation.isError
+        }
         onCancel={() => setEditor(null)}
         onCreateItem={(input) => {
           if (selectedTypeId) createItemMutation.mutate({ typeId: selectedTypeId, input });
@@ -165,7 +182,7 @@ function DictionaryHeader({
   language,
   onCreate,
   onRefresh,
-  route
+  route,
 }: {
   canCreate: boolean;
   language: "en" | "zh";
@@ -178,7 +195,9 @@ function DictionaryHeader({
       <div className="flex items-end justify-between gap-4">
         <div>
           <h2 className="text-base font-semibold">{translate(language, route.titleI18nKey)}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Manage global dictionary types and i18n-backed items.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Manage global dictionary types and i18n-backed items.
+          </p>
         </div>
         <div className="flex gap-2">
           <Button onClick={onRefresh} size="sm" variant="outline">
@@ -201,7 +220,9 @@ function PermissionDenied({ language }: { language: "en" | "zh" }) {
   return (
     <section className="rounded-lg border bg-card p-8 text-center">
       <AlertCircle className="mx-auto size-8 text-destructive" aria-hidden="true" />
-      <h2 className="mt-3 text-base font-semibold">{translate(language, "common.permissionDenied")}</h2>
+      <h2 className="mt-3 text-base font-semibold">
+        {translate(language, "common.permissionDenied")}
+      </h2>
     </section>
   );
 }

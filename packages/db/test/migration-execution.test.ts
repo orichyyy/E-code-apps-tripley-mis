@@ -10,7 +10,7 @@ import {
   encodeOrgPath,
   runPostgresqlMigrations,
   runSqliteMigrations,
-  runSqliteMigrationsWithClient
+  runSqliteMigrationsWithClient,
 } from "../src";
 
 const sqliteFilesToRemove: string[] = [];
@@ -40,7 +40,7 @@ describe("database migration execution", () => {
         "0004_system_dictionary_i18n.sql",
         "0005_announcements_webhooks.sql",
         "0006_file_references.sql",
-        "0007_user_preferences.sql"
+        "0007_user_preferences.sql",
       ]);
       expect(tables).toContainEqual({ name: "users" });
       expect(tables).toContainEqual({ name: "organizations" });
@@ -70,11 +70,13 @@ describe("database migration execution", () => {
       client
         .prepare(
           `INSERT INTO organizations (path, level, segment, name, code, created_at, updated_at)
-           VALUES (?, 8, 255, 'Max Path Organization', 'max-path', '2026-07-03T00:00:00.000Z', '2026-07-03T00:00:00.000Z')`
+           VALUES (?, 8, 255, 'Max Path Organization', 'max-path', '2026-07-03T00:00:00.000Z', '2026-07-03T00:00:00.000Z')`,
         )
         .run(path);
 
-      const row = client.prepare("SELECT path FROM organizations WHERE code = ?").get("max-path") as {
+      const row = client
+        .prepare("SELECT path FROM organizations WHERE code = ?")
+        .get("max-path") as {
         path: bigint;
       };
 
@@ -111,7 +113,7 @@ describe("database migration execution", () => {
              'user_preferences',
              'webhook_subscriptions'
            )
-         ORDER BY table_name`
+         ORDER BY table_name`,
       );
 
       expect(applied).toEqual([
@@ -121,7 +123,7 @@ describe("database migration execution", () => {
         "0004_system_dictionary_i18n.sql",
         "0005_announcements_webhooks.sql",
         "0006_file_references.sql",
-        "0007_user_preferences.sql"
+        "0007_user_preferences.sql",
       ]);
       expect(result.rows.map((row) => row.table_name)).toEqual([
         "announcements",
@@ -137,7 +139,7 @@ describe("database migration execution", () => {
         "system_initialization_state",
         "user_preferences",
         "users",
-        "webhook_subscriptions"
+        "webhook_subscriptions",
       ]);
     } finally {
       await pool.end();
@@ -146,7 +148,10 @@ describe("database migration execution", () => {
 });
 
 function createTempSqliteFilename(): string {
-  const filename = join(tmpdir(), `web-admin-base-${process.pid}-${Date.now()}-${Math.random()}.sqlite`);
+  const filename = join(
+    tmpdir(),
+    `web-admin-base-${process.pid}-${Date.now()}-${Math.random()}.sqlite`,
+  );
   sqliteFilesToRemove.push(filename);
 
   return filename;

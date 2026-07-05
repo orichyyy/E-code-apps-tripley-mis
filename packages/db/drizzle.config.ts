@@ -7,6 +7,6 @@ export default defineConfig({
   schema: dialect === "postgresql" ? "./src/schema/postgresql.ts" : "./src/schema/sqlite.ts",
   out: dialect === "postgresql" ? "./src/migrations/postgresql" : "./src/migrations/sqlite",
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? "file:./data/web-admin-base.sqlite"
-  }
+    url: process.env.DATABASE_URL ?? "file:./data/web-admin-base.sqlite",
+  },
 });

@@ -1,6 +1,12 @@
 import { apiPort, webPort } from "./config";
 import { runAuthenticatedChecks, runBrowserSmoke, waitForHttp } from "./checks";
-import { cleanupDefaultSmokeArtifacts, prepareSmokeWorkspace, runPnpm, startService, stopServices } from "./processes";
+import {
+  cleanupDefaultSmokeArtifacts,
+  prepareSmokeWorkspace,
+  runPnpm,
+  startService,
+  stopServices,
+} from "./processes";
 
 try {
   await prepareSmokeWorkspace();

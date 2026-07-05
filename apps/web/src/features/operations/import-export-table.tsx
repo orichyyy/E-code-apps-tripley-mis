@@ -9,7 +9,7 @@ export function ImportExportTable({
   isLoading,
   onSelect,
   rows,
-  selectedId
+  selectedId,
 }: {
   isError: boolean;
   isLoading: boolean;
@@ -43,14 +43,19 @@ export function ImportExportTable({
         </thead>
         <tbody>
           {rows.map((record) => (
-            <tr className={record.id === selectedId ? "bg-muted/40" : "hover:bg-muted/40"} key={record.id}>
+            <tr
+              className={record.id === selectedId ? "bg-muted/40" : "hover:bg-muted/40"}
+              key={record.id}
+            >
               <td className="border-b px-4 py-3">
                 <div className="font-medium">{record.resourceType}</div>
                 <div className="text-xs text-muted-foreground">{record.taskType}</div>
               </td>
               <td className="border-b px-4 py-3 text-muted-foreground">
                 {record.successRows}/{record.totalRows}
-                {record.failedRows > 0 ? <span className="ml-2 text-destructive">{record.failedRows} failed</span> : null}
+                {record.failedRows > 0 ? (
+                  <span className="ml-2 text-destructive">{record.failedRows} failed</span>
+                ) : null}
               </td>
               <td className="border-b px-4 py-3 text-muted-foreground">
                 <div>Result {record.resultFileObjectId ?? "-"}</div>
@@ -59,7 +64,9 @@ export function ImportExportTable({
               <td className="border-b px-4 py-3">
                 <StatusBadge>{record.status}</StatusBadge>
               </td>
-              <td className="border-b px-4 py-3 text-muted-foreground">{record.createdAt || "-"}</td>
+              <td className="border-b px-4 py-3 text-muted-foreground">
+                {record.createdAt || "-"}
+              </td>
               <td className="border-b px-4 py-3">
                 <Button onClick={() => onSelect(record.id)} size="sm" variant="outline">
                   View

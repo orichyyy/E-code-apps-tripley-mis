@@ -3,7 +3,13 @@ import { Loader2 } from "lucide-react";
 import type { ImportExportTask } from "./operations-api";
 import { StatusBadge } from "./status-badge";
 
-export function ImportExportDetail({ isLoading, task }: { isLoading: boolean; task: ImportExportTask | null }) {
+export function ImportExportDetail({
+  isLoading,
+  task,
+}: {
+  isLoading: boolean;
+  task: ImportExportTask | null;
+}) {
   if (isLoading) {
     return (
       <section className="rounded-lg border bg-card p-4 text-sm shadow-sm">
@@ -15,7 +21,9 @@ export function ImportExportDetail({ isLoading, task }: { isLoading: boolean; ta
     return (
       <section className="rounded-lg border bg-card p-4 text-sm shadow-sm">
         <h3 className="font-semibold">Task detail</h3>
-        <p className="mt-2 text-muted-foreground">Select a task to inspect result files and validation errors.</p>
+        <p className="mt-2 text-muted-foreground">
+          Select a task to inspect result files and validation errors.
+        </p>
       </section>
     );
   }

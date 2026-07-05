@@ -2,7 +2,7 @@ import type {
   FieldPermissionRuleRecord,
   PermissionRecord,
   RoleDataPermissionRecord,
-  UserPermissionOverrideRecord
+  UserPermissionOverrideRecord,
 } from "./domain";
 import type { BackendCoreContext } from "./service-context";
 import { requireRole, requireUser } from "./store-guards";
@@ -34,7 +34,7 @@ type PermissionInvalidator = {
 export class PermissionExtensionService {
   constructor(
     private readonly context: BackendCoreContext,
-    private readonly invalidator: PermissionInvalidator
+    private readonly invalidator: PermissionInvalidator,
   ) {}
 
   listRoleDataPermissions(roleId: string): RoleDataPermissionRecord[] {
@@ -47,13 +47,13 @@ export class PermissionExtensionService {
   async updateRoleDataPermissions(
     roleId: string,
     input: { rules: RoleDataPermissionInput[] },
-    actorId: string | null = null
+    actorId: string | null = null,
   ): Promise<RoleDataPermissionRecord[]> {
     requireRole(this.context.store, roleId);
     const now = toUtcIso(nowUtc());
     const rules = input.rules.map((rule) => ({
       ...rule,
-      permission: this.requirePermissionByCode(rule.permissionCode)
+      permission: this.requirePermissionByCode(rule.permissionCode),
     }));
 
     for (const record of this.context.store.roleDataPermissions.values()) {
@@ -62,17 +62,19 @@ export class PermissionExtensionService {
     }
 
     for (const rule of rules) {
-      const record = this.findRoleDataPermission(roleId, rule.permission.id) ?? {
-        id: this.context.store.nextId("roleDataPermission"),
-        tenantId: null,
-        roleId,
-        permissionId: rule.permission.id,
-        permissionCode: rule.permission.code,
-        effect: rule.effect,
-        rule: rule.rule,
-        createdAt: now,
-        createdBy: actorId
-      } as RoleDataPermissionRecord;
+      const record =
+        this.findRoleDataPermission(roleId, rule.permission.id) ??
+        ({
+          id: this.context.store.nextId("roleDataPermission"),
+          tenantId: null,
+          roleId,
+          permissionId: rule.permission.id,
+          permissionCode: rule.permission.code,
+          effect: rule.effect,
+          rule: rule.rule,
+          createdAt: now,
+          createdBy: actorId,
+        } as RoleDataPermissionRecord);
       record.permissionCode = rule.permission.code;
       record.effect = rule.effect;
       record.rule = rule.rule;
@@ -88,7 +90,7 @@ export class PermissionExtensionService {
     requireRole(this.context.store, roleId);
     return [...this.context.store.fieldPermissionRules.values()]
       .filter(
-        (record) => record.targetType === "role" && record.targetId === roleId && !record.isDeleted
+        (record) => record.targetType === "role" && record.targetId === roleId && !record.isDeleted,
       )
       .sort(compareById);
   }
@@ -96,7 +98,7 @@ export class PermissionExtensionService {
   async updateRoleFieldPermissions(
     roleId: string,
     input: { rules: RoleFieldPermissionInput[] },
-    actorId: string | null = null
+    actorId: string | null = null,
   ): Promise<FieldPermissionRuleRecord[]> {
     requireRole(this.context.store, roleId);
     const now = toUtcIso(nowUtc());
@@ -107,17 +109,19 @@ export class PermissionExtensionService {
     }
 
     for (const rule of input.rules) {
-      const record = this.findRoleFieldPermission(roleId, rule.resource, rule.field) ?? {
-        id: this.context.store.nextId("fieldPermissionRule"),
-        tenantId: null,
-        targetType: "role",
-        targetId: roleId,
-        resource: rule.resource,
-        field: rule.field,
-        effect: rule.effect,
-        createdAt: now,
-        createdBy: actorId
-      } as FieldPermissionRuleRecord;
+      const record =
+        this.findRoleFieldPermission(roleId, rule.resource, rule.field) ??
+        ({
+          id: this.context.store.nextId("fieldPermissionRule"),
+          tenantId: null,
+          targetType: "role",
+          targetId: roleId,
+          resource: rule.resource,
+          field: rule.field,
+          effect: rule.effect,
+          createdAt: now,
+          createdBy: actorId,
+        } as FieldPermissionRuleRecord);
       record.effect = rule.effect;
       restore(record, now, actorId);
       this.context.store.fieldPermissionRules.set(record.id, record);
@@ -137,13 +141,13 @@ export class PermissionExtensionService {
   async updateUserPermissionOverrides(
     userId: string,
     input: { overrides: UserPermissionOverrideInput[] },
-    actorId: string | null = null
+    actorId: string | null = null,
   ): Promise<UserPermissionOverrideRecord[]> {
     requireUser(this.context.store, userId);
     const now = toUtcIso(nowUtc());
     const overrides = input.overrides.map((override) => ({
       ...override,
-      permission: this.requirePermissionByCode(override.permissionCode)
+      permission: this.requirePermissionByCode(override.permissionCode),
     }));
 
     for (const record of this.context.store.userPermissionOverrides.values()) {
@@ -152,16 +156,18 @@ export class PermissionExtensionService {
     }
 
     for (const override of overrides) {
-      const record = this.findUserPermissionOverride(userId, override.permission.id) ?? {
-        id: this.context.store.nextId("userPermissionOverride"),
-        tenantId: null,
-        userId,
-        permissionId: override.permission.id,
-        permissionCode: override.permission.code,
-        effect: override.effect,
-        createdAt: now,
-        createdBy: actorId
-      } as UserPermissionOverrideRecord;
+      const record =
+        this.findUserPermissionOverride(userId, override.permission.id) ??
+        ({
+          id: this.context.store.nextId("userPermissionOverride"),
+          tenantId: null,
+          userId,
+          permissionId: override.permission.id,
+          permissionCode: override.permission.code,
+          effect: override.effect,
+          createdAt: now,
+          createdBy: actorId,
+        } as UserPermissionOverrideRecord);
       record.permissionCode = override.permission.code;
       record.effect = override.effect;
       restore(record, now, actorId);
@@ -174,7 +180,7 @@ export class PermissionExtensionService {
 
   private requirePermissionByCode(code: string): PermissionRecord {
     const permission = [...this.context.store.permissions.values()].find(
-      (candidate) => candidate.code === code && candidate.status === "enabled"
+      (candidate) => candidate.code === code && candidate.status === "enabled",
     );
     if (!permission) throw createKnownError("PERMISSION_UNKNOWN_CODE");
     return permission;
@@ -182,33 +188,33 @@ export class PermissionExtensionService {
 
   private findRoleDataPermission(
     roleId: string,
-    permissionId: string
+    permissionId: string,
   ): RoleDataPermissionRecord | undefined {
     return [...this.context.store.roleDataPermissions.values()].find(
-      (record) => record.roleId === roleId && record.permissionId === permissionId
+      (record) => record.roleId === roleId && record.permissionId === permissionId,
     );
   }
 
   private findRoleFieldPermission(
     roleId: string,
     resource: string,
-    field: string
+    field: string,
   ): FieldPermissionRuleRecord | undefined {
     return [...this.context.store.fieldPermissionRules.values()].find(
       (record) =>
         record.targetType === "role" &&
         record.targetId === roleId &&
         record.resource === resource &&
-        record.field === field
+        record.field === field,
     );
   }
 
   private findUserPermissionOverride(
     userId: string,
-    permissionId: string
+    permissionId: string,
   ): UserPermissionOverrideRecord | undefined {
     return [...this.context.store.userPermissionOverrides.values()].find(
-      (record) => record.userId === userId && record.permissionId === permissionId
+      (record) => record.userId === userId && record.permissionId === permissionId,
     );
   }
 }
@@ -222,7 +228,7 @@ function softDelete(
     updatedBy: string | null;
   },
   deletedAt: string,
-  deletedBy: string | null
+  deletedBy: string | null,
 ): void {
   record.isDeleted = true;
   record.deletedAt = deletedAt;
@@ -240,7 +246,7 @@ function restore(
     updatedBy: string | null;
   },
   updatedAt: string,
-  updatedBy: string | null
+  updatedBy: string | null,
 ): void {
   record.isDeleted = false;
   record.deletedAt = null;

@@ -31,11 +31,11 @@ export const useLayoutStore = create<LayoutState>((set) => ({
   setThemeColor: (themeColor) => set({ themeColor }),
   addTab: (path) =>
     set((state) => ({
-      openTabs: state.openTabs.includes(path) ? state.openTabs : [...state.openTabs, path]
+      openTabs: state.openTabs.includes(path) ? state.openTabs : [...state.openTabs, path],
     })),
   closeTab: (path) =>
     set((state) => ({
-      openTabs: state.openTabs.filter((tab) => tab !== path)
+      openTabs: state.openTabs.filter((tab) => tab !== path),
     })),
-  setLanguage: (language) => set({ language })
+  setLanguage: (language) => set({ language }),
 }));

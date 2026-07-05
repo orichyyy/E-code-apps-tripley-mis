@@ -15,16 +15,19 @@ type SharedSchemaTableName = Exclude<keyof typeof sqlite, "sqliteSchema"> &
 function getCheckNames(table: unknown): string[] {
   const tableRecord = table as TableWithSymbols;
   const symbols = Object.getOwnPropertySymbols(tableRecord);
-  const builderSymbol = symbols.find((symbol) => symbol.toString() === "Symbol(drizzle:ExtraConfigBuilder)");
-  const columnsSymbol = symbols.find((symbol) => symbol.toString() === "Symbol(drizzle:ExtraConfigColumns)");
+  const builderSymbol = symbols.find(
+    (symbol) => symbol.toString() === "Symbol(drizzle:ExtraConfigBuilder)",
+  );
+  const columnsSymbol = symbols.find(
+    (symbol) => symbol.toString() === "Symbol(drizzle:ExtraConfigColumns)",
+  );
 
   if (!builderSymbol || !columnsSymbol) {
     return [];
   }
 
   const buildExtraConfig = tableRecord[builderSymbol] as
-    | ((columns: unknown) => Record<string, ExtraConfigItem>)
-    | undefined;
+    ((columns: unknown) => Record<string, ExtraConfigItem>) | undefined;
 
   if (!buildExtraConfig) {
     return [];
@@ -40,16 +43,19 @@ function getCheckNames(table: unknown): string[] {
 function getIndexNames(table: unknown): string[] {
   const tableRecord = table as TableWithSymbols;
   const symbols = Object.getOwnPropertySymbols(tableRecord);
-  const builderSymbol = symbols.find((symbol) => symbol.toString() === "Symbol(drizzle:ExtraConfigBuilder)");
-  const columnsSymbol = symbols.find((symbol) => symbol.toString() === "Symbol(drizzle:ExtraConfigColumns)");
+  const builderSymbol = symbols.find(
+    (symbol) => symbol.toString() === "Symbol(drizzle:ExtraConfigBuilder)",
+  );
+  const columnsSymbol = symbols.find(
+    (symbol) => symbol.toString() === "Symbol(drizzle:ExtraConfigColumns)",
+  );
 
   if (!builderSymbol || !columnsSymbol) {
     return [];
   }
 
   const buildExtraConfig = tableRecord[builderSymbol] as
-    | ((columns: unknown) => Record<string, ExtraConfigItem>)
-    | undefined;
+    ((columns: unknown) => Record<string, ExtraConfigItem>) | undefined;
 
   if (!buildExtraConfig) {
     return [];
@@ -227,15 +233,14 @@ describe("backend core schema", () => {
     expect(postgresql.webhookSubscriptions.secret.name).toBe("secret");
   });
 
-
   it("keeps the root organization segment constraint in both migrations", () => {
     const sqliteMigration = readFileSync(
       new URL("../src/migrations/sqlite/0001_backend_core_foundation.sql", import.meta.url),
-      "utf8"
+      "utf8",
     );
     const postgresqlMigration = readFileSync(
       new URL("../src/migrations/postgresql/0001_backend_core_foundation.sql", import.meta.url),
-      "utf8"
+      "utf8",
     );
 
     expect(sqliteMigration).toContain("CHECK (level <> 1 OR segment BETWEEN 1 AND 127)");
@@ -250,8 +255,8 @@ describe("backend core schema", () => {
           "organizations_level_check",
           "organizations_root_segment_check",
           "organizations_segment_check",
-          "organizations_status_check"
-        ]
+          "organizations_status_check",
+        ],
       ],
       ["users", ["users_status_check"]],
       [
@@ -259,8 +264,8 @@ describe("backend core schema", () => {
         [
           "user_preferences_language_check",
           "user_preferences_theme_color_check",
-          "user_preferences_theme_mode_check"
-        ]
+          "user_preferences_theme_mode_check",
+        ],
       ],
       ["roles", ["roles_status_check"]],
       ["userOrganizationRoles", ["user_organization_roles_status_check"]],
@@ -269,7 +274,7 @@ describe("backend core schema", () => {
       ["roleDataPermissions", ["role_data_permissions_effect_check"]],
       [
         "fieldPermissionRules",
-        ["field_permission_rules_effect_check", "field_permission_rules_target_type_check"]
+        ["field_permission_rules_effect_check", "field_permission_rules_target_type_check"],
       ],
       ["userPermissionOverrides", ["user_permission_overrides_effect_check"]],
       ["menus", ["menus_status_check"]],
@@ -285,7 +290,7 @@ describe("backend core schema", () => {
       ["notifications", ["notifications_channel_check", "notifications_status_check"]],
       [
         "notificationTemplates",
-        ["notification_templates_channel_check", "notification_templates_status_check"]
+        ["notification_templates_channel_check", "notification_templates_status_check"],
       ],
       ["logEntries", ["log_entries_level_check", "log_entries_type_check"]],
       ["importExportTasks", ["import_export_tasks_status_check", "import_export_tasks_type_check"]],
@@ -293,7 +298,7 @@ describe("backend core schema", () => {
       ["dictionaryTypes", ["dictionary_types_status_check"]],
       ["dictionaryItems", ["dictionary_items_status_check"]],
       ["announcements", ["announcements_scope_type_check", "announcements_status_check"]],
-      ["webhookSubscriptions", ["webhook_subscriptions_status_check"]]
+      ["webhookSubscriptions", ["webhook_subscriptions_status_check"]],
     ]);
 
     for (const [tableName, expectedChecks] of expectedChecksByTable) {
@@ -306,7 +311,7 @@ describe("backend core schema", () => {
     const expectedIndexesByTable = new Map<SharedSchemaTableName, string[]>([
       [
         "organizations",
-        ["organizations_code_unique", "organizations_path_level_idx", "organizations_path_unique"]
+        ["organizations_code_unique", "organizations_path_level_idx", "organizations_path_unique"],
       ],
       ["users", ["users_email_unique", "users_phone_unique", "users_username_unique"]],
       ["userPreferences", ["user_preferences_user_unique"]],
@@ -326,7 +331,7 @@ describe("backend core schema", () => {
       ["cacheEntries", ["cache_entries_expires_at_idx", "cache_entries_key_unique"]],
       [
         "rateLimitCounters",
-        ["rate_limit_counters_expires_at_idx", "rate_limit_counters_key_window_unique"]
+        ["rate_limit_counters_expires_at_idx", "rate_limit_counters_key_window_unique"],
       ],
       ["locks", ["locks_expires_at_idx", "locks_key_unique"]],
       ["queueJobs", ["queue_jobs_status_available_idx"]],
@@ -343,7 +348,7 @@ describe("backend core schema", () => {
       ["dictionaryItems", ["dictionary_items_type_idx", "dictionary_items_type_value_unique"]],
       ["i18nMessages", ["i18n_messages_key_language_unique", "i18n_messages_module_idx"]],
       ["announcements", ["announcements_status_idx"]],
-      ["webhookSubscriptions", ["webhook_subscriptions_status_idx"]]
+      ["webhookSubscriptions", ["webhook_subscriptions_status_idx"]],
     ]);
 
     for (const [tableName, expectedIndexes] of expectedIndexesByTable) {

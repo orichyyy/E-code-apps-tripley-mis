@@ -25,7 +25,7 @@ export async function runPnpm(args: string[], label: string): Promise<void> {
       cwd: rootDir,
       env: serviceEnv,
       shell: false,
-      stdio: "pipe"
+      stdio: "pipe",
     });
     let output = "";
 
@@ -52,7 +52,7 @@ export function startService(name: string, args: string[]): ManagedProcess {
     cwd: rootDir,
     env: serviceEnv,
     shell: false,
-    stdio: ["ignore", "pipe", "pipe"]
+    stdio: ["ignore", "pipe", "pipe"],
   });
 
   const chunks: string[] = [];
@@ -88,7 +88,7 @@ export async function serviceLogSummary(): Promise<string> {
       } catch {
         return `--- ${service.name} ---\n(no log)`;
       }
-    })
+    }),
   );
   return summaries.join("\n");
 }
@@ -110,7 +110,9 @@ async function stopProcessTree(child: ChildProcess): Promise<void> {
 
   if (process.platform === "win32") {
     await new Promise<void>((resolve) => {
-      const killer = spawn("taskkill.exe", ["/PID", String(child.pid), "/T", "/F"], { stdio: "ignore" });
+      const killer = spawn("taskkill.exe", ["/PID", String(child.pid), "/T", "/F"], {
+        stdio: "ignore",
+      });
       killer.on("exit", () => resolve());
       killer.on("error", () => resolve());
     });

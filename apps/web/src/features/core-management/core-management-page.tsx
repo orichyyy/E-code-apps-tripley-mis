@@ -17,12 +17,17 @@ import {
   fetchRoles,
   syncPermissions,
   updateMenuApiBindings,
-  updateRolePermissions
+  updateRolePermissions,
 } from "./core-management-api";
 import { CoreAssignmentPanel } from "./core-assignment-panel";
 import { CoreEntityForm } from "./core-entity-form";
 import { CoreEntityTable } from "./core-entity-table";
-import { displayValue, type CoreEntity, type CoreFormValues, type CorePageKind } from "./core-management-model";
+import {
+  displayValue,
+  type CoreEntity,
+  type CoreFormValues,
+  type CorePageKind,
+} from "./core-management-model";
 import { getPageConfig, runRecordAction } from "./core-page-config";
 
 type CoreManagementPageProps = {
@@ -43,45 +48,46 @@ export function CoreManagementPage({ route, kind }: CoreManagementPageProps) {
   const query = useQuery({
     enabled: canView,
     queryKey: ["core-management", kind, keyword],
-    queryFn: () => config.fetch(keyword)
+    queryFn: () => config.fetch(keyword),
   });
   const organizationsQuery = useQuery({
     enabled: canView && (kind === "users" || kind === "organizations" || kind === "menus"),
     queryKey: ["core-management", "organizations", "options"],
-    queryFn: fetchOrganizations
+    queryFn: fetchOrganizations,
   });
   const rolesQuery = useQuery({
     enabled: canView && kind === "users",
     queryKey: ["core-management", "roles", "options"],
-    queryFn: () => fetchRoles("")
+    queryFn: () => fetchRoles(""),
   });
   const permissionsQuery = useQuery({
     enabled: canView && (kind === "roles" || kind === "permissions"),
     queryKey: ["core-management", "permissions", "all"],
-    queryFn: () => fetchPermissions("")
+    queryFn: () => fetchPermissions(""),
   });
   const menusQuery = useQuery({
     enabled: canView && kind === "menus",
     queryKey: ["core-management", "menus", "options"],
-    queryFn: fetchMenus
+    queryFn: fetchMenus,
   });
   const apiPermissionsQuery = useQuery({
     enabled: canView && kind === "menus",
     queryKey: ["core-management", "api-permissions", "all"],
-    queryFn: fetchApiPermissions
+    queryFn: fetchApiPermissions,
   });
   const rolePermissionsQuery = useQuery({
     enabled: canView && kind === "roles" && Boolean(selected),
     queryKey: ["core-management", "roles", selected?.id, "permissions"],
-    queryFn: () => fetchRolePermissions(selected?.id ?? "")
+    queryFn: () => fetchRolePermissions(selected?.id ?? ""),
   });
   const fields = useMemo(
-    () => config.fields({
-      organizations: organizationsQuery.data ?? [],
-      roles: rolesQuery.data ?? [],
-      menus: menusQuery.data ?? []
-    }),
-    [config, menusQuery.data, organizationsQuery.data, rolesQuery.data]
+    () =>
+      config.fields({
+        organizations: organizationsQuery.data ?? [],
+        roles: rolesQuery.data ?? [],
+        menus: menusQuery.data ?? [],
+      }),
+    [config, menusQuery.data, organizationsQuery.data, rolesQuery.data],
   );
   const invalidate = async () => {
     await queryClient.invalidateQueries({ queryKey: ["core-management"] });
@@ -91,7 +97,7 @@ export function CoreManagementPage({ route, kind }: CoreManagementPageProps) {
     onSuccess: async () => {
       setCreating(false);
       await invalidate();
-    }
+    },
   });
   const updateMutation = useMutation({
     mutationFn: ({ id, values }: { id: string; values: CoreFormValues }) =>
@@ -99,24 +105,26 @@ export function CoreManagementPage({ route, kind }: CoreManagementPageProps) {
     onSuccess: async () => {
       setEditing(null);
       await invalidate();
-    }
+    },
   });
   const actionMutation = useMutation({
     mutationFn: ({ record, action }: { record: CoreEntity; action: string }) =>
       runRecordAction(kind, record, action),
-    onSuccess: invalidate
+    onSuccess: invalidate,
   });
   const rolePermissionMutation = useMutation({
-    mutationFn: (permissionCodes: string[]) => updateRolePermissions(selected?.id ?? "", permissionCodes),
-    onSuccess: invalidate
+    mutationFn: (permissionCodes: string[]) =>
+      updateRolePermissions(selected?.id ?? "", permissionCodes),
+    onSuccess: invalidate,
   });
   const syncPermissionMutation = useMutation({
     mutationFn: syncPermissions,
-    onSuccess: invalidate
+    onSuccess: invalidate,
   });
   const menuBindingMutation = useMutation({
-    mutationFn: (apiPermissionIds: string[]) => updateMenuApiBindings(selected?.id ?? "", apiPermissionIds),
-    onSuccess: invalidate
+    mutationFn: (apiPermissionIds: string[]) =>
+      updateMenuApiBindings(selected?.id ?? "", apiPermissionIds),
+    onSuccess: invalidate,
   });
   const rows = query.data ?? [];
 
@@ -124,7 +132,9 @@ export function CoreManagementPage({ route, kind }: CoreManagementPageProps) {
     return (
       <section className="rounded-lg border bg-card p-8 text-center">
         <AlertCircle className="mx-auto size-8 text-destructive" aria-hidden="true" />
-        <h2 className="mt-3 text-base font-semibold">{translate(language, "common.permissionDenied")}</h2>
+        <h2 className="mt-3 text-base font-semibold">
+          {translate(language, "common.permissionDenied")}
+        </h2>
       </section>
     );
   }
@@ -150,7 +160,11 @@ export function CoreManagementPage({ route, kind }: CoreManagementPageProps) {
             columns={config.columns}
             isError={query.isError}
             isLoading={query.isLoading}
-            onDelete={config.delete ? (record) => actionMutation.mutate({ record, action: "delete" }) : undefined}
+            onDelete={
+              config.delete
+                ? (record) => actionMutation.mutate({ record, action: "delete" })
+                : undefined
+            }
             onEdit={config.update ? setEditing : undefined}
             onSelect={kind === "roles" || kind === "menus" ? setSelected : undefined}
             onStatusAction={(record, action) => actionMutation.mutate({ record, action })}
@@ -175,7 +189,10 @@ export function CoreManagementPage({ route, kind }: CoreManagementPageProps) {
         {editing && config.update ? (
           <CoreEntityForm
             busy={updateMutation.isPending}
-            fields={fields.filter((field) => field.type !== "password" && !(kind === "users" && field.name === "roleId"))}
+            fields={fields.filter(
+              (field) =>
+                field.type !== "password" && !(kind === "users" && field.name === "roleId"),
+            )}
             initialValues={config.initialValues(editing)}
             key={editing.id}
             mode="edit"
@@ -217,7 +234,10 @@ export function CoreManagementPage({ route, kind }: CoreManagementPageProps) {
             <p className="mt-1 text-sm text-muted-foreground">{config.sidePanel}</p>
           </section>
         ) : null}
-        {actionMutation.isError || createMutation.isError || updateMutation.isError || syncPermissionMutation.isError ? (
+        {actionMutation.isError ||
+        createMutation.isError ||
+        updateMutation.isError ||
+        syncPermissionMutation.isError ? (
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
             The operation failed.
           </div>
@@ -233,7 +253,7 @@ function CoreToolbar({
   onCreate,
   onRefresh,
   onSync,
-  route
+  route,
 }: {
   canCreate: boolean;
   description: string;
@@ -291,5 +311,7 @@ function CoreFilter({ keyword, onChange }: { keyword: string; onChange: (value: 
 }
 
 function readStringArray(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
 }

@@ -2,7 +2,7 @@ import {
   createDatabaseJobSchedulerAdapter,
   createDatabaseQueueAdapter,
   type DatabaseAdapterExecutor,
-  type FileStorageAdapter
+  type FileStorageAdapter,
 } from "@web-admin-base/adapters";
 
 import type { WorkerConfig } from "./config/load-config";
@@ -26,7 +26,7 @@ export type WorkerApplicationOptions = {
 
 export function createWorkerApplication(
   config: WorkerConfig,
-  options: WorkerApplicationOptions = {}
+  options: WorkerApplicationOptions = {},
 ): WorkerApplication {
   const executor = options.executor ?? createWorkerDatabaseExecutor(config.database);
   const ownsExecutor = !options.executor;
@@ -42,9 +42,9 @@ export function createWorkerApplication(
     log: options.log,
     queueTasks: [
       createInAppNotificationDispatchTask(createDatabaseInAppNotificationDispatchHandler(executor)),
-      ...catalog.queueTasks
+      ...catalog.queueTasks,
     ],
-    scheduledTasks: catalog.scheduledTasks
+    scheduledTasks: catalog.scheduledTasks,
   });
 
   return {
@@ -53,6 +53,6 @@ export function createWorkerApplication(
     async close() {
       await runtime.stop();
       if (ownsExecutor) await executor.close();
-    }
+    },
   };
 }

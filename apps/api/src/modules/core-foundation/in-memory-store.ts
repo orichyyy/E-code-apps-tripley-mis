@@ -15,7 +15,7 @@ import type {
   UserPreferenceRecord,
   UserOrganizationRoleRecord,
   UserPermissionOverrideRecord,
-  UserRecord
+  UserRecord,
 } from "./domain";
 
 type SequenceName =

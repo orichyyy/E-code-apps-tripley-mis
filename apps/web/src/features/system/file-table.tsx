@@ -27,7 +27,7 @@ export function FileTable({
   onDetail,
   onDownload,
   onPreview,
-  rows
+  rows,
 }: FileTableProps) {
   if (isLoading) {
     return (
@@ -37,9 +37,12 @@ export function FileTable({
       </div>
     );
   }
-  if (isError) return <div className="p-8 text-sm text-destructive">The data could not be loaded.</div>;
+  if (isError)
+    return <div className="p-8 text-sm text-destructive">The data could not be loaded.</div>;
   if (rows.length === 0) {
-    return <div className="p-8 text-sm text-muted-foreground">No records match the current filters.</div>;
+    return (
+      <div className="p-8 text-sm text-muted-foreground">No records match the current filters.</div>
+    );
   }
 
   return (
@@ -62,7 +65,9 @@ export function FileTable({
             <tr className="hover:bg-muted/40" key={record.id}>
               <td className="border-b px-4 py-3">
                 <div className="font-medium">{record.originalName}</div>
-                <div className="max-w-72 truncate text-xs text-muted-foreground">{record.objectKey}</div>
+                <div className="max-w-72 truncate text-xs text-muted-foreground">
+                  {record.objectKey}
+                </div>
               </td>
               <td className="border-b px-4 py-3">
                 <div>{record.extension || "-"}</div>
@@ -105,7 +110,7 @@ function FileRowActions({
   onDetail,
   onDownload,
   onPreview,
-  record
+  record,
 }: {
   canDelete: boolean;
   canDownload: boolean;
@@ -126,19 +131,34 @@ function FileRowActions({
         Details
       </Button>
       {canDownload ? (
-        <Button disabled={deleteDisabled} onClick={() => onDownload(record)} size="sm" variant="ghost">
+        <Button
+          disabled={deleteDisabled}
+          onClick={() => onDownload(record)}
+          size="sm"
+          variant="ghost"
+        >
           <Download className="size-4" aria-hidden="true" />
           Download
         </Button>
       ) : null}
       {canPreview && isImage ? (
-        <Button disabled={deleteDisabled} onClick={() => onPreview(record)} size="sm" variant="ghost">
+        <Button
+          disabled={deleteDisabled}
+          onClick={() => onPreview(record)}
+          size="sm"
+          variant="ghost"
+        >
           <ImageIcon className="size-4" aria-hidden="true" />
           Preview
         </Button>
       ) : null}
       {canDelete ? (
-        <Button disabled={deleteDisabled} onClick={() => onDelete(record)} size="sm" variant="ghost">
+        <Button
+          disabled={deleteDisabled}
+          onClick={() => onDelete(record)}
+          size="sm"
+          variant="ghost"
+        >
           <Trash2 className="size-4" aria-hidden="true" />
           Invalidate
         </Button>

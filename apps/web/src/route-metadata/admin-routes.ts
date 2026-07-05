@@ -8,7 +8,13 @@ export type WebAdminRouteMetadata = AdminRouteMetadata & {
 };
 
 export const adminRoutes: WebAdminRouteMetadata[] = [
-  { routeCode: "dashboard", path: "/", titleI18nKey: "routes.dashboard", menuVisible: true, sortOrder: 10 },
+  {
+    routeCode: "dashboard",
+    path: "/",
+    titleI18nKey: "routes.dashboard",
+    menuVisible: true,
+    sortOrder: 10,
+  },
   {
     routeCode: "system.users",
     path: "/system/users",
@@ -19,8 +25,8 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     sortOrder: 100,
     actions: [
       { code: "user:create", labelI18nKey: "actions.create", requiredPermission: "user:create" },
-      { code: "user:export", labelI18nKey: "actions.export", requiredPermission: "user:export" }
-    ]
+      { code: "user:export", labelI18nKey: "actions.export", requiredPermission: "user:export" },
+    ],
   },
   {
     routeCode: "system.organizations",
@@ -30,7 +36,13 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     menuVisible: true,
     group: "system",
     sortOrder: 110,
-    actions: [{ code: "organization:create", labelI18nKey: "actions.create", requiredPermission: "organization:create" }]
+    actions: [
+      {
+        code: "organization:create",
+        labelI18nKey: "actions.create",
+        requiredPermission: "organization:create",
+      },
+    ],
   },
   {
     routeCode: "system.roles",
@@ -40,7 +52,9 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     menuVisible: true,
     group: "system",
     sortOrder: 120,
-    actions: [{ code: "role:create", labelI18nKey: "actions.create", requiredPermission: "role:create" }]
+    actions: [
+      { code: "role:create", labelI18nKey: "actions.create", requiredPermission: "role:create" },
+    ],
   },
   {
     routeCode: "system.permissions",
@@ -50,7 +64,13 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     menuVisible: true,
     group: "system",
     sortOrder: 130,
-    actions: [{ code: "permission:sync", labelI18nKey: "actions.sync", requiredPermission: "permission:sync" }]
+    actions: [
+      {
+        code: "permission:sync",
+        labelI18nKey: "actions.sync",
+        requiredPermission: "permission:sync",
+      },
+    ],
   },
   {
     routeCode: "system.menus",
@@ -59,7 +79,7 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     requiredPermission: "menu:view",
     menuVisible: true,
     group: "system",
-    sortOrder: 140
+    sortOrder: 140,
   },
   {
     routeCode: "system.config",
@@ -68,7 +88,7 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     requiredPermission: "system-config:view",
     menuVisible: true,
     group: "system",
-    sortOrder: 150
+    sortOrder: 150,
   },
   {
     routeCode: "system.dictionaries",
@@ -77,7 +97,7 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     requiredPermission: "dictionary:view",
     menuVisible: true,
     group: "system",
-    sortOrder: 160
+    sortOrder: 160,
   },
   {
     routeCode: "system.i18nMessages",
@@ -87,7 +107,9 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     menuVisible: true,
     group: "system",
     sortOrder: 165,
-    actions: [{ code: "i18n:update", labelI18nKey: "actions.edit", requiredPermission: "i18n:update" }]
+    actions: [
+      { code: "i18n:update", labelI18nKey: "actions.edit", requiredPermission: "i18n:update" },
+    ],
   },
   {
     routeCode: "system.files",
@@ -99,11 +121,19 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     sortOrder: 170,
     actions: [
       { code: "file:upload", labelI18nKey: "actions.upload", requiredPermission: "file:upload" },
-      { code: "file:download", labelI18nKey: "actions.export", requiredPermission: "file:download" },
+      {
+        code: "file:download",
+        labelI18nKey: "actions.export",
+        requiredPermission: "file:download",
+      },
       { code: "file:preview", labelI18nKey: "actions.view", requiredPermission: "file:preview" },
-      { code: "file:references:view", labelI18nKey: "actions.view", requiredPermission: "file:references:view" },
-      { code: "file:delete", labelI18nKey: "actions.delete", requiredPermission: "file:delete" }
-    ]
+      {
+        code: "file:references:view",
+        labelI18nKey: "actions.view",
+        requiredPermission: "file:references:view",
+      },
+      { code: "file:delete", labelI18nKey: "actions.delete", requiredPermission: "file:delete" },
+    ],
   },
   {
     routeCode: "notifications.announcements",
@@ -114,10 +144,22 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     group: "notifications",
     sortOrder: 200,
     actions: [
-      { code: "announcement:create", labelI18nKey: "actions.create", requiredPermission: "announcement:create" },
-      { code: "announcement:update", labelI18nKey: "actions.edit", requiredPermission: "announcement:update" },
-      { code: "announcement:publish", labelI18nKey: "actions.publish", requiredPermission: "announcement:publish" }
-    ]
+      {
+        code: "announcement:create",
+        labelI18nKey: "actions.create",
+        requiredPermission: "announcement:create",
+      },
+      {
+        code: "announcement:update",
+        labelI18nKey: "actions.edit",
+        requiredPermission: "announcement:update",
+      },
+      {
+        code: "announcement:publish",
+        labelI18nKey: "actions.publish",
+        requiredPermission: "announcement:publish",
+      },
+    ],
   },
   {
     routeCode: "notifications.in-app",
@@ -127,7 +169,13 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     menuVisible: true,
     group: "notifications",
     sortOrder: 210,
-    actions: [{ code: "notification:update", labelI18nKey: "actions.edit", requiredPermission: "notification:update" }]
+    actions: [
+      {
+        code: "notification:update",
+        labelI18nKey: "actions.edit",
+        requiredPermission: "notification:update",
+      },
+    ],
   },
   {
     routeCode: "notifications.templates",
@@ -138,9 +186,17 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     group: "notifications",
     sortOrder: 215,
     actions: [
-      { code: "notification-template:create", labelI18nKey: "actions.create", requiredPermission: "notification-template:create" },
-      { code: "notification-template:update", labelI18nKey: "actions.edit", requiredPermission: "notification-template:update" }
-    ]
+      {
+        code: "notification-template:create",
+        labelI18nKey: "actions.create",
+        requiredPermission: "notification-template:create",
+      },
+      {
+        code: "notification-template:update",
+        labelI18nKey: "actions.edit",
+        requiredPermission: "notification-template:update",
+      },
+    ],
   },
   {
     routeCode: "notifications.webhooks",
@@ -151,9 +207,17 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     group: "notifications",
     sortOrder: 220,
     actions: [
-      { code: "webhook:create", labelI18nKey: "actions.create", requiredPermission: "webhook:create" },
-      { code: "webhook:update", labelI18nKey: "actions.edit", requiredPermission: "webhook:update" }
-    ]
+      {
+        code: "webhook:create",
+        labelI18nKey: "actions.create",
+        requiredPermission: "webhook:create",
+      },
+      {
+        code: "webhook:update",
+        labelI18nKey: "actions.edit",
+        requiredPermission: "webhook:update",
+      },
+    ],
   },
   {
     routeCode: "operations.online-users",
@@ -162,7 +226,7 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     requiredPermission: "online-user:view",
     menuVisible: true,
     group: "operations",
-    sortOrder: 300
+    sortOrder: 300,
   },
   {
     routeCode: "operations.scheduler",
@@ -171,7 +235,7 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     requiredPermission: "job:view",
     menuVisible: true,
     group: "operations",
-    sortOrder: 310
+    sortOrder: 310,
   },
   {
     routeCode: "operations.import-export",
@@ -180,7 +244,7 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     requiredPermission: "import-export:view",
     menuVisible: true,
     group: "operations",
-    sortOrder: 320
+    sortOrder: 320,
   },
   ...[
     ["logs.login", "/logs/login", "routes.logs.login", "login-log:view"],
@@ -190,25 +254,23 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     ["logs.exception", "/logs/exception", "routes.logs.exception", "exception-log:view"],
     ["logs.security", "/logs/security", "routes.logs.security", "security-log:view"],
     ["logs.scheduler", "/logs/scheduler", "routes.logs.scheduler", "scheduler-log:view"],
-    ["logs.files", "/logs/files", "routes.logs.files", "file-log:view"]
-  ].map(
-    ([routeCode, path, titleI18nKey, requiredPermission], index): WebAdminRouteMetadata => ({
-      routeCode,
-      path,
-      titleI18nKey,
-      requiredPermission,
-      menuVisible: true,
-      group: "logs",
-      sortOrder: 400 + index
-    })
-  ),
+    ["logs.files", "/logs/files", "routes.logs.files", "file-log:view"],
+  ].map(([routeCode, path, titleI18nKey, requiredPermission], index): WebAdminRouteMetadata => ({
+    routeCode,
+    path,
+    titleI18nKey,
+    requiredPermission,
+    menuVisible: true,
+    group: "logs",
+    sortOrder: 400 + index,
+  })),
   {
     routeCode: "account.profile",
     path: "/account/profile",
     titleI18nKey: "routes.account.profile",
     menuVisible: true,
     group: "account",
-    sortOrder: 500
+    sortOrder: 500,
   },
   {
     routeCode: "account.password",
@@ -216,7 +278,7 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     titleI18nKey: "routes.account.password",
     menuVisible: true,
     group: "account",
-    sortOrder: 510
+    sortOrder: 510,
   },
   {
     routeCode: "account.settings",
@@ -224,6 +286,6 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     titleI18nKey: "routes.account.settings",
     menuVisible: true,
     group: "account",
-    sortOrder: 520
-  }
+    sortOrder: 520,
+  },
 ];

@@ -2,7 +2,10 @@ import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { NotificationTemplate } from "./notification-template-api";
-import { NotificationChannelBadge, NotificationTemplateStatusBadge } from "./notification-template-status";
+import {
+  NotificationChannelBadge,
+  NotificationTemplateStatusBadge,
+} from "./notification-template-status";
 
 type NotificationTemplateTableProps = {
   canUpdate: boolean;
@@ -17,7 +20,7 @@ export function NotificationTemplateTable({
   isError,
   isLoading,
   onEdit,
-  rows
+  rows,
 }: NotificationTemplateTableProps) {
   if (isLoading) {
     return (
@@ -27,9 +30,12 @@ export function NotificationTemplateTable({
       </div>
     );
   }
-  if (isError) return <div className="p-8 text-sm text-destructive">The data could not be loaded.</div>;
+  if (isError)
+    return <div className="p-8 text-sm text-destructive">The data could not be loaded.</div>;
   if (rows.length === 0) {
-    return <div className="p-8 text-sm text-muted-foreground">No records match the current filters.</div>;
+    return (
+      <div className="p-8 text-sm text-muted-foreground">No records match the current filters.</div>
+    );
   }
 
   return (

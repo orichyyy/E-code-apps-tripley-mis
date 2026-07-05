@@ -28,11 +28,11 @@ export function createInMemoryCacheAdapter(): CacheAdapter {
     async set<T>(key: string, value: T, options?: { ttlSeconds?: number }) {
       entries.set(key, {
         value,
-        expiresAt: options?.ttlSeconds ? Date.now() + options.ttlSeconds * 1000 : undefined
+        expiresAt: options?.ttlSeconds ? Date.now() + options.ttlSeconds * 1000 : undefined,
       });
     },
     async delete(key: string) {
       entries.delete(key);
-    }
+    },
   };
 }

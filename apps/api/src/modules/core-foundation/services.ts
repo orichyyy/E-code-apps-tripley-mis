@@ -1,11 +1,8 @@
 import {
   createInMemoryCacheAdapter,
-  createInMemoryTokenStoreAdapter
+  createInMemoryTokenStoreAdapter,
 } from "@web-admin-base/adapters";
-import {
-  baseRouteManifest,
-  type BaseApiPermissionManifestEntry
-} from "@web-admin-base/contracts";
+import { baseRouteManifest, type BaseApiPermissionManifestEntry } from "@web-admin-base/contracts";
 import type {
   AssignUserOrganizationRoleRequest,
   ChangePasswordRequest,
@@ -29,7 +26,7 @@ import type {
   UpdateRolePermissionsRequest,
   UpdateRoleRequest,
   UpdateUserPermissionOverridesRequest,
-  UpdateUserRequest
+  UpdateUserRequest,
 } from "@web-admin-base/contracts";
 
 import { AuthService, type OnlineUserListFilters } from "./auth.service";
@@ -42,14 +39,14 @@ import { ProfileService } from "./profile.service";
 import {
   PermissionService,
   type ApiPermissionListFilters,
-  type PermissionListFilters
+  type PermissionListFilters,
 } from "./permission.service";
 import { RouteMetadataService, type RouteMetadataListFilters } from "./route-metadata.service";
 import { RoleService, type RoleListFilters } from "./role.service";
 import {
   defaultBackendCoreConfig,
   type BackendCoreConfig,
-  type BackendCoreContext
+  type BackendCoreContext,
 } from "./service-context";
 import { UserService, type UserListFilters } from "./user.service";
 import { PermissionCache } from "../permissions/permission-cache";
@@ -85,7 +82,7 @@ export class BackendCoreServices {
       this.permissions,
       this.routeMetadata,
       this.roles,
-      this.users
+      this.users,
     );
   }
 
@@ -101,7 +98,10 @@ export class BackendCoreServices {
     return this.initialization.seed(input);
   }
 
-  async login(input: LoginRequest, request: { ipAddress?: string | null; userAgent?: string | null }) {
+  async login(
+    input: LoginRequest,
+    request: { ipAddress?: string | null; userAgent?: string | null },
+  ) {
     const login = await this.auth.login(input, request);
     const authContext = {
       userId: login.user.id,
@@ -109,15 +109,15 @@ export class BackendCoreServices {
       username: login.user.username,
       currentOrganizationId: login.session.currentOrganizationId,
       tokenVersion: login.user.tokenVersion,
-      passwordChangeRequired: login.user.firstLoginPasswordChangeRequired
+      passwordChangeRequired: login.user.firstLoginPasswordChangeRequired,
     };
     const permissionContext = await this.permissions.getPermissionContext(
       authContext.userId,
-      authContext.currentOrganizationId
+      authContext.currentOrganizationId,
     );
     const userContext = this.auth.getCurrentUserContext(
       authContext,
-      permissionContext.permissionCodes
+      permissionContext.permissionCodes,
     );
 
     return {
@@ -127,7 +127,7 @@ export class BackendCoreServices {
       permissionCodes: userContext.permissionCodes,
       menus: userContext.menus,
       passwordChangeRequired: userContext.passwordChangeRequired,
-      preferences: this.profile.getPreferences(authContext.userId)
+      preferences: this.profile.getPreferences(authContext.userId),
     };
   }
 
@@ -145,7 +145,7 @@ export class BackendCoreServices {
 
   async changePassword(
     authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
-    input: ChangePasswordRequest
+    input: ChangePasswordRequest,
   ) {
     const user = await this.auth.changePassword(authContext, input);
     await this.permissions.invalidateUser(authContext.userId);
@@ -154,27 +154,29 @@ export class BackendCoreServices {
 
   async switchCurrentOrganization(
     authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
-    input: SwitchCurrentOrganizationRequest
+    input: SwitchCurrentOrganizationRequest,
   ) {
     const permissionContext = await this.permissions.getPermissionContext(
       authContext.userId,
-      input.organizationId
+      input.organizationId,
     );
     return this.auth.switchCurrentOrganization(
       authContext,
       input,
-      permissionContext.permissionCodes
+      permissionContext.permissionCodes,
     );
   }
 
-  async getCurrentUserContext(authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>) {
+  async getCurrentUserContext(
+    authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
+  ) {
     const permissionContext = await this.permissions.getPermissionContext(
       authContext.userId,
-      authContext.currentOrganizationId
+      authContext.currentOrganizationId,
     );
     return {
       ...this.auth.getCurrentUserContext(authContext, permissionContext.permissionCodes),
-      preferences: this.profile.getPreferences(authContext.userId)
+      preferences: this.profile.getPreferences(authContext.userId),
     };
   }
 
@@ -184,7 +186,7 @@ export class BackendCoreServices {
 
   async updateOwnProfile(
     authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
-    input: UpdateOwnProfileRequest
+    input: UpdateOwnProfileRequest,
   ) {
     const profile = this.profile.updateProfile(authContext, input);
     await this.permissions.invalidateUser(authContext.userId);
@@ -193,36 +195,38 @@ export class BackendCoreServices {
 
   async updateOwnPreferences(
     authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
-    input: UpdateOwnPreferencesRequest
+    input: UpdateOwnPreferencesRequest,
   ) {
     return this.profile.updatePreferences(authContext, input);
   }
 
   async updateOwnAvatar(
     authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
-    input: UpdateOwnAvatarRequest
+    input: UpdateOwnAvatarRequest,
   ) {
     const profile = this.profile.updateAvatar(authContext, input);
     await this.permissions.invalidateUser(authContext.userId);
     return profile;
   }
 
-  listCurrentUserOrganizations(authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>) {
+  listCurrentUserOrganizations(
+    authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
+  ) {
     return this.auth.listCurrentUserOrganizations(authContext);
   }
 
   async getCurrentPermissionContext(
-    authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>
+    authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
   ) {
     const permissionContext = await this.permissions.getPermissionContext(
       authContext.userId,
-      authContext.currentOrganizationId
+      authContext.currentOrganizationId,
     );
     return {
       ...this.auth.getCurrentPermissionContext(authContext, permissionContext.permissionCodes),
       dataPermissions: permissionContext.dataPermissions ?? [],
       fieldPermissions: permissionContext.fieldPermissions ?? [],
-      userPermissionOverrides: permissionContext.userPermissionOverrides ?? []
+      userPermissionOverrides: permissionContext.userPermissionOverrides ?? [],
     };
   }
 
@@ -232,7 +236,7 @@ export class BackendCoreServices {
 
   requireApiPermission(
     authContext: ReturnType<AuthService["findAuthContext"]>,
-    apiPermission: BaseApiPermissionManifestEntry
+    apiPermission: BaseApiPermissionManifestEntry,
   ) {
     return this.permissions.requireApiPermission(authContext, apiPermission);
   }
@@ -274,7 +278,7 @@ export class BackendCoreServices {
   async updateOrganization(
     id: string,
     input: UpdateOrganizationRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ) {
     const organization = this.organizations.update(id, input, actorId);
     await this.permissions.invalidateAllPermissionContexts();
@@ -320,18 +324,14 @@ export class BackendCoreServices {
   async setUserStatus(
     id: string,
     status: "enabled" | "disabled" | "locked",
-    actorId: string | null = null
+    actorId: string | null = null,
   ) {
     const user = this.users.setStatus(id, status, actorId);
     await this.permissions.invalidateUser(id);
     return user;
   }
 
-  async resetUserPassword(
-    id: string,
-    input: ResetPasswordRequest,
-    actorId: string | null = null
-  ) {
+  async resetUserPassword(id: string, input: ResetPasswordRequest, actorId: string | null = null) {
     const user = await this.users.resetPassword(id, input, actorId);
     await this.permissions.invalidateUser(id);
     return user;
@@ -346,7 +346,7 @@ export class BackendCoreServices {
   async assignUserOrganizationRole(
     userId: string,
     input: AssignUserOrganizationRoleRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ) {
     const binding = this.users.assignOrganizationRole(userId, input, actorId);
     await this.permissions.invalidateUser(userId);
@@ -360,7 +360,7 @@ export class BackendCoreServices {
   async removeUserOrganizationRole(
     userId: string,
     organizationId: string,
-    deletedBy: string | null = null
+    deletedBy: string | null = null,
   ) {
     const result = this.users.removeOrganizationRole(userId, organizationId, deletedBy);
     await this.permissions.invalidateUser(userId);
@@ -385,11 +385,7 @@ export class BackendCoreServices {
     return role;
   }
 
-  async setRoleStatus(
-    id: string,
-    status: "enabled" | "disabled",
-    actorId: string | null = null
-  ) {
+  async setRoleStatus(id: string, status: "enabled" | "disabled", actorId: string | null = null) {
     const role = this.roles.setStatus(id, status, actorId);
     await this.permissions.invalidateRole(id);
     return role;
@@ -402,7 +398,7 @@ export class BackendCoreServices {
   async updateRolePermissions(
     id: string,
     input: UpdateRolePermissionsRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ) {
     const role = this.roles.updatePermissions(id, input, actorId);
     await this.permissions.invalidateRole(id);
@@ -420,7 +416,7 @@ export class BackendCoreServices {
   updateRoleDataPermissions(
     id: string,
     input: UpdateRoleDataPermissionsRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ) {
     return this.permissionExtensions.updateRoleDataPermissions(id, input, actorId);
   }
@@ -432,7 +428,7 @@ export class BackendCoreServices {
   updateRoleFieldPermissions(
     id: string,
     input: UpdateRoleFieldPermissionsRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ) {
     return this.permissionExtensions.updateRoleFieldPermissions(id, input, actorId);
   }
@@ -444,7 +440,7 @@ export class BackendCoreServices {
   updateUserPermissionOverrides(
     userId: string,
     input: UpdateUserPermissionOverridesRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ) {
     return this.permissionExtensions.updateUserPermissionOverrides(userId, input, actorId);
   }
@@ -521,7 +517,7 @@ export function createInMemoryBackendCoreServices(config?: Partial<BackendCoreCo
     tokenStore: createInMemoryTokenStoreAdapter(),
     config: {
       ...defaultBackendCoreConfig,
-      ...config
-    }
+      ...config,
+    },
   });
 }

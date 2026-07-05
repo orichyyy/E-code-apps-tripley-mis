@@ -13,7 +13,11 @@ export const adminPassword = process.env.SMOKE_ADMIN_PASSWORD ?? "Admin1234";
 
 const pnpmCli = process.env.npm_execpath;
 
-export const pnpmCommand = pnpmCli ? process.execPath : process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+export const pnpmCommand = pnpmCli
+  ? process.execPath
+  : process.platform === "win32"
+    ? "pnpm.cmd"
+    : "pnpm";
 export const pnpmPrefixArgs = pnpmCli ? [pnpmCli] : [];
 
 export const serviceEnv = normalizeEnv({
@@ -31,7 +35,7 @@ export const serviceEnv = normalizeEnv({
   FILE_STORAGE_ROOT: fileStorageRoot,
   SMTP_ENABLED: "false",
   WEB_ADMIN_SEED_ADMIN_USERNAME: adminUsername,
-  WEB_ADMIN_SEED_ADMIN_PASSWORD: adminPassword
+  WEB_ADMIN_SEED_ADMIN_PASSWORD: adminPassword,
 });
 
 export const requiredMenuCodes = [
@@ -39,7 +43,7 @@ export const requiredMenuCodes = [
   "system.dictionaries",
   "operations.scheduler",
   "logs.api",
-  "account.settings"
+  "account.settings",
 ];
 
 export const apiChecks = [
@@ -66,13 +70,14 @@ export const apiChecks = [
   "/announcements",
   "/notifications",
   "/notification-templates",
-  "/webhooks"
+  "/webhooks",
 ];
 
 function normalizeEnv(input: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   return Object.fromEntries(
     Object.entries(input).filter(
-      (entry): entry is [string, string] => typeof entry[1] === "string" && !entry[0].startsWith("=")
-    )
+      (entry): entry is [string, string] =>
+        typeof entry[1] === "string" && !entry[0].startsWith("="),
+    ),
   );
 }

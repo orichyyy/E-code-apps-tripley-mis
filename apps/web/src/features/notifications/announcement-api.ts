@@ -1,4 +1,7 @@
-import type { CreateAnnouncementRequest, UpdateAnnouncementRequest } from "@web-admin-base/contracts";
+import type {
+  CreateAnnouncementRequest,
+  UpdateAnnouncementRequest,
+} from "@web-admin-base/contracts";
 
 import { requestJson, stringField, unwrapRecords } from "@/lib/api-request";
 
@@ -27,26 +30,26 @@ export async function fetchAnnouncements(): Promise<Announcement[]> {
 export async function createAnnouncement(input: CreateAnnouncementRequest) {
   return requestJson<{ data: Announcement }>("/announcements", {
     method: "POST",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 }
 
 export async function updateAnnouncement(id: string, input: UpdateAnnouncementRequest) {
   return requestJson<{ data: Announcement | null }>(`/announcements/${id}`, {
     method: "PATCH",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 }
 
 export async function publishAnnouncement(id: string) {
   return requestJson<{ data: Announcement | null }>(`/announcements/${id}/publish`, {
-    method: "POST"
+    method: "POST",
   });
 }
 
 export async function unpublishAnnouncement(id: string) {
   return requestJson<{ data: Announcement | null }>(`/announcements/${id}/unpublish`, {
-    method: "POST"
+    method: "POST",
   });
 }
 
@@ -65,7 +68,7 @@ function toAnnouncement(record: Record<string, unknown>): Announcement {
     createdAt: stringField(record.createdAt, ""),
     updatedAt: stringField(record.updatedAt, ""),
     createdBy: typeof record.createdBy === "string" ? record.createdBy : null,
-    updatedBy: typeof record.updatedBy === "string" ? record.updatedBy : null
+    updatedBy: typeof record.updatedBy === "string" ? record.updatedBy : null,
   };
 }
 

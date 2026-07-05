@@ -1,7 +1,7 @@
 import {
   type ChangePasswordRequest,
   type LoginRequest,
-  type SwitchCurrentOrganizationRequest
+  type SwitchCurrentOrganizationRequest,
 } from "@web-admin-base/contracts";
 
 import type { AuthContext } from "../../core/auth-context/auth-context";
@@ -11,12 +11,10 @@ import {
   createRefreshToken,
   hashToken,
   signAccessToken,
-  verifyAccessToken
+  verifyAccessToken,
 } from "../../infra/security/jwt";
 import { hashPassword, verifyPassword } from "../../infra/security/password-hash";
-import {
-  validatePasswordComplexity
-} from "../../infra/security/password-policy";
+import { validatePasswordComplexity } from "../../infra/security/password-policy";
 import { builtInRoleCodes } from "./built-in-roles";
 import type { AuthSessionRecord, OrganizationRecord, PublicSession, UserRecord } from "./domain";
 import type { BackendCoreContext } from "./service-context";
@@ -41,19 +39,23 @@ export class AuthService {
       path: this.context.config.refreshTokenCookiePath,
       sameSite: this.context.config.refreshTokenCookieSameSite,
       secure: this.context.config.refreshTokenCookieSecure,
-      domain: this.context.config.refreshTokenCookieDomain
+      domain: this.context.config.refreshTokenCookieDomain,
     };
   }
 
-  async login(input: LoginRequest, request: { ipAddress?: string | null; userAgent?: string | null }) {
+  async login(
+    input: LoginRequest,
+    request: { ipAddress?: string | null; userAgent?: string | null },
+  ) {
     const user = [...this.context.store.users.values()].find(
-      (candidate) => candidate.username === input.username && !candidate.isDeleted
+      (candidate) => candidate.username === input.username && !candidate.isDeleted,
     );
     if (!user) throw createKnownError("AUTH_INVALID_CREDENTIALS");
 
     const now = nowUtc();
     this.clearExpiredTimedLock(user, now);
-    if (user.status === "disabled" || user.isDeleted) throw createKnownError("AUTH_ACCOUNT_DISABLED");
+    if (user.status === "disabled" || user.isDeleted)
+      throw createKnownError("AUTH_ACCOUNT_DISABLED");
     if (this.isUserLocked(user, now)) {
       throw createKnownError("AUTH_ACCOUNT_LOCKED");
     }
@@ -77,7 +79,7 @@ export class AuthService {
       organizationId,
       user.tokenVersion,
       refreshTokenHash,
-      request
+      request,
     );
     const refreshTokenId = this.context.store.nextId("refreshToken");
     const refreshTokenRecord = {
@@ -89,7 +91,7 @@ export class AuthService {
       tokenVersion: user.tokenVersion,
       expiresAt: session.expiresAt,
       revokedAt: null,
-      createdAt: session.createdAt
+      createdAt: session.createdAt,
     };
     this.context.store.refreshTokens.set(refreshTokenId, refreshTokenRecord);
     await this.context.tokenStore.store({
@@ -99,7 +101,7 @@ export class AuthService {
       tokenVersion: user.tokenVersion,
       expiresAt: session.expiresAt,
       createdAt: session.createdAt,
-      revokedAt: null
+      revokedAt: null,
     });
 
     return {
@@ -112,10 +114,10 @@ export class AuthService {
         secure: this.context.config.refreshTokenCookieSecure,
         domain: this.context.config.refreshTokenCookieDomain,
         path: this.context.config.refreshTokenCookiePath,
-        maxAgeSeconds: this.context.config.refreshTokenTtlDays * 24 * 60 * 60
+        maxAgeSeconds: this.context.config.refreshTokenTtlDays * 24 * 60 * 60,
       },
       session: toPublicSession(session),
-      user: toPublicUser(user)
+      user: toPublicUser(user),
     };
   }
 
@@ -136,10 +138,12 @@ export class AuthService {
     this.clearExpiredTimedLock(user, nowUtc());
     if (user.status === "disabled") throw createKnownError("AUTH_ACCOUNT_DISABLED");
     if (user.status === "locked") throw createKnownError("AUTH_ACCOUNT_LOCKED");
-    if (storedToken.tokenVersion !== user.tokenVersion) throw createKnownError("AUTH_TOKEN_INVALIDATED");
+    if (storedToken.tokenVersion !== user.tokenVersion)
+      throw createKnownError("AUTH_TOKEN_INVALIDATED");
 
     const session = this.requireActiveSession(storedToken.sessionId, user.id);
-    if (session.tokenVersion !== user.tokenVersion) throw createKnownError("AUTH_TOKEN_INVALIDATED");
+    if (session.tokenVersion !== user.tokenVersion)
+      throw createKnownError("AUTH_TOKEN_INVALIDATED");
     const organization = this.context.store.organizations.get(session.currentOrganizationId);
     if (!organization || organization.status !== "enabled" || organization.isDeleted) {
       throw createKnownError("BUSINESS_ORG_DISABLED");
@@ -152,7 +156,7 @@ export class AuthService {
     session.tokenVersion = user.tokenVersion;
     return {
       accessToken: this.signAccessToken(user, session.currentOrganizationId, session.id),
-      session: toPublicSession(session)
+      session: toPublicSession(session),
     };
   }
 
@@ -167,7 +171,10 @@ export class AuthService {
       throw createKnownError("AUTH_INVALID_CREDENTIALS");
     }
 
-    const result = validatePasswordComplexity(input.newPassword, this.context.config.passwordPolicy);
+    const result = validatePasswordComplexity(
+      input.newPassword,
+      this.context.config.passwordPolicy,
+    );
     if (!result.valid) {
       throw createKnownError((result.reasons[0] ?? "VALIDATION_PASSWORD_POLICY") as KnownErrorCode);
     }
@@ -176,7 +183,7 @@ export class AuthService {
     user.passwordHash = await hashPassword(input.newPassword);
     user.passwordChangedAt = toUtcIso(now);
     user.passwordExpiresAt = toUtcIso(
-      addDaysUtc(now, this.context.config.passwordPolicy.periodicChangeDays)
+      addDaysUtc(now, this.context.config.passwordPolicy.periodicChangeDays),
     );
     user.firstLoginPasswordChangeRequired = false;
     user.tokenVersion += 1;
@@ -188,7 +195,7 @@ export class AuthService {
   async switchCurrentOrganization(
     authContext: AuthContext,
     input: SwitchCurrentOrganizationRequest,
-    permissionCodes: string[]
+    permissionCodes: string[],
   ) {
     const user = requireUser(this.context.store, authContext.userId);
     const organization = requireEnabledOrganization(this.context.store, input.organizationId);
@@ -197,7 +204,7 @@ export class AuthService {
       (candidate) =>
         candidate.userId === user.id &&
         candidate.organizationId === input.organizationId &&
-        this.isUsableOrganizationBinding(candidate)
+        this.isUsableOrganizationBinding(candidate),
     );
     if (!binding && !this.hasActiveSuperAdminBinding(user.id)) {
       throw createKnownError("PERMISSION_DENIED");
@@ -211,7 +218,7 @@ export class AuthService {
       session: toPublicSession(session),
       currentOrganization: toPublicOrganization(organization),
       permissionCodes,
-      menus: this.filterMenus(permissionCodes)
+      menus: this.filterMenus(permissionCodes),
     };
   }
 
@@ -220,7 +227,7 @@ export class AuthService {
     const session = this.requireActiveSession(authContext.sessionId, user.id);
     const currentOrganization = requireEnabledOrganization(
       this.context.store,
-      authContext.currentOrganizationId
+      authContext.currentOrganizationId,
     );
     const organizations = this.listAvailableOrganizations(user.id);
 
@@ -231,7 +238,7 @@ export class AuthService {
       organizations,
       permissionCodes,
       menus: this.filterMenus(permissionCodes),
-      passwordChangeRequired: this.isPasswordChangeRequired(user)
+      passwordChangeRequired: this.isPasswordChangeRequired(user),
     };
   }
 
@@ -246,13 +253,13 @@ export class AuthService {
     this.requireActiveSession(authContext.sessionId, user.id);
     const currentOrganization = requireEnabledOrganization(
       this.context.store,
-      authContext.currentOrganizationId
+      authContext.currentOrganizationId,
     );
 
     return {
       currentOrganization: toPublicOrganization(currentOrganization),
       permissionCodes,
-      menus: this.filterMenus(permissionCodes)
+      menus: this.filterMenus(permissionCodes),
     };
   }
 
@@ -260,7 +267,7 @@ export class AuthService {
     try {
       const claims = verifyAccessToken(accessToken, {
         secret: this.context.config.jwtSecret,
-        issuer: this.context.config.jwtIssuer
+        issuer: this.context.config.jwtIssuer,
       });
       const user = this.context.store.users.get(claims.sub);
       if (!user || user.isDeleted) throw createKnownError("AUTH_TOKEN_INVALIDATED");
@@ -295,7 +302,7 @@ export class AuthService {
         username: user.username,
         currentOrganizationId: claims.currentOrganizationId,
         tokenVersion: claims.tokenVersion,
-        passwordChangeRequired: this.isPasswordChangeRequired(user)
+        passwordChangeRequired: this.isPasswordChangeRequired(user),
       };
     } catch (error) {
       if (error instanceof Error && error.name === "AppError") throw error;
@@ -318,7 +325,10 @@ export class AuthService {
   }
 
   listOnlineUsers(filters: OnlineUserListFilters = {}): PublicSession[] {
-    if (filters.currentOrganizationId !== undefined && !isIntegerIdString(filters.currentOrganizationId)) {
+    if (
+      filters.currentOrganizationId !== undefined &&
+      !isIntegerIdString(filters.currentOrganizationId)
+    ) {
       throw createKnownError("VALIDATION_INVALID_REQUEST");
     }
     if (filters.userId !== undefined && !isIntegerIdString(filters.userId)) {
@@ -349,7 +359,7 @@ export class AuthService {
       .filter(
         (session) =>
           filters.currentOrganizationId === undefined ||
-          session.currentOrganizationId === filters.currentOrganizationId
+          session.currentOrganizationId === filters.currentOrganizationId,
       )
       .filter((session) => filters.userId === undefined || session.userId === filters.userId)
       .map(toPublicSession);
@@ -365,9 +375,9 @@ export class AuthService {
         currentOrganizationId: organizationId,
         tokenVersion: user.tokenVersion,
         iat: issuedAt,
-        exp: issuedAt + this.context.config.accessTokenTtlSeconds
+        exp: issuedAt + this.context.config.accessTokenTtlSeconds,
       },
-      { secret: this.context.config.jwtSecret, issuer: this.context.config.jwtIssuer }
+      { secret: this.context.config.jwtSecret, issuer: this.context.config.jwtIssuer },
     );
   }
 
@@ -376,7 +386,7 @@ export class AuthService {
     organizationId: string,
     tokenVersion: number,
     refreshTokenHash: string,
-    request: { ipAddress?: string | null; userAgent?: string | null }
+    request: { ipAddress?: string | null; userAgent?: string | null },
   ): AuthSessionRecord {
     const now = nowUtc();
     const session: AuthSessionRecord = {
@@ -392,7 +402,7 @@ export class AuthService {
       expiresAt: toUtcIso(addDaysUtc(now, this.context.config.refreshTokenTtlDays)),
       revokedAt: null,
       createdAt: toUtcIso(now),
-      lastSeenAt: toUtcIso(now)
+      lastSeenAt: toUtcIso(now),
     };
     this.context.store.authSessions.set(session.id, session);
     return session;
@@ -417,14 +427,14 @@ export class AuthService {
         menu.status === "enabled" &&
         menu.visible &&
         this.hasEnabledRouteMetadata(menu.routeCode) &&
-        (!menu.requiredPermission || permissionCodes.includes(menu.requiredPermission))
+        (!menu.requiredPermission || permissionCodes.includes(menu.requiredPermission)),
     );
   }
 
   private hasEnabledRouteMetadata(routeCode: string | null): boolean {
     if (routeCode === null) return true;
     return [...this.context.store.routeMetadata.values()].some(
-      (route) => route.routeCode === routeCode && route.status === "enabled"
+      (route) => route.routeCode === routeCode && route.status === "enabled",
     );
   }
 
@@ -435,7 +445,7 @@ export class AuthService {
       if (user.status !== "locked") user.tokenVersion += 1;
       user.status = "locked";
       user.lockedUntil = toUtcIso(
-        addSecondsUtc(now, this.context.config.failedLoginLockMinutes * 60)
+        addSecondsUtc(now, this.context.config.failedLoginLockMinutes * 60),
       );
     }
     user.updatedAt = toUtcIso(now);
@@ -446,19 +456,22 @@ export class AuthService {
     if (
       primary?.status === "enabled" &&
       !primary.isDeleted &&
-      (this.hasActiveOrganizationBinding(user.id, primary.id) || this.hasActiveSuperAdminBinding(user.id))
+      (this.hasActiveOrganizationBinding(user.id, primary.id) ||
+        this.hasActiveSuperAdminBinding(user.id))
     ) {
       return primary.id;
     }
 
-    const enabledBinding = [...this.context.store.userOrganizationRoles.values()].find((binding) => {
-      if (binding.userId !== user.id || !this.isUsableOrganizationBinding(binding)) return false;
-      const organization = this.context.store.organizations.get(binding.organizationId);
-      return organization?.status === "enabled" && !organization.isDeleted;
-    });
+    const enabledBinding = [...this.context.store.userOrganizationRoles.values()].find(
+      (binding) => {
+        if (binding.userId !== user.id || !this.isUsableOrganizationBinding(binding)) return false;
+        const organization = this.context.store.organizations.get(binding.organizationId);
+        return organization?.status === "enabled" && !organization.isDeleted;
+      },
+    );
     if (!enabledBinding && this.hasActiveSuperAdminBinding(user.id)) {
       const enabledOrganization = [...this.context.store.organizations.values()].find(
-        isEnabledOrganization
+        isEnabledOrganization,
       );
       if (enabledOrganization) return enabledOrganization.id;
     }
@@ -471,7 +484,7 @@ export class AuthService {
       (binding) =>
         binding.userId === userId &&
         binding.organizationId === organizationId &&
-        this.isUsableOrganizationBinding(binding)
+        this.isUsableOrganizationBinding(binding),
     );
   }
 
@@ -506,13 +519,17 @@ export class AuthService {
     return [...this.context.store.userOrganizationRoles.values()].some((binding) => {
       if (binding.userId !== userId || !isActiveBinding(binding)) return false;
       const role = this.context.store.roles.get(binding.roleId);
-      return role?.code === builtInRoleCodes.superAdmin && role.status === "enabled" && !role.isDeleted;
+      return (
+        role?.code === builtInRoleCodes.superAdmin && role.status === "enabled" && !role.isDeleted
+      );
     });
   }
 
-  private isUsableOrganizationBinding(
-    binding: { isDeleted: boolean; status: "enabled" | "disabled"; roleId: string }
-  ): boolean {
+  private isUsableOrganizationBinding(binding: {
+    isDeleted: boolean;
+    status: "enabled" | "disabled";
+    roleId: string;
+  }): boolean {
     if (!isActiveBinding(binding)) return false;
     const role = this.context.store.roles.get(binding.roleId);
     return role?.status === "enabled" && !role.isDeleted;
@@ -538,7 +555,7 @@ export class AuthService {
 }
 
 function isEnabledOrganization(
-  organization: OrganizationRecord | undefined
+  organization: OrganizationRecord | undefined,
 ): organization is OrganizationRecord {
   return organization?.status === "enabled" && !organization.isDeleted;
 }

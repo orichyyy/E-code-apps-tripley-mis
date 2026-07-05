@@ -4,13 +4,13 @@ import type {
   PublicOrganization,
   PublicSession,
   PublicUser,
-  UserRecord
+  UserRecord,
 } from "./domain";
 
 export function toPublicOrganization(organization: OrganizationRecord): PublicOrganization {
   return {
     ...organization,
-    path: organization.path.toString()
+    path: organization.path.toString(),
   };
 }
 

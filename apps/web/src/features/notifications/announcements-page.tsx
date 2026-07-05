@@ -3,7 +3,7 @@ import {
   createAnnouncementRequestSchema,
   updateAnnouncementRequestSchema,
   type CreateAnnouncementRequest,
-  type UpdateAnnouncementRequest
+  type UpdateAnnouncementRequest,
 } from "@web-admin-base/contracts";
 import { AlertCircle, Plus, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -20,7 +20,7 @@ import {
   publishAnnouncement,
   unpublishAnnouncement,
   updateAnnouncement,
-  type Announcement
+  type Announcement,
 } from "./announcement-api";
 import { AnnouncementForm } from "./announcement-form";
 import { AnnouncementSidePanel } from "./announcement-status";
@@ -44,7 +44,7 @@ export function AnnouncementsPage({ route }: AnnouncementsPageProps) {
   const query = useQuery({
     enabled: canView,
     queryKey: ["announcements"],
-    queryFn: fetchAnnouncements
+    queryFn: fetchAnnouncements,
   });
   const invalidateAnnouncements = async () => {
     await queryClient.invalidateQueries({ queryKey: ["announcements"] });
@@ -54,36 +54,42 @@ export function AnnouncementsPage({ route }: AnnouncementsPageProps) {
     onSuccess: async () => {
       setCreating(false);
       await invalidateAnnouncements();
-    }
+    },
   });
   const updateMutation = useMutation({
-    mutationFn: ({ id, input }: { id: string; input: UpdateAnnouncementRequest }) => updateAnnouncement(id, input),
+    mutationFn: ({ id, input }: { id: string; input: UpdateAnnouncementRequest }) =>
+      updateAnnouncement(id, input),
     onSuccess: async () => {
       setEditing(null);
       await invalidateAnnouncements();
-    }
+    },
   });
   const publishMutation = useMutation({
     mutationFn: publishAnnouncement,
-    onSuccess: invalidateAnnouncements
+    onSuccess: invalidateAnnouncements,
   });
   const unpublishMutation = useMutation({
     mutationFn: unpublishAnnouncement,
-    onSuccess: invalidateAnnouncements
+    onSuccess: invalidateAnnouncements,
   });
   const rows = useMemo(
     () =>
       (query.data ?? []).filter((record) =>
-        [record.title, record.content, record.scopeType, record.status].join(" ").toLowerCase().includes(keyword.toLowerCase())
+        [record.title, record.content, record.scopeType, record.status]
+          .join(" ")
+          .toLowerCase()
+          .includes(keyword.toLowerCase()),
       ),
-    [keyword, query.data]
+    [keyword, query.data],
   );
 
   if (!canView) {
     return (
       <section className="rounded-lg border bg-card p-8 text-center">
         <AlertCircle className="mx-auto size-8 text-destructive" aria-hidden="true" />
-        <h2 className="mt-3 text-base font-semibold">{translate(language, "common.permissionDenied")}</h2>
+        <h2 className="mt-3 text-base font-semibold">
+          {translate(language, "common.permissionDenied")}
+        </h2>
       </section>
     );
   }
@@ -128,7 +134,7 @@ export function AnnouncementsPage({ route }: AnnouncementsPageProps) {
         onUpdate={(id, input) =>
           updateMutation.mutate({
             id,
-            input: updateAnnouncementRequestSchema.parse(input)
+            input: updateAnnouncementRequestSchema.parse(input),
           })
         }
         updatePending={updateMutation.isPending}
@@ -142,7 +148,7 @@ function AnnouncementsToolbar({
   language,
   onCreate,
   onRefresh,
-  route
+  route,
 }: {
   canCreate: boolean;
   language: "en" | "zh";
@@ -177,7 +183,7 @@ function AnnouncementsToolbar({
 function AnnouncementsFilter({
   keyword,
   language,
-  onChange
+  onChange,
 }: {
   keyword: string;
   language: "en" | "zh";
@@ -211,7 +217,7 @@ function AnnouncementEditorPanel({
   onCancelEdit,
   onCreate,
   onUpdate,
-  updatePending
+  updatePending,
 }: {
   creating: boolean;
   createPending: boolean;
@@ -225,7 +231,14 @@ function AnnouncementEditorPanel({
 }) {
   return (
     <aside className="space-y-4">
-      {creating ? <AnnouncementForm busy={createPending} mode="create" onCancel={onCancelCreate} onSubmit={onCreate} /> : null}
+      {creating ? (
+        <AnnouncementForm
+          busy={createPending}
+          mode="create"
+          onCancel={onCancelCreate}
+          onSubmit={onCreate}
+        />
+      ) : null}
       {editing ? (
         <AnnouncementForm
           busy={updatePending}

@@ -2,7 +2,7 @@ import type {
   BaseMenuManifestEntry,
   CreateMenuRequest,
   UpdateMenuApiBindingsRequest,
-  UpdateMenuRequest
+  UpdateMenuRequest,
 } from "@web-admin-base/contracts";
 
 import { createKnownError } from "../../core/errors/error-codes";
@@ -72,7 +72,7 @@ export class MenuService {
       deletedAt: null,
       deletedBy: null,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
     this.context.store.menus.set(menu.id, menu);
     return menu;
@@ -83,7 +83,8 @@ export class MenuService {
     if (input.parentMenuId !== undefined) this.ensureParentUpdateIsValid(id, input.parentMenuId);
     if (input.code !== undefined) this.ensureUniqueMenuCode(input.code, id);
     if (input.path !== undefined) this.ensureUniqueMenuPath(input.path, id);
-    if (input.requiredPermission !== undefined) this.ensureKnownPermission(input.requiredPermission);
+    if (input.requiredPermission !== undefined)
+      this.ensureKnownPermission(input.requiredPermission);
     if (input.routeCode !== undefined) this.ensureKnownRoute(input.routeCode);
 
     if (input.parentMenuId !== undefined) menu.parentMenuId = input.parentMenuId;
@@ -136,7 +137,7 @@ export class MenuService {
         tenantId: null,
         menuId: menu.id,
         apiPermissionId,
-        createdAt: now
+        createdAt: now,
       };
       this.context.store.menuApiBindings.set(binding.id, binding);
       return binding;
@@ -145,7 +146,7 @@ export class MenuService {
     return {
       menuId: menu.id,
       apiPermissionIds,
-      bindings
+      bindings,
     };
   }
 
@@ -183,7 +184,7 @@ export class MenuService {
         requiredPermission: entry.requiredPermission,
         routeCode: entry.routeCode,
         sortOrder: entry.sortOrder,
-        visible: entry.visible
+        visible: entry.visible,
       });
       byCode.set(menu.code, menu);
       seeded.push(menu);
@@ -226,20 +227,20 @@ export class MenuService {
 
   private findDescendantMenus(parentId: string): MenuRecord[] {
     return [...this.context.store.menus.values()].filter(
-      (menu) => !menu.isDeleted && this.isDescendantMenu(menu.id, parentId)
+      (menu) => !menu.isDeleted && this.isDescendantMenu(menu.id, parentId),
     );
   }
 
   private ensureUniqueMenuCode(code: string, currentMenuId?: string): void {
     const duplicate = [...this.context.store.menus.values()].some(
-      (menu) => menu.id !== currentMenuId && menu.code === code
+      (menu) => menu.id !== currentMenuId && menu.code === code,
     );
     if (duplicate) throw createKnownError("VALIDATION_DUPLICATE_MENU_CODE");
   }
 
   private ensureUniqueMenuPath(path: string, currentMenuId?: string): void {
     const duplicate = [...this.context.store.menus.values()].some(
-      (menu) => menu.id !== currentMenuId && menu.path === path
+      (menu) => menu.id !== currentMenuId && menu.path === path,
     );
     if (duplicate) throw createKnownError("VALIDATION_DUPLICATE_MENU_PATH");
   }
@@ -247,7 +248,7 @@ export class MenuService {
   private ensureKnownPermission(permissionCode: string | null): void {
     if (permissionCode === null) return;
     const permission = [...this.context.store.permissions.values()].find(
-      (candidate) => candidate.code === permissionCode && candidate.status === "enabled"
+      (candidate) => candidate.code === permissionCode && candidate.status === "enabled",
     );
     if (!permission) throw createKnownError("PERMISSION_UNKNOWN_CODE");
   }
@@ -255,7 +256,7 @@ export class MenuService {
   private ensureKnownRoute(routeCode: string | null): void {
     if (routeCode === null) return;
     const route = [...this.context.store.routeMetadata.values()].find(
-      (candidate) => candidate.routeCode === routeCode && candidate.status === "enabled"
+      (candidate) => candidate.routeCode === routeCode && candidate.status === "enabled",
     );
     if (!route) throw createKnownError("VALIDATION_INVALID_REQUEST");
   }

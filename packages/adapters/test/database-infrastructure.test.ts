@@ -6,7 +6,7 @@ import {
   createPostgresqlPool,
   createSqliteClient,
   runPostgresqlMigrations,
-  runSqliteMigrations
+  runSqliteMigrations,
 } from "@web-admin-base/db";
 import { describe, expect, it } from "vitest";
 
@@ -18,7 +18,7 @@ import {
   createDatabaseQueueAdapter,
   createDatabaseRateLimitAdapter,
   computeNextCronRun,
-  type DatabaseAdapterExecutor
+  type DatabaseAdapterExecutor,
 } from "../src";
 
 const postgresqlUrl = process.env.TEST_DATABASE_URL;
@@ -53,13 +53,13 @@ describe("database infrastructure adapters", () => {
 
   it("computes the next supported cron run in UTC", () => {
     expect(computeNextCronRun("* * * * *", new Date("2026-07-04T12:34:45.000Z"))).toBe(
-      "2026-07-04T12:35:00.000Z"
+      "2026-07-04T12:35:00.000Z",
     );
     expect(computeNextCronRun("0 0 * * *", new Date("2026-07-04T12:34:45.000Z"))).toBe(
-      "2026-07-05T00:00:00.000Z"
+      "2026-07-05T00:00:00.000Z",
     );
     expect(computeNextCronRun("0 9 1 * 1", new Date("2026-07-04T00:00:00.000Z"))).toBe(
-      "2026-07-06T09:00:00.000Z"
+      "2026-07-06T09:00:00.000Z",
     );
   });
 });
@@ -68,7 +68,11 @@ async function expectInfrastructureAdapters(executor: DatabaseAdapterExecutor): 
   const cache = createDatabaseCacheAdapter(executor);
   const rateLimit = createDatabaseRateLimitAdapter(executor);
   const locks = createDatabaseLockAdapter(executor, { owner: "test-worker" });
-  const queue = createDatabaseQueueAdapter(executor, { workerId: "test-worker", maxAttempts: 2, retryDelaySeconds: 0 });
+  const queue = createDatabaseQueueAdapter(executor, {
+    workerId: "test-worker",
+    maxAttempts: 2,
+    retryDelaySeconds: 0,
+  });
   const events = createDatabaseEventBusAdapter(executor);
   const scheduler = createDatabaseJobSchedulerAdapter(executor, { retryDelaySeconds: 0 });
   const handledJobs: string[] = [];
@@ -78,14 +82,27 @@ async function expectInfrastructureAdapters(executor: DatabaseAdapterExecutor): 
   await cache.set("config:language", { value: "en" });
   await expect(cache.get("config:language")).resolves.toEqual({ value: "en" });
 
-  await expect(rateLimit.check("login:admin", 2, 60)).resolves.toMatchObject({ allowed: true, remaining: 1 });
-  await expect(rateLimit.check("login:admin", 2, 60)).resolves.toMatchObject({ allowed: true, remaining: 0 });
-  await expect(rateLimit.check("login:admin", 2, 60)).resolves.toMatchObject({ allowed: false, remaining: 0 });
+  await expect(rateLimit.check("login:admin", 2, 60)).resolves.toMatchObject({
+    allowed: true,
+    remaining: 1,
+  });
+  await expect(rateLimit.check("login:admin", 2, 60)).resolves.toMatchObject({
+    allowed: true,
+    remaining: 0,
+  });
+  await expect(rateLimit.check("login:admin", 2, 60)).resolves.toMatchObject({
+    allowed: false,
+    remaining: 0,
+  });
 
   const firstLock = await locks.acquire("scheduled:cleanup");
-  const blockedLock = await createDatabaseLockAdapter(executor, { owner: "other-worker" }).acquire("scheduled:cleanup");
+  const blockedLock = await createDatabaseLockAdapter(executor, { owner: "other-worker" }).acquire(
+    "scheduled:cleanup",
+  );
   await firstLock?.release();
-  const secondLock = await createDatabaseLockAdapter(executor, { owner: "other-worker" }).acquire("scheduled:cleanup");
+  const secondLock = await createDatabaseLockAdapter(executor, { owner: "other-worker" }).acquire(
+    "scheduled:cleanup",
+  );
   await secondLock?.release();
   expect(firstLock?.key).toBe("scheduled:cleanup");
   expect(blockedLock).toBeNull();
@@ -104,16 +121,25 @@ async function expectInfrastructureAdapters(executor: DatabaseAdapterExecutor): 
   await queue.enqueue("log.fail", { message: "broken" });
   await expect(queue.processNext("log.fail")).resolves.toBe(true);
   await expect(queue.processNext("log.fail")).resolves.toBe(true);
-  const failedJobs = await executor.all("SELECT status, attempt, last_error FROM queue_jobs WHERE type = 'log.fail'");
+  const failedJobs = await executor.all(
+    "SELECT status, attempt, last_error FROM queue_jobs WHERE type = 'log.fail'",
+  );
   expect(failedJobs.map((row) => ({ ...row, attempt: Number(row.attempt) }))).toEqual([
-    expect.objectContaining({ status: "dead_letter", attempt: 2, last_error: "write failed" })
+    expect.objectContaining({ status: "dead_letter", attempt: 2, last_error: "write failed" }),
   ]);
 
   const staleAt = new Date(Date.now() - 20 * 60 * 1000).toISOString();
   await executor.run(
     `INSERT INTO queue_jobs (type, payload_json, status, attempt, max_attempts, available_at, locked_by, locked_at, created_at, updated_at)
      VALUES (${marker(executor, 1)}, ${marker(executor, 2)}, 'running', 1, 2, ${marker(executor, 3)}, 'stale-worker', ${marker(executor, 4)}, ${marker(executor, 5)}, ${marker(executor, 6)})`,
-    ["log.write", jsonPayload({ message: "recovered" }, executor), staleAt, staleAt, staleAt, staleAt]
+    [
+      "log.write",
+      jsonPayload({ message: "recovered" }, executor),
+      staleAt,
+      staleAt,
+      staleAt,
+      staleAt,
+    ],
   );
   await expect(queue.processNext("log.write")).resolves.toBe(true);
   expect(handledJobs).toEqual(["created", "recovered"]);
@@ -125,53 +151,69 @@ async function expectInfrastructureAdapters(executor: DatabaseAdapterExecutor): 
     id: "ignored-client-id",
     type: "notification.created",
     payload: { title: "Welcome" },
-    occurredAt: "2026-07-03T00:00:00.000Z"
+    occurredAt: "2026-07-03T00:00:00.000Z",
   });
   await expect(events.processNext()).resolves.toBe(true);
   expect(handledEvents).toEqual(["Welcome"]);
 
-  await scheduler.register({ code: "cleanup", cronExpression: "* * * * *", enabled: true }, async () => {
-    handledSchedules.push("cleanup");
-  });
+  await scheduler.register(
+    { code: "cleanup", cronExpression: "* * * * *", enabled: true },
+    async () => {
+      handledSchedules.push("cleanup");
+    },
+  );
   await expect(scheduler.processDue()).resolves.toBe(0);
-  await executor.run("UPDATE scheduled_jobs SET next_run_at = '2026-01-01T00:00:00.000Z' WHERE code = 'cleanup'");
+  await executor.run(
+    "UPDATE scheduled_jobs SET next_run_at = '2026-01-01T00:00:00.000Z' WHERE code = 'cleanup'",
+  );
   await expect(scheduler.processDue()).resolves.toBe(1);
   expect(handledSchedules).toEqual(["cleanup"]);
-  const schedulerRows = await executor.all("SELECT next_run_at, attempt, last_error FROM scheduled_jobs WHERE code = 'cleanup'");
-  const schedulerLogs = await executor.all("SELECT log_type, level, message FROM log_entries WHERE log_type = 'scheduler'");
-  expect(new Date(String(schedulerRows[0]?.next_run_at)).getTime()).toBeGreaterThan(Date.now() - 1_000);
+  const schedulerRows = await executor.all(
+    "SELECT next_run_at, attempt, last_error FROM scheduled_jobs WHERE code = 'cleanup'",
+  );
+  const schedulerLogs = await executor.all(
+    "SELECT log_type, level, message FROM log_entries WHERE log_type = 'scheduler'",
+  );
+  expect(new Date(String(schedulerRows[0]?.next_run_at)).getTime()).toBeGreaterThan(
+    Date.now() - 1_000,
+  );
   expect(schedulerRows.map((row) => ({ ...row, attempt: Number(row.attempt) }))).toEqual([
-    expect.objectContaining({ attempt: 0, last_error: null })
+    expect.objectContaining({ attempt: 0, last_error: null }),
   ]);
   expect(schedulerLogs).toEqual([
     expect.objectContaining({
       log_type: "scheduler",
       level: "info",
-      message: "Scheduled job succeeded"
-    })
+      message: "Scheduled job succeeded",
+    }),
   ]);
 
-  await scheduler.register({ code: "failing-cleanup", cronExpression: "* * * * *", enabled: true }, async () => {
-    throw new Error("cleanup failed");
-  });
+  await scheduler.register(
+    { code: "failing-cleanup", cronExpression: "* * * * *", enabled: true },
+    async () => {
+      throw new Error("cleanup failed");
+    },
+  );
   await executor.run(
-    "UPDATE scheduled_jobs SET next_run_at = '2026-01-01T00:00:00.000Z', max_attempts = 2 WHERE code = 'failing-cleanup'"
+    "UPDATE scheduled_jobs SET next_run_at = '2026-01-01T00:00:00.000Z', max_attempts = 2 WHERE code = 'failing-cleanup'",
   );
   await expect(scheduler.processDue()).resolves.toBe(2);
   await expect(scheduler.processDue()).resolves.toBe(0);
   const failedScheduleRows = await executor.all(
-    "SELECT attempt, last_error, next_run_at FROM scheduled_jobs WHERE code = 'failing-cleanup'"
+    "SELECT attempt, last_error, next_run_at FROM scheduled_jobs WHERE code = 'failing-cleanup'",
   );
   const errorLogs = await executor.all(
-    "SELECT level, message FROM log_entries WHERE log_type = 'scheduler' AND level = 'error' ORDER BY id ASC"
+    "SELECT level, message FROM log_entries WHERE log_type = 'scheduler' AND level = 'error' ORDER BY id ASC",
   );
   expect(failedScheduleRows.map((row) => ({ ...row, attempt: Number(row.attempt) }))).toEqual([
-    expect.objectContaining({ attempt: 0, last_error: "cleanup failed" })
+    expect.objectContaining({ attempt: 0, last_error: "cleanup failed" }),
   ]);
-  expect(new Date(String(failedScheduleRows[0]?.next_run_at)).getTime()).toBeGreaterThan(Date.now() - 1_000);
+  expect(new Date(String(failedScheduleRows[0]?.next_run_at)).getTime()).toBeGreaterThan(
+    Date.now() - 1_000,
+  );
   expect(errorLogs).toEqual([
     expect.objectContaining({ level: "error", message: "cleanup failed" }),
-    expect.objectContaining({ level: "error", message: "cleanup failed" })
+    expect.objectContaining({ level: "error", message: "cleanup failed" }),
   ]);
 }
 
@@ -183,7 +225,7 @@ async function clearInfrastructureTables(executor: DatabaseAdapterExecutor): Pro
     "log_entries",
     "cache_entries",
     "rate_limit_counters",
-    "locks"
+    "locks",
   ]) {
     await executor.run(`DELETE FROM ${table}`);
   }
@@ -198,13 +240,16 @@ function jsonPayload(value: unknown, executor: DatabaseAdapterExecutor): unknown
 }
 
 function getPostgresqlUrl(): string {
-  if (!postgresqlUrl) throw new Error("TEST_DATABASE_URL is required for PostgreSQL adapter tests.");
+  if (!postgresqlUrl)
+    throw new Error("TEST_DATABASE_URL is required for PostgreSQL adapter tests.");
   return postgresqlUrl;
 }
 
 function createPostgresqlTestExecutor(url: string): DatabaseAdapterExecutor {
   const pool = createPostgresqlPool(url);
-  let activeClient: { query(sql: string, params?: unknown[]): Promise<{ rows: unknown[] }> } | null = null;
+  let activeClient: {
+    query(sql: string, params?: unknown[]): Promise<{ rows: unknown[] }>;
+  } | null = null;
 
   return {
     dialect: "postgresql",
@@ -234,7 +279,7 @@ function createPostgresqlTestExecutor(url: string): DatabaseAdapterExecutor {
     },
     async close() {
       await pool.end();
-    }
+    },
   };
 }
 
@@ -267,6 +312,6 @@ function createSqliteTestExecutor(url: string): DatabaseAdapterExecutor {
     },
     async close() {
       client.close();
-    }
+    },
   };
 }

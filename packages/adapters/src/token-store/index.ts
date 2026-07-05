@@ -40,6 +40,6 @@ export function createInMemoryTokenStoreAdapter(): TokenStoreAdapter {
       for (const token of tokens.values()) {
         if (token.sessionId === sessionId) token.revokedAt = revokedAt;
       }
-    }
+    },
   };
 }

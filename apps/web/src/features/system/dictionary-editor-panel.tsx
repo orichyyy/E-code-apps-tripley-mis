@@ -1,6 +1,6 @@
 import type {
   CreateDictionaryItemRequest,
-  CreateDictionaryTypeRequest
+  CreateDictionaryTypeRequest,
 } from "@web-admin-base/contracts";
 
 import { DictionaryItemForm, DictionaryTypeForm } from "./dictionary-forms";
@@ -34,7 +34,7 @@ export function DictionaryEditorPanel({
   onCreateType,
   onUpdateItem,
   onUpdateType,
-  selectedType
+  selectedType,
 }: DictionaryEditorPanelProps) {
   return (
     <aside className="flex flex-col gap-4">
@@ -79,7 +79,8 @@ function DictionaryBoundary({ selectedType }: { selectedType: DictionaryType | n
     <section className="rounded-lg border bg-card p-4 text-sm shadow-sm">
       <h3 className="font-semibold">Dictionary boundary</h3>
       <p className="mt-2 text-muted-foreground">
-        Dictionaries are global in version 1. Organization-level overrides and ad hoc i18n key creation remain reserved.
+        Dictionaries are global in version 1. Organization-level overrides and ad hoc i18n key
+        creation remain reserved.
       </p>
       {selectedType ? (
         <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">

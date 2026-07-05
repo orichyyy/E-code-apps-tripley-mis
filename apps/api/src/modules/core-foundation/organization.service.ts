@@ -1,23 +1,19 @@
 import type {
   CreateOrganizationRequest,
   UpdateOrganizationDepthConfigRequest,
-  UpdateOrganizationRequest
+  UpdateOrganizationRequest,
 } from "@web-admin-base/contracts";
 import {
   allocateNextOrgSegment,
   decodeOrgPath,
   encodeOrgPath,
   isDescendantPath,
-  OrgSegmentRangeExhaustedError
+  OrgSegmentRangeExhaustedError,
 } from "@web-admin-base/db";
 
 import { createKnownError } from "../../core/errors/error-codes";
 import { nowUtc, toUtcIso } from "../../core/time/utc";
-import type {
-  OrganizationRecord,
-  PublicOrganization,
-  PublicOrganizationTreeNode
-} from "./domain";
+import type { OrganizationRecord, PublicOrganization, PublicOrganizationTreeNode } from "./domain";
 import type { BackendCoreContext } from "./service-context";
 import { requireOrganization, requireUser } from "./store-guards";
 import { toPublicOrganization } from "./serializers";
@@ -28,7 +24,7 @@ export class OrganizationService {
   getDepthConfig() {
     return {
       maxDepth: this.context.config.maxOrganizationDepth,
-      maxSupportedDepth: 8
+      maxSupportedDepth: 8,
     };
   }
 
@@ -54,7 +50,7 @@ export class OrganizationService {
     for (const organization of organizations) {
       const node = {
         ...toPublicOrganization(organization),
-        children: []
+        children: [],
       };
       nodesByPath.set(organization.path.toString(), node);
 
@@ -74,16 +70,13 @@ export class OrganizationService {
     return toPublicOrganization(requireOrganization(this.context.store, id));
   }
 
-  create(
-    input: CreateOrganizationRequest,
-    actorId: string | null = null
-  ): PublicOrganization {
+  create(input: CreateOrganizationRequest, actorId: string | null = null): PublicOrganization {
     return toPublicOrganization(this.createRecord(input, actorId));
   }
 
   createRecord(
     input: CreateOrganizationRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ): OrganizationRecord {
     const store = this.context.store;
     this.ensureUniqueOrganizationCode(input.code);
@@ -123,7 +116,7 @@ export class OrganizationService {
       createdAt: now,
       updatedAt: now,
       createdBy: actorId,
-      updatedBy: actorId
+      updatedBy: actorId,
     };
     store.organizations.set(organization.id, organization);
     return organization;
@@ -132,7 +125,7 @@ export class OrganizationService {
   update(
     id: string,
     input: UpdateOrganizationRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ): PublicOrganization {
     const organization = requireOrganization(this.context.store, id);
     if (input.code !== undefined) this.ensureUniqueOrganizationCode(input.code, organization.id);
@@ -159,7 +152,7 @@ export class OrganizationService {
       (candidate) =>
         !candidate.isDeleted &&
         (candidate.id === id ||
-          isDescendantPath(candidate.path, organization.path, organization.level))
+          isDescendantPath(candidate.path, organization.path, organization.level)),
     );
     affected.forEach((candidate) => {
       candidate.status = "disabled";
@@ -194,7 +187,7 @@ export class OrganizationService {
     this.softDeleteOrganizationRoleBindings(
       new Set(affectedOrganizations.map((affectedOrganization) => affectedOrganization.id)),
       now,
-      deletedBy
+      deletedBy,
     );
     return toPublicOrganization(organization);
   }
@@ -216,14 +209,14 @@ export class OrganizationService {
       (candidate) =>
         !candidate.isDeleted &&
         candidate.id !== organization.id &&
-        isDescendantPath(candidate.path, organization.path, organization.level)
+        isDescendantPath(candidate.path, organization.path, organization.level),
     );
   }
 
   private softDeleteOrganizationRoleBindings(
     organizationIds: Set<string>,
     deletedAt: string,
-    deletedBy: string | null
+    deletedBy: string | null,
   ): void {
     for (const binding of this.context.store.userOrganizationRoles.values()) {
       if (binding.isDeleted || !organizationIds.has(binding.organizationId)) continue;
@@ -253,15 +246,13 @@ export class OrganizationService {
       (candidate) =>
         !candidate.isDeleted &&
         candidate.status === "disabled" &&
-        isDescendantPath(organization.path, candidate.path, candidate.level)
+        isDescendantPath(organization.path, candidate.path, candidate.level),
     );
   }
 
   private ensureUniqueOrganizationCode(code: string, currentOrganizationId?: string): void {
     const duplicate = [...this.context.store.organizations.values()].some(
-      (organization) =>
-        organization.id !== currentOrganizationId &&
-        organization.code === code
+      (organization) => organization.id !== currentOrganizationId && organization.code === code,
     );
     if (duplicate) throw createKnownError("VALIDATION_DUPLICATE_ORGANIZATION_CODE");
   }
@@ -279,14 +270,12 @@ function compareOrganizationsForTree(left: OrganizationRecord, right: Organizati
   return left.id.localeCompare(right.id);
 }
 
-function sortOrganizationTree(
-  nodes: PublicOrganizationTreeNode[]
-): PublicOrganizationTreeNode[] {
+function sortOrganizationTree(nodes: PublicOrganizationTreeNode[]): PublicOrganizationTreeNode[] {
   nodes.sort(
     (left, right) =>
       left.sortOrder - right.sortOrder ||
       left.segment - right.segment ||
-      left.id.localeCompare(right.id)
+      left.id.localeCompare(right.id),
   );
   nodes.forEach((node) => sortOrganizationTree(node.children));
   return nodes;

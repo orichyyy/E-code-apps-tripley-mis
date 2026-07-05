@@ -13,13 +13,13 @@ describe("OrganizationService", () => {
       adminDisplayName: "Super Admin",
       adminEmail: "admin@example.com",
       adminPhone: "10000000000",
-      adminPassword: "password1"
+      adminPassword: "password1",
     });
 
     for (let index = 2; index <= 127; index += 1) {
       await services.createOrganization({
         name: `Root ${index}`,
-        code: `root-${index}`
+        code: `root-${index}`,
       });
     }
 
@@ -27,7 +27,7 @@ describe("OrganizationService", () => {
     try {
       await services.createOrganization({
         name: "Overflow Root",
-        code: "overflow-root"
+        code: "overflow-root",
       });
     } catch (error) {
       caught = error;

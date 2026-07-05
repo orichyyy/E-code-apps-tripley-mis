@@ -26,7 +26,7 @@ describe("createLocalFileStorageAdapter", () => {
     expect(stored).toEqual({
       objectKey: "exports/result.csv",
       contentType: "text/csv",
-      sizeBytes: body.byteLength
+      sizeBytes: body.byteLength,
     });
     expect(new TextDecoder().decode(read ?? new Uint8Array())).toBe("file content");
     expect(existsSync(join(root, "exports", "result.csv"))).toBe(true);
@@ -37,7 +37,7 @@ describe("createLocalFileStorageAdapter", () => {
     const storage = createLocalFileStorageAdapter({ rootDirectory: root });
 
     await expect(storage.put("../outside.txt", new Uint8Array(), "text/plain")).rejects.toThrow(
-      "storage root"
+      "storage root",
     );
   });
 });

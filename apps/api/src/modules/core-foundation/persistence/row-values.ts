@@ -8,12 +8,14 @@ import type {
   PermissionRecord,
   RoleDataPermissionRecord,
   RolePermissionRecord,
-  UserPreferenceRecord
+  UserPreferenceRecord,
 } from "../domain";
 import type { InMemoryBackendStore } from "../in-memory-store";
 
 export function placeholders(count: number, dialect: DatabaseDialect): string {
-  return Array.from({ length: count }, (_, index) => dialect === "postgresql" ? `$${index + 1}` : "?").join(", ");
+  return Array.from({ length: count }, (_, index) =>
+    dialect === "postgresql" ? `$${index + 1}` : "?",
+  ).join(", ");
 }
 
 export function normalizeParam(value: unknown, dialect: DatabaseDialect): unknown {
@@ -131,7 +133,7 @@ export function initializationStatus(value: unknown): InitializationStateRecord[
 export function setSequence(
   store: InMemoryBackendStore,
   sequence: Parameters<InMemoryBackendStore["setSequenceValue"]>[0],
-  records: Map<string, { id: string }>
+  records: Map<string, { id: string }>,
 ): void {
   const maxId = Math.max(0, ...[...records.values()].map((record) => Number(record.id)));
   store.setSequenceValue(sequence, maxId);

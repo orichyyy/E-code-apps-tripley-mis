@@ -1,7 +1,10 @@
 import type { JobSchedulerAdapter, ScheduledJobDefinition } from ".";
 
 export function createInMemoryJobSchedulerAdapter(): JobSchedulerAdapter {
-  const jobs = new Map<string, { definition: ScheduledJobDefinition; handler: () => Promise<void> }>();
+  const jobs = new Map<
+    string,
+    { definition: ScheduledJobDefinition; handler: () => Promise<void> }
+  >();
 
   return {
     async healthCheck() {
@@ -12,6 +15,6 @@ export function createInMemoryJobSchedulerAdapter(): JobSchedulerAdapter {
     },
     async unregister(jobCode) {
       jobs.delete(jobCode);
-    }
+    },
   };
 }

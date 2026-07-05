@@ -19,6 +19,6 @@ export function readMigrationFiles(dialect: DatabaseDialect): SqlMigration[] {
     .sort()
     .map((filename) => ({
       name: filename,
-      sql: readFileSync(join(directory, filename), "utf8")
+      sql: readFileSync(join(directory, filename), "utf8"),
     }));
 }

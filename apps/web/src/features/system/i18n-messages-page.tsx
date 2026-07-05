@@ -28,14 +28,15 @@ export function I18nMessagesPage({ route }: I18nMessagesPageProps) {
   const query = useQuery({
     enabled: canView,
     queryKey: ["i18n-messages"],
-    queryFn: fetchI18nMessages
+    queryFn: fetchI18nMessages,
   });
   const updateMutation = useMutation({
-    mutationFn: ({ id, input }: { id: string; input: UpdateI18nMessageRequest }) => updateI18nMessage(id, input),
+    mutationFn: ({ id, input }: { id: string; input: UpdateI18nMessageRequest }) =>
+      updateI18nMessage(id, input),
     onSuccess: async () => {
       setEditing(null);
       await queryClient.invalidateQueries({ queryKey: ["i18n-messages"] });
-    }
+    },
   });
   const rows = useMemo(
     () =>
@@ -43,16 +44,18 @@ export function I18nMessagesPage({ route }: I18nMessagesPageProps) {
         [record.messageKey, record.language, record.module, record.messageValue]
           .join(" ")
           .toLowerCase()
-          .includes(keyword.toLowerCase())
+          .includes(keyword.toLowerCase()),
       ),
-    [keyword, query.data]
+    [keyword, query.data],
   );
 
   if (!canView) {
     return (
       <section className="rounded-lg border bg-card p-8 text-center">
         <AlertCircle className="mx-auto size-8 text-destructive" aria-hidden="true" />
-        <h2 className="mt-3 text-base font-semibold">{translate(language, "common.permissionDenied")}</h2>
+        <h2 className="mt-3 text-base font-semibold">
+          {translate(language, "common.permissionDenied")}
+        </h2>
       </section>
     );
   }
@@ -92,7 +95,7 @@ function I18nMessagesToolbar({
   language,
   onRefresh,
   recordCount,
-  route
+  route,
 }: {
   language: "en" | "zh";
   onRefresh: () => void;
@@ -104,7 +107,8 @@ function I18nMessagesToolbar({
       <div>
         <h2 className="text-base font-semibold">{translate(language, route.titleI18nKey)}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Maintain existing localized message values for frontend UI, backend messages, and extension keys.
+          Maintain existing localized message values for frontend UI, backend messages, and
+          extension keys.
         </p>
       </div>
       <div className="flex items-center gap-3">
@@ -121,7 +125,7 @@ function I18nMessagesToolbar({
 function I18nMessagesFilter({
   keyword,
   language,
-  onChange
+  onChange,
 }: {
   keyword: string;
   language: "en" | "zh";
@@ -151,7 +155,7 @@ function I18nMessagesSidePanel({
   error,
   onCancelEdit,
   onUpdate,
-  updatePending
+  updatePending,
 }: {
   editing: I18nMessage | null;
   error: boolean;
@@ -173,8 +177,9 @@ function I18nMessagesSidePanel({
         <section className="rounded-lg border bg-card p-4 text-sm shadow-sm">
           <h3 className="font-semibold">Message boundary</h3>
           <p className="mt-2 text-muted-foreground">
-            This page edits existing message values only. New i18n keys should be introduced by route, menu, dictionary,
-            notification, or module manifests so keys stay stable and reviewable.
+            This page edits existing message values only. New i18n keys should be introduced by
+            route, menu, dictionary, notification, or module manifests so keys stay stable and
+            reviewable.
           </p>
         </section>
       )}

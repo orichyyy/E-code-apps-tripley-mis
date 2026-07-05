@@ -117,5 +117,5 @@ export const responseSchemaByOperationCode: Record<string, string> = {
   "api.scheduled-tasks.run": "ScheduledTaskResponse",
   "api.import-export.tasks.list": "ImportExportTaskListResponse",
   "api.import-export.export.create": "ImportExportTaskResponse",
-  "api.import-export.tasks.detail": "ImportExportTaskResponse"
+  "api.import-export.tasks.detail": "ImportExportTaskResponse",
 };

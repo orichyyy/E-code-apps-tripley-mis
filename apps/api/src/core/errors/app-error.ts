@@ -1,10 +1,5 @@
 export type ErrorCategory =
-  | "authentication"
-  | "authorization"
-  | "business"
-  | "system"
-  | "third-party"
-  | "validation";
+  "authentication" | "authorization" | "business" | "system" | "third-party" | "validation";
 
 export type AppErrorOptions = {
   code: string;

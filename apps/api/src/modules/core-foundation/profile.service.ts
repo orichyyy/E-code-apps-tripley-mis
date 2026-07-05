@@ -2,7 +2,7 @@ import type {
   UpdateOwnAvatarRequest,
   UpdateOwnPreferencesRequest,
   UpdateOwnProfileRequest,
-  UpdateUserRequest
+  UpdateUserRequest,
 } from "@web-admin-base/contracts";
 
 import { nowUtc, toUtcIso } from "../../core/time/utc";
@@ -18,14 +18,14 @@ type AuthContext = NonNullable<ReturnType<AuthService["findAuthContext"]>>;
 export class ProfileService {
   constructor(
     private readonly context: BackendCoreContext,
-    private readonly users: UserService
+    private readonly users: UserService,
   ) {}
 
   getProfile(authContext: AuthContext): PublicProfile {
     const user = requireUser(this.context.store, authContext.userId);
     return {
       user: toPublicUser(user),
-      preferences: this.getOrCreatePreferences(user.id)
+      preferences: this.getOrCreatePreferences(user.id),
     };
   }
 
@@ -41,16 +41,19 @@ export class ProfileService {
       phone: input.phone,
       avatarFileId: input.avatarFileId,
       gender: input.gender,
-      employeeNumber: input.employeeNumber
+      employeeNumber: input.employeeNumber,
     };
     const user = this.users.update(authContext.userId, profileInput, authContext.userId);
     return {
       user,
-      preferences: this.getOrCreatePreferences(authContext.userId)
+      preferences: this.getOrCreatePreferences(authContext.userId),
     };
   }
 
-  updatePreferences(authContext: AuthContext, input: UpdateOwnPreferencesRequest): UserPreferenceRecord {
+  updatePreferences(
+    authContext: AuthContext,
+    input: UpdateOwnPreferencesRequest,
+  ): UserPreferenceRecord {
     const preferences = this.getOrCreatePreferences(authContext.userId);
     if (input.language !== undefined) preferences.language = input.language;
     if (input.themeMode !== undefined) preferences.themeMode = input.themeMode;
@@ -66,7 +69,7 @@ export class ProfileService {
 
   private getOrCreatePreferences(userId: string): UserPreferenceRecord {
     const existing = [...this.context.store.userPreferences.values()].find(
-      (preference) => preference.userId === userId
+      (preference) => preference.userId === userId,
     );
     if (existing) return existing;
 
@@ -79,7 +82,7 @@ export class ProfileService {
       themeMode: "light",
       themeColor: "blue",
       pageTabsEnabled: true,
-      updatedAt: toUtcIso(nowUtc())
+      updatedAt: toUtcIso(nowUtc()),
     };
     this.context.store.userPreferences.set(preferences.id, preferences);
     return preferences;

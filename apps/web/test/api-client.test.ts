@@ -5,29 +5,29 @@ import {
   fetchAnnouncements,
   publishAnnouncement,
   unpublishAnnouncement,
-  updateAnnouncement
+  updateAnnouncement,
 } from "../src/features/notifications/announcement-api";
 import {
   archiveNotification,
   deleteNotification,
   fetchInAppNotifications,
-  markNotificationRead
+  markNotificationRead,
 } from "../src/features/notifications/in-app-notification-api";
 import {
   createNotificationTemplate,
   fetchNotificationTemplates,
-  updateNotificationTemplate
+  updateNotificationTemplate,
 } from "../src/features/notifications/notification-template-api";
 import {
   createWebhookSubscription,
   fetchWebhookSubscriptions,
-  updateWebhookSubscription
+  updateWebhookSubscription,
 } from "../src/features/notifications/webhook-subscription-api";
 import {
   fetchProfile,
   updateOwnAvatar,
   updateOwnPreferences,
-  updateOwnProfile
+  updateOwnProfile,
 } from "../src/features/account/profile-api";
 import {
   deleteFile,
@@ -36,7 +36,7 @@ import {
   fetchFileReferences,
   fetchFiles,
   previewFileBlob,
-  uploadFile
+  uploadFile,
 } from "../src/features/system/file-api";
 import { fetchI18nMessages, updateI18nMessage } from "../src/features/system/i18n-message-api";
 import {
@@ -47,7 +47,7 @@ import {
   fetchSystemConfigs,
   updateDictionaryItem,
   updateDictionaryType,
-  updateSystemConfig
+  updateSystemConfig,
 } from "../src/features/system/system-management-api";
 import { createLogExportTask, fetchLogs } from "../src/features/logs/log-api";
 import {
@@ -59,7 +59,7 @@ import {
   fetchScheduledTasks,
   runScheduledTask,
   setScheduledTaskStatus,
-  updateScheduledTask
+  updateScheduledTask,
 } from "../src/features/operations/operations-api";
 import { changeOwnPassword, fetchPageDataset, loginWithPassword } from "../src/lib/api-client";
 
@@ -80,18 +80,18 @@ describe("frontend API client", () => {
               code: "cleanup",
               handlerType: "cleanup",
               status: "enabled",
-              updatedAt: "2026-07-03T00:00:00.000Z"
-            }
-          ]
+              updatedAt: "2026-07-03T00:00:00.000Z",
+            },
+          ],
         }),
-        { status: 200, headers: { "content-type": "application/json" } }
-      )
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
     );
 
     const dataset = await fetchPageDataset("operations.scheduler");
 
     expect(fetchMock).toHaveBeenCalledWith("/api/scheduled-tasks", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(dataset.mode).toBe("available-api");
     expect(dataset.records).toEqual([
@@ -100,8 +100,8 @@ describe("frontend API client", () => {
         name: "cleanup",
         code: "cleanup",
         owner: "cleanup",
-        source: "available-api"
-      })
+        source: "available-api",
+      }),
     ]);
   });
 
@@ -110,24 +110,44 @@ describe("frontend API client", () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = String(input);
       if (url === "/api/online-users") {
-        return Promise.resolve(jsonResponse({ data: [{ id: "s1", userId: "1", username: "admin", status: "active" }] }));
+        return Promise.resolve(
+          jsonResponse({ data: [{ id: "s1", userId: "1", username: "admin", status: "active" }] }),
+        );
       }
       if (url === "/api/scheduled-tasks") {
         return Promise.resolve(
           jsonResponse({
-            data: [{ id: "7", code: "cleanup", cronExpression: "*/15 * * * *", handlerType: "cleanup", enabled: true }]
-          })
+            data: [
+              {
+                id: "7",
+                code: "cleanup",
+                cronExpression: "*/15 * * * *",
+                handlerType: "cleanup",
+                enabled: true,
+              },
+            ],
+          }),
         );
       }
       if (url === "/api/import-export/tasks" || url === "/api/import-export/tasks/9") {
-        return Promise.resolve(jsonResponse({ data: [{ id: "9", taskType: "export", resourceType: "logs:login", status: "pending" }] }));
+        return Promise.resolve(
+          jsonResponse({
+            data: [{ id: "9", taskType: "export", resourceType: "logs:login", status: "pending" }],
+          }),
+        );
       }
       return Promise.resolve(jsonResponse({ data: { id: "7" } }));
     });
 
     await fetchOnlineUsers();
     await fetchScheduledTasks();
-    await createScheduledTask({ code: "cleanup", cronExpression: "*/15 * * * *", handlerType: "cleanup", payload: {}, enabled: true });
+    await createScheduledTask({
+      code: "cleanup",
+      cronExpression: "*/15 * * * *",
+      handlerType: "cleanup",
+      payload: {},
+      enabled: true,
+    });
     await updateScheduledTask("7", { enabled: false });
     await setScheduledTaskStatus("7", false);
     await runScheduledTask("7");
@@ -136,31 +156,37 @@ describe("frontend API client", () => {
     await createExportTask({ resourceType: "logs:login" });
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/online-users", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/scheduled-tasks", {
       method: "POST",
-      body: JSON.stringify({ code: "cleanup", cronExpression: "*/15 * * * *", handlerType: "cleanup", payload: {}, enabled: true }),
+      body: JSON.stringify({
+        code: "cleanup",
+        cronExpression: "*/15 * * * *",
+        handlerType: "cleanup",
+        payload: {},
+        enabled: true,
+      }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(5, "/api/scheduled-tasks/7/disable", {
       method: "POST",
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(6, "/api/scheduled-tasks/7/run", {
       method: "POST",
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(9, "/api/import-export/export", {
       method: "POST",
       body: JSON.stringify({ resourceType: "logs:login" }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
   });
 
@@ -169,9 +195,17 @@ describe("frontend API client", () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = String(input);
       if (url === "/api/logs/login") {
-        return Promise.resolve(jsonResponse({ data: [{ id: "1", logType: "login", level: "info", message: "Login ok" }] }));
+        return Promise.resolve(
+          jsonResponse({
+            data: [{ id: "1", logType: "login", level: "info", message: "Login ok" }],
+          }),
+        );
       }
-      return Promise.resolve(jsonResponse({ data: { id: "12", taskType: "export", resourceType: "logs:login", status: "pending" } }));
+      return Promise.resolve(
+        jsonResponse({
+          data: { id: "12", taskType: "export", resourceType: "logs:login", status: "pending" },
+        }),
+      );
     });
 
     const logs = await fetchLogs("logs.login");
@@ -184,8 +218,8 @@ describe("frontend API client", () => {
       body: JSON.stringify({ logType: "login" }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
   });
 
@@ -201,22 +235,22 @@ describe("frontend API client", () => {
                 user: {
                   id: "1",
                   username: "admin",
-                  displayName: "Super Administrator"
+                  displayName: "Super Administrator",
                 },
                 permissionCodes: ["user:view", "role:view"],
                 passwordChangeRequired: true,
-                preferences: { language: "zh" }
-              }
+                preferences: { language: "zh" },
+              },
             }),
-            { status: 200, headers: { "content-type": "application/json" } }
-          )
+            { status: 200, headers: { "content-type": "application/json" } },
+          ),
         );
       }
       return Promise.resolve(
         new Response(JSON.stringify({ data: { ok: true } }), {
           status: 200,
-          headers: { "content-type": "application/json" }
-        })
+          headers: { "content-type": "application/json" },
+        }),
       );
     });
 
@@ -231,22 +265,22 @@ describe("frontend API client", () => {
         username: "admin",
         displayName: "Super Administrator",
         language: "zh",
-        forcePasswordChange: true
+        forcePasswordChange: true,
       },
-      permissionCodes: ["user:view", "role:view"]
+      permissionCodes: ["user:view", "role:view"],
     });
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ username: "admin", password: "Admin1234" }),
-      headers: { "content-type": "application/json" }
+      headers: { "content-type": "application/json" },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/auth/change-password", {
       method: "POST",
       body: JSON.stringify({ oldPassword: "Admin1234", newPassword: "Admin5678" }),
       headers: {
         authorization: "Bearer real-token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
   });
 
@@ -263,26 +297,26 @@ describe("frontend API client", () => {
               valueType: "number",
               groupKey: "password",
               status: "enabled",
-              updatedAt: "2026-07-03T00:00:00.000Z"
-            }
-          ]
+              updatedAt: "2026-07-03T00:00:00.000Z",
+            },
+          ],
         }),
-        { status: 200, headers: { "content-type": "application/json" } }
-      )
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
     );
 
     const dataset = await fetchPageDataset("system.config");
 
     expect(fetchMock).toHaveBeenCalledWith("/api/system-config", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(dataset.records).toEqual([
       expect.objectContaining({
         id: "11",
         name: "password.minimumLength",
         code: "password.minimumLength",
-        source: "available-api"
-      })
+        source: "available-api",
+      }),
     ]);
   });
 
@@ -302,27 +336,29 @@ describe("frontend API client", () => {
               description: "Minimum length",
               editable: true,
               status: "enabled",
-              updatedAt: "2026-07-03T00:00:00.000Z"
-            }
-          ]
-        })
-      )
+              updatedAt: "2026-07-03T00:00:00.000Z",
+            },
+          ],
+        }),
+      ),
     );
 
     const records = await fetchSystemConfigs();
     await updateSystemConfig("password.minimumLength", { configValue: 10 });
 
-    expect(records[0]).toEqual(expect.objectContaining({ configKey: "password.minimumLength", configValue: 8 }));
+    expect(records[0]).toEqual(
+      expect.objectContaining({ configKey: "password.minimumLength", configValue: 8 }),
+    );
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/system-config", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/system-config/password.minimumLength", {
       method: "PATCH",
       body: JSON.stringify({ configValue: 10 }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
   });
 
@@ -331,57 +367,90 @@ describe("frontend API client", () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = String(input);
       if (url === "/api/dictionary-types") {
-        return Promise.resolve(jsonResponse({ data: [{ id: "21", code: "status", name: "Status", status: "enabled" }] }));
+        return Promise.resolve(
+          jsonResponse({ data: [{ id: "21", code: "status", name: "Status", status: "enabled" }] }),
+        );
       }
       if (url === "/api/dictionary-types/21/items") {
         return Promise.resolve(
-          jsonResponse({ data: [{ id: "31", typeId: "21", itemValue: "enabled", labelI18nKey: "dictionary.status.enabled", sortOrder: 1, status: "enabled" }] })
+          jsonResponse({
+            data: [
+              {
+                id: "31",
+                typeId: "21",
+                itemValue: "enabled",
+                labelI18nKey: "dictionary.status.enabled",
+                sortOrder: 1,
+                status: "enabled",
+              },
+            ],
+          }),
         );
       }
       return Promise.resolve(jsonResponse({ data: { id: "21" } }));
     });
 
     await fetchDictionaryTypes();
-    await createDictionaryType({ code: "status", name: "Status", description: null, status: "enabled" });
+    await createDictionaryType({
+      code: "status",
+      name: "Status",
+      description: null,
+      status: "enabled",
+    });
     await updateDictionaryType("21", { status: "disabled" });
     await fetchDictionaryItems("21");
-    await createDictionaryItem("21", { itemValue: "disabled", labelI18nKey: "dictionary.status.disabled", sortOrder: 2, status: "enabled" });
+    await createDictionaryItem("21", {
+      itemValue: "disabled",
+      labelI18nKey: "dictionary.status.disabled",
+      sortOrder: 2,
+      status: "enabled",
+    });
     await updateDictionaryItem("31", { status: "disabled" });
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/dictionary-types", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/dictionary-types", {
       method: "POST",
-      body: JSON.stringify({ code: "status", name: "Status", description: null, status: "enabled" }),
+      body: JSON.stringify({
+        code: "status",
+        name: "Status",
+        description: null,
+        status: "enabled",
+      }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/dictionary-types/21", {
       method: "PATCH",
       body: JSON.stringify({ status: "disabled" }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(5, "/api/dictionary-types/21/items", {
       method: "POST",
-      body: JSON.stringify({ itemValue: "disabled", labelI18nKey: "dictionary.status.disabled", sortOrder: 2, status: "enabled" }),
+      body: JSON.stringify({
+        itemValue: "disabled",
+        labelI18nKey: "dictionary.status.disabled",
+        sortOrder: 2,
+        status: "enabled",
+      }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(6, "/api/dictionary-items/31", {
       method: "PATCH",
       body: JSON.stringify({ status: "disabled" }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
   });
 
@@ -397,26 +466,26 @@ describe("frontend API client", () => {
               content: "Window",
               scopeType: "system",
               status: "published",
-              updatedAt: "2026-07-03T00:00:00.000Z"
-            }
-          ]
+              updatedAt: "2026-07-03T00:00:00.000Z",
+            },
+          ],
         }),
-        { status: 200, headers: { "content-type": "application/json" } }
-      )
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
     );
 
     const dataset = await fetchPageDataset("notifications.announcements");
 
     expect(fetchMock).toHaveBeenCalledWith("/api/announcements", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(dataset.records).toEqual([
       expect.objectContaining({
         id: "21",
         name: "Maintenance",
         status: "published",
-        source: "available-api"
-      })
+        source: "available-api",
+      }),
     ]);
   });
 
@@ -441,13 +510,13 @@ describe("frontend API client", () => {
                 createdAt: "2026-07-03T00:00:00.000Z",
                 updatedAt: "2026-07-03T00:00:00.000Z",
                 createdBy: "1",
-                updatedBy: "1"
-              }
-            ]
+                updatedBy: "1",
+              },
+            ],
           }),
-          { status: 200, headers: { "content-type": "application/json" } }
-        )
-      )
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      ),
     );
 
     const records = await fetchAnnouncements();
@@ -457,7 +526,7 @@ describe("frontend API client", () => {
     await unpublishAnnouncement("21");
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/announcements", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(records).toEqual([
       expect.objectContaining({
@@ -465,32 +534,32 @@ describe("frontend API client", () => {
         title: "Maintenance",
         content: "Window",
         scopeType: "system",
-        status: "draft"
-      })
+        status: "draft",
+      }),
     ]);
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/announcements", {
       method: "POST",
       body: JSON.stringify({ title: "Maintenance", content: "Window", scopeType: "system" }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/announcements/21", {
       method: "PATCH",
       body: JSON.stringify({ title: "Maintenance updated" }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(4, "/api/announcements/21/publish", {
       method: "POST",
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(5, "/api/announcements/21/unpublish", {
       method: "POST",
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
   });
 
@@ -512,13 +581,13 @@ describe("frontend API client", () => {
                 readAt: null,
                 archivedAt: null,
                 createdAt: "2026-07-03T00:00:00.000Z",
-                updatedAt: "2026-07-03T00:00:00.000Z"
-              }
-            ]
+                updatedAt: "2026-07-03T00:00:00.000Z",
+              },
+            ],
           }),
-          { status: 200, headers: { "content-type": "application/json" } }
-        )
-      )
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      ),
     );
 
     const records = await fetchInAppNotifications();
@@ -527,27 +596,27 @@ describe("frontend API client", () => {
     await deleteNotification("61");
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/notifications", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(records).toEqual([
       expect.objectContaining({
         id: "61",
         title: "Approval needed",
         status: "unread",
-        metadata: { requestId: "REQ-1" }
-      })
+        metadata: { requestId: "REQ-1" },
+      }),
     ]);
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/notifications/61/read", {
       method: "POST",
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/notifications/61/archive", {
       method: "POST",
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(4, "/api/notifications/61", {
       method: "DELETE",
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
   });
 
@@ -566,18 +635,18 @@ describe("frontend API client", () => {
               secretConfigured: true,
               status: "enabled",
               createdAt: "2026-07-03T00:00:00.000Z",
-              updatedAt: "2026-07-03T00:00:00.000Z"
-            }
-          ]
+              updatedAt: "2026-07-03T00:00:00.000Z",
+            },
+          ],
         }),
-        { status: 200, headers: { "content-type": "application/json" } }
-      )
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
     );
 
     const records = await fetchWebhookSubscriptions();
 
     expect(fetchMock).toHaveBeenCalledWith("/api/webhooks", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(records).toEqual([
       {
@@ -588,8 +657,8 @@ describe("frontend API client", () => {
         secretConfigured: true,
         status: "enabled",
         createdAt: "2026-07-03T00:00:00.000Z",
-        updatedAt: "2026-07-03T00:00:00.000Z"
-      }
+        updatedAt: "2026-07-03T00:00:00.000Z",
+      },
     ]);
     expect(records[0]).not.toHaveProperty("secret");
   });
@@ -610,18 +679,18 @@ describe("frontend API client", () => {
               variables: ["userName"],
               status: "enabled",
               createdAt: "2026-07-03T00:00:00.000Z",
-              updatedAt: "2026-07-03T00:00:00.000Z"
-            }
-          ]
+              updatedAt: "2026-07-03T00:00:00.000Z",
+            },
+          ],
         }),
-        { status: 200, headers: { "content-type": "application/json" } }
-      )
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
     );
 
     const records = await fetchNotificationTemplates();
 
     expect(fetchMock).toHaveBeenCalledWith("/api/notification-templates", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(records).toEqual([
       {
@@ -634,8 +703,8 @@ describe("frontend API client", () => {
         variables: ["userName"],
         status: "enabled",
         createdAt: "2026-07-03T00:00:00.000Z",
-        updatedAt: "2026-07-03T00:00:00.000Z"
-      }
+        updatedAt: "2026-07-03T00:00:00.000Z",
+      },
     ]);
   });
 
@@ -653,20 +722,20 @@ describe("frontend API client", () => {
                 language: "en",
                 messageValue: "Dashboard",
                 module: "routes",
-                updatedAt: "2026-07-03T00:00:00.000Z"
-              }
-            ]
+                updatedAt: "2026-07-03T00:00:00.000Z",
+              },
+            ],
           }),
-          { status: 200, headers: { "content-type": "application/json" } }
-        )
-      )
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      ),
     );
 
     const records = await fetchI18nMessages();
     await updateI18nMessage("51", { messageValue: "Control center" });
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/i18n/messages", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(records).toEqual([
       {
@@ -676,16 +745,16 @@ describe("frontend API client", () => {
         language: "en",
         messageValue: "Dashboard",
         module: "routes",
-        updatedAt: "2026-07-03T00:00:00.000Z"
-      }
+        updatedAt: "2026-07-03T00:00:00.000Z",
+      },
     ]);
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/i18n/messages/51", {
       method: "PATCH",
       body: JSON.stringify({ messageValue: "Control center" }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
   });
 
@@ -709,11 +778,11 @@ describe("frontend API client", () => {
                 referenced: false,
                 isDeleted: false,
                 createdAt: "2026-07-03T00:00:00.000Z",
-                updatedAt: "2026-07-03T00:00:00.000Z"
-              }
+                updatedAt: "2026-07-03T00:00:00.000Z",
+              },
             }),
-            { status: 201, headers: { "content-type": "application/json" } }
-          )
+            { status: 201, headers: { "content-type": "application/json" } },
+          ),
         );
       }
       if (url === "/api/files/71/references") {
@@ -729,12 +798,12 @@ describe("frontend API client", () => {
                   referenceType: "avatar",
                   status: "active",
                   createdAt: "2026-07-03T00:00:00.000Z",
-                  createdBy: "1"
-                }
-              ]
+                  createdBy: "1",
+                },
+              ],
             }),
-            { status: 200, headers: { "content-type": "application/json" } }
-          )
+            { status: 200, headers: { "content-type": "application/json" } },
+          ),
         );
       }
       if (url === "/api/files/71/download" || url === "/api/files/71/preview") {
@@ -759,8 +828,8 @@ describe("frontend API client", () => {
                         referenced: true,
                         isDeleted: false,
                         createdAt: "2026-07-03T00:00:00.000Z",
-                        updatedAt: "2026-07-03T00:00:00.000Z"
-                      }
+                        updatedAt: "2026-07-03T00:00:00.000Z",
+                      },
                     ]
                   : {
                       id: "71",
@@ -774,18 +843,18 @@ describe("frontend API client", () => {
                       referenced: true,
                       isDeleted: false,
                       createdAt: "2026-07-03T00:00:00.000Z",
-                      updatedAt: "2026-07-03T00:00:00.000Z"
-                    }
+                      updatedAt: "2026-07-03T00:00:00.000Z",
+                    },
             }),
-            { status: 200, headers: { "content-type": "application/json" } }
-          )
+            { status: 200, headers: { "content-type": "application/json" } },
+          ),
         );
       }
       return Promise.resolve(
         new Response(JSON.stringify({ data: null }), {
           status: 200,
-          headers: { "content-type": "application/json" }
-        })
+          headers: { "content-type": "application/json" },
+        }),
       );
     });
 
@@ -798,42 +867,42 @@ describe("frontend API client", () => {
     const preview = await previewFileBlob("71");
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/files", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(records).toEqual([
       expect.objectContaining({
         id: "71",
         originalName: "report.pdf",
         contentType: "application/pdf",
-        referenced: true
-      })
+        referenced: true,
+      }),
     ]);
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/files/71", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(detail).toEqual(expect.objectContaining({ id: "71", objectKey: "uploads/report.pdf" }));
     expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/files/71", {
       method: "DELETE",
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(4, "/api/files/upload", {
       method: "POST",
       body: expect.any(FormData),
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(uploaded).toEqual(expect.objectContaining({ id: "72", originalName: "image.png" }));
     expect(fetchMock).toHaveBeenNthCalledWith(5, "/api/files/71/references", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(references).toEqual([
-      expect.objectContaining({ id: "81", resourceType: "users", referenceType: "avatar" })
+      expect.objectContaining({ id: "81", resourceType: "users", referenceType: "avatar" }),
     ]);
     expect(fetchMock).toHaveBeenNthCalledWith(6, "/api/files/71/download", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     await expect(downloaded.text()).resolves.toBe("file-bytes");
     expect(fetchMock).toHaveBeenNthCalledWith(7, "/api/files/71/preview", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     await expect(preview.text()).resolves.toBe("file-bytes");
   });
@@ -844,9 +913,9 @@ describe("frontend API client", () => {
       Promise.resolve(
         new Response(JSON.stringify({ data: { id: "41" } }), {
           status: 200,
-          headers: { "content-type": "application/json" }
-        })
-      )
+          headers: { "content-type": "application/json" },
+        }),
+      ),
     );
 
     await createNotificationTemplate({
@@ -855,7 +924,7 @@ describe("frontend API client", () => {
       locale: "en",
       subject: "Welcome",
       body: "Hello {{userName}}",
-      variables: ["userName"]
+      variables: ["userName"],
     });
     await updateNotificationTemplate("41", { subject: "Welcome back" });
 
@@ -867,20 +936,20 @@ describe("frontend API client", () => {
         locale: "en",
         subject: "Welcome",
         body: "Hello {{userName}}",
-        variables: ["userName"]
+        variables: ["userName"],
       }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/notification-templates/41", {
       method: "PATCH",
       body: JSON.stringify({ subject: "Welcome back" }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
   });
 
@@ -890,9 +959,9 @@ describe("frontend API client", () => {
       Promise.resolve(
         new Response(JSON.stringify({ data: { id: "31" } }), {
           status: 200,
-          headers: { "content-type": "application/json" }
-        })
-      )
+          headers: { "content-type": "application/json" },
+        }),
+      ),
     );
 
     await createWebhookSubscription({
@@ -900,7 +969,7 @@ describe("frontend API client", () => {
       url: "https://example.com/audit",
       eventTypes: ["security.event"],
       secret: "new-secret",
-      status: "enabled"
+      status: "enabled",
     });
     await updateWebhookSubscription("31", { status: "disabled" });
 
@@ -911,20 +980,20 @@ describe("frontend API client", () => {
         url: "https://example.com/audit",
         eventTypes: ["security.event"],
         secret: "new-secret",
-        status: "enabled"
+        status: "enabled",
       }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/webhooks/31", {
       method: "PATCH",
       body: JSON.stringify({ status: "disabled" }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
   });
 
@@ -943,7 +1012,7 @@ describe("frontend API client", () => {
                 phone: "10000000000",
                 avatarFileId: null,
                 gender: null,
-                employeeNumber: null
+                employeeNumber: null,
               },
               preferences: {
                 id: "1",
@@ -953,36 +1022,41 @@ describe("frontend API client", () => {
                 themeMode: "dark",
                 themeColor: "emerald",
                 pageTabsEnabled: false,
-                updatedAt: "2026-07-03T00:00:00.000Z"
-              }
-            }
+                updatedAt: "2026-07-03T00:00:00.000Z",
+              },
+            },
           }),
-          { status: 200, headers: { "content-type": "application/json" } }
-        )
-      )
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      ),
     );
 
     const profile = await fetchProfile();
     await updateOwnProfile({ displayName: "Admin User" });
-    await updateOwnPreferences({ language: "en", themeMode: "light", themeColor: "blue", pageTabsEnabled: true });
+    await updateOwnPreferences({
+      language: "en",
+      themeMode: "light",
+      themeColor: "blue",
+      pageTabsEnabled: true,
+    });
     await updateOwnAvatar({ avatarFileId: "9" });
 
     expect(profile.preferences).toMatchObject({
       language: "zh",
       themeMode: "dark",
       themeColor: "emerald",
-      pageTabsEnabled: false
+      pageTabsEnabled: false,
     });
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/profile", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/profile", {
       method: "PATCH",
       body: JSON.stringify({ displayName: "Admin User" }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/profile/preferences", {
       method: "PATCH",
@@ -990,20 +1064,20 @@ describe("frontend API client", () => {
         language: "en",
         themeMode: "light",
         themeColor: "blue",
-        pageTabsEnabled: true
+        pageTabsEnabled: true,
       }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(4, "/api/profile/avatar", {
       method: "POST",
       body: JSON.stringify({ avatarFileId: "9" }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
   });
 });
@@ -1011,6 +1085,6 @@ describe("frontend API client", () => {
 function jsonResponse(body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status: 200,
-    headers: { "content-type": "application/json" }
+    headers: { "content-type": "application/json" },
   });
 }

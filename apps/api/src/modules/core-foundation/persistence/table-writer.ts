@@ -12,7 +12,7 @@ export abstract class TableWriter {
     for (const row of rows) {
       await this.executor.run(
         `INSERT INTO ${table} (${columns.join(", ")}) VALUES (${placeholders(row.length, this.executor.dialect)})`,
-        row.map((value) => normalizeParam(value, this.executor.dialect))
+        row.map((value) => normalizeParam(value, this.executor.dialect)),
       );
     }
   }

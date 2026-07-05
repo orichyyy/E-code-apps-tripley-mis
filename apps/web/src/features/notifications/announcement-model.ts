@@ -2,7 +2,7 @@ import {
   createAnnouncementRequestSchema,
   updateAnnouncementRequestSchema,
   type CreateAnnouncementRequest,
-  type UpdateAnnouncementRequest
+  type UpdateAnnouncementRequest,
 } from "@web-admin-base/contracts";
 import { z } from "zod";
 
@@ -17,23 +17,23 @@ export type AnnouncementFormValues = {
 export const announcementFormSchema = z.object({
   title: z.string().min(1),
   content: z.string().min(1),
-  scopeType: z.enum(["system", "organization"])
+  scopeType: z.enum(["system", "organization"]),
 });
 
 export const defaultAnnouncementFormValues: AnnouncementFormValues = {
   title: "",
   content: "",
-  scopeType: "system"
+  scopeType: "system",
 };
 
 export function toAnnouncementApiInput(
   value: AnnouncementFormValues,
-  mode: AnnouncementFormMode
+  mode: AnnouncementFormMode,
 ): CreateAnnouncementRequest | UpdateAnnouncementRequest {
   const input = {
     title: value.title.trim(),
     content: value.content.trim(),
-    scopeType: value.scopeType
+    scopeType: value.scopeType,
   };
 
   return mode === "create"

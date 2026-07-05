@@ -9,8 +9,8 @@ describe("healthResponseSchema", () => {
         status: "ok",
         service: "api",
         requestId: "request-1",
-        timestamp: new Date().toISOString()
-      })
+        timestamp: new Date().toISOString(),
+      }),
     ).toMatchObject({ status: "ok" });
   });
 });

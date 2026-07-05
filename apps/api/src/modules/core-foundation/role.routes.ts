@@ -1,7 +1,7 @@
 import {
   createRoleRequestSchema,
   updateRolePermissionsRequestSchema,
-  updateRoleRequestSchema
+  updateRoleRequestSchema,
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
@@ -22,13 +22,16 @@ export function createRoleRoutes(services: BackendCoreServices) {
 
   routes.get("/roles", (context) => {
     return context.json({
-      data: pageItems(services.listRoles({
-        keyword: context.req.query("keyword"),
-        status: context.req.query("status") as RoleListFilters["status"] | undefined
-      }), {
-        page: context.req.query("page"),
-        pageSize: context.req.query("pageSize")
-      })
+      data: pageItems(
+        services.listRoles({
+          keyword: context.req.query("keyword"),
+          status: context.req.query("status") as RoleListFilters["status"] | undefined,
+        }),
+        {
+          page: context.req.query("page"),
+          pageSize: context.req.query("pageSize"),
+        },
+      ),
     });
   });
 
@@ -46,7 +49,7 @@ export function createRoleRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     const input = updateRoleRequestSchema.parse(await context.req.json());
     return context.json({
-      data: await services.updateRole(context.req.param("id"), input, authContext?.userId ?? null)
+      data: await services.updateRole(context.req.param("id"), input, authContext?.userId ?? null),
     });
   });
 
@@ -54,7 +57,11 @@ export function createRoleRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     await assertEmptyJsonBody(context.req.raw);
     return context.json({
-      data: await services.setRoleStatus(context.req.param("id"), "enabled", authContext?.userId ?? null)
+      data: await services.setRoleStatus(
+        context.req.param("id"),
+        "enabled",
+        authContext?.userId ?? null,
+      ),
     });
   });
 
@@ -62,7 +69,11 @@ export function createRoleRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     await assertEmptyJsonBody(context.req.raw);
     return context.json({
-      data: await services.setRoleStatus(context.req.param("id"), "disabled", authContext?.userId ?? null)
+      data: await services.setRoleStatus(
+        context.req.param("id"),
+        "disabled",
+        authContext?.userId ?? null,
+      ),
     });
   });
 
@@ -70,16 +81,19 @@ export function createRoleRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     await assertEmptyJsonBody(context.req.raw);
     return context.json({
-      data: await services.deleteRole(context.req.param("id"), authContext?.userId ?? null)
+      data: await services.deleteRole(context.req.param("id"), authContext?.userId ?? null),
     });
   });
 
   routes.post("/roles/:id/copy", async (context) => {
     const authContext = context.get("authContext");
     await assertEmptyJsonBody(context.req.raw);
-    return context.json({
-      data: services.copyRole(context.req.param("id"), authContext?.userId ?? null)
-    }, 201);
+    return context.json(
+      {
+        data: services.copyRole(context.req.param("id"), authContext?.userId ?? null),
+      },
+      201,
+    );
   });
 
   routes.get("/roles/:id/permissions", (context) => {
@@ -93,8 +107,8 @@ export function createRoleRoutes(services: BackendCoreServices) {
       data: await services.updateRolePermissions(
         context.req.param("id"),
         input,
-        authContext?.userId ?? null
-      )
+        authContext?.userId ?? null,
+      ),
     });
   });
 
@@ -103,18 +117,19 @@ export function createRoleRoutes(services: BackendCoreServices) {
       action: context.req.query("action"),
       keyword: context.req.query("keyword"),
       module: context.req.query("module"),
-      permissionType: context.req.query("type") as PermissionListFilters["permissionType"] | undefined,
+      permissionType: context.req.query("type") as
+        PermissionListFilters["permissionType"] | undefined,
       resource: context.req.query("resource"),
       source: context.req.query("source"),
-      status: context.req.query("status") as PermissionListFilters["status"] | undefined
+      status: context.req.query("status") as PermissionListFilters["status"] | undefined,
     });
     return context.json({
       data: hasPaginationQuery(context)
         ? pageItems(permissions, {
             page: context.req.query("page"),
-            pageSize: context.req.query("pageSize")
+            pageSize: context.req.query("pageSize"),
           })
-        : permissions
+        : permissions,
     });
   });
 
@@ -134,15 +149,15 @@ export function createRoleRoutes(services: BackendCoreServices) {
       method: context.req.query("method"),
       module: context.req.query("module"),
       public: parseOptionalBoolean(context.req.query("public")),
-      status: context.req.query("status") as ApiPermissionListFilters["status"] | undefined
+      status: context.req.query("status") as ApiPermissionListFilters["status"] | undefined,
     });
     return context.json({
       data: hasPaginationQuery(context)
         ? pageItems(apiPermissions, {
             page: context.req.query("page"),
-            pageSize: context.req.query("pageSize")
+            pageSize: context.req.query("pageSize"),
           })
-        : apiPermissions
+        : apiPermissions,
     });
   });
 
@@ -155,7 +170,9 @@ export function createRoleRoutes(services: BackendCoreServices) {
   return routes;
 }
 
-function hasPaginationQuery(context: { req: { query: (name: string) => string | undefined } }): boolean {
+function hasPaginationQuery(context: {
+  req: { query: (name: string) => string | undefined };
+}): boolean {
   return context.req.query("page") !== undefined || context.req.query("pageSize") !== undefined;
 }
 

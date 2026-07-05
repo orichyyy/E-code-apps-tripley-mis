@@ -31,7 +31,7 @@ export class PermissionCache {
 
   async set(context: PermissionContext): Promise<void> {
     await this.cache.set(this.key(context.userId, context.organizationId), context, {
-      ttlSeconds: 300
+      ttlSeconds: 300,
     });
   }
 

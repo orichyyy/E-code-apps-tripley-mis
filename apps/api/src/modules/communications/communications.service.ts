@@ -2,7 +2,7 @@ import type {
   CreateAnnouncementRequest,
   CreateWebhookSubscriptionRequest,
   UpdateAnnouncementRequest,
-  UpdateWebhookSubscriptionRequest
+  UpdateWebhookSubscriptionRequest,
 } from "@web-admin-base/contracts";
 
 import { CommunicationsRepository } from "./communications.repository";
@@ -11,7 +11,7 @@ import type { AnnouncementRecord, WebhookSubscriptionRecord } from "./communicat
 export class CommunicationsServices {
   private readonly memory = {
     announcements: [] as AnnouncementRecord[],
-    webhooks: [] as Array<WebhookSubscriptionRecord & { secret: string | null }>
+    webhooks: [] as Array<WebhookSubscriptionRecord & { secret: string | null }>,
   };
   private sequence = 1;
 
@@ -50,7 +50,7 @@ export class CommunicationsServices {
       createdAt: now,
       updatedAt: now,
       createdBy: actorId,
-      updatedBy: actorId
+      updatedBy: actorId,
     };
     this.memory.announcements.unshift(record);
     return Promise.resolve(record);
@@ -99,7 +99,7 @@ export class CommunicationsServices {
       createdAt: now,
       updatedAt: now,
       createdBy: actorId,
-      updatedBy: actorId
+      updatedBy: actorId,
     };
     this.memory.webhooks.unshift(record);
     return Promise.resolve(stripWebhookSecret(record));
@@ -110,10 +110,12 @@ export class CommunicationsServices {
     const record = this.memory.webhooks.find((item) => item.id === id && !item.isDeleted);
     if (!record) return Promise.resolve(null);
     Object.assign(record, input, {
-      secret: Object.hasOwn(input, "secret") ? input.secret ?? null : record.secret,
-      secretConfigured: Object.hasOwn(input, "secret") ? Boolean(input.secret) : record.secretConfigured,
+      secret: Object.hasOwn(input, "secret") ? (input.secret ?? null) : record.secret,
+      secretConfigured: Object.hasOwn(input, "secret")
+        ? Boolean(input.secret)
+        : record.secretConfigured,
       updatedAt: new Date().toISOString(),
-      updatedBy: actorId
+      updatedBy: actorId,
     });
     return Promise.resolve(stripWebhookSecret(record));
   }
@@ -125,7 +127,9 @@ export class CommunicationsServices {
   }
 }
 
-function stripWebhookSecret<T extends WebhookSubscriptionRecord>(record: T): WebhookSubscriptionRecord {
+function stripWebhookSecret<T extends WebhookSubscriptionRecord>(
+  record: T,
+): WebhookSubscriptionRecord {
   const safeRecord = { ...record } as WebhookSubscriptionRecord & { secret?: string | null };
   delete safeRecord.secret;
   return safeRecord;

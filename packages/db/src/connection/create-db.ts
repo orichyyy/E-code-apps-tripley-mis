@@ -11,7 +11,10 @@ export type DatabaseHandle = {
   client: unknown;
 };
 
-export function createDatabase(config: DatabaseConfig, factories: DatabaseFactories): DatabaseHandle {
+export function createDatabase(
+  config: DatabaseConfig,
+  factories: DatabaseFactories,
+): DatabaseHandle {
   const factory = factories[config.dialect];
 
   if (!factory) {
@@ -20,13 +23,13 @@ export function createDatabase(config: DatabaseConfig, factories: DatabaseFactor
 
   return {
     dialect: config.dialect,
-    client: factory(config.url)
+    client: factory(config.url),
   };
 }
 
 export function createDefaultDatabase(config: DatabaseConfig): DatabaseHandle {
   return createDatabase(config, {
     postgresql: createPostgresqlDatabase,
-    sqlite: createSqliteDatabase
+    sqlite: createSqliteDatabase,
   });
 }

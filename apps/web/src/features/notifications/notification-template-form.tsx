@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import type {
   CreateNotificationTemplateRequest,
-  UpdateNotificationTemplateRequest
+  UpdateNotificationTemplateRequest,
 } from "@web-admin-base/contracts";
 import { Loader2 } from "lucide-react";
 
@@ -11,7 +11,7 @@ import {
   defaultNotificationTemplateFormValues,
   notificationTemplateFormSchema,
   toNotificationTemplateApiInput,
-  type NotificationTemplateFormMode
+  type NotificationTemplateFormMode,
 } from "./notification-template-model";
 
 type NotificationTemplateFormProps = {
@@ -27,7 +27,7 @@ export function NotificationTemplateForm({
   initialRecord,
   mode,
   onCancel,
-  onSubmit
+  onSubmit,
 }: NotificationTemplateFormProps) {
   const initialValues = initialRecord
     ? {
@@ -36,13 +36,13 @@ export function NotificationTemplateForm({
         locale: initialRecord.locale,
         subject: initialRecord.subject ?? "",
         body: initialRecord.body,
-        variablesText: initialRecord.variables.join(", ")
+        variablesText: initialRecord.variables.join(", "),
       }
     : defaultNotificationTemplateFormValues;
   const form = useForm({
     defaultValues: initialValues,
     validators: { onSubmit: notificationTemplateFormSchema },
-    onSubmit: ({ value }) => onSubmit(toNotificationTemplateApiInput(value, mode))
+    onSubmit: ({ value }) => onSubmit(toNotificationTemplateApiInput(value, mode)),
   });
 
   return (
@@ -80,7 +80,9 @@ export function NotificationTemplateForm({
                 <select
                   className="mt-2 h-10 w-full rounded-md border bg-background px-3"
                   onBlur={field.handleBlur}
-                  onChange={(event) => field.handleChange(event.target.value as "in_app" | "email" | "sms")}
+                  onChange={(event) =>
+                    field.handleChange(event.target.value as "in_app" | "email" | "sms")
+                  }
                   value={field.state.value}
                 >
                   <option value="in_app">In-app</option>

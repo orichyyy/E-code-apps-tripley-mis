@@ -11,7 +11,9 @@ export type DatabaseAdapterExecutor = {
 };
 
 export function placeholders(count: number, dialect: DatabaseDialect): string {
-  return Array.from({ length: count }, (_, index) => (dialect === "postgresql" ? `$${index + 1}` : "?")).join(", ");
+  return Array.from({ length: count }, (_, index) =>
+    dialect === "postgresql" ? `$${index + 1}` : "?",
+  ).join(", ");
 }
 
 export function param(value: unknown): unknown {

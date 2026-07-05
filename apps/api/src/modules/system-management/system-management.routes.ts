@@ -4,7 +4,7 @@ import {
   updateDictionaryItemRequestSchema,
   updateDictionaryTypeRequestSchema,
   updateI18nMessageRequestSchema,
-  updateSystemConfigRequestSchema
+  updateSystemConfigRequestSchema,
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
@@ -24,7 +24,9 @@ export function createSystemManagementRoutes(services: SystemManagementServices)
 
   routes.patch("/system-config/:key", async (context) => {
     const input = updateSystemConfigRequestSchema.parse(await context.req.json());
-    return context.json({ data: await services.updateSystemConfig(context.req.param("key"), input) });
+    return context.json({
+      data: await services.updateSystemConfig(context.req.param("key"), input),
+    });
   });
 
   routes.get("/dictionary-types", async (context) => {
@@ -38,7 +40,9 @@ export function createSystemManagementRoutes(services: SystemManagementServices)
 
   routes.patch("/dictionary-types/:id", async (context) => {
     const input = updateDictionaryTypeRequestSchema.parse(await context.req.json());
-    return context.json({ data: await services.updateDictionaryType(context.req.param("id"), input) });
+    return context.json({
+      data: await services.updateDictionaryType(context.req.param("id"), input),
+    });
   });
 
   routes.get("/dictionary-types/:id/items", async (context) => {
@@ -47,12 +51,17 @@ export function createSystemManagementRoutes(services: SystemManagementServices)
 
   routes.post("/dictionary-types/:id/items", async (context) => {
     const input = createDictionaryItemRequestSchema.parse(await context.req.json());
-    return context.json({ data: await services.createDictionaryItem(context.req.param("id"), input) }, 201);
+    return context.json(
+      { data: await services.createDictionaryItem(context.req.param("id"), input) },
+      201,
+    );
   });
 
   routes.patch("/dictionary-items/:id", async (context) => {
     const input = updateDictionaryItemRequestSchema.parse(await context.req.json());
-    return context.json({ data: await services.updateDictionaryItem(context.req.param("id"), input) });
+    return context.json({
+      data: await services.updateDictionaryItem(context.req.param("id"), input),
+    });
   });
 
   routes.get("/i18n/messages", async (context) => {

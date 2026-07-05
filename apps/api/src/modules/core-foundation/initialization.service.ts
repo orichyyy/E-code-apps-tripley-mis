@@ -1,14 +1,12 @@
 import {
   baseMenuManifest,
   baseRouteManifest,
-  type InitializationSetupRequest
+  type InitializationSetupRequest,
 } from "@web-admin-base/contracts";
 
 import { createKnownError } from "../../core/errors/error-codes";
 import { nowUtc, toUtcIso } from "../../core/time/utc";
-import {
-  validatePasswordComplexity
-} from "../../infra/security/password-policy";
+import { validatePasswordComplexity } from "../../infra/security/password-policy";
 import type { BackendCoreContext } from "./service-context";
 import type { MenuService } from "./menu.service";
 import type { OrganizationService } from "./organization.service";
@@ -27,13 +25,13 @@ export class InitializationService {
     private readonly permissions: PermissionService,
     private readonly routes: RouteMetadataService,
     private readonly roles: RoleService,
-    private readonly users: UserService
+    private readonly users: UserService,
   ) {}
 
   getStatus() {
     return {
       initialized: this.context.store.initializationState?.status === "initialized",
-      state: this.context.store.initializationState
+      state: this.context.store.initializationState,
     };
   }
 
@@ -49,14 +47,20 @@ export class InitializationService {
     if (this.context.store.initializationState?.status !== "initialized") {
       const initialized = await this.initializeFreshSystem(
         input,
-        "Seeded default root organization"
+        "Seeded default root organization",
       );
       return { ...initialized, seeded: true };
     }
 
     const { permissions, apiPermissions } = await this.permissions.syncPermissionManifests();
-    const superAdminRole = this.ensureBuiltInRole("Super Administrator", builtInRoleCodes.superAdmin);
-    this.grantAllPermissions(superAdminRole.id, permissions.map((permission) => permission.code));
+    const superAdminRole = this.ensureBuiltInRole(
+      "Super Administrator",
+      builtInRoleCodes.superAdmin,
+    );
+    this.grantAllPermissions(
+      superAdminRole.id,
+      permissions.map((permission) => permission.code),
+    );
     this.ensureBuiltInRole("Organization Administrator", builtInRoleCodes.organizationAdmin);
     this.ensureBuiltInRole("Normal User", builtInRoleCodes.normalUser);
     const routes = this.routes.syncBaseRoutes(baseRouteManifest);
@@ -71,9 +75,9 @@ export class InitializationService {
           activeAdmin.id,
           {
             organizationId: organization.id,
-            roleId: superAdminRole.id
+            roleId: superAdminRole.id,
           },
-          null
+          null,
         );
       }
     }
@@ -88,14 +92,17 @@ export class InitializationService {
       apiPermissions,
       routes,
       menus,
-      seeded: false
+      seeded: false,
     };
   }
 
-  private async initializeFreshSystem(input: InitializationSetupRequest, organizationRemark: string) {
+  private async initializeFreshSystem(
+    input: InitializationSetupRequest,
+    organizationRemark: string,
+  ) {
     const passwordResult = validatePasswordComplexity(
       input.adminPassword,
-      this.context.config.passwordPolicy
+      this.context.config.passwordPolicy,
     );
     if (!passwordResult.valid) {
       throw createKnownError((passwordResult.reasons[0] ?? "VALIDATION_PASSWORD_POLICY") as never);
@@ -105,29 +112,44 @@ export class InitializationService {
       name: input.organizationName,
       code: input.organizationCode,
       sortOrder: 0,
-      remark: organizationRemark
+      remark: organizationRemark,
     });
-    const superAdminRole = this.roles.createRecord({
-      name: "Super Administrator",
-      code: builtInRoleCodes.superAdmin,
-      description: "Built-in role",
-      remark: "Built-in role"
-    }, null, { isBuiltin: true });
+    const superAdminRole = this.roles.createRecord(
+      {
+        name: "Super Administrator",
+        code: builtInRoleCodes.superAdmin,
+        description: "Built-in role",
+        remark: "Built-in role",
+      },
+      null,
+      { isBuiltin: true },
+    );
     const permissions = this.permissions.syncBasePermissions();
     const apiPermissions = this.permissions.syncBaseApiPermissions();
-    this.grantAllPermissions(superAdminRole.id, permissions.map((permission) => permission.code));
-    this.roles.createRecord({
-      name: "Organization Administrator",
-      code: builtInRoleCodes.organizationAdmin,
-      description: "Built-in role",
-      remark: "Built-in role"
-    }, null, { isBuiltin: true });
-    this.roles.createRecord({
-      name: "Normal User",
-      code: builtInRoleCodes.normalUser,
-      description: "Built-in role",
-      remark: "Built-in role"
-    }, null, { isBuiltin: true });
+    this.grantAllPermissions(
+      superAdminRole.id,
+      permissions.map((permission) => permission.code),
+    );
+    this.roles.createRecord(
+      {
+        name: "Organization Administrator",
+        code: builtInRoleCodes.organizationAdmin,
+        description: "Built-in role",
+        remark: "Built-in role",
+      },
+      null,
+      { isBuiltin: true },
+    );
+    this.roles.createRecord(
+      {
+        name: "Normal User",
+        code: builtInRoleCodes.normalUser,
+        description: "Built-in role",
+        remark: "Built-in role",
+      },
+      null,
+      { isBuiltin: true },
+    );
     const routes = this.routes.syncBaseRoutes(baseRouteManifest);
     const menus = this.menus.seedBaseMenus(baseMenuManifest);
 
@@ -138,7 +160,7 @@ export class InitializationService {
       phone: input.adminPhone,
       password: input.adminPassword,
       primaryOrganizationId: organization.id,
-      roleId: superAdminRole.id
+      roleId: superAdminRole.id,
     });
     admin.firstLoginPasswordChangeRequired = false;
     admin.updatedAt = toUtcIso(nowUtc());
@@ -152,7 +174,7 @@ export class InitializationService {
       initializedBy: admin.id,
       version: "0.1.0",
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
 
     return {
@@ -163,7 +185,7 @@ export class InitializationService {
       permissions,
       apiPermissions,
       menus,
-      routes
+      routes,
     };
   }
 
@@ -181,18 +203,22 @@ export class InitializationService {
       existing.updatedAt = toUtcIso(nowUtc());
       return existing;
     }
-    return this.roles.createRecord({
-      name,
-      code,
-      description: "Built-in role",
-      remark: "Built-in role"
-    }, null, { isBuiltin: true });
+    return this.roles.createRecord(
+      {
+        name,
+        code,
+        description: "Built-in role",
+        remark: "Built-in role",
+      },
+      null,
+      { isBuiltin: true },
+    );
   }
 
   private grantAllPermissions(roleId: string, permissionCodes: string[]) {
     const now = toUtcIso(nowUtc());
     const currentRolePermissions = this.context.store.rolePermissions.filter(
-      (permission) => permission.roleId === roleId
+      (permission) => permission.roleId === roleId,
     );
     const existing = new Map<string, (typeof currentRolePermissions)[number]>();
     const duplicatePermissions = new Set<(typeof currentRolePermissions)[number]>();
@@ -205,12 +231,12 @@ export class InitializationService {
     }
     if (duplicatePermissions.size > 0) {
       const retained = this.context.store.rolePermissions.filter(
-        (permission) => !duplicatePermissions.has(permission)
+        (permission) => !duplicatePermissions.has(permission),
       );
       this.context.store.rolePermissions.splice(
         0,
         this.context.store.rolePermissions.length,
-        ...retained
+        ...retained,
       );
     }
     permissionCodes.forEach((permissionCode) => {
@@ -225,7 +251,7 @@ export class InitializationService {
         permissionCode,
         effect: "allow",
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
       });
     });
   }

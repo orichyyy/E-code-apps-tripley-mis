@@ -69,46 +69,46 @@ The first version must implement the base platform capabilities:
 
 ## 2. Confirmed Technology Stack
 
-| Area | Confirmed Decision |
-|---|---|
-| Language | TypeScript across frontend, backend, worker, and shared packages |
-| Package manager | pnpm |
-| Repository style | Monorepo |
-| Frontend app | React + Vite SPA |
-| UI | shadcn/ui + Tailwind CSS |
-| Frontend routing | TanStack Router |
-| Frontend route style | TanStack Router file routes + separate business route metadata |
-| Frontend forms | TanStack Form + Zod |
-| Frontend global state | Zustand for UI/auth/current organization context |
-| Frontend server state | TanStack Query |
-| Backend framework | Hono |
-| Backend runtime | Node.js only for v1 |
-| ORM | Drizzle ORM |
-| v1 local database | SQLite for local development, testing, and demo usage |
-| v1 supported deployment database | PostgreSQL |
-| v2 database target | SQL Server; v1 must not implement SQL Server code |
-| Database schema strategy | One common Drizzle schema definition where possible |
-| Migration strategy | Independent migration files per dialect |
-| API base path | `/api` in v1; future `/api/v2` must be possible |
-| Internal API client | Hono RPC type inference for frontend/internal usage |
-| API documentation | OpenAPI generated from Hono routes + Zod schemas |
-| Queue drivers | In-memory queue, database queue, MQ adapter, RabbitMQ driver |
-| Event bus drivers | In-process event bus, database outbox, MQ adapter/RabbitMQ-compatible integration |
-| Cache drivers | In-memory, Redis, database |
-| Lock drivers | In-memory lock and database lock abstraction |
-| Rate limit drivers | In-memory, Redis, database |
-| File storage drivers | Local shared directory storage and S3-compatible object storage |
-| Notification channels | SMTP email, webhook; SMS abstraction reserved only |
+| Area                             | Confirmed Decision                                                                |
+| -------------------------------- | --------------------------------------------------------------------------------- |
+| Language                         | TypeScript across frontend, backend, worker, and shared packages                  |
+| Package manager                  | pnpm                                                                              |
+| Repository style                 | Monorepo                                                                          |
+| Frontend app                     | React + Vite SPA                                                                  |
+| UI                               | shadcn/ui + Tailwind CSS                                                          |
+| Frontend routing                 | TanStack Router                                                                   |
+| Frontend route style             | TanStack Router file routes + separate business route metadata                    |
+| Frontend forms                   | TanStack Form + Zod                                                               |
+| Frontend global state            | Zustand for UI/auth/current organization context                                  |
+| Frontend server state            | TanStack Query                                                                    |
+| Backend framework                | Hono                                                                              |
+| Backend runtime                  | Node.js only for v1                                                               |
+| ORM                              | Drizzle ORM                                                                       |
+| v1 local database                | SQLite for local development, testing, and demo usage                             |
+| v1 supported deployment database | PostgreSQL                                                                        |
+| v2 database target               | SQL Server; v1 must not implement SQL Server code                                 |
+| Database schema strategy         | One common Drizzle schema definition where possible                               |
+| Migration strategy               | Independent migration files per dialect                                           |
+| API base path                    | `/api` in v1; future `/api/v2` must be possible                                   |
+| Internal API client              | Hono RPC type inference for frontend/internal usage                               |
+| API documentation                | OpenAPI generated from Hono routes + Zod schemas                                  |
+| Queue drivers                    | In-memory queue, database queue, MQ adapter, RabbitMQ driver                      |
+| Event bus drivers                | In-process event bus, database outbox, MQ adapter/RabbitMQ-compatible integration |
+| Cache drivers                    | In-memory, Redis, database                                                        |
+| Lock drivers                     | In-memory lock and database lock abstraction                                      |
+| Rate limit drivers               | In-memory, Redis, database                                                        |
+| File storage drivers             | Local shared directory storage and S3-compatible object storage                   |
+| Notification channels            | SMTP email, webhook; SMS abstraction reserved only                                |
 
 ### 2.1 Explicitly Not Specified by Requirement
 
 The following are intentionally not fixed by the user and must not be guessed silently:
 
-| Item | Required Handling |
-|---|---|
-| Concrete SQLite driver package | Must be behind the database adapter. The spec does not mandate `better-sqlite3`, `node:sqlite`, or `libsql`. |
+| Item                             | Required Handling                                                                                                       |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Concrete SQLite driver package   | Must be behind the database adapter. The spec does not mandate `better-sqlite3`, `node:sqlite`, or `libsql`.            |
 | Database lock internal algorithm | Must be behind `LockAdapter`. The spec does not mandate advisory locks, lease table semantics, or dialect-specific SQL. |
-| SQL Server Drizzle strategy | v1 must not introduce SQL Server code. Re-evaluate in v2. |
+| SQL Server Drizzle strategy      | v1 must not introduce SQL Server code. Re-evaluate in v2.                                                               |
 
 Codex may still implement all interfaces, module boundaries, configuration keys, tests for interfaces, and non-conflicting concrete drivers.
 
@@ -190,12 +190,12 @@ FileStorageAdapter, NotificationChannelAdapter
 
 The API service may be stateful in single-machine mode. In multi-machine mode, it must use configured adapters for shared state.
 
-| Deployment Mode | Requirement |
-|---|---|
-| Single machine, single process | In-memory adapters may be used for cache, queue, lock, and rate limit. |
-| Single machine, multiple processes | Prefer database or Redis-backed adapters for shared coordination. |
-| Multiple servers + load balancer | API must be effectively stateless; shared state must use DB, Redis, object storage, RabbitMQ, or other configured adapters. |
-| Containerized deployment | All persistent state must be externalized or mounted as configured volumes. |
+| Deployment Mode                    | Requirement                                                                                                                 |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Single machine, single process     | In-memory adapters may be used for cache, queue, lock, and rate limit.                                                      |
+| Single machine, multiple processes | Prefer database or Redis-backed adapters for shared coordination.                                                           |
+| Multiple servers + load balancer   | API must be effectively stateless; shared state must use DB, Redis, object storage, RabbitMQ, or other configured adapters. |
+| Containerized deployment           | All persistent state must be externalized or mounted as configured volumes.                                                 |
 
 ### 4.2 Supported Deployment Modes
 
@@ -300,15 +300,15 @@ web-admin-base/
 
 ### 5.1 Package Responsibilities
 
-| Package/App | Responsibility |
-|---|---|
-| `apps/api` | Hono HTTP API, middleware, module routes, services, repositories, policy enforcement. |
-| `apps/worker` | Queue consumers, scheduled jobs, async logs, import/export jobs. |
-| `apps/web` | React admin interface. |
-| `packages/db` | Drizzle schema, migrations, database connection factory, seeds. |
+| Package/App          | Responsibility                                                                                            |
+| -------------------- | --------------------------------------------------------------------------------------------------------- |
+| `apps/api`           | Hono HTTP API, middleware, module routes, services, repositories, policy enforcement.                     |
+| `apps/worker`        | Queue consumers, scheduled jobs, async logs, import/export jobs.                                          |
+| `apps/web`           | React admin interface.                                                                                    |
+| `packages/db`        | Drizzle schema, migrations, database connection factory, seeds.                                           |
 | `packages/contracts` | Zod schemas, OpenAPI generation, Hono RPC types, route metadata contracts, permission manifest contracts. |
-| `packages/adapters` | Adapter interfaces and driver implementations. |
-| `packages/shared` | Cross-cutting constants, utility types, non-infrastructure helpers. |
+| `packages/adapters`  | Adapter interfaces and driver implementations.                                                            |
+| `packages/shared`    | Cross-cutting constants, utility types, non-infrastructure helpers.                                       |
 
 ---
 
@@ -368,13 +368,13 @@ apps/api/src/
 
 Each resource-oriented module must follow this pattern:
 
-| Layer | Responsibility |
-|---|---|
-| Route | Hono route definitions, request validation, response serialization, route metadata. |
-| Service | Business rules, permission checks, transaction orchestration. |
-| Repository | Drizzle queries and persistence logic. |
-| Schema | Zod request/response schemas. |
-| Permission manifest | Permission codes used by routes and menu/actions. |
+| Layer               | Responsibility                                                                      |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| Route               | Hono route definitions, request validation, response serialization, route metadata. |
+| Service             | Business rules, permission checks, transaction orchestration.                       |
+| Repository          | Drizzle queries and persistence logic.                                              |
+| Schema              | Zod request/response schemas.                                                       |
+| Permission manifest | Permission codes used by routes and menu/actions.                                   |
 
 ### 6.3 Dependency Strategy
 
@@ -419,11 +419,11 @@ Implementation may use Zod for configuration validation.
 
 ### 7.1 Database Support Matrix
 
-| Database | v1 Role | Notes |
-|---|---|---|
-| SQLite | Local development, local testing, demo usage | Driver package is not fixed by this spec. Must be behind database adapter. |
-| PostgreSQL | Supported deployment database | Integration tests target PostgreSQL. |
-| SQL Server | v2 target | No v1 SQL Server code, schema, or migration skeleton. Re-evaluate Drizzle support in v2. |
+| Database   | v1 Role                                      | Notes                                                                                    |
+| ---------- | -------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| SQLite     | Local development, local testing, demo usage | Driver package is not fixed by this spec. Must be behind database adapter.               |
+| PostgreSQL | Supported deployment database                | Integration tests target PostgreSQL.                                                     |
+| SQL Server | v2 target                                    | No v1 SQL Server code, schema, or migration skeleton. Re-evaluate Drizzle support in v2. |
 
 ### 7.2 ORM
 
@@ -594,29 +594,29 @@ Stored as signed BIGINT/int64.
 
 ### 8.3 Organization Fields
 
-| Field | Required | Notes |
-|---|---:|---|
-| id | Yes | Auto-increment ID, serialized as string in API. |
-| tenant_id | Reserved | Nullable. |
-| path | Yes | Signed int64 materialized path. |
-| level | Yes | 1–8. |
-| segment | Yes | Segment at current level. |
-| name | Yes | Organization name. |
-| code | Yes | Organization code. |
-| manager_user_id | No | Responsible person. |
-| phone | No | Contact phone. |
-| email | No | Contact email. |
-| address | No | Address. |
-| sort_order | Yes | Display ordering. Not equal to path segment. |
-| status | Yes | enabled / disabled. |
-| remark | No | Free text. |
-| is_deleted | Yes | Soft-delete flag. |
-| deleted_at | No | UTC. |
-| deleted_by | No | User ID. |
-| created_at | Yes | UTC. |
-| updated_at | Yes | UTC. |
-| created_by | No | User ID. |
-| updated_by | No | User ID. |
+| Field           | Required | Notes                                           |
+| --------------- | -------: | ----------------------------------------------- |
+| id              |      Yes | Auto-increment ID, serialized as string in API. |
+| tenant_id       | Reserved | Nullable.                                       |
+| path            |      Yes | Signed int64 materialized path.                 |
+| level           |      Yes | 1–8.                                            |
+| segment         |      Yes | Segment at current level.                       |
+| name            |      Yes | Organization name.                              |
+| code            |      Yes | Organization code.                              |
+| manager_user_id |       No | Responsible person.                             |
+| phone           |       No | Contact phone.                                  |
+| email           |       No | Contact email.                                  |
+| address         |       No | Address.                                        |
+| sort_order      |      Yes | Display ordering. Not equal to path segment.    |
+| status          |      Yes | enabled / disabled.                             |
+| remark          |       No | Free text.                                      |
+| is_deleted      |      Yes | Soft-delete flag.                               |
+| deleted_at      |       No | UTC.                                            |
+| deleted_by      |       No | User ID.                                        |
+| created_at      |      Yes | UTC.                                            |
+| updated_at      |      Yes | UTC.                                            |
+| created_by      |       No | User ID.                                        |
+| updated_by      |       No | User ID.                                        |
 
 ### 8.4 Segment Allocation
 
@@ -705,17 +705,17 @@ packages/adapters/src/
 
 ### 9.2 Adapter Matrix
 
-| Capability | Interface Required | v1 Drivers |
-|---|---:|---|
-| Cache | Yes | in-memory, Redis, database |
-| Lock | Yes | in-memory, database abstraction |
-| Queue | Yes | in-memory, database, RabbitMQ |
-| Event Bus | Yes | in-process, database outbox, RabbitMQ-compatible MQ integration |
-| Rate Limit | Yes | in-memory, Redis, database |
-| Session/Token Store | Yes | in-memory, database, Redis |
-| Job Scheduler | Yes | worker-based scheduler using configured lock/queue strategy |
-| File Storage | Yes | local shared directory, S3-compatible storage |
-| Notification Channel | Yes | SMTP email, webhook, SMS placeholder only |
+| Capability           | Interface Required | v1 Drivers                                                      |
+| -------------------- | -----------------: | --------------------------------------------------------------- |
+| Cache                |                Yes | in-memory, Redis, database                                      |
+| Lock                 |                Yes | in-memory, database abstraction                                 |
+| Queue                |                Yes | in-memory, database, RabbitMQ                                   |
+| Event Bus            |                Yes | in-process, database outbox, RabbitMQ-compatible MQ integration |
+| Rate Limit           |                Yes | in-memory, Redis, database                                      |
+| Session/Token Store  |                Yes | in-memory, database, Redis                                      |
+| Job Scheduler        |                Yes | worker-based scheduler using configured lock/queue strategy     |
+| File Storage         |                Yes | local shared directory, S3-compatible storage                   |
+| Notification Channel |                Yes | SMTP email, webhook, SMS placeholder only                       |
 
 ### 9.3 Cache Adapter
 
@@ -746,11 +746,7 @@ export interface LockAdapter {
     ttlMs: number;
   }): Promise<{ acquired: boolean; fencingToken?: string }>;
 
-  release(input: {
-    key: string;
-    ownerId: string;
-    fencingToken?: string;
-  }): Promise<void>;
+  release(input: { key: string; ownerId: string; fencingToken?: string }): Promise<void>;
 
   extend?(input: {
     key: string;
@@ -924,11 +920,11 @@ Responsibilities:
 
 Tasks must support different execution semantics.
 
-| Task Type | Example | Execution Rule |
-|---|---|---|
-| Per-node maintenance task | Clean local temp files, clean node-local artifacts | Each server may run one worker and execute the task locally. No cluster singleton lock required. |
-| Cluster singleton task | Business logic task, global data cleanup, scheduled notification batch | Each worker instance attempts to acquire configured distributed lock; only one executes. |
-| Queue job task | Import/export, async logging, notification sending | Workers claim jobs from configured queue adapter. |
+| Task Type                 | Example                                                                | Execution Rule                                                                                   |
+| ------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Per-node maintenance task | Clean local temp files, clean node-local artifacts                     | Each server may run one worker and execute the task locally. No cluster singleton lock required. |
+| Cluster singleton task    | Business logic task, global data cleanup, scheduled notification batch | Each worker instance attempts to acquire configured distributed lock; only one executes.         |
+| Queue job task            | Import/export, async logging, notification sending                     | Workers claim jobs from configured queue adapter.                                                |
 
 ### 10.3 Scheduler Model
 
@@ -936,43 +932,43 @@ Each server may run one worker. The worker loads enabled schedules and dispatche
 
 Suggested task fields:
 
-| Field | Notes |
-|---|---|
-| id | ID string in API. |
-| code | Unique task code. |
-| name | Display name. |
-| cron_expression | Cron schedule. |
-| status | enabled / disabled. |
+| Field           | Notes                                            |
+| --------------- | ------------------------------------------------ |
+| id              | ID string in API.                                |
+| code            | Unique task code.                                |
+| name            | Display name.                                    |
+| cron_expression | Cron schedule.                                   |
+| status          | enabled / disabled.                              |
 | execution_scope | `per_node`, `cluster_singleton`, or `queue_job`. |
-| lock_key | Required for cluster singleton tasks. |
-| timeout_seconds | Execution timeout. |
-| retry_enabled | Whether retry is enabled. |
-| retry_limit | Retry count. |
-| parameters_json | Task parameters. |
-| last_run_at | Last execution time. |
-| next_run_at | Next planned time. |
+| lock_key        | Required for cluster singleton tasks.            |
+| timeout_seconds | Execution timeout.                               |
+| retry_enabled   | Whether retry is enabled.                        |
+| retry_limit     | Retry count.                                     |
+| parameters_json | Task parameters.                                 |
+| last_run_at     | Last execution time.                             |
+| next_run_at     | Next planned time.                               |
 
 ### 10.4 Queue Job Table
 
 Database queue may use a table shaped as follows:
 
-| Field | Notes |
-|---|---|
-| id | Auto-increment. |
-| queue_name | Queue partition. |
-| job_type | Handler key. |
-| payload_json | Job payload. |
-| status | pending/running/succeeded/failed. |
-| priority | Optional. |
-| run_after | Optional scheduling time. |
-| attempt_count | Retry bookkeeping. |
-| max_attempts | Reserved. |
-| locked_by | Worker ID. |
-| locked_until | Visibility timeout. |
-| error_json | Last error. |
-| result_json | Optional result. |
-| created_at | UTC. |
-| updated_at | UTC. |
+| Field         | Notes                             |
+| ------------- | --------------------------------- |
+| id            | Auto-increment.                   |
+| queue_name    | Queue partition.                  |
+| job_type      | Handler key.                      |
+| payload_json  | Job payload.                      |
+| status        | pending/running/succeeded/failed. |
+| priority      | Optional.                         |
+| run_after     | Optional scheduling time.         |
+| attempt_count | Retry bookkeeping.                |
+| max_attempts  | Reserved.                         |
+| locked_by     | Worker ID.                        |
+| locked_until  | Visibility timeout.               |
+| error_json    | Last error.                       |
+| result_json   | Optional result.                  |
+| created_at    | UTC.                              |
+| updated_at    | UTC.                              |
 
 Delayed jobs, retry, and dead-letter behavior are reserved but not required to be fully implemented beyond the simple status model.
 
@@ -993,9 +989,9 @@ Use JWT Access Token + Refresh Token.
 
 Confirmed frontend storage:
 
-| Token | Storage |
-|---|---|
-| Access Token | `localStorage` |
+| Token         | Storage         |
+| ------------- | --------------- |
+| Access Token  | `localStorage`  |
 | Refresh Token | HttpOnly Cookie |
 
 Security requirement:
@@ -1053,32 +1049,32 @@ Logout must revoke the current login session and invalidate refresh token usage.
 
 The login session table must contain:
 
-| Field | Notes |
-|---|---|
-| session_id | Public session identifier, serialized as string. |
-| user_id | User ID. |
-| organization_id | Current organization at login/session creation. |
-| refresh_token_hash | Hashed refresh token. Never store raw token. |
-| token_version | Snapshot from user at session creation/refresh. |
-| ip | Login IP. |
-| user_agent | User-Agent. |
-| login_at | UTC login time. |
-| last_activity_at | UTC last activity. |
-| expires_at | UTC expiration. |
-| status | active / revoked / expired. |
+| Field              | Notes                                            |
+| ------------------ | ------------------------------------------------ |
+| session_id         | Public session identifier, serialized as string. |
+| user_id            | User ID.                                         |
+| organization_id    | Current organization at login/session creation.  |
+| refresh_token_hash | Hashed refresh token. Never store raw token.     |
+| token_version      | Snapshot from user at session creation/refresh.  |
+| ip                 | Login IP.                                        |
+| user_agent         | User-Agent.                                      |
+| login_at           | UTC login time.                                  |
+| last_activity_at   | UTC last activity.                               |
+| expires_at         | UTC expiration.                                  |
+| status             | active / revoked / expired.                      |
 
 Online user viewing must be based on this session table.
 
 ### 11.9 Password and Account Security
 
-| Rule | Confirmed Requirement |
-|---|---|
-| Password complexity | Default minimum 8 characters, must include letters and numbers. Configurable. |
-| First login password change | Required when flagged. |
-| Periodic password change | Default 365 days. |
-| Failed login lock | Administrator-configurable failure count and lock duration. |
-| Administrator password reset | Required. User must change password after reset. |
-| Self-service password recovery | Not required in v1. |
+| Rule                           | Confirmed Requirement                                                         |
+| ------------------------------ | ----------------------------------------------------------------------------- |
+| Password complexity            | Default minimum 8 characters, must include letters and numbers. Configurable. |
+| First login password change    | Required when flagged.                                                        |
+| Periodic password change       | Default 365 days.                                                             |
+| Failed login lock              | Administrator-configurable failure count and lock duration.                   |
+| Administrator password reset   | Required. User must change password after reset.                              |
+| Self-service password recovery | Not required in v1.                                                           |
 
 ---
 
@@ -1125,15 +1121,15 @@ Pattern:
 ```ts
 // permission manifest
 export const USER_PERMISSIONS = {
-  USER_LIST: 'system.user.list',
-  USER_CREATE: 'system.user.create',
-  USER_UPDATE: 'system.user.update',
-  USER_DELETE: 'system.user.delete',
+  USER_LIST: "system.user.list",
+  USER_CREATE: "system.user.create",
+  USER_UPDATE: "system.user.update",
+  USER_DELETE: "system.user.delete",
 };
 
 // route declaration
 app.get(
-  '/api/users',
+  "/api/users",
   withPermission(USER_PERMISSIONS.USER_LIST),
   validateQuery(listUsersSchema),
   listUsersHandler,
@@ -1168,11 +1164,11 @@ Route metadata example:
 
 ```ts
 export const routeMetadata = {
-  routeCode: 'system.users.list',
-  path: '/system/users',
-  titleI18nKey: 'menu.system.users',
-  requiredPermission: 'system.user.list',
-  layout: 'admin',
+  routeCode: "system.users.list",
+  path: "/system/users",
+  titleI18nKey: "menu.system.users",
+  requiredPermission: "system.user.list",
+  layout: "admin",
 };
 ```
 
@@ -1214,7 +1210,7 @@ JSON DSL example:
 Complex rule handlers example:
 
 ```ts
-registerDataRuleHandler('inCurrentOrgAndDescendants', async (ctx) => {
+registerDataRuleHandler("inCurrentOrgAndDescendants", async (ctx) => {
   return buildOrgDescendantPredicate(ctx.currentOrganization.path, ctx.currentOrganization.level);
 });
 ```
@@ -1276,8 +1272,8 @@ deleted_by nullable
 
 ### 13.2 Users
 
-| Table | Key Fields |
-|---|---|
+| Table | Key Fields                                                                                                                                                                                                                                                                                                                                       |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | users | id, tenant_id, username, display_name, email, phone, avatar_file_id, gender, employee_no, primary_organization_id, status, password_hash, password_changed_at, force_password_change, token_version, locked_until, failed_login_count, remark, last_login_at, is_deleted, deleted_at, deleted_by, created_at, updated_at, created_by, updated_by |
 
 Constraints:
@@ -1290,18 +1286,18 @@ Constraints:
 
 ### 13.3 Organizations
 
-| Table | Key Fields |
-|---|---|
+| Table         | Key Fields                                                                                                                                                                                              |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | organizations | id, tenant_id, path, level, segment, name, code, manager_user_id, phone, email, address, sort_order, status, remark, is_deleted, deleted_at, deleted_by, created_at, updated_at, created_by, updated_by |
 
 No `parent_id` field is stored in v1.
 
 ### 13.4 Roles and User-Organization-Role
 
-| Table | Key Fields |
-|---|---|
-| roles | id, tenant_id, code, name, description, status, data_scope_rule_id, is_builtin, is_deleted, deleted_at, deleted_by, created_at, updated_at, created_by, updated_by |
-| user_organization_roles | id, tenant_id, user_id, organization_id, role_id, is_primary, status, created_at, updated_at, created_by, updated_by |
+| Table                   | Key Fields                                                                                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| roles                   | id, tenant_id, code, name, description, status, data_scope_rule_id, is_builtin, is_deleted, deleted_at, deleted_by, created_at, updated_at, created_by, updated_by |
+| user_organization_roles | id, tenant_id, user_id, organization_id, role_id, is_primary, status, created_at, updated_at, created_by, updated_by                                               |
 
 Constraints:
 
@@ -1311,11 +1307,11 @@ Constraints:
 
 ### 13.5 Permissions
 
-| Table | Key Fields |
-|---|---|
-| permissions | id, code, name, type, resource, action, description, source, status, manifest_hash, created_at, updated_at |
-| role_permissions | id, role_id, permission_id, effect, created_at, updated_at |
-| user_permission_overrides | id, user_id, organization_id nullable, permission_id, effect, created_at, updated_at |
+| Table                     | Key Fields                                                                                                 |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| permissions               | id, code, name, type, resource, action, description, source, status, manifest_hash, created_at, updated_at |
+| role_permissions          | id, role_id, permission_id, effect, created_at, updated_at                                                 |
+| user_permission_overrides | id, user_id, organization_id nullable, permission_id, effect, created_at, updated_at                       |
 
 Permission types:
 
@@ -1330,29 +1326,29 @@ field
 
 ### 13.6 Menus and Routes
 
-| Table | Key Fields |
-|---|---|
-| menus | id, parent_id nullable, route_code nullable, permission_code nullable, name_i18n_key, icon, sort_order, visible, status, created_at, updated_at |
-| menu_actions | id, menu_id, action_code, permission_code, name_i18n_key, sort_order, status |
-| route_manifest_items | id, route_code, path, title_i18n_key, required_permission_code, metadata_json, manifest_hash, status, created_at, updated_at |
+| Table                | Key Fields                                                                                                                                      |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| menus                | id, parent_id nullable, route_code nullable, permission_code nullable, name_i18n_key, icon, sort_order, visible, status, created_at, updated_at |
+| menu_actions         | id, menu_id, action_code, permission_code, name_i18n_key, sort_order, status                                                                    |
+| route_manifest_items | id, route_code, path, title_i18n_key, required_permission_code, metadata_json, manifest_hash, status, created_at, updated_at                    |
 
 Menu tree may use `parent_id`; organization tree does not.
 
 ### 13.7 Data Permissions
 
-| Table | Key Fields |
-|---|---|
-| data_permission_rules | id, code, name, resource_type, rule_json, handler_code nullable, status, created_at, updated_at |
-| role_data_permissions | id, role_id, resource_type, rule_id, params_json, created_at, updated_at |
+| Table                          | Key Fields                                                                                         |
+| ------------------------------ | -------------------------------------------------------------------------------------------------- |
+| data_permission_rules          | id, code, name, resource_type, rule_json, handler_code nullable, status, created_at, updated_at    |
+| role_data_permissions          | id, role_id, resource_type, rule_id, params_json, created_at, updated_at                           |
 | user_data_permission_overrides | id, user_id, organization_id nullable, resource_type, rule_id, params_json, created_at, updated_at |
 
 ### 13.8 Field Permissions
 
-| Table | Key Fields |
-|---|---|
-| field_permission_rules | id, resource_type, field_code, scenario, api_schema_path nullable, visible, editable, status, created_at, updated_at |
-| role_field_permissions | id, role_id, field_rule_id, effect_json, created_at, updated_at |
-| user_field_permission_overrides | id, user_id, organization_id nullable, field_rule_id, effect_json, created_at, updated_at |
+| Table                           | Key Fields                                                                                                           |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| field_permission_rules          | id, resource_type, field_code, scenario, api_schema_path nullable, visible, editable, status, created_at, updated_at |
+| role_field_permissions          | id, role_id, field_rule_id, effect_json, created_at, updated_at                                                      |
+| user_field_permission_overrides | id, user_id, organization_id nullable, field_rule_id, effect_json, created_at, updated_at                            |
 
 Scenarios:
 
@@ -1367,16 +1363,16 @@ api_response
 
 ### 13.9 Auth Sessions
 
-| Table | Key Fields |
-|---|---|
+| Table          | Key Fields                                                                                                                                                      |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | login_sessions | session_id, user_id, organization_id, refresh_token_hash, token_version, ip, user_agent, login_at, last_activity_at, expires_at, status, created_at, updated_at |
 
 ### 13.10 Files
 
-| Table | Key Fields |
-|---|---|
-| files | id, tenant_id, storage_driver, bucket, object_key, original_name, mime_type, extension, size_bytes, checksum, visibility, status, uploaded_by, uploaded_at, is_deleted, deleted_at, deleted_by |
-| file_references | id, file_id, resource_type, resource_id, reference_type, created_at, created_by |
+| Table           | Key Fields                                                                                                                                                                                     |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| files           | id, tenant_id, storage_driver, bucket, object_key, original_name, mime_type, extension, size_bytes, checksum, visibility, status, uploaded_by, uploaded_at, is_deleted, deleted_at, deleted_by |
+| file_references | id, file_id, resource_type, resource_id, reference_type, created_at, created_by                                                                                                                |
 
 Deletion behavior:
 
@@ -1385,13 +1381,13 @@ Deletion behavior:
 
 ### 13.11 Notifications and Announcements
 
-| Table | Key Fields |
-|---|---|
-| announcements | id, title, content, publish_scope, publish_at, expire_at, status, created_by, created_at, updated_at |
-| announcement_targets | id, announcement_id, target_type, target_id |
-| notifications | id, title, content, channel, recipient_user_id, status, read_at, archived_at, deleted_at, created_at, updated_at |
-| notification_templates | id, code, channel, language, subject_template, body_template, variables_json, status, created_at, updated_at |
-| webhook_subscriptions | id, name, url, secret_ref, event_types_json, status, created_at, updated_at |
+| Table                  | Key Fields                                                                                                       |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| announcements          | id, title, content, publish_scope, publish_at, expire_at, status, created_by, created_at, updated_at             |
+| announcement_targets   | id, announcement_id, target_type, target_id                                                                      |
+| notifications          | id, title, content, channel, recipient_user_id, status, read_at, archived_at, deleted_at, created_at, updated_at |
+| notification_templates | id, code, channel, language, subject_template, body_template, variables_json, status, created_at, updated_at     |
+| webhook_subscriptions  | id, name, url, secret_ref, event_types_json, status, created_at, updated_at                                      |
 
 Announcement scopes:
 
@@ -1409,23 +1405,23 @@ deleted
 
 ### 13.12 Logs
 
-| Table | Key Fields |
-|---|---|
-| login_logs | id, user_id nullable, username_input, result, failure_reason, ip, user_agent, occurred_at |
-| operation_logs | id, user_id, organization_id, module, action, resource_type, resource_id, result, detail_json, occurred_at |
-| access_logs | id, user_id, organization_id, route_code, path, method, ip, user_agent, occurred_at |
-| api_call_logs | id, request_id, user_id nullable, organization_id nullable, method, path, status_code, duration_ms, log_level, request_json nullable, response_json nullable, error_json nullable, ip, user_agent, occurred_at |
-| exception_logs | id, request_id nullable, error_type, message, stack_ref nullable, context_json, occurred_at |
-| security_logs | id, user_id nullable, event_type, severity, detail_json, ip, user_agent, occurred_at |
-| job_execution_logs | id, job_id, task_code, status, started_at, finished_at, duration_ms, error_json nullable |
-| file_operation_logs | id, user_id, file_id, operation, result, detail_json, occurred_at |
+| Table               | Key Fields                                                                                                                                                                                                     |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| login_logs          | id, user_id nullable, username_input, result, failure_reason, ip, user_agent, occurred_at                                                                                                                      |
+| operation_logs      | id, user_id, organization_id, module, action, resource_type, resource_id, result, detail_json, occurred_at                                                                                                     |
+| access_logs         | id, user_id, organization_id, route_code, path, method, ip, user_agent, occurred_at                                                                                                                            |
+| api_call_logs       | id, request_id, user_id nullable, organization_id nullable, method, path, status_code, duration_ms, log_level, request_json nullable, response_json nullable, error_json nullable, ip, user_agent, occurred_at |
+| exception_logs      | id, request_id nullable, error_type, message, stack_ref nullable, context_json, occurred_at                                                                                                                    |
+| security_logs       | id, user_id nullable, event_type, severity, detail_json, ip, user_agent, occurred_at                                                                                                                           |
+| job_execution_logs  | id, job_id, task_code, status, started_at, finished_at, duration_ms, error_json nullable                                                                                                                       |
+| file_operation_logs | id, user_id, file_id, operation, result, detail_json, occurred_at                                                                                                                                              |
 
 All log writes are asynchronous through Queue in v1.
 
 ### 13.13 Import/Export
 
-| Table | Key Fields |
-|---|---|
+| Table               | Key Fields                                                                                                                                                                                                 |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | import_export_tasks | id, type, module_code, status, file_id nullable, result_file_id nullable, error_report_file_id nullable, requested_by, requested_at, started_at, finished_at, expires_at, summary_json, error_preview_json |
 
 Retention:
@@ -1434,26 +1430,26 @@ Retention:
 
 ### 13.14 Jobs and Scheduler
 
-| Table | Key Fields |
-|---|---|
-| scheduled_tasks | id, code, name, cron_expression, status, execution_scope, lock_key nullable, timeout_seconds, retry_enabled, retry_limit, parameters_json, last_run_at, next_run_at, created_at, updated_at |
-| scheduled_task_runs | id, task_id, worker_id, status, started_at, finished_at, error_json nullable, result_json nullable |
-| queue_jobs | id, queue_name, job_type, payload_json, status, priority, run_after, attempt_count, max_attempts, locked_by, locked_until, error_json, result_json, created_at, updated_at |
+| Table               | Key Fields                                                                                                                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| scheduled_tasks     | id, code, name, cron_expression, status, execution_scope, lock_key nullable, timeout_seconds, retry_enabled, retry_limit, parameters_json, last_run_at, next_run_at, created_at, updated_at |
+| scheduled_task_runs | id, task_id, worker_id, status, started_at, finished_at, error_json nullable, result_json nullable                                                                                          |
+| queue_jobs          | id, queue_name, job_type, payload_json, status, priority, run_after, attempt_count, max_attempts, locked_by, locked_until, error_json, result_json, created_at, updated_at                  |
 
 ### 13.15 System Configuration and Dictionaries
 
-| Table | Key Fields |
-|---|---|
+| Table               | Key Fields                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------ |
 | system_config_items | id, key, value_json, value_type, description, is_sensitive, status, created_at, updated_at |
-| dictionary_types | id, code, name_i18n_key, description, status, created_at, updated_at |
-| dictionary_items | id, type_id, code, value, label_i18n_key, sort_order, status, created_at, updated_at |
+| dictionary_types    | id, code, name_i18n_key, description, status, created_at, updated_at                       |
+| dictionary_items    | id, type_id, code, value, label_i18n_key, sort_order, status, created_at, updated_at       |
 
 Organization-level config and dictionary overrides are reserved only.
 
 ### 13.16 i18n
 
-| Table | Key Fields |
-|---|---|
+| Table         | Key Fields                                                            |
+| ------------- | --------------------------------------------------------------------- |
 | i18n_messages | id, namespace, key, language, message, status, created_at, updated_at |
 
 Languages:
@@ -1543,12 +1539,12 @@ v1 supports:
 
 ### 15.2 Default File Limits
 
-| Setting | Value |
-|---|---|
-| Default max file size | 50 MB |
-| Whitelisted images | jpg, jpeg, png, webp, gif |
+| Setting               | Value                               |
+| --------------------- | ----------------------------------- |
+| Default max file size | 50 MB                               |
+| Whitelisted images    | jpg, jpeg, png, webp, gif           |
 | Whitelisted documents | pdf, doc, docx, xls, xlsx, csv, txt |
-| Whitelisted archive | zip |
+| Whitelisted archive   | zip                                 |
 
 ### 15.3 File Permissions
 
@@ -1584,11 +1580,11 @@ No generic ImportExport Adapter is required in v1. The spec only documents futur
 
 Large import/export tasks run according to deployment mode:
 
-| Deployment Mode | Execution |
-|---|---|
-| Single process | In-process job may be used. |
-| Worker-enabled deployment | Queue job should be used. |
-| Multi-server deployment | Queue adapter should be used. |
+| Deployment Mode           | Execution                     |
+| ------------------------- | ----------------------------- |
+| Single process            | In-process job may be used.   |
+| Worker-enabled deployment | Queue job should be used.     |
+| Multi-server deployment   | Queue adapter should be used. |
 
 ### 16.3 Result File Storage
 
@@ -1724,16 +1720,16 @@ Failure:
 
 Required categories:
 
-| Category | Prefix | Examples |
-|---|---|---|
-| Authentication | `AUTH_` | `AUTH_INVALID_CREDENTIALS`, `AUTH_TOKEN_EXPIRED` |
-| Authorization | `PERMISSION_` | `PERMISSION_DENIED`, `PERMISSION_SCOPE_DENIED` |
-| Validation | `VALIDATION_` | `VALIDATION_REQUIRED`, `VALIDATION_INVALID_FORMAT` |
-| Business | `BUSINESS_` | `BUSINESS_ORG_DISABLED`, `BUSINESS_DUPLICATE_CODE` |
-| System | `SYSTEM_` | `SYSTEM_INTERNAL_ERROR`, `SYSTEM_CONFIG_INVALID` |
-| Third-party | `THIRD_PARTY_` | `THIRD_PARTY_EMAIL_FAILED`, `THIRD_PARTY_WEBHOOK_FAILED` |
-| Import/Export | `IMPORT_EXPORT_` | `IMPORT_EXPORT_INVALID_TEMPLATE`, `IMPORT_EXPORT_TASK_FAILED` |
-| File | `FILE_` | `FILE_TYPE_NOT_ALLOWED`, `FILE_TOO_LARGE` |
+| Category       | Prefix           | Examples                                                      |
+| -------------- | ---------------- | ------------------------------------------------------------- |
+| Authentication | `AUTH_`          | `AUTH_INVALID_CREDENTIALS`, `AUTH_TOKEN_EXPIRED`              |
+| Authorization  | `PERMISSION_`    | `PERMISSION_DENIED`, `PERMISSION_SCOPE_DENIED`                |
+| Validation     | `VALIDATION_`    | `VALIDATION_REQUIRED`, `VALIDATION_INVALID_FORMAT`            |
+| Business       | `BUSINESS_`      | `BUSINESS_ORG_DISABLED`, `BUSINESS_DUPLICATE_CODE`            |
+| System         | `SYSTEM_`        | `SYSTEM_INTERNAL_ERROR`, `SYSTEM_CONFIG_INVALID`              |
+| Third-party    | `THIRD_PARTY_`   | `THIRD_PARTY_EMAIL_FAILED`, `THIRD_PARTY_WEBHOOK_FAILED`      |
+| Import/Export  | `IMPORT_EXPORT_` | `IMPORT_EXPORT_INVALID_TEMPLATE`, `IMPORT_EXPORT_TASK_FAILED` |
+| File           | `FILE_`          | `FILE_TYPE_NOT_ALLOWED`, `FILE_TOO_LARGE`                     |
 
 ### 18.5 Endpoint Draft
 
@@ -1741,159 +1737,159 @@ The OpenAPI output must include request/response schemas. The following endpoint
 
 #### Auth
 
-| Method | Path | Purpose |
-|---|---|---|
-| POST | `/api/auth/login` | Login with username and password. |
-| POST | `/api/auth/refresh` | Refresh access token using HttpOnly refresh cookie and CSRF protection. |
-| POST | `/api/auth/logout` | Revoke current session. |
-| GET | `/api/auth/me` | Get current user profile, organization context, permissions summary. |
-| POST | `/api/auth/change-password` | Change current user's password. |
+| Method | Path                        | Purpose                                                                 |
+| ------ | --------------------------- | ----------------------------------------------------------------------- |
+| POST   | `/api/auth/login`           | Login with username and password.                                       |
+| POST   | `/api/auth/refresh`         | Refresh access token using HttpOnly refresh cookie and CSRF protection. |
+| POST   | `/api/auth/logout`          | Revoke current session.                                                 |
+| GET    | `/api/auth/me`              | Get current user profile, organization context, permissions summary.    |
+| POST   | `/api/auth/change-password` | Change current user's password.                                         |
 
 #### Current Context
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/api/context/organizations` | List organizations available to current user. |
-| POST | `/api/context/current-organization` | Switch current organization and refresh permission context. |
-| GET | `/api/context/permissions` | Get menu/action/data/field permission context. |
+| Method | Path                                | Purpose                                                     |
+| ------ | ----------------------------------- | ----------------------------------------------------------- |
+| GET    | `/api/context/organizations`        | List organizations available to current user.               |
+| POST   | `/api/context/current-organization` | Switch current organization and refresh permission context. |
+| GET    | `/api/context/permissions`          | Get menu/action/data/field permission context.              |
 
 #### Users
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/api/users` | Paginated user list. |
-| POST | `/api/users` | Create user. |
-| GET | `/api/users/:id` | User detail. |
-| PATCH | `/api/users/:id` | Update user. |
-| DELETE | `/api/users/:id` | Soft delete user. |
-| POST | `/api/users/:id/reset-password` | Administrator resets password. |
-| POST | `/api/users/:id/organizations` | Assign user to organization with role. |
-| DELETE | `/api/users/:id/organizations/:organizationId` | Remove organization assignment. |
+| Method | Path                                           | Purpose                                |
+| ------ | ---------------------------------------------- | -------------------------------------- |
+| GET    | `/api/users`                                   | Paginated user list.                   |
+| POST   | `/api/users`                                   | Create user.                           |
+| GET    | `/api/users/:id`                               | User detail.                           |
+| PATCH  | `/api/users/:id`                               | Update user.                           |
+| DELETE | `/api/users/:id`                               | Soft delete user.                      |
+| POST   | `/api/users/:id/reset-password`                | Administrator resets password.         |
+| POST   | `/api/users/:id/organizations`                 | Assign user to organization with role. |
+| DELETE | `/api/users/:id/organizations/:organizationId` | Remove organization assignment.        |
 
 #### Organizations
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/api/organizations/tree` | Organization tree. |
-| POST | `/api/organizations` | Create organization. |
-| GET | `/api/organizations/:id` | Organization detail. |
-| PATCH | `/api/organizations/:id` | Update organization. |
-| POST | `/api/organizations/:id/disable` | Disable organization and descendants. |
-| POST | `/api/organizations/:id/enable` | Enable organization. |
-| DELETE | `/api/organizations/:id` | Soft delete organization if allowed by business rules. |
+| Method | Path                             | Purpose                                                |
+| ------ | -------------------------------- | ------------------------------------------------------ |
+| GET    | `/api/organizations/tree`        | Organization tree.                                     |
+| POST   | `/api/organizations`             | Create organization.                                   |
+| GET    | `/api/organizations/:id`         | Organization detail.                                   |
+| PATCH  | `/api/organizations/:id`         | Update organization.                                   |
+| POST   | `/api/organizations/:id/disable` | Disable organization and descendants.                  |
+| POST   | `/api/organizations/:id/enable`  | Enable organization.                                   |
+| DELETE | `/api/organizations/:id`         | Soft delete organization if allowed by business rules. |
 
 #### Roles and Permissions
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/api/roles` | Paginated role list. |
-| POST | `/api/roles` | Create role. |
-| GET | `/api/roles/:id` | Role detail. |
-| PATCH | `/api/roles/:id` | Update role. |
-| DELETE | `/api/roles/:id` | Soft delete role. |
-| POST | `/api/roles/:id/copy` | Copy role and permission configuration. |
-| GET | `/api/permissions` | List permissions. |
-| GET | `/api/permissions/manifest` | Preview generated permission manifest. |
-| POST | `/api/permissions/sync` | Admin-confirmed permission sync. |
-| PUT | `/api/roles/:id/permissions` | Update role permissions. |
-| PUT | `/api/roles/:id/data-permissions` | Update role data permission rules. |
-| PUT | `/api/roles/:id/field-permissions` | Update role field permission rules. |
+| Method | Path                               | Purpose                                 |
+| ------ | ---------------------------------- | --------------------------------------- |
+| GET    | `/api/roles`                       | Paginated role list.                    |
+| POST   | `/api/roles`                       | Create role.                            |
+| GET    | `/api/roles/:id`                   | Role detail.                            |
+| PATCH  | `/api/roles/:id`                   | Update role.                            |
+| DELETE | `/api/roles/:id`                   | Soft delete role.                       |
+| POST   | `/api/roles/:id/copy`              | Copy role and permission configuration. |
+| GET    | `/api/permissions`                 | List permissions.                       |
+| GET    | `/api/permissions/manifest`        | Preview generated permission manifest.  |
+| POST   | `/api/permissions/sync`            | Admin-confirmed permission sync.        |
+| PUT    | `/api/roles/:id/permissions`       | Update role permissions.                |
+| PUT    | `/api/roles/:id/data-permissions`  | Update role data permission rules.      |
+| PUT    | `/api/roles/:id/field-permissions` | Update role field permission rules.     |
 
 #### Menus and Routes
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/api/menus/tree` | Menu tree management data. |
-| POST | `/api/menus` | Create menu. |
-| PATCH | `/api/menus/:id` | Update menu. |
-| DELETE | `/api/menus/:id` | Delete menu. |
-| GET | `/api/routes/manifest` | View frontend route manifest. |
-| POST | `/api/routes/sync` | Admin-confirmed route manifest sync. |
+| Method | Path                   | Purpose                              |
+| ------ | ---------------------- | ------------------------------------ |
+| GET    | `/api/menus/tree`      | Menu tree management data.           |
+| POST   | `/api/menus`           | Create menu.                         |
+| PATCH  | `/api/menus/:id`       | Update menu.                         |
+| DELETE | `/api/menus/:id`       | Delete menu.                         |
+| GET    | `/api/routes/manifest` | View frontend route manifest.        |
+| POST   | `/api/routes/sync`     | Admin-confirmed route manifest sync. |
 
 #### System Config and Dictionaries
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/api/system-config` | List config items. |
-| PATCH | `/api/system-config/:key` | Update config value. |
-| GET | `/api/dictionary-types` | List dictionary types. |
-| POST | `/api/dictionary-types` | Create dictionary type. |
-| PATCH | `/api/dictionary-types/:id` | Update dictionary type. |
-| GET | `/api/dictionary-types/:id/items` | List dictionary items. |
-| POST | `/api/dictionary-types/:id/items` | Create dictionary item. |
-| PATCH | `/api/dictionary-items/:id` | Update dictionary item. |
+| Method | Path                              | Purpose                 |
+| ------ | --------------------------------- | ----------------------- |
+| GET    | `/api/system-config`              | List config items.      |
+| PATCH  | `/api/system-config/:key`         | Update config value.    |
+| GET    | `/api/dictionary-types`           | List dictionary types.  |
+| POST   | `/api/dictionary-types`           | Create dictionary type. |
+| PATCH  | `/api/dictionary-types/:id`       | Update dictionary type. |
+| GET    | `/api/dictionary-types/:id/items` | List dictionary items.  |
+| POST   | `/api/dictionary-types/:id/items` | Create dictionary item. |
+| PATCH  | `/api/dictionary-items/:id`       | Update dictionary item. |
 
 #### Files
 
-| Method | Path | Purpose |
-|---|---|---|
-| POST | `/api/files/upload` | Upload file. |
-| GET | `/api/files` | File list. |
-| GET | `/api/files/:id` | File metadata. |
-| GET | `/api/files/:id/download` | Authenticated download. |
-| DELETE | `/api/files/:id` | Delete file metadata/object according to storage policy. |
+| Method | Path                      | Purpose                                                  |
+| ------ | ------------------------- | -------------------------------------------------------- |
+| POST   | `/api/files/upload`       | Upload file.                                             |
+| GET    | `/api/files`              | File list.                                               |
+| GET    | `/api/files/:id`          | File metadata.                                           |
+| GET    | `/api/files/:id/download` | Authenticated download.                                  |
+| DELETE | `/api/files/:id`          | Delete file metadata/object according to storage policy. |
 
 #### Notifications and Announcements
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/api/announcements` | List announcements. |
-| POST | `/api/announcements` | Create announcement. |
-| PATCH | `/api/announcements/:id` | Update announcement. |
-| POST | `/api/announcements/:id/publish` | Publish announcement. |
-| POST | `/api/announcements/:id/unpublish` | Unpublish announcement. |
-| GET | `/api/notifications` | Current user's notifications. |
-| POST | `/api/notifications/:id/read` | Mark read. |
-| POST | `/api/notifications/:id/archive` | Archive. |
-| DELETE | `/api/notifications/:id` | Delete notification. |
-| GET | `/api/notification-templates` | Template list. |
-| POST | `/api/notification-templates` | Create template. |
-| PATCH | `/api/notification-templates/:id` | Update template. |
-| GET | `/api/webhooks` | Webhook subscriptions. |
-| POST | `/api/webhooks` | Create webhook subscription. |
-| PATCH | `/api/webhooks/:id` | Update webhook subscription. |
+| Method | Path                               | Purpose                       |
+| ------ | ---------------------------------- | ----------------------------- |
+| GET    | `/api/announcements`               | List announcements.           |
+| POST   | `/api/announcements`               | Create announcement.          |
+| PATCH  | `/api/announcements/:id`           | Update announcement.          |
+| POST   | `/api/announcements/:id/publish`   | Publish announcement.         |
+| POST   | `/api/announcements/:id/unpublish` | Unpublish announcement.       |
+| GET    | `/api/notifications`               | Current user's notifications. |
+| POST   | `/api/notifications/:id/read`      | Mark read.                    |
+| POST   | `/api/notifications/:id/archive`   | Archive.                      |
+| DELETE | `/api/notifications/:id`           | Delete notification.          |
+| GET    | `/api/notification-templates`      | Template list.                |
+| POST   | `/api/notification-templates`      | Create template.              |
+| PATCH  | `/api/notification-templates/:id`  | Update template.              |
+| GET    | `/api/webhooks`                    | Webhook subscriptions.        |
+| POST   | `/api/webhooks`                    | Create webhook subscription.  |
+| PATCH  | `/api/webhooks/:id`                | Update webhook subscription.  |
 
 #### Logs
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/api/logs/login` | Login logs. |
-| GET | `/api/logs/operation` | Operation logs. |
-| GET | `/api/logs/access` | Access logs. |
-| GET | `/api/logs/api` | API call logs. |
-| GET | `/api/logs/exception` | Exception logs. |
-| GET | `/api/logs/security` | Security logs. |
-| GET | `/api/logs/jobs` | Job logs. |
-| GET | `/api/logs/files` | File operation logs. |
-| POST | `/api/logs/export` | Create async CSV export task. |
+| Method | Path                  | Purpose                       |
+| ------ | --------------------- | ----------------------------- |
+| GET    | `/api/logs/login`     | Login logs.                   |
+| GET    | `/api/logs/operation` | Operation logs.               |
+| GET    | `/api/logs/access`    | Access logs.                  |
+| GET    | `/api/logs/api`       | API call logs.                |
+| GET    | `/api/logs/exception` | Exception logs.               |
+| GET    | `/api/logs/security`  | Security logs.                |
+| GET    | `/api/logs/jobs`      | Job logs.                     |
+| GET    | `/api/logs/files`     | File operation logs.          |
+| POST   | `/api/logs/export`    | Create async CSV export task. |
 
 #### Jobs and Import/Export
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/api/scheduled-tasks` | Scheduled task list. |
-| POST | `/api/scheduled-tasks` | Create task. |
-| PATCH | `/api/scheduled-tasks/:id` | Update task. |
-| POST | `/api/scheduled-tasks/:id/enable` | Enable task. |
-| POST | `/api/scheduled-tasks/:id/disable` | Disable task. |
-| POST | `/api/scheduled-tasks/:id/run` | Manual run. |
-| GET | `/api/import-export/tasks` | Import/export task list. |
-| POST | `/api/import-export/import` | Create import task. |
-| POST | `/api/import-export/export` | Create export task. |
-| GET | `/api/import-export/tasks/:id` | Task detail. |
-| GET | `/api/import-export/tasks/:id/result` | Download result file if available. |
+| Method | Path                                  | Purpose                            |
+| ------ | ------------------------------------- | ---------------------------------- |
+| GET    | `/api/scheduled-tasks`                | Scheduled task list.               |
+| POST   | `/api/scheduled-tasks`                | Create task.                       |
+| PATCH  | `/api/scheduled-tasks/:id`            | Update task.                       |
+| POST   | `/api/scheduled-tasks/:id/enable`     | Enable task.                       |
+| POST   | `/api/scheduled-tasks/:id/disable`    | Disable task.                      |
+| POST   | `/api/scheduled-tasks/:id/run`        | Manual run.                        |
+| GET    | `/api/import-export/tasks`            | Import/export task list.           |
+| POST   | `/api/import-export/import`           | Create import task.                |
+| POST   | `/api/import-export/export`           | Create export task.                |
+| GET    | `/api/import-export/tasks/:id`        | Task detail.                       |
+| GET    | `/api/import-export/tasks/:id/result` | Download result file if available. |
 
 #### i18n, Online Users, Initialization, Observability
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/api/i18n/messages` | Get i18n messages. |
-| PATCH | `/api/i18n/messages/:id` | Update i18n message. |
-| GET | `/api/online-users` | View online users based on active sessions. |
-| GET | `/api/initialization/status` | Check initialization status. |
-| POST | `/api/initialization/setup` | First-start initialization wizard. |
-| GET | `/api/health` | Health check. |
-| GET | `/api/metrics` | Metrics endpoint or metrics placeholder. |
+| Method | Path                         | Purpose                                     |
+| ------ | ---------------------------- | ------------------------------------------- |
+| GET    | `/api/i18n/messages`         | Get i18n messages.                          |
+| PATCH  | `/api/i18n/messages/:id`     | Update i18n message.                        |
+| GET    | `/api/online-users`          | View online users based on active sessions. |
+| GET    | `/api/initialization/status` | Check initialization status.                |
+| POST   | `/api/initialization/setup`  | First-start initialization wizard.          |
+| GET    | `/api/health`                | Health check.                               |
+| GET    | `/api/metrics`               | Metrics endpoint or metrics placeholder.    |
 
 ---
 
@@ -1901,15 +1897,15 @@ The OpenAPI output must include request/response schemas. The following endpoint
 
 ### 19.1 Frontend Stack
 
-| Area | Decision |
-|---|---|
-| App type | Vite SPA |
-| Router | TanStack Router |
-| UI | shadcn/ui + Tailwind CSS |
-| Form | TanStack Form + Zod |
-| Global state | Zustand |
-| Server state | TanStack Query |
-| API client | Hono RPC for internal client; OpenAPI for documentation/external clients |
+| Area         | Decision                                                                 |
+| ------------ | ------------------------------------------------------------------------ |
+| App type     | Vite SPA                                                                 |
+| Router       | TanStack Router                                                          |
+| UI           | shadcn/ui + Tailwind CSS                                                 |
+| Form         | TanStack Form + Zod                                                      |
+| Global state | Zustand                                                                  |
+| Server state | TanStack Query                                                           |
+| API client   | Hono RPC for internal client; OpenAPI for documentation/external clients |
 
 ### 19.2 State Boundary
 
@@ -2545,4 +2541,3 @@ The following are intentionally reserved and must not be implemented in v1 witho
 15. Detailed dead-letter queue behavior.
 16. Concrete database lock internal algorithm, unless separately confirmed.
 17. Concrete SQLite driver package, unless separately confirmed.
-

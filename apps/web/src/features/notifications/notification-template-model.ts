@@ -2,7 +2,7 @@ import {
   createNotificationTemplateRequestSchema,
   updateNotificationTemplateRequestSchema,
   type CreateNotificationTemplateRequest,
-  type UpdateNotificationTemplateRequest
+  type UpdateNotificationTemplateRequest,
 } from "@web-admin-base/contracts";
 import { z } from "zod";
 
@@ -23,7 +23,7 @@ export const notificationTemplateFormSchema = z.object({
   locale: z.string().min(1),
   subject: z.string(),
   body: z.string().min(1),
-  variablesText: z.string()
+  variablesText: z.string(),
 });
 
 export const defaultNotificationTemplateFormValues: NotificationTemplateFormValues = {
@@ -32,12 +32,12 @@ export const defaultNotificationTemplateFormValues: NotificationTemplateFormValu
   locale: "en",
   subject: "",
   body: "",
-  variablesText: ""
+  variablesText: "",
 };
 
 export function toNotificationTemplateApiInput(
   value: NotificationTemplateFormValues,
-  mode: NotificationTemplateFormMode
+  mode: NotificationTemplateFormMode,
 ): CreateNotificationTemplateRequest | UpdateNotificationTemplateRequest {
   const input = {
     code: value.code.trim(),
@@ -45,7 +45,7 @@ export function toNotificationTemplateApiInput(
     locale: value.locale.trim(),
     subject: value.subject.trim() || null,
     body: value.body,
-    variables: parseVariables(value.variablesText)
+    variables: parseVariables(value.variablesText),
   };
 
   return mode === "create"

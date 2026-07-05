@@ -4,7 +4,7 @@ import type {
   UpdateDictionaryItemRequest,
   UpdateDictionaryTypeRequest,
   UpdateI18nMessageRequest,
-  UpdateSystemConfigRequest
+  UpdateSystemConfigRequest,
 } from "@web-admin-base/contracts";
 
 import { SystemManagementRepository } from "./system-management.repository";
@@ -13,7 +13,7 @@ import type {
   DictionaryItemRecord,
   DictionaryTypeRecord,
   I18nMessageRecord,
-  SystemConfigRecord
+  SystemConfigRecord,
 } from "./system-management.types";
 
 export class SystemManagementServices {
@@ -21,7 +21,7 @@ export class SystemManagementServices {
     systemConfigs: [] as SystemConfigRecord[],
     dictionaryTypes: [] as DictionaryTypeRecord[],
     dictionaryItems: [] as DictionaryItemRecord[],
-    i18nMessages: [] as I18nMessageRecord[]
+    i18nMessages: [] as I18nMessageRecord[],
   };
   private sequence = 1;
 
@@ -31,7 +31,9 @@ export class SystemManagementServices {
     return new SystemManagementServices();
   }
 
-  static database(repository = SystemManagementRepository.fromEnvironment()): SystemManagementServices {
+  static database(
+    repository = SystemManagementRepository.fromEnvironment(),
+  ): SystemManagementServices {
     return new SystemManagementServices(repository);
   }
 
@@ -50,7 +52,7 @@ export class SystemManagementServices {
     Object.assign(config, {
       configValue: input.configValue,
       valueType: inferValueType(input.configValue),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     });
     return config;
   }
@@ -67,7 +69,7 @@ export class SystemManagementServices {
       code: input.code,
       name: input.name,
       description: input.description ?? null,
-      status: input.status
+      status: input.status,
     };
     this.memory.dictionaryTypes.unshift(record);
     return Promise.resolve(record);
@@ -97,7 +99,7 @@ export class SystemManagementServices {
       itemValue: input.itemValue,
       labelI18nKey: input.labelI18nKey,
       sortOrder: input.sortOrder,
-      status: input.status
+      status: input.status,
     };
     this.memory.dictionaryItems.unshift(record);
     return Promise.resolve(record);

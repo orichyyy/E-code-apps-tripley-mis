@@ -41,6 +41,7 @@ This exception takes precedence over the file-size, function-size, code-organiza
   - tests
 
 # File Size and Function Size
+
 Keep files small and focused.
 Keep functions short and purpose-driven.
 A function should usually do one thing.
@@ -50,6 +51,7 @@ Avoid deeply nested control flow.
 Prefer early returns over large nested blocks.
 
 # Architecture
+
 Keep business logic independent from frameworks when practical.
 Place side effects at the edges of the system.
 Keep core logic easy to test without requiring UI, network, filesystem, database, or platform APIs.

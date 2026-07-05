@@ -13,11 +13,15 @@ import {
   fetchLogs,
   getLogType,
   type LogEntry,
-  type LogRouteCode
+  type LogRouteCode,
 } from "./log-api";
 import { EmptyState, ErrorState, StatusBadge } from "@/features/operations/status-badge";
 
-export function LogsPage({ route }: { route: WebAdminRouteMetadata & { routeCode: LogRouteCode } }) {
+export function LogsPage({
+  route,
+}: {
+  route: WebAdminRouteMetadata & { routeCode: LogRouteCode };
+}) {
   const language = useLayoutStore((state) => state.language);
   const permissionCodes = useAuthStore((state) => state.permissionCodes);
   const canView = hasPermission(permissionCodes, route.requiredPermission);
@@ -28,13 +32,13 @@ export function LogsPage({ route }: { route: WebAdminRouteMetadata & { routeCode
   const query = useQuery({
     enabled: canView,
     queryKey: ["logs", route.routeCode],
-    queryFn: () => fetchLogs(route.routeCode)
+    queryFn: () => fetchLogs(route.routeCode),
   });
   const exportMutation = useMutation({
     mutationFn: () => createLogExportTask(getLogType(route.routeCode)),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["import-export-tasks"] });
-    }
+    },
   });
   const rows = useMemo(
     () =>
@@ -45,10 +49,13 @@ export function LogsPage({ route }: { route: WebAdminRouteMetadata & { routeCode
           record.traceId ?? "",
           record.userId ?? "",
           record.ipAddress ?? "",
-          JSON.stringify(record.metadata)
-        ].join(" ").toLowerCase().includes(keyword.toLowerCase())
+          JSON.stringify(record.metadata),
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(keyword.toLowerCase()),
       ),
-    [keyword, query.data]
+    [keyword, query.data],
   );
 
   if (!canView) return <PermissionDenied language={language} />;
@@ -69,7 +76,11 @@ export function LogsPage({ route }: { route: WebAdminRouteMetadata & { routeCode
               {translate(language, "actions.refresh")}
             </Button>
             {canExport ? (
-              <Button disabled={exportMutation.isPending} onClick={() => exportMutation.mutate()} size="sm">
+              <Button
+                disabled={exportMutation.isPending}
+                onClick={() => exportMutation.mutate()}
+                size="sm"
+              >
                 {exportMutation.isPending ? (
                   <Loader2 className="size-4 animate-spin" aria-hidden="true" />
                 ) : (
@@ -130,7 +141,7 @@ function LogTable({
   isLoading,
   onSelect,
   rows,
-  selectedId
+  selectedId,
 }: {
   isError: boolean;
   isLoading: boolean;
@@ -164,7 +175,10 @@ function LogTable({
         </thead>
         <tbody>
           {rows.map((record) => (
-            <tr className={record.id === selectedId ? "bg-muted/40" : "hover:bg-muted/40"} key={record.id}>
+            <tr
+              className={record.id === selectedId ? "bg-muted/40" : "hover:bg-muted/40"}
+              key={record.id}
+            >
               <td className="max-w-96 border-b px-4 py-3">
                 <div className="truncate font-medium">{record.message || "-"}</div>
                 <div className="text-xs text-muted-foreground">{record.logType}</div>
@@ -177,7 +191,9 @@ function LogTable({
                 <div>User {record.userId ?? "-"}</div>
                 <div className="text-xs">IP {record.ipAddress ?? "-"}</div>
               </td>
-              <td className="border-b px-4 py-3 text-muted-foreground">{record.occurredAt || "-"}</td>
+              <td className="border-b px-4 py-3 text-muted-foreground">
+                {record.occurredAt || "-"}
+              </td>
               <td className="border-b px-4 py-3">
                 <Button onClick={() => onSelect(record)} size="sm" variant="outline">
                   View
@@ -196,7 +212,9 @@ function LogDetailPanel({ entry }: { entry: LogEntry | null }) {
     return (
       <section className="rounded-lg border bg-card p-4 text-sm shadow-sm">
         <h3 className="font-semibold">Log detail</h3>
-        <p className="mt-2 text-muted-foreground">Select a log row to inspect trace and metadata fields.</p>
+        <p className="mt-2 text-muted-foreground">
+          Select a log row to inspect trace and metadata fields.
+        </p>
       </section>
     );
   }
@@ -237,7 +255,9 @@ function PermissionDenied({ language }: { language: "en" | "zh" }) {
   return (
     <section className="rounded-lg border bg-card p-8 text-center">
       <AlertCircle className="mx-auto size-8 text-destructive" aria-hidden="true" />
-      <h2 className="mt-3 text-base font-semibold">{translate(language, "common.permissionDenied")}</h2>
+      <h2 className="mt-3 text-base font-semibold">
+        {translate(language, "common.permissionDenied")}
+      </h2>
     </section>
   );
 }

@@ -12,7 +12,8 @@ export function WebhookSidePanel() {
         <div>
           <h3 className="text-sm font-semibold">Subscription boundary</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            This page manages durable webhook subscription records only. Sender drivers and delivery retries remain reserved.
+            This page manages durable webhook subscription records only. Sender drivers and delivery
+            retries remain reserved.
           </p>
         </div>
       </div>

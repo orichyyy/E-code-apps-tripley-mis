@@ -3,7 +3,7 @@ import type {
   CreateDictionaryTypeRequest,
   UpdateDictionaryItemRequest,
   UpdateDictionaryTypeRequest,
-  UpdateSystemConfigRequest
+  UpdateSystemConfigRequest,
 } from "@web-admin-base/contracts";
 
 import { requestJson, unwrapRecords } from "@/lib/api-request";
@@ -11,7 +11,7 @@ import {
   booleanValue,
   nullableString,
   numberValue,
-  stringValue
+  stringValue,
 } from "@/features/operations/record-utils";
 
 type ConfigValue = string | number | boolean | Record<string, unknown> | unknown[];
@@ -54,10 +54,13 @@ export async function fetchSystemConfigs(): Promise<SystemConfig[]> {
 }
 
 export async function updateSystemConfig(configKey: string, input: UpdateSystemConfigRequest) {
-  return requestJson<{ data: SystemConfig | null }>(`/system-config/${encodeURIComponent(configKey)}`, {
-    method: "PATCH",
-    body: JSON.stringify(input)
-  });
+  return requestJson<{ data: SystemConfig | null }>(
+    `/system-config/${encodeURIComponent(configKey)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    },
+  );
 }
 
 export async function fetchDictionaryTypes(): Promise<DictionaryType[]> {
@@ -68,14 +71,14 @@ export async function fetchDictionaryTypes(): Promise<DictionaryType[]> {
 export async function createDictionaryType(input: CreateDictionaryTypeRequest) {
   return requestJson<{ data: DictionaryType }>("/dictionary-types", {
     method: "POST",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 }
 
 export async function updateDictionaryType(id: string, input: UpdateDictionaryTypeRequest) {
   return requestJson<{ data: DictionaryType | null }>(`/dictionary-types/${id}`, {
     method: "PATCH",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 }
 
@@ -87,14 +90,14 @@ export async function fetchDictionaryItems(typeId: string): Promise<DictionaryIt
 export async function createDictionaryItem(typeId: string, input: CreateDictionaryItemRequest) {
   return requestJson<{ data: DictionaryItem }>(`/dictionary-types/${typeId}/items`, {
     method: "POST",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 }
 
 export async function updateDictionaryItem(id: string, input: UpdateDictionaryItemRequest) {
   return requestJson<{ data: DictionaryItem | null }>(`/dictionary-items/${id}`, {
     method: "PATCH",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 }
 
@@ -109,7 +112,7 @@ function toSystemConfig(record: Record<string, unknown>): SystemConfig {
     description: nullableString(record.description),
     editable: booleanValue(record.editable),
     status: stringValue(record.status, "enabled"),
-    updatedAt: stringValue(record.updatedAt)
+    updatedAt: stringValue(record.updatedAt),
   };
 }
 
@@ -120,7 +123,7 @@ function toDictionaryType(record: Record<string, unknown>): DictionaryType {
     code: stringValue(record.code),
     name: stringValue(record.name),
     description: nullableString(record.description),
-    status: stringValue(record.status, "enabled")
+    status: stringValue(record.status, "enabled"),
   };
 }
 
@@ -132,7 +135,7 @@ function toDictionaryItem(record: Record<string, unknown>): DictionaryItem {
     itemValue: stringValue(record.itemValue),
     labelI18nKey: stringValue(record.labelI18nKey),
     sortOrder: numberValue(record.sortOrder),
-    status: stringValue(record.status, "enabled")
+    status: stringValue(record.status, "enabled"),
   };
 }
 

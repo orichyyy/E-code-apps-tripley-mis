@@ -13,14 +13,16 @@ describe("baseApiPermissionManifest", () => {
 
   it("only references declared base permissions", () => {
     const declaredPermissionCodes = new Set(
-      basePermissionManifest.map((permission) => permission.code)
+      basePermissionManifest.map((permission) => permission.code),
     );
     const requiredPermissionCodes = baseApiPermissionManifest
       .map((entry) => entry.requiredPermission)
       .filter((permissionCode): permissionCode is string => Boolean(permissionCode));
 
     expect(
-      requiredPermissionCodes.every((permissionCode) => declaredPermissionCodes.has(permissionCode))
+      requiredPermissionCodes.every((permissionCode) =>
+        declaredPermissionCodes.has(permissionCode),
+      ),
     ).toBe(true);
   });
 
@@ -37,7 +39,7 @@ describe("baseApiPermissionManifest", () => {
       "api.profile.avatar.update",
       "api.profile.preferences.update",
       "api.profile.update",
-      "api.profile.view"
+      "api.profile.view",
     ]);
     const privateRoutesWithoutRequiredPermission = baseApiPermissionManifest
       .filter((entry) => !entry.public && !entry.requiredPermission)
@@ -45,7 +47,7 @@ describe("baseApiPermissionManifest", () => {
       .sort();
 
     expect(privateRoutesWithoutRequiredPermission).toEqual(
-      [...authenticatedContextRouteCodes].sort()
+      [...authenticatedContextRouteCodes].sort(),
     );
   });
 
@@ -56,149 +58,149 @@ describe("baseApiPermissionManifest", () => {
         expect.objectContaining({
           method: "GET",
           path: "/api/auth/me",
-          public: false
+          public: false,
         }),
         expect.objectContaining({
           method: "GET",
           path: "/api/profile",
-          public: false
+          public: false,
         }),
         expect.objectContaining({
           method: "PATCH",
           path: "/api/profile/preferences",
-          public: false
+          public: false,
         }),
         expect.objectContaining({
           method: "GET",
           path: "/api/organizations/config/depth",
-          requiredPermission: "organization:view"
+          requiredPermission: "organization:view",
         }),
         expect.objectContaining({
           method: "PATCH",
           path: "/api/organizations/config/depth",
-          requiredPermission: "organization:depth:configure"
+          requiredPermission: "organization:depth:configure",
         }),
         expect.objectContaining({
           method: "POST",
           path: "/api/auth/change-password",
-          public: false
+          public: false,
         }),
         expect.objectContaining({
           method: "POST",
           path: "/api/context/current-organization",
-          public: false
+          public: false,
         }),
         expect.objectContaining({
           method: "POST",
           path: "/api/auth/current-organization",
-          public: false
+          public: false,
         }),
         expect.objectContaining({
           method: "GET",
           path: "/api/context/permissions",
-          public: false
+          public: false,
         }),
         expect.objectContaining({
           method: "GET",
           path: "/api/permissions/effective",
-          public: false
+          public: false,
         }),
         expect.objectContaining({
           method: "POST",
           path: "/api/users/:id/reset-password",
-          requiredPermission: "user:password:reset"
+          requiredPermission: "user:password:reset",
         }),
         expect.objectContaining({
           method: "POST",
           path: "/api/roles/:id/copy",
-          requiredPermission: "role:copy"
+          requiredPermission: "role:copy",
         }),
         expect.objectContaining({
           method: "POST",
           path: "/api/roles/:id/disable",
-          requiredPermission: "role:status:update"
+          requiredPermission: "role:status:update",
         }),
         expect.objectContaining({
           method: "POST",
           path: "/api/roles/:id/enable",
-          requiredPermission: "role:status:update"
+          requiredPermission: "role:status:update",
         }),
         expect.objectContaining({
           method: "GET",
           path: "/api/users/:id/organizations",
-          requiredPermission: "user:view"
+          requiredPermission: "user:view",
         }),
         expect.objectContaining({
           method: "GET",
           path: "/api/roles/:id/permissions",
-          requiredPermission: "role:view"
+          requiredPermission: "role:view",
         }),
         expect.objectContaining({
           method: "GET",
           path: "/api/roles/:id/data-permissions",
-          requiredPermission: "role:view"
+          requiredPermission: "role:view",
         }),
         expect.objectContaining({
           method: "PUT",
           path: "/api/roles/:id/data-permissions",
-          requiredPermission: "role:permissions:update"
+          requiredPermission: "role:permissions:update",
         }),
         expect.objectContaining({
           method: "GET",
           path: "/api/roles/:id/field-permissions",
-          requiredPermission: "role:view"
+          requiredPermission: "role:view",
         }),
         expect.objectContaining({
           method: "PUT",
           path: "/api/roles/:id/field-permissions",
-          requiredPermission: "role:permissions:update"
+          requiredPermission: "role:permissions:update",
         }),
         expect.objectContaining({
           method: "GET",
           path: "/api/permissions/user-overrides/:userId",
-          requiredPermission: "permission:view"
+          requiredPermission: "permission:view",
         }),
         expect.objectContaining({
           method: "PUT",
           path: "/api/permissions/user-overrides/:userId",
-          requiredPermission: "permission:sync"
+          requiredPermission: "permission:sync",
         }),
         expect.objectContaining({
           method: "POST",
           path: "/api/menus",
-          requiredPermission: "menu:create"
+          requiredPermission: "menu:create",
         }),
         expect.objectContaining({
           method: "PATCH",
           path: "/api/menus/:id",
-          requiredPermission: "menu:update"
+          requiredPermission: "menu:update",
         }),
         expect.objectContaining({
           method: "DELETE",
           path: "/api/menus/:id",
-          requiredPermission: "menu:delete"
+          requiredPermission: "menu:delete",
         }),
         expect.objectContaining({
           method: "POST",
           path: "/api/routes/sync",
-          requiredPermission: "route:sync"
+          requiredPermission: "route:sync",
         }),
         expect.objectContaining({
           method: "POST",
           path: "/api/permissions/sync",
-          requiredPermission: "permission:sync"
+          requiredPermission: "permission:sync",
         }),
         expect.objectContaining({
           method: "GET",
           path: "/api/permissions/api",
-          requiredPermission: "permission:view"
+          requiredPermission: "permission:view",
         }),
         expect.objectContaining({
           method: "POST",
           path: "/api/permissions/api/sync",
-          requiredPermission: "permission:api:sync"
-        })
-      ])
+          requiredPermission: "permission:api:sync",
+        }),
+      ]),
     );
   });
 });

@@ -6,7 +6,7 @@ import {
   createInMemoryNotificationChannelAdapter,
   createInMemoryQueueAdapter,
   createInMemoryRateLimitAdapter,
-  createInProcessEventBusAdapter
+  createInProcessEventBusAdapter,
 } from "../src";
 
 describe("in-memory infrastructure adapters", () => {
@@ -40,7 +40,7 @@ describe("in-memory infrastructure adapters", () => {
       id: "event-1",
       type: "user.created",
       payload: { id: "1" },
-      occurredAt: "2026-07-03T00:00:00.000Z"
+      occurredAt: "2026-07-03T00:00:00.000Z",
     });
 
     expect(handledJobs).toEqual([job.id]);
@@ -52,15 +52,15 @@ describe("in-memory infrastructure adapters", () => {
 
     await expect(rateLimit.check("login:1", 2, 60)).resolves.toMatchObject({
       allowed: true,
-      remaining: 1
+      remaining: 1,
     });
     await expect(rateLimit.check("login:1", 2, 60)).resolves.toMatchObject({
       allowed: true,
-      remaining: 0
+      remaining: 0,
     });
     await expect(rateLimit.check("login:1", 2, 60)).resolves.toMatchObject({
       allowed: false,
-      remaining: 0
+      remaining: 0,
     });
   });
 
@@ -70,17 +70,17 @@ describe("in-memory infrastructure adapters", () => {
 
     await scheduler.register(
       { code: "cleanup", cronExpression: "0 0 * * *", enabled: true },
-      async () => undefined
+      async () => undefined,
     );
     await notifications.send({
       channel: "webhook",
       recipient: "https://example.test/hook",
-      body: "payload"
+      body: "payload",
     });
 
     await expect(scheduler.healthCheck()).resolves.toEqual({ ok: true });
     expect(notifications.listMessages()).toEqual([
-      expect.objectContaining({ channel: "webhook", body: "payload" })
+      expect.objectContaining({ channel: "webhook", body: "payload" }),
     ]);
   });
 });

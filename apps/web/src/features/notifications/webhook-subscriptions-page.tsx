@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createWebhookSubscriptionRequestSchema,
   updateWebhookSubscriptionRequestSchema,
-  type UpdateWebhookSubscriptionRequest
+  type UpdateWebhookSubscriptionRequest,
 } from "@web-admin-base/contracts";
 import { AlertCircle, Plus, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -12,7 +12,7 @@ import {
   createWebhookSubscription,
   fetchWebhookSubscriptions,
   updateWebhookSubscription,
-  type WebhookSubscription
+  type WebhookSubscription,
 } from "@/features/notifications/webhook-subscription-api";
 import { hasPermission } from "@/features/permissions/permission-utils";
 import { translate } from "@/i18n/messages";
@@ -40,14 +40,14 @@ export function WebhookSubscriptionsPage({ route }: WebhookSubscriptionsPageProp
   const query = useQuery({
     enabled: canView,
     queryKey: ["webhook-subscriptions"],
-    queryFn: fetchWebhookSubscriptions
+    queryFn: fetchWebhookSubscriptions,
   });
   const createMutation = useMutation({
     mutationFn: createWebhookSubscription,
     onSuccess: async () => {
       setCreating(false);
       await queryClient.invalidateQueries({ queryKey: ["webhook-subscriptions"] });
-    }
+    },
   });
   const updateMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: UpdateWebhookSubscriptionRequest }) =>
@@ -55,7 +55,7 @@ export function WebhookSubscriptionsPage({ route }: WebhookSubscriptionsPageProp
     onSuccess: async () => {
       setEditing(null);
       await queryClient.invalidateQueries({ queryKey: ["webhook-subscriptions"] });
-    }
+    },
   });
   const rows = useMemo(
     () =>
@@ -63,16 +63,18 @@ export function WebhookSubscriptionsPage({ route }: WebhookSubscriptionsPageProp
         [record.name, record.url, record.status, record.eventTypes.join(",")]
           .join(" ")
           .toLowerCase()
-          .includes(keyword.toLowerCase())
+          .includes(keyword.toLowerCase()),
       ),
-    [keyword, query.data]
+    [keyword, query.data],
   );
 
   if (!canView) {
     return (
       <section className="rounded-lg border bg-card p-8 text-center">
         <AlertCircle className="mx-auto size-8 text-destructive" aria-hidden="true" />
-        <h2 className="mt-3 text-base font-semibold">{translate(language, "common.permissionDenied")}</h2>
+        <h2 className="mt-3 text-base font-semibold">
+          {translate(language, "common.permissionDenied")}
+        </h2>
       </section>
     );
   }
@@ -97,7 +99,7 @@ export function WebhookSubscriptionsPage({ route }: WebhookSubscriptionsPageProp
             onToggle={(record) =>
               updateMutation.mutate({
                 id: record.id,
-                input: { status: record.status === "enabled" ? "disabled" : "enabled" }
+                input: { status: record.status === "enabled" ? "disabled" : "enabled" },
               })
             }
             rows={rows}
@@ -111,11 +113,13 @@ export function WebhookSubscriptionsPage({ route }: WebhookSubscriptionsPageProp
         error={createMutation.isError || updateMutation.isError}
         onCancelCreate={() => setCreating(false)}
         onCancelEdit={() => setEditing(null)}
-        onCreate={(input) => createMutation.mutate(createWebhookSubscriptionRequestSchema.parse(input))}
+        onCreate={(input) =>
+          createMutation.mutate(createWebhookSubscriptionRequestSchema.parse(input))
+        }
         onUpdate={(id, input) =>
           updateMutation.mutate({
             id,
-            input: updateWebhookSubscriptionRequestSchema.parse(input)
+            input: updateWebhookSubscriptionRequestSchema.parse(input),
           })
         }
         updatePending={updateMutation.isPending}
@@ -129,7 +133,7 @@ function WebhookToolbar({
   language,
   onCreate,
   onRefresh,
-  route
+  route,
 }: {
   canCreate: boolean;
   language: "en" | "zh";
@@ -164,7 +168,7 @@ function WebhookToolbar({
 function WebhookFilter({
   keyword,
   language,
-  onChange
+  onChange,
 }: {
   keyword: string;
   language: "en" | "zh";
@@ -198,7 +202,7 @@ function WebhookEditorPanel({
   onCancelEdit,
   onCreate,
   onUpdate,
-  updatePending
+  updatePending,
 }: {
   creating: boolean;
   createPending: boolean;
@@ -207,13 +211,25 @@ function WebhookEditorPanel({
   onCancelCreate: () => void;
   onCancelEdit: () => void;
   onCreate: Parameters<typeof WebhookSubscriptionForm>[0]["onSubmit"];
-  onUpdate: (id: string, input: Parameters<typeof WebhookSubscriptionForm>[0]["onSubmit"] extends (input: infer T) => void ? T : never) => void;
+  onUpdate: (
+    id: string,
+    input: Parameters<typeof WebhookSubscriptionForm>[0]["onSubmit"] extends (
+      input: infer T,
+    ) => void
+      ? T
+      : never,
+  ) => void;
   updatePending: boolean;
 }) {
   return (
     <aside className="space-y-4">
       {creating ? (
-        <WebhookSubscriptionForm busy={createPending} mode="create" onCancel={onCancelCreate} onSubmit={onCreate} />
+        <WebhookSubscriptionForm
+          busy={createPending}
+          mode="create"
+          onCancel={onCancelCreate}
+          onSubmit={onCreate}
+        />
       ) : null}
       {editing ? (
         <WebhookSubscriptionForm

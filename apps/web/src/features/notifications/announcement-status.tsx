@@ -10,7 +10,11 @@ export function AnnouncementStatusBadge({ status }: { status: Announcement["stat
         ? "bg-destructive/10 text-destructive"
         : "bg-muted text-muted-foreground";
 
-  return <span className={`inline-flex rounded-md px-2 py-1 text-xs font-medium ${className}`}>{status}</span>;
+  return (
+    <span className={`inline-flex rounded-md px-2 py-1 text-xs font-medium ${className}`}>
+      {status}
+    </span>
+  );
 }
 
 export function AnnouncementScopeBadge({ scopeType }: { scopeType: Announcement["scopeType"] }) {
@@ -31,8 +35,9 @@ export function AnnouncementSidePanel() {
         <div>
           <h3 className="font-semibold">Announcement boundary</h3>
           <p className="mt-2 text-muted-foreground">
-            This page manages durable announcement records and publication state only. Notification delivery, webhook
-            dispatch, email, and SMS fan-out remain separate reserved integrations.
+            This page manages durable announcement records and publication state only. Notification
+            delivery, webhook dispatch, email, and SMS fan-out remain separate reserved
+            integrations.
           </p>
         </div>
       </div>

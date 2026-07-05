@@ -63,7 +63,7 @@ export const messages: Record<Language, Record<string, string>> = {
     "routes.operations.importExport": "Import/export tasks",
     "routes.account.profile": "Personal center",
     "routes.account.password": "Password change",
-    "routes.account.settings": "Personal settings"
+    "routes.account.settings": "Personal settings",
   },
   zh: {
     "app.name": "Web Admin Base",
@@ -127,8 +127,8 @@ export const messages: Record<Language, Record<string, string>> = {
     "routes.operations.importExport": "导入导出任务",
     "routes.account.profile": "个人中心",
     "routes.account.password": "修改密码",
-    "routes.account.settings": "个人设置"
-  }
+    "routes.account.settings": "个人设置",
+  },
 };
 
 export function translate(language: Language, key: string) {

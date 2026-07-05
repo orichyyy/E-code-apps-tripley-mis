@@ -17,7 +17,7 @@ type OrganizationState = {
 
 const defaultOrganizations: SelectableOrganization[] = [
   { id: "1", name: "Main Organization", code: "main", status: "enabled" },
-  { id: "2", name: "Shared Services", code: "shared", status: "enabled" }
+  { id: "2", name: "Shared Services", code: "shared", status: "enabled" },
 ];
 
 export const useOrganizationStore = create<OrganizationState>((set) => ({
@@ -25,5 +25,5 @@ export const useOrganizationStore = create<OrganizationState>((set) => ({
   organizations: defaultOrganizations,
   setCurrentOrganizationId: (currentOrganizationId) => set({ currentOrganizationId }),
   setOrganizations: (organizations) => set({ organizations }),
-  switchOrganization: (currentOrganizationId) => set({ currentOrganizationId })
+  switchOrganization: (currentOrganizationId) => set({ currentOrganizationId }),
 }));

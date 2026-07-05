@@ -1,6 +1,6 @@
 import type {
   CreateNotificationTemplateRequest,
-  UpdateNotificationTemplateRequest
+  UpdateNotificationTemplateRequest,
 } from "@web-admin-base/contracts";
 
 import { requestJson, stringField, unwrapRecords } from "@/lib/api-request";
@@ -26,14 +26,17 @@ export async function fetchNotificationTemplates(): Promise<NotificationTemplate
 export async function createNotificationTemplate(input: CreateNotificationTemplateRequest) {
   return requestJson<{ data: NotificationTemplate }>("/notification-templates", {
     method: "POST",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 }
 
-export async function updateNotificationTemplate(id: string, input: UpdateNotificationTemplateRequest) {
+export async function updateNotificationTemplate(
+  id: string,
+  input: UpdateNotificationTemplateRequest,
+) {
   return requestJson<{ data: NotificationTemplate }>(`/notification-templates/${id}`, {
     method: "PATCH",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 }
 
@@ -50,7 +53,7 @@ function toNotificationTemplate(record: Record<string, unknown>): NotificationTe
       : [],
     status: record.status === "disabled" ? "disabled" : "enabled",
     createdAt: stringField(record.createdAt, ""),
-    updatedAt: stringField(record.updatedAt, "")
+    updatedAt: stringField(record.updatedAt, ""),
   };
 }
 

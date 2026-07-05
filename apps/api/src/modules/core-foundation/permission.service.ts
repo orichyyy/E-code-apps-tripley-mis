@@ -2,7 +2,7 @@ import {
   baseApiPermissionManifest,
   basePermissionManifest,
   type BaseApiPermissionManifestEntry,
-  type PermissionManifestEntry
+  type PermissionManifestEntry,
 } from "@web-admin-base/contracts";
 import { createHash } from "node:crypto";
 
@@ -48,12 +48,12 @@ export type PermissionTreeNode = {
 export class PermissionService {
   constructor(
     private readonly context: BackendCoreContext,
-    private readonly cache: PermissionCache
+    private readonly cache: PermissionCache,
   ) {}
 
   async requireApiPermission(
     authContext: AuthContext | null,
-    apiPermission: BaseApiPermissionManifestEntry
+    apiPermission: BaseApiPermissionManifestEntry,
   ) {
     if (apiPermission.public) return;
     if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
@@ -64,7 +64,7 @@ export class PermissionService {
 
     const permissionContext = await this.getPermissionContext(
       authContext.userId,
-      authContext.currentOrganizationId
+      authContext.currentOrganizationId,
     );
     if (!permissionContext.permissionCodes.includes(apiPermission.requiredPermission)) {
       throw createKnownError("PERMISSION_API_DENIED");
@@ -75,7 +75,7 @@ export class PermissionService {
     const userIds = new Set(
       [...this.context.store.userOrganizationRoles.values()]
         .filter((binding) => binding.roleId === roleId)
-        .map((binding) => binding.userId)
+        .map((binding) => binding.userId),
     );
     await Promise.all([...userIds].map((userId) => this.invalidateUser(userId)));
   }
@@ -89,7 +89,7 @@ export class PermissionService {
       if (!organization.isDeleted) organizationIds.add(organization.id);
     }
     await Promise.all(
-      [...organizationIds].map((organizationId) => this.cache.invalidate(userId, organizationId))
+      [...organizationIds].map((organizationId) => this.cache.invalidate(userId, organizationId)),
     );
   }
 
@@ -115,8 +115,8 @@ export class PermissionService {
 
     await Promise.all(
       [...userIds].flatMap((userId) =>
-        [...organizationIds].map((organizationId) => this.cache.invalidate(userId, organizationId))
-      )
+        [...organizationIds].map((organizationId) => this.cache.invalidate(userId, organizationId)),
+      ),
     );
   }
 
@@ -128,7 +128,7 @@ export class PermissionService {
     await this.invalidateAllPermissionContexts();
     return {
       permissions,
-      apiPermissions
+      apiPermissions,
     };
   }
 
@@ -149,16 +149,26 @@ export class PermissionService {
 
     return [...this.context.store.permissions.values()]
       .filter((permission) => filters.status === undefined || permission.status === filters.status)
-      .filter((permission) => action === undefined || permission.action.toLocaleLowerCase() === action)
-      .filter((permission) => module === undefined || permission.module.toLocaleLowerCase() === module)
       .filter(
-        (permission) => permissionType === undefined || permission.permissionType === permissionType
+        (permission) => action === undefined || permission.action.toLocaleLowerCase() === action,
       )
       .filter(
-        (permission) => resource === undefined || permission.resource.toLocaleLowerCase() === resource
+        (permission) => module === undefined || permission.module.toLocaleLowerCase() === module,
       )
-      .filter((permission) => source === undefined || permission.source.toLocaleLowerCase() === source)
-      .filter((permission) => keyword === undefined || matchesPermissionKeyword(permission, keyword));
+      .filter(
+        (permission) =>
+          permissionType === undefined || permission.permissionType === permissionType,
+      )
+      .filter(
+        (permission) =>
+          resource === undefined || permission.resource.toLocaleLowerCase() === resource,
+      )
+      .filter(
+        (permission) => source === undefined || permission.source.toLocaleLowerCase() === source,
+      )
+      .filter(
+        (permission) => keyword === undefined || matchesPermissionKeyword(permission, keyword),
+      );
   }
 
   listPermissionTree(): PermissionTreeNode[] {
@@ -169,31 +179,23 @@ export class PermissionService {
         key: `module:${permission.module}`,
         label: permission.module,
         level: "module",
-        module: permission.module
+        module: permission.module,
       });
-      const resourceNode = ensureNode(
-        childMap(moduleNode),
-        permission.resource,
-        {
-          key: `module:${permission.module}:resource:${permission.resource}`,
-          label: permission.resource,
-          level: "resource",
-          module: permission.module,
-          resource: permission.resource
-        }
-      );
-      const actionNode = ensureNode(
-        childMap(resourceNode),
-        permission.action,
-        {
-          key: `module:${permission.module}:resource:${permission.resource}:action:${permission.action}`,
-          label: permission.action,
-          level: "action",
-          module: permission.module,
-          resource: permission.resource,
-          action: permission.action
-        }
-      );
+      const resourceNode = ensureNode(childMap(moduleNode), permission.resource, {
+        key: `module:${permission.module}:resource:${permission.resource}`,
+        label: permission.resource,
+        level: "resource",
+        module: permission.module,
+        resource: permission.resource,
+      });
+      const actionNode = ensureNode(childMap(resourceNode), permission.action, {
+        key: `module:${permission.module}:resource:${permission.resource}:action:${permission.action}`,
+        label: permission.action,
+        level: "action",
+        module: permission.module,
+        resource: permission.resource,
+        action: permission.action,
+      });
       moduleNode.permissions.push(permission);
       resourceNode.permissions.push(permission);
       actionNode.permissions.push(permission);
@@ -221,9 +223,13 @@ export class PermissionService {
       .filter((permission) => filters.status === undefined || permission.status === filters.status)
       .filter((permission) => logLevel === undefined || permission.logLevel === logLevel)
       .filter((permission) => method === undefined || permission.method.toUpperCase() === method)
-      .filter((permission) => module === undefined || permission.module.toLocaleLowerCase() === module)
+      .filter(
+        (permission) => module === undefined || permission.module.toLocaleLowerCase() === module,
+      )
       .filter((permission) => filters.public === undefined || permission.public === filters.public)
-      .filter((permission) => keyword === undefined || matchesApiPermissionKeyword(permission, keyword));
+      .filter(
+        (permission) => keyword === undefined || matchesApiPermissionKeyword(permission, keyword),
+      );
   }
 
   syncBasePermissions(): PermissionRecord[] {
@@ -239,7 +245,7 @@ export class PermissionService {
       const manifestHash = hashBasePermissionManifestEntry(entry);
       const { resource, action } = parsePermissionCode(entry.code);
       const existing = [...this.context.store.permissions.values()].find(
-        (permission) => permission.code === entry.code
+        (permission) => permission.code === entry.code,
       );
       if (existing) {
         existing.name = entry.code;
@@ -268,7 +274,7 @@ export class PermissionService {
         manifestHash,
         status: "enabled",
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
       };
       this.context.store.permissions.set(permission.id, permission);
       return permission;
@@ -313,7 +319,7 @@ export class PermissionService {
         public: entry.public,
         status: "enabled",
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
       };
       this.context.store.apiPermissions.set(apiPermission.id, apiPermission);
       return apiPermission;
@@ -321,14 +327,14 @@ export class PermissionService {
   }
 
   private findExistingApiPermissionForManifestEntry(
-    entry: BaseApiPermissionManifestEntry
+    entry: BaseApiPermissionManifestEntry,
   ): ApiPermissionRecord | undefined {
     return (
       [...this.context.store.apiPermissions.values()].find(
-        (permission) => permission.code === entry.code
+        (permission) => permission.code === entry.code,
       ) ??
       [...this.context.store.apiPermissions.values()].find(
-        (permission) => permission.method === entry.method && permission.path === entry.path
+        (permission) => permission.method === entry.method && permission.path === entry.path,
       )
     );
   }
@@ -344,7 +350,7 @@ export class PermissionService {
       (candidate) =>
         candidate.userId === userId &&
         candidate.organizationId === organizationId &&
-        isActiveBinding(candidate)
+        isActiveBinding(candidate),
     );
     const role = binding ? this.context.store.roles.get(binding.roleId) : null;
     const basePermissionCodes = isSuperAdmin
@@ -353,7 +359,7 @@ export class PermissionService {
     const userPermissionOverrides = this.listActiveUserPermissionOverrideEffects(userId);
     const permissionCodes = this.applyUserPermissionOverrides(
       basePermissionCodes,
-      userPermissionOverrides
+      userPermissionOverrides,
     );
     const roleIds = binding ? [binding.roleId] : [];
     const context = {
@@ -362,7 +368,7 @@ export class PermissionService {
       permissionCodes,
       dataPermissions: this.listActiveRoleDataPermissionEffects(roleIds),
       fieldPermissions: this.listActiveRoleFieldPermissionEffects(roleIds),
-      userPermissionOverrides
+      userPermissionOverrides,
     };
     await this.cache.set(context);
     return context;
@@ -370,7 +376,7 @@ export class PermissionService {
 
   private applyUserPermissionOverrides(
     basePermissionCodes: string[],
-    overrides: Array<{ permissionCode: string; effect: "allow" | "deny" }>
+    overrides: Array<{ permissionCode: string; effect: "allow" | "deny" }>,
   ): string[] {
     const effective = new Set(basePermissionCodes);
     const enabledPermissionCodes = new Set(this.listEnabledPermissionCodes());
@@ -392,7 +398,7 @@ export class PermissionService {
       .filter((record) => record.userId === userId && !record.isDeleted)
       .map((record) => ({
         permissionCode: record.permissionCode,
-        effect: record.effect
+        effect: record.effect,
       }));
   }
 
@@ -404,7 +410,7 @@ export class PermissionService {
         roleId: record.roleId,
         permissionCode: record.permissionCode,
         effect: record.effect,
-        rule: record.rule
+        rule: record.rule,
       }));
   }
 
@@ -413,13 +419,13 @@ export class PermissionService {
     return [...this.context.store.fieldPermissionRules.values()]
       .filter(
         (record) =>
-          record.targetType === "role" && roleIdSet.has(record.targetId) && !record.isDeleted
+          record.targetType === "role" && roleIdSet.has(record.targetId) && !record.isDeleted,
       )
       .map((record) => ({
         roleId: record.targetId,
         resource: record.resource,
         field: record.field,
-        effect: record.effect
+        effect: record.effect,
       }));
   }
 
@@ -427,7 +433,9 @@ export class PermissionService {
     return [...this.context.store.userOrganizationRoles.values()].some((binding) => {
       if (binding.userId !== userId || !isActiveBinding(binding)) return false;
       const role = this.context.store.roles.get(binding.roleId);
-      return role?.code === builtInRoleCodes.superAdmin && role.status === "enabled" && !role.isDeleted;
+      return (
+        role?.code === builtInRoleCodes.superAdmin && role.status === "enabled" && !role.isDeleted
+      );
     });
   }
 
@@ -439,7 +447,7 @@ export class PermissionService {
 
   private listRolePermissionCodes(
     roleId: string | undefined,
-    role: { status: "enabled" | "disabled"; isDeleted: boolean } | null
+    role: { status: "enabled" | "disabled"; isDeleted: boolean } | null,
   ): string[] {
     if (!roleId || role?.status !== "enabled" || role.isDeleted) return [];
     const enabledPermissionCodes = new Set(this.listEnabledPermissionCodes());
@@ -450,7 +458,7 @@ export class PermissionService {
         (permission) =>
           permission.roleId === roleId &&
           permission.effect === "allow" &&
-          enabledPermissionCodes.has(permission.permissionCode)
+          enabledPermissionCodes.has(permission.permissionCode),
       )
       .forEach((permission) => {
         if (seenPermissionCodes.has(permission.permissionCode)) return;
@@ -463,12 +471,12 @@ export class PermissionService {
   private pruneDisabledRolePermissions(): void {
     const enabledPermissionCodes = new Set(this.listEnabledPermissionCodes());
     const retained = this.context.store.rolePermissions.filter((permission) =>
-      enabledPermissionCodes.has(permission.permissionCode)
+      enabledPermissionCodes.has(permission.permissionCode),
     );
     this.context.store.rolePermissions.splice(
       0,
       this.context.store.rolePermissions.length,
-      ...retained
+      ...retained,
     );
   }
 
@@ -476,7 +484,7 @@ export class PermissionService {
     const enabledApiPermissionIds = new Set(
       [...this.context.store.apiPermissions.values()]
         .filter((apiPermission) => apiPermission.status === "enabled")
-        .map((apiPermission) => apiPermission.id)
+        .map((apiPermission) => apiPermission.id),
     );
     for (const [bindingId, binding] of this.context.store.menuApiBindings.entries()) {
       if (!enabledApiPermissionIds.has(binding.apiPermissionId)) {
@@ -495,7 +503,7 @@ function childMap(node: PermissionTreeNode): Map<string, PermissionTreeNode> {
 function ensureNode(
   nodes: Map<string, PermissionTreeNode>,
   key: string,
-  input: Omit<PermissionTreeNode, "permissions" | "children">
+  input: Omit<PermissionTreeNode, "permissions" | "children">,
 ): PermissionTreeNode {
   const existing = nodes.get(key);
   if (existing) return existing;
@@ -542,7 +550,9 @@ function isApiPermissionLogLevel(logLevel: string): logLevel is ApiPermissionRec
   return ["none", "basic", "request", "request_response"].includes(logLevel);
 }
 
-function isPermissionType(permissionType: string): permissionType is PermissionRecord["permissionType"] {
+function isPermissionType(
+  permissionType: string,
+): permissionType is PermissionRecord["permissionType"] {
   return ["menu", "page", "action", "api", "data", "field"].includes(permissionType);
 }
 
@@ -552,29 +562,28 @@ function matchesPermissionKeyword(permission: PermissionRecord, keyword: string)
     permission.name,
     permission.description ?? "",
     permission.resource,
-    permission.action
+    permission.action,
   ].some((value) => value.toLocaleLowerCase().includes(keyword));
 }
 
-function matchesApiPermissionKeyword(
-  permission: ApiPermissionRecord,
-  keyword: string
-): boolean {
+function matchesApiPermissionKeyword(permission: ApiPermissionRecord, keyword: string): boolean {
   return [
     permission.code,
     permission.path,
     permission.description ?? "",
-    permission.requiredPermission ?? ""
+    permission.requiredPermission ?? "",
   ].some((value) => value.toLocaleLowerCase().includes(keyword));
 }
 
 function hashBasePermissionManifestEntry(entry: PermissionManifestEntry): string {
   return createHash("sha256")
-    .update(JSON.stringify({
-      code: entry.code,
-      description: entry.description,
-      module: entry.module
-    }))
+    .update(
+      JSON.stringify({
+        code: entry.code,
+        description: entry.description,
+        module: entry.module,
+      }),
+    )
     .digest("hex");
 }
 
@@ -583,6 +592,6 @@ function parsePermissionCode(code: string): { resource: string; action: string }
   if (separatorIndex === -1) return { resource: code, action: "" };
   return {
     resource: code.slice(0, separatorIndex),
-    action: code.slice(separatorIndex + 1)
+    action: code.slice(separatorIndex + 1),
   };
 }

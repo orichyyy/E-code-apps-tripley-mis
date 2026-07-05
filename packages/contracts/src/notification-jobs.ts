@@ -9,8 +9,10 @@ export const inAppNotificationDispatchPayloadSchema = z
     body: z.string().min(1),
     metadata: z.record(z.unknown()).default({}),
     createdBy: z.string().nullable().default(null),
-    enqueuedAt: z.string().datetime()
+    enqueuedAt: z.string().datetime(),
   })
   .strict();
 
-export type InAppNotificationDispatchPayload = z.infer<typeof inAppNotificationDispatchPayloadSchema>;
+export type InAppNotificationDispatchPayload = z.infer<
+  typeof inAppNotificationDispatchPayloadSchema
+>;

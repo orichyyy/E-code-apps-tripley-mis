@@ -35,7 +35,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         username: "admin",
         displayName: "Super Administrator",
         language: "en",
-        forcePasswordChange: false
+        forcePasswordChange: false,
       }
     : null,
   permissionCodes: initialAccessToken ? ["*"] : [],
@@ -64,12 +64,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   updateUser: (patch) =>
     set((state) => ({
-      user: state.user ? { ...state.user, ...patch } : state.user
+      user: state.user ? { ...state.user, ...patch } : state.user,
     })),
   setPermissionContext: ({ permissionCodes, hiddenFields = {} }) =>
     set({ permissionCodes, hiddenFields }),
   markPasswordChanged: () =>
     set((state) => ({
-      user: state.user ? { ...state.user, forcePasswordChange: false } : state.user
-    }))
+      user: state.user ? { ...state.user, forcePasswordChange: false } : state.user,
+    })),
 }));

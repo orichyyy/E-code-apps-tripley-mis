@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import type {
   CreateWebhookSubscriptionRequest,
-  UpdateWebhookSubscriptionRequest
+  UpdateWebhookSubscriptionRequest,
 } from "@web-admin-base/contracts";
 import { Loader2 } from "lucide-react";
 
@@ -11,7 +11,7 @@ import {
   defaultWebhookFormValues,
   toWebhookApiInput,
   webhookFormSchema,
-  type WebhookFormMode
+  type WebhookFormMode,
 } from "./webhook-subscription-model";
 
 type WebhookFormProps = {
@@ -27,7 +27,7 @@ export function WebhookSubscriptionForm({
   initialRecord,
   mode,
   onCancel,
-  onSubmit
+  onSubmit,
 }: WebhookFormProps) {
   const initialValues = initialRecord
     ? {
@@ -35,18 +35,20 @@ export function WebhookSubscriptionForm({
         url: initialRecord.url,
         eventTypesText: initialRecord.eventTypes.join(", "),
         secret: "",
-        status: initialRecord.status
+        status: initialRecord.status,
       }
     : defaultWebhookFormValues;
   const form = useForm({
     defaultValues: initialValues,
     validators: { onSubmit: webhookFormSchema },
-    onSubmit: ({ value }) => onSubmit(toWebhookApiInput(value, mode))
+    onSubmit: ({ value }) => onSubmit(toWebhookApiInput(value, mode)),
   });
 
   return (
     <section className="rounded-lg border bg-card p-4 shadow-sm">
-      <h3 className="text-sm font-semibold">{mode === "create" ? "Create webhook" : "Edit webhook"}</h3>
+      <h3 className="text-sm font-semibold">
+        {mode === "create" ? "Create webhook" : "Edit webhook"}
+      </h3>
       <form
         className="mt-4 space-y-4"
         onSubmit={(event) => {
@@ -106,7 +108,11 @@ export function WebhookSubscriptionForm({
                 className="mt-2 h-10 w-full rounded-md border bg-background px-3"
                 onBlur={field.handleBlur}
                 onChange={(event) => field.handleChange(event.target.value)}
-                placeholder={mode === "create" ? "Optional signing secret" : "Leave blank to keep existing secret"}
+                placeholder={
+                  mode === "create"
+                    ? "Optional signing secret"
+                    : "Leave blank to keep existing secret"
+                }
                 type="password"
                 value={field.state.value}
               />
@@ -121,7 +127,9 @@ export function WebhookSubscriptionForm({
               <select
                 className="mt-2 h-10 w-full rounded-md border bg-background px-3"
                 onBlur={field.handleBlur}
-                onChange={(event) => field.handleChange(event.target.value as "enabled" | "disabled")}
+                onChange={(event) =>
+                  field.handleChange(event.target.value as "enabled" | "disabled")
+                }
                 value={field.state.value}
               >
                 <option value="enabled">Enabled</option>

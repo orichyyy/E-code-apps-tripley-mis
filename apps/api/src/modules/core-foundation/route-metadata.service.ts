@@ -30,14 +30,18 @@ export class RouteMetadataService {
 
     return [...this.context.store.routeMetadata.values()]
       .filter((route) => filters.status === undefined || route.status === filters.status)
-      .filter((route) => filters.menuVisible === undefined || route.menuVisible === filters.menuVisible)
+      .filter(
+        (route) => filters.menuVisible === undefined || route.menuVisible === filters.menuVisible,
+      )
       .filter((route) => path === undefined || route.path.toLocaleLowerCase() === path)
       .filter(
         (route) =>
           requiredPermission === undefined ||
-          route.requiredPermission?.toLocaleLowerCase() === requiredPermission
+          route.requiredPermission?.toLocaleLowerCase() === requiredPermission,
       )
-      .filter((route) => routeCode === undefined || route.routeCode.toLocaleLowerCase() === routeCode)
+      .filter(
+        (route) => routeCode === undefined || route.routeCode.toLocaleLowerCase() === routeCode,
+      )
       .filter((route) => keyword === undefined || matchesRouteMetadataKeyword(route, keyword))
       .sort((left, right) => left.sortOrder - right.sortOrder || left.id.localeCompare(right.id));
   }
@@ -56,7 +60,7 @@ export class RouteMetadataService {
 
   private upsertManifestEntry(entry: AdminRouteMetadata): RouteMetadataRecord {
     const existing = [...this.context.store.routeMetadata.values()].find(
-      (route) => route.routeCode === entry.routeCode
+      (route) => route.routeCode === entry.routeCode,
     );
     const metadataJson = getRouteManifestMetadata(entry);
     const manifestHash = hashRouteManifestEntry(entry);
@@ -89,7 +93,7 @@ export class RouteMetadataService {
       sortOrder: entry.sortOrder ?? 0,
       status: "enabled",
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
     this.context.store.routeMetadata.set(route.id, route);
     return route;
@@ -101,19 +105,16 @@ function isEntityStatus(status: string): status is RouteMetadataRecord["status"]
 }
 
 function matchesRouteMetadataKeyword(route: RouteMetadataRecord, keyword: string): boolean {
-  return [
-    route.routeCode,
-    route.path,
-    route.titleI18nKey,
-    route.requiredPermission ?? ""
-  ].some((value) => value.toLocaleLowerCase().includes(keyword));
+  return [route.routeCode, route.path, route.titleI18nKey, route.requiredPermission ?? ""].some(
+    (value) => value.toLocaleLowerCase().includes(keyword),
+  );
 }
 
 function getRouteManifestMetadata(entry: AdminRouteMetadata): Record<string, unknown> {
   return {
     menuVisible: entry.menuVisible,
     icon: entry.icon ?? null,
-    sortOrder: entry.sortOrder ?? 0
+    sortOrder: entry.sortOrder ?? 0,
   };
 }
 
@@ -125,8 +126,8 @@ function hashRouteManifestEntry(entry: AdminRouteMetadata): string {
         path: entry.path,
         titleI18nKey: entry.titleI18nKey,
         requiredPermission: entry.requiredPermission ?? null,
-        metadataJson: getRouteManifestMetadata(entry)
-      })
+        metadataJson: getRouteManifestMetadata(entry),
+      }),
     )
     .digest("hex");
 }

@@ -9,7 +9,7 @@ export const defaultPasswordPolicy: PasswordPolicy = {
   minLength: 8,
   requireLetters: true,
   requireNumbers: true,
-  periodicChangeDays: 365
+  periodicChangeDays: 365,
 };
 
 export type PasswordValidationResult = {
@@ -19,7 +19,7 @@ export type PasswordValidationResult = {
 
 export function validatePasswordComplexity(
   password: string,
-  policy: PasswordPolicy = defaultPasswordPolicy
+  policy: PasswordPolicy = defaultPasswordPolicy,
 ): PasswordValidationResult {
   const reasons: string[] = [];
 
@@ -37,6 +37,6 @@ export function validatePasswordComplexity(
 
   return {
     valid: reasons.length === 0,
-    reasons
+    reasons,
   };
 }

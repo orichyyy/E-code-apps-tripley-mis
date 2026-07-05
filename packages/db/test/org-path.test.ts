@@ -6,7 +6,7 @@ import {
   encodeOrgPath,
   getOrgPathRange,
   isDescendantPath,
-  OrgSegmentRangeExhaustedError
+  OrgSegmentRangeExhaustedError,
 } from "../src";
 
 describe("organization materialized path helpers", () => {
@@ -27,7 +27,7 @@ describe("organization materialized path helpers", () => {
 
     expect(getOrgPathRange(ancestor, 2)).toEqual({
       min: ancestor,
-      max: encodeOrgPath([1, 5, 255, 255, 255, 255, 255, 255])
+      max: encodeOrgPath([1, 5, 255, 255, 255, 255, 255, 255]),
     });
     expect(isDescendantPath(descendant, ancestor, 2)).toBe(true);
     expect(isDescendantPath(sibling, ancestor, 2)).toBe(false);
@@ -41,7 +41,7 @@ describe("organization materialized path helpers", () => {
     const usedRootSegments = Array.from({ length: 127 }, (_, index) => index + 1);
 
     expect(() => allocateNextOrgSegment(usedRootSegments, 1)).toThrow(
-      OrgSegmentRangeExhaustedError
+      OrgSegmentRangeExhaustedError,
     );
   });
 });

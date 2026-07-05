@@ -5,7 +5,7 @@ import {
   createScheduledTaskRequestSchema,
   sendTestEmailNotificationRequestSchema,
   updateNotificationTemplateRequestSchema,
-  updateScheduledTaskRequestSchema
+  updateScheduledTaskRequestSchema,
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
@@ -28,7 +28,7 @@ const logPathToType = {
   exception: "exception",
   security: "security",
   jobs: "scheduler",
-  files: "file_operation"
+  files: "file_operation",
 } as const satisfies Record<string, LogType>;
 
 export function createInfrastructureRoutes(services: InfrastructureServices) {
@@ -52,13 +52,15 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
       {
         data: await services.uploadFile({
           ...uploaded,
-          actorId: actorId(context)
-        })
+          actorId: actorId(context),
+        }),
       },
-      201
+      201,
     );
   });
-  routes.get("/files/:id", async (context) => context.json({ data: await services.getFile(context.req.param("id")) }));
+  routes.get("/files/:id", async (context) =>
+    context.json({ data: await services.getFile(context.req.param("id")) }),
+  );
   routes.get("/files/:id/download", async (context) => {
     const { body, file } = await services.getFileContent(context.req.param("id"), "download");
     return new Response(toArrayBuffer(body), {
@@ -66,8 +68,8 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
       headers: {
         "content-type": String(file.contentType),
         "content-length": String(body.byteLength),
-        "content-disposition": toContentDisposition(String(file.originalName))
-      }
+        "content-disposition": toContentDisposition(String(file.originalName)),
+      },
     });
   });
   routes.get("/files/:id/preview", async (context) => {
@@ -76,8 +78,8 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
       status: 200,
       headers: {
         "content-type": String(file.contentType),
-        "content-length": String(body.byteLength)
-      }
+        "content-length": String(body.byteLength),
+      },
     });
   });
   routes.get("/files/:id/references", async (context) => {
@@ -85,7 +87,9 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
   });
   routes.delete("/files/:id", async (context) => {
     await assertEmptyJsonBody(context.req.raw);
-    return context.json({ data: await services.deleteFile(context.req.param("id"), actorId(context)) });
+    return context.json({
+      data: await services.deleteFile(context.req.param("id"), actorId(context)),
+    });
   });
 
   routes.get("/notifications", async (context) => {
@@ -94,15 +98,33 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
   });
   routes.post("/notifications/:id/read", async (context) => {
     await assertEmptyJsonBody(context.req.raw);
-    return context.json({ data: await services.updateNotificationStatus(context.req.param("id"), "read", actorId(context)) });
+    return context.json({
+      data: await services.updateNotificationStatus(
+        context.req.param("id"),
+        "read",
+        actorId(context),
+      ),
+    });
   });
   routes.post("/notifications/:id/archive", async (context) => {
     await assertEmptyJsonBody(context.req.raw);
-    return context.json({ data: await services.updateNotificationStatus(context.req.param("id"), "archived", actorId(context)) });
+    return context.json({
+      data: await services.updateNotificationStatus(
+        context.req.param("id"),
+        "archived",
+        actorId(context),
+      ),
+    });
   });
   routes.delete("/notifications/:id", async (context) => {
     await assertEmptyJsonBody(context.req.raw);
-    return context.json({ data: await services.updateNotificationStatus(context.req.param("id"), "deleted", actorId(context)) });
+    return context.json({
+      data: await services.updateNotificationStatus(
+        context.req.param("id"),
+        "deleted",
+        actorId(context),
+      ),
+    });
   });
 
   routes.post("/notifications/email/test", async (context) => {
@@ -110,39 +132,53 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
     return context.json({ data: await services.sendTestEmail(input) });
   });
 
-  routes.get("/notification-templates", async (context) => context.json({ data: await services.listNotificationTemplates() }));
+  routes.get("/notification-templates", async (context) =>
+    context.json({ data: await services.listNotificationTemplates() }),
+  );
   routes.post("/notification-templates", async (context) => {
     const input = createNotificationTemplateRequestSchema.parse(await context.req.json());
     return context.json({ data: await services.createNotificationTemplate(input) }, 201);
   });
   routes.patch("/notification-templates/:id", async (context) => {
     const input = updateNotificationTemplateRequestSchema.parse(await context.req.json());
-    return context.json({ data: await services.updateNotificationTemplate(context.req.param("id"), input) });
+    return context.json({
+      data: await services.updateNotificationTemplate(context.req.param("id"), input),
+    });
   });
 
-  routes.get("/scheduled-tasks", async (context) => context.json({ data: await services.listScheduledTasks() }));
+  routes.get("/scheduled-tasks", async (context) =>
+    context.json({ data: await services.listScheduledTasks() }),
+  );
   routes.post("/scheduled-tasks", async (context) => {
     const input = createScheduledTaskRequestSchema.parse(await context.req.json());
     return context.json({ data: await services.createScheduledTask(input) }, 201);
   });
   routes.patch("/scheduled-tasks/:id", async (context) => {
     const input = updateScheduledTaskRequestSchema.parse(await context.req.json());
-    return context.json({ data: await services.updateScheduledTask(context.req.param("id"), input) });
+    return context.json({
+      data: await services.updateScheduledTask(context.req.param("id"), input),
+    });
   });
   routes.post("/scheduled-tasks/:id/enable", async (context) => {
     await assertEmptyJsonBody(context.req.raw);
-    return context.json({ data: await services.setScheduledTaskStatus(context.req.param("id"), true) });
+    return context.json({
+      data: await services.setScheduledTaskStatus(context.req.param("id"), true),
+    });
   });
   routes.post("/scheduled-tasks/:id/disable", async (context) => {
     await assertEmptyJsonBody(context.req.raw);
-    return context.json({ data: await services.setScheduledTaskStatus(context.req.param("id"), false) });
+    return context.json({
+      data: await services.setScheduledTaskStatus(context.req.param("id"), false),
+    });
   });
   routes.post("/scheduled-tasks/:id/run", async (context) => {
     await assertEmptyJsonBody(context.req.raw);
     return context.json({ data: await services.enqueueScheduledTaskRun(context.req.param("id")) });
   });
 
-  routes.get("/import-export/tasks", async (context) => context.json({ data: await services.listImportExportTasks() }));
+  routes.get("/import-export/tasks", async (context) =>
+    context.json({ data: await services.listImportExportTasks() }),
+  );
   routes.post("/import-export/export", async (context) => {
     const input = createExportTaskRequestSchema.parse(await context.req.json());
     return context.json({ data: await services.createExportTask(input, actorId(context)) }, 201);
@@ -154,24 +190,31 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
   return routes;
 }
 
-function actorId(context: { get: (key: "authContext") => AuthContextVariables["authContext"] }): string | null {
+function actorId(context: {
+  get: (key: "authContext") => AuthContextVariables["authContext"];
+}): string | null {
   return context.get("authContext")?.userId ?? null;
 }
 
-function requireAuth(context: { get: (key: "authContext") => AuthContextVariables["authContext"] }) {
+function requireAuth(context: {
+  get: (key: "authContext") => AuthContextVariables["authContext"];
+}) {
   const auth = context.get("authContext");
   if (!auth) throw createKnownError("AUTH_TOKEN_EXPIRED");
   return auth;
 }
 
-async function readUploadedFile(request: { parseBody: () => Promise<Record<string, FormDataEntryValue | FormDataEntryValue[]>> }) {
+async function readUploadedFile(request: {
+  parseBody: () => Promise<Record<string, FormDataEntryValue | FormDataEntryValue[]>>;
+}) {
   const body = await request.parseBody();
   const file = Array.isArray(body.file) ? body.file[0] : body.file;
-  if (!isUploadedFile(file)) throw createKnownError("VALIDATION_INVALID_REQUEST", { field: "file" });
+  if (!isUploadedFile(file))
+    throw createKnownError("VALIDATION_INVALID_REQUEST", { field: "file" });
   return {
     originalName: file.name,
     contentType: file.type,
-    body: new Uint8Array(await file.arrayBuffer())
+    body: new Uint8Array(await file.arrayBuffer()),
   };
 }
 

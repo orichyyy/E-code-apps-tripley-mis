@@ -19,7 +19,7 @@ describe("web admin frontend", () => {
         fullscreenEnabled: false,
         themeColor: "blue",
         openTabs: ["/"],
-        language: "en"
+        language: "en",
       });
     });
   });
@@ -40,9 +40,9 @@ describe("web admin frontend", () => {
         username: "admin",
         displayName: "Super Administrator",
         language: "en",
-        forcePasswordChange: false
+        forcePasswordChange: false,
       },
-      permissionCodes: ["*"]
+      permissionCodes: ["*"],
     });
 
     render(<App />);
@@ -62,16 +62,18 @@ describe("web admin frontend", () => {
         username: "admin",
         displayName: "Super Administrator",
         language: "en",
-        forcePasswordChange: false
+        forcePasswordChange: false,
       },
-      permissionCodes: ["*"]
+      permissionCodes: ["*"],
     });
 
     render(<App />);
 
     const primaryNavigation = await screen.findByRole("navigation", { name: "Primary" });
     const dashboardLink = within(primaryNavigation).getByRole("link", { name: "Dashboard" });
-    const sidebarSystemConfigLink = within(primaryNavigation).getByRole("link", { name: "System configuration" });
+    const sidebarSystemConfigLink = within(primaryNavigation).getByRole("link", {
+      name: "System configuration",
+    });
 
     expect(dashboardLink).not.toHaveClass("active");
     expect(sidebarSystemConfigLink).toHaveClass("active");
@@ -81,25 +83,26 @@ describe("web admin frontend", () => {
     window.history.pushState(null, "", "/account/settings");
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
       const method = init?.method ?? "GET";
-      const body = method === "PATCH"
-        ? {
-            data: {
-              id: "1",
-              tenantId: null,
-              userId: "1",
-              language: "zh",
-              themeMode: "dark",
-              themeColor: "emerald",
-              pageTabsEnabled: false,
-              updatedAt: "2026-07-03T00:00:01.000Z"
+      const body =
+        method === "PATCH"
+          ? {
+              data: {
+                id: "1",
+                tenantId: null,
+                userId: "1",
+                language: "zh",
+                themeMode: "dark",
+                themeColor: "emerald",
+                pageTabsEnabled: false,
+                updatedAt: "2026-07-03T00:00:01.000Z",
+              },
             }
-          }
-        : { data: profileFixture() };
+          : { data: profileFixture() };
       return Promise.resolve(
         new Response(JSON.stringify(body), {
           status: 200,
-          headers: { "content-type": "application/json" }
-        })
+          headers: { "content-type": "application/json" },
+        }),
       );
     });
     useAuthStore.getState().signIn({
@@ -109,9 +112,9 @@ describe("web admin frontend", () => {
         username: "admin",
         displayName: "Super Administrator",
         language: "en",
-        forcePasswordChange: false
+        forcePasswordChange: false,
       },
-      permissionCodes: ["*"]
+      permissionCodes: ["*"],
     });
 
     render(<App />);
@@ -129,12 +132,12 @@ describe("web admin frontend", () => {
           language: "zh",
           themeMode: "light",
           themeColor: "emerald",
-          pageTabsEnabled: true
+          pageTabsEnabled: true,
         }),
         headers: {
           authorization: "Bearer test-token",
-          "content-type": "application/json"
-        }
+          "content-type": "application/json",
+        },
       });
     });
   });
@@ -154,11 +157,11 @@ describe("web admin frontend", () => {
               secretConfigured: true,
               status: "enabled",
               createdAt: "2026-07-03T00:00:00.000Z",
-              updatedAt: "2026-07-03T00:00:00.000Z"
-            }
-          ]
-        })
-      )
+              updatedAt: "2026-07-03T00:00:00.000Z",
+            },
+          ],
+        }),
+      ),
     );
     useAuthStore.getState().signIn({
       accessToken: "test-token",
@@ -167,9 +170,9 @@ describe("web admin frontend", () => {
         username: "admin",
         displayName: "Super Administrator",
         language: "en",
-        forcePasswordChange: false
+        forcePasswordChange: false,
       },
-      permissionCodes: ["webhook:view", "webhook:create", "webhook:update"]
+      permissionCodes: ["webhook:view", "webhook:create", "webhook:update"],
     });
 
     render(<App />);
@@ -199,11 +202,11 @@ describe("web admin frontend", () => {
               createdAt: "2026-07-03T00:00:00.000Z",
               updatedAt: "2026-07-03T00:00:00.000Z",
               createdBy: "1",
-              updatedBy: "1"
-            }
-          ]
-        })
-      )
+              updatedBy: "1",
+            },
+          ],
+        }),
+      ),
     );
     useAuthStore.getState().signIn({
       accessToken: "test-token",
@@ -212,9 +215,14 @@ describe("web admin frontend", () => {
         username: "admin",
         displayName: "Super Administrator",
         language: "en",
-        forcePasswordChange: false
+        forcePasswordChange: false,
       },
-      permissionCodes: ["announcement:view", "announcement:create", "announcement:update", "announcement:publish"]
+      permissionCodes: [
+        "announcement:view",
+        "announcement:create",
+        "announcement:update",
+        "announcement:publish",
+      ],
     });
 
     render(<App />);
@@ -241,11 +249,11 @@ describe("web admin frontend", () => {
               readAt: null,
               archivedAt: null,
               createdAt: "2026-07-03T00:00:00.000Z",
-              updatedAt: "2026-07-03T00:00:00.000Z"
-            }
-          ]
-        })
-      )
+              updatedAt: "2026-07-03T00:00:00.000Z",
+            },
+          ],
+        }),
+      ),
     );
     useAuthStore.getState().signIn({
       accessToken: "test-token",
@@ -254,9 +262,9 @@ describe("web admin frontend", () => {
         username: "admin",
         displayName: "Super Administrator",
         language: "en",
-        forcePasswordChange: false
+        forcePasswordChange: false,
       },
-      permissionCodes: ["notification:view", "notification:update"]
+      permissionCodes: ["notification:view", "notification:update"],
     });
 
     render(<App />);
@@ -283,11 +291,11 @@ describe("web admin frontend", () => {
               variables: ["userName"],
               status: "enabled",
               createdAt: "2026-07-03T00:00:00.000Z",
-              updatedAt: "2026-07-03T00:00:00.000Z"
-            }
-          ]
-        })
-      )
+              updatedAt: "2026-07-03T00:00:00.000Z",
+            },
+          ],
+        }),
+      ),
     );
     useAuthStore.getState().signIn({
       accessToken: "test-token",
@@ -296,9 +304,13 @@ describe("web admin frontend", () => {
         username: "admin",
         displayName: "Super Administrator",
         language: "en",
-        forcePasswordChange: false
+        forcePasswordChange: false,
       },
-      permissionCodes: ["notification-template:view", "notification-template:create", "notification-template:update"]
+      permissionCodes: [
+        "notification-template:view",
+        "notification-template:create",
+        "notification-template:update",
+      ],
     });
 
     render(<App />);
@@ -321,11 +333,11 @@ describe("web admin frontend", () => {
               language: "en",
               messageValue: "Dashboard",
               module: "routes",
-              updatedAt: "2026-07-03T00:00:00.000Z"
-            }
-          ]
-        })
-      )
+              updatedAt: "2026-07-03T00:00:00.000Z",
+            },
+          ],
+        }),
+      ),
     );
     useAuthStore.getState().signIn({
       accessToken: "test-token",
@@ -334,9 +346,9 @@ describe("web admin frontend", () => {
         username: "admin",
         displayName: "Super Administrator",
         language: "en",
-        forcePasswordChange: false
+        forcePasswordChange: false,
       },
-      permissionCodes: ["i18n:view", "i18n:update"]
+      permissionCodes: ["i18n:view", "i18n:update"],
     });
 
     render(<App />);
@@ -364,11 +376,11 @@ describe("web admin frontend", () => {
               referenced: true,
               isDeleted: false,
               createdAt: "2026-07-03T00:00:00.000Z",
-              updatedAt: "2026-07-03T00:00:00.000Z"
-            }
-          ]
-        })
-      )
+              updatedAt: "2026-07-03T00:00:00.000Z",
+            },
+          ],
+        }),
+      ),
     );
     useAuthStore.getState().signIn({
       accessToken: "test-token",
@@ -377,9 +389,16 @@ describe("web admin frontend", () => {
         username: "admin",
         displayName: "Super Administrator",
         language: "en",
-        forcePasswordChange: false
+        forcePasswordChange: false,
       },
-      permissionCodes: ["file:view", "file:upload", "file:download", "file:preview", "file:references:view", "file:delete"]
+      permissionCodes: [
+        "file:view",
+        "file:upload",
+        "file:download",
+        "file:preview",
+        "file:references:view",
+        "file:delete",
+      ],
     });
 
     render(<App />);
@@ -409,18 +428,24 @@ describe("web admin frontend", () => {
                   email: "admin@example.com",
                   phone: "10000000000",
                   status: "enabled",
-                  updatedAt: "2026-07-03T00:00:00.000Z"
-                }
-              ]
-            }
-          })
+                  updatedAt: "2026-07-03T00:00:00.000Z",
+                },
+              ],
+            },
+          }),
         );
       }
       if (url === "/api/organizations/tree") {
-        return Promise.resolve(jsonResponse({ data: [{ id: "1", name: "Main Organization", code: "main" }] }));
+        return Promise.resolve(
+          jsonResponse({ data: [{ id: "1", name: "Main Organization", code: "main" }] }),
+        );
       }
       if (url.startsWith("/api/roles")) {
-        return Promise.resolve(jsonResponse({ data: { items: [{ id: "1", name: "Super Admin", code: "super_admin" }] } }));
+        return Promise.resolve(
+          jsonResponse({
+            data: { items: [{ id: "1", name: "Super Admin", code: "super_admin" }] },
+          }),
+        );
       }
       return Promise.resolve(jsonResponse({ data: [] }));
     });
@@ -431,9 +456,9 @@ describe("web admin frontend", () => {
         username: "admin",
         displayName: "Super Administrator",
         language: "en",
-        forcePasswordChange: false
+        forcePasswordChange: false,
       },
-      permissionCodes: ["user:view", "user:create", "user:update", "user:delete"]
+      permissionCodes: ["user:view", "user:create", "user:update", "user:delete"],
     });
 
     render(<App />);
@@ -462,10 +487,10 @@ describe("web admin frontend", () => {
                 description: "Minimum password length",
                 editable: true,
                 status: "enabled",
-                updatedAt: "2026-07-03T00:00:00.000Z"
-              }
-            ]
-          })
+                updatedAt: "2026-07-03T00:00:00.000Z",
+              },
+            ],
+          }),
         );
       }
       return Promise.resolve(jsonResponse({ data: { id: "11" } }));
@@ -477,9 +502,9 @@ describe("web admin frontend", () => {
         username: "admin",
         displayName: "Super Administrator",
         language: "en",
-        forcePasswordChange: false
+        forcePasswordChange: false,
       },
-      permissionCodes: ["system-config:view", "system-config:update"]
+      permissionCodes: ["system-config:view", "system-config:update"],
     });
 
     render(<App />);
@@ -495,8 +520,8 @@ describe("web admin frontend", () => {
         body: JSON.stringify({ configValue: 10 }),
         headers: {
           authorization: "Bearer test-token",
-          "content-type": "application/json"
-        }
+          "content-type": "application/json",
+        },
       });
     });
   });
@@ -515,10 +540,10 @@ describe("web admin frontend", () => {
                 code: "status",
                 name: "Status",
                 description: "Base status values",
-                status: "enabled"
-              }
-            ]
-          })
+                status: "enabled",
+              },
+            ],
+          }),
         );
       }
       if (url === "/api/dictionary-types/21/items") {
@@ -532,10 +557,10 @@ describe("web admin frontend", () => {
                 itemValue: "enabled",
                 labelI18nKey: "dictionary.status.enabled",
                 sortOrder: 1,
-                status: "enabled"
-              }
-            ]
-          })
+                status: "enabled",
+              },
+            ],
+          }),
         );
       }
       return Promise.resolve(jsonResponse({ data: { id: "32" } }));
@@ -547,9 +572,9 @@ describe("web admin frontend", () => {
         username: "admin",
         displayName: "Super Administrator",
         language: "en",
-        forcePasswordChange: false
+        forcePasswordChange: false,
       },
-      permissionCodes: ["dictionary:view", "dictionary:create", "dictionary:update"]
+      permissionCodes: ["dictionary:view", "dictionary:create", "dictionary:update"],
     });
 
     render(<App />);
@@ -558,7 +583,9 @@ describe("web admin frontend", () => {
     expect(await screen.findByText("dictionary.status.enabled")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /^item$/i }));
     fireEvent.change(screen.getByLabelText("Item value"), { target: { value: "disabled" } });
-    fireEvent.change(screen.getByLabelText("Label i18n key"), { target: { value: "dictionary.status.disabled" } });
+    fireEvent.change(screen.getByLabelText("Label i18n key"), {
+      target: { value: "dictionary.status.disabled" },
+    });
     fireEvent.change(screen.getByLabelText("Sort order"), { target: { value: "2" } });
     fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
 
@@ -569,12 +596,12 @@ describe("web admin frontend", () => {
           itemValue: "disabled",
           labelI18nKey: "dictionary.status.disabled",
           sortOrder: 2,
-          status: "enabled"
+          status: "enabled",
         }),
         headers: {
           authorization: "Bearer test-token",
-          "content-type": "application/json"
-        }
+          "content-type": "application/json",
+        },
       });
     });
   });
@@ -599,10 +626,10 @@ describe("web admin frontend", () => {
                 attempt: 0,
                 maxAttempts: 3,
                 createdAt: "2026-07-03T00:00:00.000Z",
-                updatedAt: "2026-07-03T00:00:00.000Z"
-              }
-            ]
-          })
+                updatedAt: "2026-07-03T00:00:00.000Z",
+              },
+            ],
+          }),
         );
       }
       return Promise.resolve(jsonResponse({ data: [] }));
@@ -614,9 +641,9 @@ describe("web admin frontend", () => {
         username: "admin",
         displayName: "Super Administrator",
         language: "en",
-        forcePasswordChange: false
+        forcePasswordChange: false,
       },
-      permissionCodes: ["job:view", "job:create", "job:update", "job:run"]
+      permissionCodes: ["job:view", "job:create", "job:update", "job:run"],
     });
 
     render(<App />);
@@ -644,13 +671,17 @@ describe("web admin frontend", () => {
                 ipAddress: "127.0.0.1",
                 metadata: { username: "admin" },
                 occurredAt: "2026-07-03T00:00:00.000Z",
-                createdAt: "2026-07-03T00:00:00.000Z"
-              }
-            ]
-          })
+                createdAt: "2026-07-03T00:00:00.000Z",
+              },
+            ],
+          }),
         );
       }
-      return Promise.resolve(jsonResponse({ data: { id: "101", taskType: "export", resourceType: "logs:login", status: "pending" } }));
+      return Promise.resolve(
+        jsonResponse({
+          data: { id: "101", taskType: "export", resourceType: "logs:login", status: "pending" },
+        }),
+      );
     });
     useAuthStore.getState().signIn({
       accessToken: "test-token",
@@ -659,9 +690,9 @@ describe("web admin frontend", () => {
         username: "admin",
         displayName: "Super Administrator",
         language: "en",
-        forcePasswordChange: false
+        forcePasswordChange: false,
       },
-      permissionCodes: ["login-log:view", "log:export"]
+      permissionCodes: ["login-log:view", "log:export"],
     });
 
     render(<App />);
@@ -675,8 +706,8 @@ describe("web admin frontend", () => {
         body: JSON.stringify({ logType: "login" }),
         headers: {
           authorization: "Bearer test-token",
-          "content-type": "application/json"
-        }
+          "content-type": "application/json",
+        },
       });
     });
   });
@@ -692,7 +723,7 @@ function profileFixture() {
       phone: "10000000000",
       avatarFileId: null,
       gender: null,
-      employeeNumber: null
+      employeeNumber: null,
     },
     preferences: {
       id: "1",
@@ -702,14 +733,14 @@ function profileFixture() {
       themeMode: "light",
       themeColor: "blue",
       pageTabsEnabled: true,
-      updatedAt: "2026-07-03T00:00:00.000Z"
-    }
+      updatedAt: "2026-07-03T00:00:00.000Z",
+    },
   };
 }
 
 function jsonResponse(body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status: 200,
-    headers: { "content-type": "application/json" }
+    headers: { "content-type": "application/json" },
   });
 }

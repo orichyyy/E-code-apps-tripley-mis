@@ -20,7 +20,7 @@ export async function fetchI18nMessages(): Promise<I18nMessage[]> {
 export async function updateI18nMessage(id: string, input: UpdateI18nMessageRequest) {
   return requestJson<{ data: I18nMessage | null }>(`/i18n/messages/${id}`, {
     method: "PATCH",
-    body: JSON.stringify(input)
+    body: JSON.stringify(input),
   });
 }
 
@@ -32,6 +32,6 @@ function toI18nMessage(record: Record<string, unknown>): I18nMessage {
     language: stringField(record.language, ""),
     messageValue: stringField(record.messageValue, ""),
     module: stringField(record.module, ""),
-    updatedAt: stringField(record.updatedAt, "")
+    updatedAt: stringField(record.updatedAt, ""),
   };
 }

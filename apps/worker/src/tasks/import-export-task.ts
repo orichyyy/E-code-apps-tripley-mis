@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import type {
   DatabaseAdapterExecutor,
   FileStorageAdapter,
-  QueueJob
+  QueueJob,
 } from "@web-admin-base/adapters";
 
 import { bool, json, now, p } from "./db-utils";
@@ -20,7 +20,7 @@ const supportedLogTypes = new Set([
   "exception",
   "security",
   "scheduler",
-  "file_operation"
+  "file_operation",
 ]);
 
 type ImportExportProcessPayload = {
@@ -29,19 +29,19 @@ type ImportExportProcessPayload = {
 
 export function createImportExportQueueTask(
   executor: DatabaseAdapterExecutor,
-  storage: FileStorageAdapter
+  storage: FileStorageAdapter,
 ) {
   return {
     jobType: importExportProcessJobType,
     handler: async (job: QueueJob<unknown>) => {
       await processImportExportTasks(executor, storage, job.payload as ImportExportProcessPayload);
-    }
+    },
   };
 }
 
 export function createImportExportScheduledHandler(
   executor: DatabaseAdapterExecutor,
-  storage: FileStorageAdapter
+  storage: FileStorageAdapter,
 ) {
   return async (): Promise<void> => {
     await processImportExportTasks(executor, storage, {});
@@ -51,7 +51,7 @@ export function createImportExportScheduledHandler(
 export async function processImportExportTasks(
   executor: DatabaseAdapterExecutor,
   storage: FileStorageAdapter,
-  payload: ImportExportProcessPayload
+  payload: ImportExportProcessPayload,
 ): Promise<void> {
   const tasks = await claimPendingExportTasks(executor, payload.taskId);
   let succeeded = 0;
@@ -71,13 +71,19 @@ export async function processImportExportTasks(
     level: failed > 0 ? "warn" : "info",
     message: "Import/export task processing completed",
     taskCode: importExportProcessTaskCode,
-    metadata: { claimed: tasks.length, succeeded, failed, taskId: payload.taskId ?? null, completedAt: now() }
+    metadata: {
+      claimed: tasks.length,
+      succeeded,
+      failed,
+      taskId: payload.taskId ?? null,
+      completedAt: now(),
+    },
   });
 }
 
 async function claimPendingExportTasks(
   executor: DatabaseAdapterExecutor,
-  taskId?: string
+  taskId?: string,
 ): Promise<Array<{ id: string; resourceType: string; createdBy: string | null }>> {
   return executor.transaction(async () => {
     const rows = await executor.all(
@@ -86,20 +92,21 @@ async function claimPendingExportTasks(
        WHERE task_type = 'export' AND status = 'pending'
        ${taskId ? `AND id = ${p(executor, 1)}` : ""}
        ORDER BY id ASC LIMIT 10`,
-      taskId ? [taskId] : []
+      taskId ? [taskId] : [],
     );
     const claimedAt = now();
     for (const row of rows) {
       await executor.run(
         `UPDATE import_export_tasks SET status = 'running', updated_at = ${p(executor, 1)}
          WHERE id = ${p(executor, 2)} AND status = 'pending'`,
-        [claimedAt, row.id]
+        [claimedAt, row.id],
       );
     }
     return rows.map((row) => ({
       id: String(row.id),
       resourceType: String(row.resource_type),
-      createdBy: row.created_by === null || row.created_by === undefined ? null : String(row.created_by)
+      createdBy:
+        row.created_by === null || row.created_by === undefined ? null : String(row.created_by),
     }));
   });
 }
@@ -107,7 +114,7 @@ async function claimPendingExportTasks(
 async function processExportTask(
   executor: DatabaseAdapterExecutor,
   storage: FileStorageAdapter,
-  task: { id: string; resourceType: string; createdBy: string | null }
+  task: { id: string; resourceType: string; createdBy: string | null },
 ): Promise<void> {
   const logType = parseLogExportResource(task.resourceType);
   if (!logType) throw new Error(`Unsupported export resource type: ${task.resourceType}`);
@@ -115,7 +122,7 @@ async function processExportTask(
   const logs = await executor.all(
     `SELECT id, log_type, level, message, trace_id, user_id, ip_address, metadata_json, occurred_at, created_at
      FROM log_entries WHERE log_type = ${p(executor, 1)} ORDER BY occurred_at DESC, id DESC LIMIT 10000`,
-    [logType]
+    [logType],
   );
   const csv = toCsv(logs);
   const objectKey = createExportObjectKey(task.id, logType);
@@ -141,15 +148,15 @@ async function processExportTask(
       json(executor, []),
       new Date(Date.now() + resultRetentionDays * 24 * 60 * 60 * 1000).toISOString(),
       completedAt,
-      task.id
-    ]
+      task.id,
+    ],
   );
 }
 
 async function insertResultFile(
   executor: DatabaseAdapterExecutor,
   stored: { objectKey: string; contentType: string; sizeBytes: number },
-  createdBy: string | null
+  createdBy: string | null,
 ): Promise<string> {
   const createdAt = now();
   await executor.run(
@@ -163,23 +170,28 @@ async function insertResultFile(
       createdAt,
       createdAt,
       createdBy,
-      createdBy
-    ]
+      createdBy,
+    ],
   );
-  const rows = await executor.all(`SELECT id FROM file_objects WHERE object_key = ${p(executor, 1)} LIMIT 1`, [
-    stored.objectKey
-  ]);
+  const rows = await executor.all(
+    `SELECT id FROM file_objects WHERE object_key = ${p(executor, 1)} LIMIT 1`,
+    [stored.objectKey],
+  );
   if (!rows[0]) throw new Error("Export result file metadata was not created.");
   return String(rows[0].id);
 }
 
-async function failTask(executor: DatabaseAdapterExecutor, taskId: string, message: string): Promise<void> {
+async function failTask(
+  executor: DatabaseAdapterExecutor,
+  taskId: string,
+  message: string,
+): Promise<void> {
   const failedAt = now();
   await executor.run(
     `UPDATE import_export_tasks
      SET status = 'failed', failed_rows = 1, error_preview_json = ${p(executor, 1)}, updated_at = ${p(executor, 2)}
      WHERE id = ${p(executor, 3)}`,
-    [json(executor, [{ row: null, message }]), failedAt, taskId]
+    [json(executor, [{ row: null, message }]), failedAt, taskId],
   );
 }
 
@@ -196,10 +208,21 @@ function createExportObjectKey(taskId: string, logType: string, date = new Date(
 }
 
 function toCsv(rows: Array<Record<string, unknown>>): string {
-  const headers = ["id", "log_type", "level", "message", "trace_id", "user_id", "ip_address", "metadata_json", "occurred_at", "created_at"];
+  const headers = [
+    "id",
+    "log_type",
+    "level",
+    "message",
+    "trace_id",
+    "user_id",
+    "ip_address",
+    "metadata_json",
+    "occurred_at",
+    "created_at",
+  ];
   return [
     headers.join(","),
-    ...rows.map((row) => headers.map((header) => csvCell(row[header])).join(","))
+    ...rows.map((row) => headers.map((header) => csvCell(row[header])).join(",")),
   ].join("\n");
 }
 

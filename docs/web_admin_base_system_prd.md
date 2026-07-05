@@ -88,13 +88,13 @@ The system supports hierarchical organizations. A user may belong to multiple or
 
 The PRD is primarily product-oriented, but the following implementation context has been confirmed:
 
-| Area | Requirement |
-|---|---|
-| Frontend | React + shadcn/ui + Tailwind CSS + Zustand |
-| Backend | Hono |
-| Database | Must support at least PostgreSQL and SQL Server |
+| Area          | Requirement                                                             |
+| ------------- | ----------------------------------------------------------------------- |
+| Frontend      | React + shadcn/ui + Tailwind CSS + Zustand                              |
+| Backend       | Hono                                                                    |
+| Database      | Must support at least PostgreSQL and SQL Server                         |
 | API base path | Version 1 uses `/api`; the design must allow future `/api/v2` expansion |
-| PRD output | English |
+| PRD output    | English                                                                 |
 
 No explicit backend runtime compatibility requirements are included in this PRD.
 
@@ -127,11 +127,11 @@ No explicit backend runtime compatibility requirements are included in this PRD.
 
 The system must initialize the following built-in roles:
 
-| Role | Description |
-|---|---|
-| Super Administrator | Not restricted by organization. Can manage all organizations, users, roles, permissions, data, configuration, logs, and system resources. |
-| Organization Administrator | Manages users, organization resources, and assigned permissions within the authorized organization scope. |
-| Normal User | Uses assigned menus, pages, operations, and data according to the role in the current organization. |
+| Role                       | Description                                                                                                                               |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Super Administrator        | Not restricted by organization. Can manage all organizations, users, roles, permissions, data, configuration, logs, and system resources. |
+| Organization Administrator | Manages users, organization resources, and assigned permissions within the authorized organization scope.                                 |
+| Normal User                | Uses assigned menus, pages, operations, and data according to the role in the current organization.                                       |
 
 Roles are not separated into system-level roles and organization-level roles. Permission scope is controlled by permission configuration and data permission rules.
 
@@ -319,32 +319,32 @@ Organization management provides the hierarchical structure used for user assign
 
 ### 10.3 Organization Fields
 
-| Field | Required | Description |
-|---|---:|---|
-| Organization Name | Yes | Display name of the organization |
-| Organization Code | Yes | Unique organization code within the relevant scope |
-| Parent Organization | Conditional | Empty for root organization |
-| Owner | No | Responsible user/person |
-| Phone | No | Contact phone |
-| Email | No | Contact email |
-| Address | No | Organization address |
-| Sort Order | No | Display order in tree |
-| Status | Yes | Enabled or disabled |
-| Remark | No | Additional notes |
-| Created At | Yes | Creation time |
-| Updated At | Yes | Last update time |
+| Field               |    Required | Description                                        |
+| ------------------- | ----------: | -------------------------------------------------- |
+| Organization Name   |         Yes | Display name of the organization                   |
+| Organization Code   |         Yes | Unique organization code within the relevant scope |
+| Parent Organization | Conditional | Empty for root organization                        |
+| Owner               |          No | Responsible user/person                            |
+| Phone               |          No | Contact phone                                      |
+| Email               |          No | Contact email                                      |
+| Address             |          No | Organization address                               |
+| Sort Order          |          No | Display order in tree                              |
+| Status              |         Yes | Enabled or disabled                                |
+| Remark              |          No | Additional notes                                   |
+| Created At          |         Yes | Creation time                                      |
+| Updated At          |         Yes | Last update time                                   |
 
 ### 10.4 Organization Operations
 
-| Operation | Description | Permission Code Example |
-|---|---|---|
-| View Organization Tree | View organization hierarchy | `organization:view` |
-| Create Organization | Create child or root organization | `organization:create` |
-| Edit Organization | Edit organization fields | `organization:update` |
-| Disable Organization | Disable organization and child organizations | `organization:disable` |
-| Enable Organization | Enable organization when rules allow | `organization:enable` |
-| Delete Organization | Logical delete when allowed | `organization:delete` |
-| Configure Max Depth | Configure tree maximum depth | `organization:depth:configure` |
+| Operation              | Description                                  | Permission Code Example        |
+| ---------------------- | -------------------------------------------- | ------------------------------ |
+| View Organization Tree | View organization hierarchy                  | `organization:view`            |
+| Create Organization    | Create child or root organization            | `organization:create`          |
+| Edit Organization      | Edit organization fields                     | `organization:update`          |
+| Disable Organization   | Disable organization and child organizations | `organization:disable`         |
+| Enable Organization    | Enable organization when rules allow         | `organization:enable`          |
+| Delete Organization    | Logical delete when allowed                  | `organization:delete`          |
+| Configure Max Depth    | Configure tree maximum depth                 | `organization:depth:configure` |
 
 ### 10.5 Business Rules
 
@@ -372,41 +372,41 @@ User management controls system accounts, organization membership, role assignme
 
 ### 11.2 User Fields
 
-| Field | Required | Description |
-|---|---:|---|
-| Username | Yes | Login identifier; administrator may modify it |
-| Name / Nickname | Yes | User display name |
-| Email | Yes | Must be unique |
-| Phone Number | Yes | Must be unique |
-| Avatar | No | Linked file resource |
-| Gender | No | User gender field |
-| Employee Number | No | Internal employee number |
-| Organization List | Yes | Organizations the user belongs to |
-| Primary Organization | Yes | Default organization after login |
-| Role per Organization | Yes | One role per organization |
-| Status | Yes | Enabled, disabled, locked |
-| Remark | No | Additional notes |
-| Last Login Time | No | Updated after successful login |
-| Created At | Yes | Creation time |
-| Updated At | Yes | Last update time |
-| Created By | Yes | Creator user |
-| Updated By | Yes | Last updater user |
+| Field                 | Required | Description                                   |
+| --------------------- | -------: | --------------------------------------------- |
+| Username              |      Yes | Login identifier; administrator may modify it |
+| Name / Nickname       |      Yes | User display name                             |
+| Email                 |      Yes | Must be unique                                |
+| Phone Number          |      Yes | Must be unique                                |
+| Avatar                |       No | Linked file resource                          |
+| Gender                |       No | User gender field                             |
+| Employee Number       |       No | Internal employee number                      |
+| Organization List     |      Yes | Organizations the user belongs to             |
+| Primary Organization  |      Yes | Default organization after login              |
+| Role per Organization |      Yes | One role per organization                     |
+| Status                |      Yes | Enabled, disabled, locked                     |
+| Remark                |       No | Additional notes                              |
+| Last Login Time       |       No | Updated after successful login                |
+| Created At            |      Yes | Creation time                                 |
+| Updated At            |      Yes | Last update time                              |
+| Created By            |      Yes | Creator user                                  |
+| Updated By            |      Yes | Last updater user                             |
 
 ### 11.3 User Operations
 
-| Operation | Description | Permission Code Example |
-|---|---|---|
-| View User List | Query users by keyword, status, organization | `user:view` |
-| Create User | Create a new user | `user:create` |
-| Edit User | Edit user profile, username, organizations, roles | `user:update` |
-| Disable User | Disable account | `user:disable` |
-| Enable User | Enable account | `user:enable` |
-| Lock User | Lock account | `user:lock` |
-| Unlock User | Unlock account | `user:unlock` |
-| Reset Password | Administrator resets password | `user:password:reset` |
-| Delete User | Logical delete | `user:delete` |
-| Import Users | CSV import | `user:import` |
-| Export Users | CSV export | `user:export` |
+| Operation      | Description                                       | Permission Code Example |
+| -------------- | ------------------------------------------------- | ----------------------- |
+| View User List | Query users by keyword, status, organization      | `user:view`             |
+| Create User    | Create a new user                                 | `user:create`           |
+| Edit User      | Edit user profile, username, organizations, roles | `user:update`           |
+| Disable User   | Disable account                                   | `user:disable`          |
+| Enable User    | Enable account                                    | `user:enable`           |
+| Lock User      | Lock account                                      | `user:lock`             |
+| Unlock User    | Unlock account                                    | `user:unlock`           |
+| Reset Password | Administrator resets password                     | `user:password:reset`   |
+| Delete User    | Logical delete                                    | `user:delete`           |
+| Import Users   | CSV import                                        | `user:import`           |
+| Export Users   | CSV export                                        | `user:export`           |
 
 ### 11.4 Business Rules
 
@@ -439,27 +439,27 @@ Role management provides reusable permission bundles that can be assigned to use
 
 ### 12.2 Role Fields
 
-| Field | Required | Description |
-|---|---:|---|
-| Role Name | Yes | Display name |
-| Role Code | Yes | Unique code |
-| Status | Yes | Enabled or disabled |
-| Permission Set | Yes | Menu, page, action, API, data, and field permissions |
-| Remark | No | Additional notes |
-| Created At | Yes | Creation time |
-| Updated At | Yes | Last update time |
+| Field          | Required | Description                                          |
+| -------------- | -------: | ---------------------------------------------------- |
+| Role Name      |      Yes | Display name                                         |
+| Role Code      |      Yes | Unique code                                          |
+| Status         |      Yes | Enabled or disabled                                  |
+| Permission Set |      Yes | Menu, page, action, API, data, and field permissions |
+| Remark         |       No | Additional notes                                     |
+| Created At     |      Yes | Creation time                                        |
+| Updated At     |      Yes | Last update time                                     |
 
 ### 12.3 Role Operations
 
-| Operation | Description | Permission Code Example |
-|---|---|---|
-| View Roles | Query role list | `role:view` |
-| Create Role | Create role | `role:create` |
-| Edit Role | Edit role metadata | `role:update` |
-| Copy Role | Copy role and permission configuration | `role:copy` |
-| Configure Permissions | Configure role permissions | `role:permissions:update` |
-| Enable/Disable Role | Change role status | `role:status:update` |
-| Delete Role | Delete or logically delete role where allowed | `role:delete` |
+| Operation             | Description                                   | Permission Code Example   |
+| --------------------- | --------------------------------------------- | ------------------------- |
+| View Roles            | Query role list                               | `role:view`               |
+| Create Role           | Create role                                   | `role:create`             |
+| Edit Role             | Edit role metadata                            | `role:update`             |
+| Copy Role             | Copy role and permission configuration        | `role:copy`               |
+| Configure Permissions | Configure role permissions                    | `role:permissions:update` |
+| Enable/Disable Role   | Change role status                            | `role:status:update`      |
+| Delete Role           | Delete or logically delete role where allowed | `role:delete`             |
 
 ### 12.4 Business Rules
 
@@ -544,14 +544,14 @@ Field-level permissions apply to:
 
 ### 13.7 Permission Operations
 
-| Operation | Description | Permission Code Example |
-|---|---|---|
-| View Permission Tree | View permission resources | `permission:view` |
-| Configure Role Permissions | Assign permissions to a role | `permission:role:update` |
-| Configure User Permission Override | Configure user-level override | `permission:user:update` |
-| Configure Data Rules | Configure data permission rules | `permission:data:update` |
-| Configure Field Rules | Configure field permission rules | `permission:field:update` |
-| Sync API Permissions | Scan backend APIs and generate identifiers | `permission:api:sync` |
+| Operation                          | Description                                | Permission Code Example   |
+| ---------------------------------- | ------------------------------------------ | ------------------------- |
+| View Permission Tree               | View permission resources                  | `permission:view`         |
+| Configure Role Permissions         | Assign permissions to a role               | `permission:role:update`  |
+| Configure User Permission Override | Configure user-level override              | `permission:user:update`  |
+| Configure Data Rules               | Configure data permission rules            | `permission:data:update`  |
+| Configure Field Rules              | Configure field permission rules           | `permission:field:update` |
+| Sync API Permissions               | Scan backend APIs and generate identifiers | `permission:api:sync`     |
 
 ### 13.8 Acceptance Criteria
 
@@ -590,15 +590,15 @@ Backend APIs must be automatically scanned to generate API permission identifier
 
 ### 14.4 Menu Operations
 
-| Operation | Description | Permission Code Example |
-|---|---|---|
-| View Menu Tree | View menu and permission tree | `menu:view` |
-| Create Menu | Create menu node | `menu:create` |
-| Edit Menu | Edit menu metadata | `menu:update` |
-| Delete Menu | Delete menu node where allowed | `menu:delete` |
-| Configure Actions | Add or edit button/action permissions | `menu:action:update` |
-| Bind APIs | Bind API identifiers to permission nodes | `menu:api:bind` |
-| Sort Menus | Update display order | `menu:sort` |
+| Operation         | Description                              | Permission Code Example |
+| ----------------- | ---------------------------------------- | ----------------------- |
+| View Menu Tree    | View menu and permission tree            | `menu:view`             |
+| Create Menu       | Create menu node                         | `menu:create`           |
+| Edit Menu         | Edit menu metadata                       | `menu:update`           |
+| Delete Menu       | Delete menu node where allowed           | `menu:delete`           |
+| Configure Actions | Add or edit button/action permissions    | `menu:action:update`    |
+| Bind APIs         | Bind API identifiers to permission nodes | `menu:api:bind`         |
+| Sort Menus        | Update display order                     | `menu:sort`             |
 
 ### 14.5 Acceptance Criteria
 
@@ -620,16 +620,16 @@ Version 1 supports global configuration only. Organization-level configuration o
 
 ### 15.3 Configuration Fields
 
-| Field | Required | Description |
-|---|---:|---|
-| Config Key | Yes | Unique key |
-| Config Value | Yes | Value |
-| Value Type | Yes | String, number, boolean, JSON, etc. |
-| Group | No | Configuration group |
-| Description | No | Explanation |
-| Editable | Yes | Whether editable in UI |
-| Status | Yes | Enabled or disabled |
-| Updated At | Yes | Last update time |
+| Field        | Required | Description                         |
+| ------------ | -------: | ----------------------------------- |
+| Config Key   |      Yes | Unique key                          |
+| Config Value |      Yes | Value                               |
+| Value Type   |      Yes | String, number, boolean, JSON, etc. |
+| Group        |       No | Configuration group                 |
+| Description  |       No | Explanation                         |
+| Editable     |      Yes | Whether editable in UI              |
+| Status       |      Yes | Enabled or disabled                 |
+| Updated At   |      Yes | Last update time                    |
 
 ### 15.4 Required Configuration Groups
 
@@ -667,15 +667,15 @@ Dictionary data must support internationalization. At minimum, the system must s
 
 ### 16.4 Dictionary Operations
 
-| Operation | Description | Permission Code Example |
-|---|---|---|
-| View Dictionaries | View dictionary types and items | `dictionary:view` |
-| Create Dictionary Type | Create type | `dictionary:type:create` |
-| Edit Dictionary Type | Edit type | `dictionary:type:update` |
-| Delete Dictionary Type | Delete type where allowed | `dictionary:type:delete` |
-| Create Dictionary Item | Create item | `dictionary:item:create` |
-| Edit Dictionary Item | Edit item | `dictionary:item:update` |
-| Enable/Disable Item | Change item status | `dictionary:item:status:update` |
+| Operation              | Description                     | Permission Code Example         |
+| ---------------------- | ------------------------------- | ------------------------------- |
+| View Dictionaries      | View dictionary types and items | `dictionary:view`               |
+| Create Dictionary Type | Create type                     | `dictionary:type:create`        |
+| Edit Dictionary Type   | Edit type                       | `dictionary:type:update`        |
+| Delete Dictionary Type | Delete type where allowed       | `dictionary:type:delete`        |
+| Create Dictionary Item | Create item                     | `dictionary:item:create`        |
+| Edit Dictionary Item   | Edit item                       | `dictionary:item:update`        |
+| Enable/Disable Item    | Change item status              | `dictionary:item:status:update` |
 
 ### 16.5 Acceptance Criteria
 
@@ -701,16 +701,16 @@ For S3-compatible object storage, private bucket access must be supported throug
 
 ### 17.3 Upload Rules
 
-| Rule | Requirement |
-|---|---|
-| Default single file size limit | 50 MB |
-| File size configuration | Must be configurable |
-| File type whitelist | Required |
-| File type blacklist | Required |
-| Image preview | Required |
-| Download permission | Required |
-| Delete permission | Required |
-| File reference relationship | Required |
+| Rule                           | Requirement          |
+| ------------------------------ | -------------------- |
+| Default single file size limit | 50 MB                |
+| File size configuration        | Must be configurable |
+| File type whitelist            | Required             |
+| File type blacklist            | Required             |
+| Image preview                  | Required             |
+| Download permission            | Required             |
+| Delete permission              | Required             |
+| File reference relationship    | Required             |
 
 ### 17.4 Default File Type Whitelist
 
@@ -726,14 +726,14 @@ If a file is referenced by business data or system data, deletion is allowed, bu
 
 ### 17.6 File Operations
 
-| Operation | Description | Permission Code Example |
-|---|---|---|
-| View Files | Query uploaded files | `file:view` |
-| Upload File | Upload file | `file:upload` |
-| Download File | Download file after permission check | `file:download` |
-| Preview Image | Preview image files | `file:preview` |
-| Delete File | Delete file and mark references invalid | `file:delete` |
-| View References | View file reference relationship | `file:references:view` |
+| Operation       | Description                             | Permission Code Example |
+| --------------- | --------------------------------------- | ----------------------- |
+| View Files      | Query uploaded files                    | `file:view`             |
+| Upload File     | Upload file                             | `file:upload`           |
+| Download File   | Download file after permission check    | `file:download`         |
+| Preview Image   | Preview image files                     | `file:preview`          |
+| Delete File     | Delete file and mark references invalid | `file:delete`           |
+| View References | View file reference relationship        | `file:references:view`  |
 
 ### 17.7 Acceptance Criteria
 
@@ -752,13 +752,13 @@ The system provides announcements, in-app notifications, email notifications, we
 
 ### 18.2 Supported Channels
 
-| Channel | Version 1 Requirement |
-|---|---|
-| Announcement | Implement |
-| In-app notification | Implement |
-| SMTP email | Implement |
-| Webhook | Implement |
-| SMS | Do not send in Version 1; reserve SMS templates and channel abstraction |
+| Channel             | Version 1 Requirement                                                   |
+| ------------------- | ----------------------------------------------------------------------- |
+| Announcement        | Implement                                                               |
+| In-app notification | Implement                                                               |
+| SMTP email          | Implement                                                               |
+| Webhook             | Implement                                                               |
+| SMS                 | Do not send in Version 1; reserve SMS templates and channel abstraction |
 
 ### 18.3 Announcement Scope
 
@@ -800,17 +800,17 @@ Webhooks must support two purposes:
 
 ### 18.7 Notification Operations
 
-| Operation | Description | Permission Code Example |
-|---|---|---|
-| Publish Announcement | Publish announcement | `announcement:publish` |
-| Edit Announcement | Edit draft announcement | `announcement:update` |
-| Delete Announcement | Delete announcement | `announcement:delete` |
-| View Notifications | View in-app notifications | `notification:view` |
-| Mark as Read | Mark notification as read | `notification:read` |
-| Archive Notification | Archive notification | `notification:archive` |
-| Delete Notification | Delete notification | `notification:delete` |
-| Manage Templates | Manage templates | `notification:template:update` |
-| Manage Webhooks | Manage webhook subscriptions | `webhook:update` |
+| Operation            | Description                  | Permission Code Example        |
+| -------------------- | ---------------------------- | ------------------------------ |
+| Publish Announcement | Publish announcement         | `announcement:publish`         |
+| Edit Announcement    | Edit draft announcement      | `announcement:update`          |
+| Delete Announcement  | Delete announcement          | `announcement:delete`          |
+| View Notifications   | View in-app notifications    | `notification:view`            |
+| Mark as Read         | Mark notification as read    | `notification:read`            |
+| Archive Notification | Archive notification         | `notification:archive`         |
+| Delete Notification  | Delete notification          | `notification:delete`          |
+| Manage Templates     | Manage templates             | `notification:template:update` |
+| Manage Webhooks      | Manage webhook subscriptions | `webhook:update`               |
 
 ### 18.8 Acceptance Criteria
 
@@ -917,14 +917,14 @@ Version 1 must support:
 
 ### 20.3 Scheduled Task Operations
 
-| Operation | Description | Permission Code Example |
-|---|---|---|
-| View Jobs | View scheduled task list | `job:view` |
-| Create Job | Create a scheduled task | `job:create` |
-| Edit Job | Edit task configuration | `job:update` |
-| Enable/Disable Job | Change task status | `job:status:update` |
-| Run Job Manually | Trigger task manually | `job:run` |
-| View Execution Logs | View task execution records | `job:log:view` |
+| Operation           | Description                 | Permission Code Example |
+| ------------------- | --------------------------- | ----------------------- |
+| View Jobs           | View scheduled task list    | `job:view`              |
+| Create Job          | Create a scheduled task     | `job:create`            |
+| Edit Job            | Edit task configuration     | `job:update`            |
+| Enable/Disable Job  | Change task status          | `job:status:update`     |
+| Run Job Manually    | Trigger task manually       | `job:run`               |
+| View Execution Logs | View task execution records | `job:log:view`          |
 
 ### 20.4 Acceptance Criteria
 
@@ -1153,23 +1153,23 @@ A future module must comply with the following requirements:
 
 ## 27. Functional Module Requirement Matrix
 
-| Module | Pages | Fields | Operations | Permissions | Logs | Acceptance Required |
-|---|---:|---:|---:|---:|---:|---:|
-| Login/Logout | Yes | Yes | Yes | Yes | Yes | Yes |
-| User Management | Yes | Yes | Yes | Yes | Yes | Yes |
-| Organization Management | Yes | Yes | Yes | Yes | Yes | Yes |
-| Role Management | Yes | Yes | Yes | Yes | Yes | Yes |
-| Permission Management | Yes | Yes | Yes | Yes | Yes | Yes |
-| Menu Management | Yes | Yes | Yes | Yes | Yes | Yes |
-| Logs | Yes | Yes | Yes | Yes | Yes | Yes |
-| System Configuration | Yes | Yes | Yes | Yes | Yes | Yes |
-| Dictionary Management | Yes | Yes | Yes | Yes | Yes | Yes |
-| File Management | Yes | Yes | Yes | Yes | Yes | Yes |
-| Notifications | Yes | Yes | Yes | Yes | Yes | Yes |
-| Scheduled Tasks | Yes | Yes | Yes | Yes | Yes | Yes |
-| Import/Export | Yes | Yes | Yes | Yes | Yes | Yes |
-| Personal Center | Yes | Yes | Yes | Yes | Yes | Yes |
-| Initialization | Yes | Yes | Yes | Yes | Yes | Yes |
+| Module                  | Pages | Fields | Operations | Permissions | Logs | Acceptance Required |
+| ----------------------- | ----: | -----: | ---------: | ----------: | ---: | ------------------: |
+| Login/Logout            |   Yes |    Yes |        Yes |         Yes |  Yes |                 Yes |
+| User Management         |   Yes |    Yes |        Yes |         Yes |  Yes |                 Yes |
+| Organization Management |   Yes |    Yes |        Yes |         Yes |  Yes |                 Yes |
+| Role Management         |   Yes |    Yes |        Yes |         Yes |  Yes |                 Yes |
+| Permission Management   |   Yes |    Yes |        Yes |         Yes |  Yes |                 Yes |
+| Menu Management         |   Yes |    Yes |        Yes |         Yes |  Yes |                 Yes |
+| Logs                    |   Yes |    Yes |        Yes |         Yes |  Yes |                 Yes |
+| System Configuration    |   Yes |    Yes |        Yes |         Yes |  Yes |                 Yes |
+| Dictionary Management   |   Yes |    Yes |        Yes |         Yes |  Yes |                 Yes |
+| File Management         |   Yes |    Yes |        Yes |         Yes |  Yes |                 Yes |
+| Notifications           |   Yes |    Yes |        Yes |         Yes |  Yes |                 Yes |
+| Scheduled Tasks         |   Yes |    Yes |        Yes |         Yes |  Yes |                 Yes |
+| Import/Export           |   Yes |    Yes |        Yes |         Yes |  Yes |                 Yes |
+| Personal Center         |   Yes |    Yes |        Yes |         Yes |  Yes |                 Yes |
+| Initialization          |   Yes |    Yes |        Yes |         Yes |  Yes |                 Yes |
 
 ---
 
@@ -1213,209 +1213,209 @@ Unless otherwise stated:
 
 ### 28.4 Authentication APIs
 
-| Method | Path | Description | Main Request | Main Response |
-|---|---|---|---|---|
-| POST | `/api/auth/login` | Username/password login | `username`, `password` | access token, refresh token, user summary, primary organization |
-| POST | `/api/auth/refresh` | Refresh access token | refresh token | new access token, refresh token metadata |
-| POST | `/api/auth/logout` | Logout current session | none | success |
-| GET | `/api/auth/me` | Get current user context | none | user, organizations, current organization, permissions |
-| POST | `/api/auth/current-organization` | Switch current organization | `organizationId` | updated organization context and permissions |
-| POST | `/api/auth/change-password` | Change own password | `oldPassword`, `newPassword` | success |
+| Method | Path                             | Description                 | Main Request                 | Main Response                                                   |
+| ------ | -------------------------------- | --------------------------- | ---------------------------- | --------------------------------------------------------------- |
+| POST   | `/api/auth/login`                | Username/password login     | `username`, `password`       | access token, refresh token, user summary, primary organization |
+| POST   | `/api/auth/refresh`              | Refresh access token        | refresh token                | new access token, refresh token metadata                        |
+| POST   | `/api/auth/logout`               | Logout current session      | none                         | success                                                         |
+| GET    | `/api/auth/me`                   | Get current user context    | none                         | user, organizations, current organization, permissions          |
+| POST   | `/api/auth/current-organization` | Switch current organization | `organizationId`             | updated organization context and permissions                    |
+| POST   | `/api/auth/change-password`      | Change own password         | `oldPassword`, `newPassword` | success                                                         |
 
 ### 28.5 User APIs
 
-| Method | Path | Description | Main Request | Main Response |
-|---|---|---|---|---|
-| GET | `/api/users` | Query users | filters, pagination | paged user list |
-| POST | `/api/users` | Create user | user fields, organizations, roles | created user |
-| GET | `/api/users/{id}` | Get user detail | path id | user detail |
-| PATCH | `/api/users/{id}` | Update user | changed fields | updated user |
-| DELETE | `/api/users/{id}` | Logical delete user | path id | success |
-| POST | `/api/users/{id}/enable` | Enable user | path id | success |
-| POST | `/api/users/{id}/disable` | Disable user | path id | success |
-| POST | `/api/users/{id}/lock` | Lock user | path id | success |
-| POST | `/api/users/{id}/unlock` | Unlock user | path id | success |
-| POST | `/api/users/{id}/reset-password` | Administrator reset password | reset mode | success |
-| GET | `/api/users/export` | Create CSV export task | filters | export task |
-| POST | `/api/users/import` | Create CSV import task | uploaded file id | import task |
-| GET | `/api/users/import-template` | Download CSV template | none | file |
+| Method | Path                             | Description                  | Main Request                      | Main Response   |
+| ------ | -------------------------------- | ---------------------------- | --------------------------------- | --------------- |
+| GET    | `/api/users`                     | Query users                  | filters, pagination               | paged user list |
+| POST   | `/api/users`                     | Create user                  | user fields, organizations, roles | created user    |
+| GET    | `/api/users/{id}`                | Get user detail              | path id                           | user detail     |
+| PATCH  | `/api/users/{id}`                | Update user                  | changed fields                    | updated user    |
+| DELETE | `/api/users/{id}`                | Logical delete user          | path id                           | success         |
+| POST   | `/api/users/{id}/enable`         | Enable user                  | path id                           | success         |
+| POST   | `/api/users/{id}/disable`        | Disable user                 | path id                           | success         |
+| POST   | `/api/users/{id}/lock`           | Lock user                    | path id                           | success         |
+| POST   | `/api/users/{id}/unlock`         | Unlock user                  | path id                           | success         |
+| POST   | `/api/users/{id}/reset-password` | Administrator reset password | reset mode                        | success         |
+| GET    | `/api/users/export`              | Create CSV export task       | filters                           | export task     |
+| POST   | `/api/users/import`              | Create CSV import task       | uploaded file id                  | import task     |
+| GET    | `/api/users/import-template`     | Download CSV template        | none                              | file            |
 
 ### 28.6 Organization APIs
 
-| Method | Path | Description | Main Request | Main Response |
-|---|---|---|---|---|
-| GET | `/api/organizations/tree` | Get organization tree | filters | tree |
-| POST | `/api/organizations` | Create organization | organization fields | created organization |
-| GET | `/api/organizations/{id}` | Get organization detail | path id | organization detail |
-| PATCH | `/api/organizations/{id}` | Update organization | changed fields | updated organization |
-| POST | `/api/organizations/{id}/enable` | Enable organization | path id | success |
-| POST | `/api/organizations/{id}/disable` | Disable organization and children | path id | success |
-| DELETE | `/api/organizations/{id}` | Logical delete organization where allowed | path id | success |
-| GET | `/api/organizations/config/depth` | Get max depth configuration | none | max depth |
-| PATCH | `/api/organizations/config/depth` | Update max depth configuration | `maxDepth` | success |
+| Method | Path                              | Description                               | Main Request        | Main Response        |
+| ------ | --------------------------------- | ----------------------------------------- | ------------------- | -------------------- |
+| GET    | `/api/organizations/tree`         | Get organization tree                     | filters             | tree                 |
+| POST   | `/api/organizations`              | Create organization                       | organization fields | created organization |
+| GET    | `/api/organizations/{id}`         | Get organization detail                   | path id             | organization detail  |
+| PATCH  | `/api/organizations/{id}`         | Update organization                       | changed fields      | updated organization |
+| POST   | `/api/organizations/{id}/enable`  | Enable organization                       | path id             | success              |
+| POST   | `/api/organizations/{id}/disable` | Disable organization and children         | path id             | success              |
+| DELETE | `/api/organizations/{id}`         | Logical delete organization where allowed | path id             | success              |
+| GET    | `/api/organizations/config/depth` | Get max depth configuration               | none                | max depth            |
+| PATCH  | `/api/organizations/config/depth` | Update max depth configuration            | `maxDepth`          | success              |
 
 ### 28.7 Role APIs
 
-| Method | Path | Description | Main Request | Main Response |
-|---|---|---|---|---|
-| GET | `/api/roles` | Query roles | filters, pagination | paged role list |
-| POST | `/api/roles` | Create role | role fields | created role |
-| GET | `/api/roles/{id}` | Get role detail | path id | role detail |
-| PATCH | `/api/roles/{id}` | Update role | changed fields | updated role |
-| DELETE | `/api/roles/{id}` | Delete role where allowed | path id | success |
-| POST | `/api/roles/{id}/copy` | Copy role and permissions | new role name/code | created role |
-| GET | `/api/roles/{id}/permissions` | Get role permissions | path id | permissions |
-| PUT | `/api/roles/{id}/permissions` | Update role permissions | permission configuration | success |
-| POST | `/api/roles/{id}/enable` | Enable role | path id | success |
-| POST | `/api/roles/{id}/disable` | Disable role | path id | success |
+| Method | Path                          | Description               | Main Request             | Main Response   |
+| ------ | ----------------------------- | ------------------------- | ------------------------ | --------------- |
+| GET    | `/api/roles`                  | Query roles               | filters, pagination      | paged role list |
+| POST   | `/api/roles`                  | Create role               | role fields              | created role    |
+| GET    | `/api/roles/{id}`             | Get role detail           | path id                  | role detail     |
+| PATCH  | `/api/roles/{id}`             | Update role               | changed fields           | updated role    |
+| DELETE | `/api/roles/{id}`             | Delete role where allowed | path id                  | success         |
+| POST   | `/api/roles/{id}/copy`        | Copy role and permissions | new role name/code       | created role    |
+| GET    | `/api/roles/{id}/permissions` | Get role permissions      | path id                  | permissions     |
+| PUT    | `/api/roles/{id}/permissions` | Update role permissions   | permission configuration | success         |
+| POST   | `/api/roles/{id}/enable`      | Enable role               | path id                  | success         |
+| POST   | `/api/roles/{id}/disable`     | Disable role              | path id                  | success         |
 
 ### 28.8 Permission APIs
 
-| Method | Path | Description | Main Request | Main Response |
-|---|---|---|---|---|
-| GET | `/api/permissions/tree` | Get permission tree | optional filters | permission tree |
-| GET | `/api/permissions/effective` | Get effective permissions for current user/context | none | effective permissions |
-| POST | `/api/permissions/api/sync` | Scan and sync backend API identifiers | none | sync result |
-| GET | `/api/permissions/api` | Query API permission identifiers | filters | API identifiers |
-| PUT | `/api/permissions/user-overrides/{userId}` | Update user permission overrides | permissions | success |
-| GET | `/api/permissions/data-rules` | Query data permission rules | filters | rule list |
-| POST | `/api/permissions/data-rules` | Create data permission rule | rule definition | created rule |
-| PATCH | `/api/permissions/data-rules/{id}` | Update data permission rule | changed fields | updated rule |
-| DELETE | `/api/permissions/data-rules/{id}` | Delete data permission rule | path id | success |
-| GET | `/api/permissions/field-rules` | Query field permission rules | filters | rule list |
-| PUT | `/api/permissions/field-rules` | Update field permission rules | rules | success |
+| Method | Path                                       | Description                                        | Main Request     | Main Response         |
+| ------ | ------------------------------------------ | -------------------------------------------------- | ---------------- | --------------------- |
+| GET    | `/api/permissions/tree`                    | Get permission tree                                | optional filters | permission tree       |
+| GET    | `/api/permissions/effective`               | Get effective permissions for current user/context | none             | effective permissions |
+| POST   | `/api/permissions/api/sync`                | Scan and sync backend API identifiers              | none             | sync result           |
+| GET    | `/api/permissions/api`                     | Query API permission identifiers                   | filters          | API identifiers       |
+| PUT    | `/api/permissions/user-overrides/{userId}` | Update user permission overrides                   | permissions      | success               |
+| GET    | `/api/permissions/data-rules`              | Query data permission rules                        | filters          | rule list             |
+| POST   | `/api/permissions/data-rules`              | Create data permission rule                        | rule definition  | created rule          |
+| PATCH  | `/api/permissions/data-rules/{id}`         | Update data permission rule                        | changed fields   | updated rule          |
+| DELETE | `/api/permissions/data-rules/{id}`         | Delete data permission rule                        | path id          | success               |
+| GET    | `/api/permissions/field-rules`             | Query field permission rules                       | filters          | rule list             |
+| PUT    | `/api/permissions/field-rules`             | Update field permission rules                      | rules            | success               |
 
 ### 28.9 Menu APIs
 
-| Method | Path | Description | Main Request | Main Response |
-|---|---|---|---|---|
-| GET | `/api/menus/tree` | Query menu tree | filters | menu tree |
-| POST | `/api/menus` | Create menu | menu fields | created menu |
-| PATCH | `/api/menus/{id}` | Update menu | changed fields | updated menu |
-| DELETE | `/api/menus/{id}` | Delete menu | path id | success |
-| POST | `/api/menus/{id}/actions` | Create action permission under menu | action fields | created action |
-| PATCH | `/api/menus/actions/{actionId}` | Update action permission | changed fields | updated action |
-| DELETE | `/api/menus/actions/{actionId}` | Delete action permission | path id | success |
-| PUT | `/api/menus/{id}/api-bindings` | Bind API identifiers | apiPermissionIds | success |
-| PATCH | `/api/menus/sort` | Update menu sort order | sort payload | success |
+| Method | Path                            | Description                         | Main Request     | Main Response  |
+| ------ | ------------------------------- | ----------------------------------- | ---------------- | -------------- |
+| GET    | `/api/menus/tree`               | Query menu tree                     | filters          | menu tree      |
+| POST   | `/api/menus`                    | Create menu                         | menu fields      | created menu   |
+| PATCH  | `/api/menus/{id}`               | Update menu                         | changed fields   | updated menu   |
+| DELETE | `/api/menus/{id}`               | Delete menu                         | path id          | success        |
+| POST   | `/api/menus/{id}/actions`       | Create action permission under menu | action fields    | created action |
+| PATCH  | `/api/menus/actions/{actionId}` | Update action permission            | changed fields   | updated action |
+| DELETE | `/api/menus/actions/{actionId}` | Delete action permission            | path id          | success        |
+| PUT    | `/api/menus/{id}/api-bindings`  | Bind API identifiers                | apiPermissionIds | success        |
+| PATCH  | `/api/menus/sort`               | Update menu sort order              | sort payload     | success        |
 
 ### 28.10 System Configuration APIs
 
-| Method | Path | Description | Main Request | Main Response |
-|---|---|---|---|---|
-| GET | `/api/system-configs` | Query configuration | filters | config list |
-| GET | `/api/system-configs/{key}` | Get config by key | path key | config detail |
-| PATCH | `/api/system-configs/{key}` | Update config | value | updated config |
-| GET | `/api/system-configs/groups` | Query config groups | none | groups |
+| Method | Path                         | Description         | Main Request | Main Response  |
+| ------ | ---------------------------- | ------------------- | ------------ | -------------- |
+| GET    | `/api/system-configs`        | Query configuration | filters      | config list    |
+| GET    | `/api/system-configs/{key}`  | Get config by key   | path key     | config detail  |
+| PATCH  | `/api/system-configs/{key}`  | Update config       | value        | updated config |
+| GET    | `/api/system-configs/groups` | Query config groups | none         | groups         |
 
 ### 28.11 Dictionary APIs
 
-| Method | Path | Description | Main Request | Main Response |
-|---|---|---|---|---|
-| GET | `/api/dictionaries/types` | Query dictionary types | filters | type list |
-| POST | `/api/dictionaries/types` | Create dictionary type | type fields | created type |
-| PATCH | `/api/dictionaries/types/{id}` | Update dictionary type | changed fields | updated type |
-| DELETE | `/api/dictionaries/types/{id}` | Delete dictionary type | path id | success |
-| GET | `/api/dictionaries/types/{id}/items` | Query dictionary items | filters | item list |
-| POST | `/api/dictionaries/items` | Create dictionary item | item fields | created item |
-| PATCH | `/api/dictionaries/items/{id}` | Update dictionary item | changed fields | updated item |
-| DELETE | `/api/dictionaries/items/{id}` | Delete dictionary item | path id | success |
+| Method | Path                                 | Description            | Main Request   | Main Response |
+| ------ | ------------------------------------ | ---------------------- | -------------- | ------------- |
+| GET    | `/api/dictionaries/types`            | Query dictionary types | filters        | type list     |
+| POST   | `/api/dictionaries/types`            | Create dictionary type | type fields    | created type  |
+| PATCH  | `/api/dictionaries/types/{id}`       | Update dictionary type | changed fields | updated type  |
+| DELETE | `/api/dictionaries/types/{id}`       | Delete dictionary type | path id        | success       |
+| GET    | `/api/dictionaries/types/{id}/items` | Query dictionary items | filters        | item list     |
+| POST   | `/api/dictionaries/items`            | Create dictionary item | item fields    | created item  |
+| PATCH  | `/api/dictionaries/items/{id}`       | Update dictionary item | changed fields | updated item  |
+| DELETE | `/api/dictionaries/items/{id}`       | Delete dictionary item | path id        | success       |
 
 ### 28.12 File APIs
 
-| Method | Path | Description | Main Request | Main Response |
-|---|---|---|---|---|
-| GET | `/api/files` | Query files | filters, pagination | paged file list |
-| POST | `/api/files/upload` | Upload file | multipart file | file metadata |
-| GET | `/api/files/{id}` | Get file metadata | path id | file metadata |
-| GET | `/api/files/{id}/download` | Download file with permission check | path id | file stream |
-| GET | `/api/files/{id}/preview` | Preview image | path id | preview stream or URL |
-| DELETE | `/api/files/{id}` | Delete file and mark references invalid | path id | success |
-| GET | `/api/files/{id}/references` | Query file references | path id | reference list |
+| Method | Path                         | Description                             | Main Request        | Main Response         |
+| ------ | ---------------------------- | --------------------------------------- | ------------------- | --------------------- |
+| GET    | `/api/files`                 | Query files                             | filters, pagination | paged file list       |
+| POST   | `/api/files/upload`          | Upload file                             | multipart file      | file metadata         |
+| GET    | `/api/files/{id}`            | Get file metadata                       | path id             | file metadata         |
+| GET    | `/api/files/{id}/download`   | Download file with permission check     | path id             | file stream           |
+| GET    | `/api/files/{id}/preview`    | Preview image                           | path id             | preview stream or URL |
+| DELETE | `/api/files/{id}`            | Delete file and mark references invalid | path id             | success               |
+| GET    | `/api/files/{id}/references` | Query file references                   | path id             | reference list        |
 
 ### 28.13 Notification APIs
 
-| Method | Path | Description | Main Request | Main Response |
-|---|---|---|---|---|
-| GET | `/api/announcements` | Query announcements | filters | announcement list |
-| POST | `/api/announcements` | Create announcement | announcement fields | created announcement |
-| PATCH | `/api/announcements/{id}` | Update announcement | changed fields | updated announcement |
-| POST | `/api/announcements/{id}/publish` | Publish announcement | publish scope | success |
-| DELETE | `/api/announcements/{id}` | Delete announcement | path id | success |
-| GET | `/api/notifications` | Query current user's notifications | filters | notification list |
-| POST | `/api/notifications/{id}/read` | Mark as read | path id | success |
-| POST | `/api/notifications/{id}/archive` | Archive notification | path id | success |
-| DELETE | `/api/notifications/{id}` | Delete notification | path id | success |
-| GET | `/api/notification-templates` | Query templates | filters | template list |
-| POST | `/api/notification-templates` | Create template | template fields | created template |
-| PATCH | `/api/notification-templates/{id}` | Update template | changed fields | updated template |
-| DELETE | `/api/notification-templates/{id}` | Delete template | path id | success |
-| GET | `/api/webhooks` | Query webhooks | filters | webhook list |
-| POST | `/api/webhooks` | Create webhook subscription | webhook fields | created webhook |
-| PATCH | `/api/webhooks/{id}` | Update webhook subscription | changed fields | updated webhook |
-| DELETE | `/api/webhooks/{id}` | Delete webhook subscription | path id | success |
+| Method | Path                               | Description                        | Main Request        | Main Response        |
+| ------ | ---------------------------------- | ---------------------------------- | ------------------- | -------------------- |
+| GET    | `/api/announcements`               | Query announcements                | filters             | announcement list    |
+| POST   | `/api/announcements`               | Create announcement                | announcement fields | created announcement |
+| PATCH  | `/api/announcements/{id}`          | Update announcement                | changed fields      | updated announcement |
+| POST   | `/api/announcements/{id}/publish`  | Publish announcement               | publish scope       | success              |
+| DELETE | `/api/announcements/{id}`          | Delete announcement                | path id             | success              |
+| GET    | `/api/notifications`               | Query current user's notifications | filters             | notification list    |
+| POST   | `/api/notifications/{id}/read`     | Mark as read                       | path id             | success              |
+| POST   | `/api/notifications/{id}/archive`  | Archive notification               | path id             | success              |
+| DELETE | `/api/notifications/{id}`          | Delete notification                | path id             | success              |
+| GET    | `/api/notification-templates`      | Query templates                    | filters             | template list        |
+| POST   | `/api/notification-templates`      | Create template                    | template fields     | created template     |
+| PATCH  | `/api/notification-templates/{id}` | Update template                    | changed fields      | updated template     |
+| DELETE | `/api/notification-templates/{id}` | Delete template                    | path id             | success              |
+| GET    | `/api/webhooks`                    | Query webhooks                     | filters             | webhook list         |
+| POST   | `/api/webhooks`                    | Create webhook subscription        | webhook fields      | created webhook      |
+| PATCH  | `/api/webhooks/{id}`               | Update webhook subscription        | changed fields      | updated webhook      |
+| DELETE | `/api/webhooks/{id}`               | Delete webhook subscription        | path id             | success              |
 
 ### 28.14 Log APIs
 
-| Method | Path | Description | Main Request | Main Response |
-|---|---|---|---|---|
-| GET | `/api/logs/login` | Query login logs | filters, pagination | paged logs |
-| GET | `/api/logs/operations` | Query operation logs | filters, pagination | paged logs |
-| GET | `/api/logs/access` | Query access logs | filters, pagination | paged logs |
-| GET | `/api/logs/api` | Query API logs | filters, pagination | paged logs |
-| GET | `/api/logs/exceptions` | Query exception logs | filters, pagination | paged logs |
-| GET | `/api/logs/security` | Query security logs | filters, pagination | paged logs |
-| GET | `/api/logs/files` | Query file operation logs | filters, pagination | paged logs |
-| POST | `/api/logs/export` | Create async CSV log export | log type, filters | export task |
-| GET | `/api/logs/retention-configs` | Get retention configs | none | configs |
-| PATCH | `/api/logs/retention-configs/{logType}` | Update retention config | retention days | success |
+| Method | Path                                    | Description                 | Main Request        | Main Response |
+| ------ | --------------------------------------- | --------------------------- | ------------------- | ------------- |
+| GET    | `/api/logs/login`                       | Query login logs            | filters, pagination | paged logs    |
+| GET    | `/api/logs/operations`                  | Query operation logs        | filters, pagination | paged logs    |
+| GET    | `/api/logs/access`                      | Query access logs           | filters, pagination | paged logs    |
+| GET    | `/api/logs/api`                         | Query API logs              | filters, pagination | paged logs    |
+| GET    | `/api/logs/exceptions`                  | Query exception logs        | filters, pagination | paged logs    |
+| GET    | `/api/logs/security`                    | Query security logs         | filters, pagination | paged logs    |
+| GET    | `/api/logs/files`                       | Query file operation logs   | filters, pagination | paged logs    |
+| POST   | `/api/logs/export`                      | Create async CSV log export | log type, filters   | export task   |
+| GET    | `/api/logs/retention-configs`           | Get retention configs       | none                | configs       |
+| PATCH  | `/api/logs/retention-configs/{logType}` | Update retention config     | retention days      | success       |
 
 ### 28.15 Scheduled Task APIs
 
-| Method | Path | Description | Main Request | Main Response |
-|---|---|---|---|---|
-| GET | `/api/jobs` | Query jobs | filters, pagination | job list |
-| POST | `/api/jobs` | Create job | job fields | created job |
-| PATCH | `/api/jobs/{id}` | Update job | changed fields | updated job |
-| POST | `/api/jobs/{id}/enable` | Enable job | path id | success |
-| POST | `/api/jobs/{id}/disable` | Disable job | path id | success |
-| POST | `/api/jobs/{id}/run` | Run job manually | parameters | execution record |
-| GET | `/api/jobs/{id}/executions` | Query job execution logs | filters | execution logs |
+| Method | Path                        | Description              | Main Request        | Main Response    |
+| ------ | --------------------------- | ------------------------ | ------------------- | ---------------- |
+| GET    | `/api/jobs`                 | Query jobs               | filters, pagination | job list         |
+| POST   | `/api/jobs`                 | Create job               | job fields          | created job      |
+| PATCH  | `/api/jobs/{id}`            | Update job               | changed fields      | updated job      |
+| POST   | `/api/jobs/{id}/enable`     | Enable job               | path id             | success          |
+| POST   | `/api/jobs/{id}/disable`    | Disable job              | path id             | success          |
+| POST   | `/api/jobs/{id}/run`        | Run job manually         | parameters          | execution record |
+| GET    | `/api/jobs/{id}/executions` | Query job execution logs | filters             | execution logs   |
 
 ### 28.16 Import/Export APIs
 
-| Method | Path | Description | Main Request | Main Response |
-|---|---|---|---|---|
-| GET | `/api/import-export/tasks` | Query import/export tasks | filters, pagination | task list |
-| GET | `/api/import-export/tasks/{id}` | Get task detail | path id | task detail |
-| GET | `/api/import-export/tasks/{id}/download` | Download successful export result | path id | file |
-| GET | `/api/import-export/tasks/{id}/errors` | Download import error report | path id | file |
-| POST | `/api/import-export/import` | Create import task | resource type, file id | import task |
-| POST | `/api/import-export/export` | Create export task | resource type, filters | export task |
-| GET | `/api/import-export/templates/{resourceType}` | Download import template | resource type | file |
+| Method | Path                                          | Description                       | Main Request           | Main Response |
+| ------ | --------------------------------------------- | --------------------------------- | ---------------------- | ------------- |
+| GET    | `/api/import-export/tasks`                    | Query import/export tasks         | filters, pagination    | task list     |
+| GET    | `/api/import-export/tasks/{id}`               | Get task detail                   | path id                | task detail   |
+| GET    | `/api/import-export/tasks/{id}/download`      | Download successful export result | path id                | file          |
+| GET    | `/api/import-export/tasks/{id}/errors`        | Download import error report      | path id                | file          |
+| POST   | `/api/import-export/import`                   | Create import task                | resource type, file id | import task   |
+| POST   | `/api/import-export/export`                   | Create export task                | resource type, filters | export task   |
+| GET    | `/api/import-export/templates/{resourceType}` | Download import template          | resource type          | file          |
 
 ### 28.17 Personal Center APIs
 
-| Method | Path | Description | Main Request | Main Response |
-|---|---|---|---|---|
-| GET | `/api/profile` | Get own profile | none | profile |
-| PATCH | `/api/profile` | Update own profile | allowed fields | updated profile |
-| PATCH | `/api/profile/preferences` | Update preferences | language, theme, tabs | preferences |
-| POST | `/api/profile/avatar` | Upload/change avatar | file id | updated profile |
+| Method | Path                       | Description          | Main Request          | Main Response   |
+| ------ | -------------------------- | -------------------- | --------------------- | --------------- |
+| GET    | `/api/profile`             | Get own profile      | none                  | profile         |
+| PATCH  | `/api/profile`             | Update own profile   | allowed fields        | updated profile |
+| PATCH  | `/api/profile/preferences` | Update preferences   | language, theme, tabs | preferences     |
+| POST   | `/api/profile/avatar`      | Upload/change avatar | file id               | updated profile |
 
 ### 28.18 Initialization APIs
 
-| Method | Path | Description | Main Request | Main Response |
-|---|---|---|---|---|
-| GET | `/api/setup/status` | Check initialization status | none | initialized flag |
-| POST | `/api/setup/initialize` | Run first startup initialization | root org, admin, base settings | success |
+| Method | Path                    | Description                      | Main Request                   | Main Response    |
+| ------ | ----------------------- | -------------------------------- | ------------------------------ | ---------------- |
+| GET    | `/api/setup/status`     | Check initialization status      | none                           | initialized flag |
+| POST   | `/api/setup/initialize` | Run first startup initialization | root org, admin, base settings | success          |
 
 ### 28.19 Observability APIs
 
-| Method | Path | Description | Main Request | Main Response |
-|---|---|---|---|---|
-| GET | `/api/health` | Health check | none | health status |
-| GET | `/api/metrics` | Metrics endpoint, reserved | none | metrics or reserved response |
+| Method | Path           | Description                | Main Request | Main Response                |
+| ------ | -------------- | -------------------------- | ------------ | ---------------------------- |
+| GET    | `/api/health`  | Health check               | none         | health status                |
+| GET    | `/api/metrics` | Metrics endpoint, reserved | none         | metrics or reserved response |
 
 ---
 
@@ -1427,34 +1427,34 @@ The data model below is database-neutral and should be implementable on PostgreS
 
 Where applicable, entities should include:
 
-| Field | Description |
-|---|---|
-| `id` | Primary identifier |
-| `tenant_id` | Reserved for future tenant support |
-| `created_at` | Creation timestamp |
-| `updated_at` | Update timestamp |
+| Field        | Description                                             |
+| ------------ | ------------------------------------------------------- |
+| `id`         | Primary identifier                                      |
+| `tenant_id`  | Reserved for future tenant support                      |
+| `created_at` | Creation timestamp                                      |
+| `updated_at` | Update timestamp                                        |
 | `deleted_at` | Logical deletion timestamp, if logical deletion applies |
-| `status` | Enabled, disabled, locked, or module-specific status |
+| `status`     | Enabled, disabled, locked, or module-specific status    |
 
 ### 29.2 Organization
 
-| Entity | Field | Description |
-|---|---|---|
-| `organizations` | `id` | Primary key |
-| `organizations` | `tenant_id` | Reserved tenant identifier |
-| `organizations` | `parent_id` | Parent organization id |
-| `organizations` | `name` | Organization name |
-| `organizations` | `code` | Organization code |
-| `organizations` | `owner_user_id` | Responsible user |
-| `organizations` | `phone` | Contact phone |
-| `organizations` | `email` | Contact email |
-| `organizations` | `address` | Address |
-| `organizations` | `sort_order` | Display order |
-| `organizations` | `status` | Enabled or disabled |
-| `organizations` | `remark` | Remarks |
-| `organizations` | `created_at` | Created time |
-| `organizations` | `updated_at` | Updated time |
-| `organizations` | `deleted_at` | Logical deletion time |
+| Entity          | Field           | Description                |
+| --------------- | --------------- | -------------------------- |
+| `organizations` | `id`            | Primary key                |
+| `organizations` | `tenant_id`     | Reserved tenant identifier |
+| `organizations` | `parent_id`     | Parent organization id     |
+| `organizations` | `name`          | Organization name          |
+| `organizations` | `code`          | Organization code          |
+| `organizations` | `owner_user_id` | Responsible user           |
+| `organizations` | `phone`         | Contact phone              |
+| `organizations` | `email`         | Contact email              |
+| `organizations` | `address`       | Address                    |
+| `organizations` | `sort_order`    | Display order              |
+| `organizations` | `status`        | Enabled or disabled        |
+| `organizations` | `remark`        | Remarks                    |
+| `organizations` | `created_at`    | Created time               |
+| `organizations` | `updated_at`    | Updated time               |
+| `organizations` | `deleted_at`    | Logical deletion time      |
 
 Constraints:
 
@@ -1464,30 +1464,30 @@ Constraints:
 
 ### 29.3 User
 
-| Entity | Field | Description |
-|---|---|---|
-| `users` | `id` | Primary key |
-| `users` | `tenant_id` | Reserved tenant identifier |
-| `users` | `username` | Login username |
-| `users` | `display_name` | Name or nickname |
-| `users` | `email` | Unique email |
-| `users` | `phone` | Unique phone number |
-| `users` | `avatar_file_id` | Avatar file id |
-| `users` | `gender` | Gender |
-| `users` | `employee_no` | Employee number |
-| `users` | `primary_org_id` | Primary organization id |
-| `users` | `status` | Enabled, disabled, locked |
-| `users` | `password_hash` | Password hash |
-| `users` | `password_changed_at` | Password update time |
+| Entity  | Field                   | Description                       |
+| ------- | ----------------------- | --------------------------------- |
+| `users` | `id`                    | Primary key                       |
+| `users` | `tenant_id`             | Reserved tenant identifier        |
+| `users` | `username`              | Login username                    |
+| `users` | `display_name`          | Name or nickname                  |
+| `users` | `email`                 | Unique email                      |
+| `users` | `phone`                 | Unique phone number               |
+| `users` | `avatar_file_id`        | Avatar file id                    |
+| `users` | `gender`                | Gender                            |
+| `users` | `employee_no`           | Employee number                   |
+| `users` | `primary_org_id`        | Primary organization id           |
+| `users` | `status`                | Enabled, disabled, locked         |
+| `users` | `password_hash`         | Password hash                     |
+| `users` | `password_changed_at`   | Password update time              |
 | `users` | `force_password_change` | Whether forced to change password |
-| `users` | `lock_until` | Lock expiration time |
-| `users` | `remark` | Remarks |
-| `users` | `last_login_at` | Last login time |
-| `users` | `created_by` | Creator user id |
-| `users` | `updated_by` | Updater user id |
-| `users` | `created_at` | Created time |
-| `users` | `updated_at` | Updated time |
-| `users` | `deleted_at` | Logical deletion time |
+| `users` | `lock_until`            | Lock expiration time              |
+| `users` | `remark`                | Remarks                           |
+| `users` | `last_login_at`         | Last login time                   |
+| `users` | `created_by`            | Creator user id                   |
+| `users` | `updated_by`            | Updater user id                   |
+| `users` | `created_at`            | Created time                      |
+| `users` | `updated_at`            | Updated time                      |
+| `users` | `deleted_at`            | Logical deletion time             |
 
 Constraints:
 
@@ -1497,17 +1497,17 @@ Constraints:
 
 ### 29.4 User Organization Role Binding
 
-| Entity | Field | Description |
-|---|---|---|
-| `user_organization_roles` | `id` | Primary key |
-| `user_organization_roles` | `tenant_id` | Reserved tenant identifier |
-| `user_organization_roles` | `user_id` | User id |
-| `user_organization_roles` | `organization_id` | Organization id |
-| `user_organization_roles` | `role_id` | Role id |
-| `user_organization_roles` | `is_primary` | Whether this is the user's primary organization binding |
-| `user_organization_roles` | `status` | Enabled or disabled |
-| `user_organization_roles` | `created_at` | Created time |
-| `user_organization_roles` | `updated_at` | Updated time |
+| Entity                    | Field             | Description                                             |
+| ------------------------- | ----------------- | ------------------------------------------------------- |
+| `user_organization_roles` | `id`              | Primary key                                             |
+| `user_organization_roles` | `tenant_id`       | Reserved tenant identifier                              |
+| `user_organization_roles` | `user_id`         | User id                                                 |
+| `user_organization_roles` | `organization_id` | Organization id                                         |
+| `user_organization_roles` | `role_id`         | Role id                                                 |
+| `user_organization_roles` | `is_primary`      | Whether this is the user's primary organization binding |
+| `user_organization_roles` | `status`          | Enabled or disabled                                     |
+| `user_organization_roles` | `created_at`      | Created time                                            |
+| `user_organization_roles` | `updated_at`      | Updated time                                            |
 
 Constraints:
 
@@ -1517,335 +1517,335 @@ Constraints:
 
 ### 29.5 Role
 
-| Entity | Field | Description |
-|---|---|---|
-| `roles` | `id` | Primary key |
-| `roles` | `tenant_id` | Reserved tenant identifier |
-| `roles` | `name` | Role name |
-| `roles` | `code` | Role code |
-| `roles` | `status` | Enabled or disabled |
-| `roles` | `description` | Description |
-| `roles` | `created_at` | Created time |
-| `roles` | `updated_at` | Updated time |
-| `roles` | `deleted_at` | Logical deletion time |
+| Entity  | Field         | Description                |
+| ------- | ------------- | -------------------------- |
+| `roles` | `id`          | Primary key                |
+| `roles` | `tenant_id`   | Reserved tenant identifier |
+| `roles` | `name`        | Role name                  |
+| `roles` | `code`        | Role code                  |
+| `roles` | `status`      | Enabled or disabled        |
+| `roles` | `description` | Description                |
+| `roles` | `created_at`  | Created time               |
+| `roles` | `updated_at`  | Updated time               |
+| `roles` | `deleted_at`  | Logical deletion time      |
 
 ### 29.6 Permission Resources
 
-| Entity | Field | Description |
-|---|---|---|
-| `permission_resources` | `id` | Primary key |
-| `permission_resources` | `tenant_id` | Reserved tenant identifier |
+| Entity                 | Field           | Description                          |
+| ---------------------- | --------------- | ------------------------------------ |
+| `permission_resources` | `id`            | Primary key                          |
+| `permission_resources` | `tenant_id`     | Reserved tenant identifier           |
 | `permission_resources` | `resource_type` | Menu, page, action, API, data, field |
-| `permission_resources` | `code` | Permission code |
-| `permission_resources` | `name` | Permission name |
-| `permission_resources` | `parent_id` | Parent permission id |
-| `permission_resources` | `status` | Enabled or disabled |
-| `permission_resources` | `metadata` | Resource-specific metadata |
-| `permission_resources` | `created_at` | Created time |
-| `permission_resources` | `updated_at` | Updated time |
+| `permission_resources` | `code`          | Permission code                      |
+| `permission_resources` | `name`          | Permission name                      |
+| `permission_resources` | `parent_id`     | Parent permission id                 |
+| `permission_resources` | `status`        | Enabled or disabled                  |
+| `permission_resources` | `metadata`      | Resource-specific metadata           |
+| `permission_resources` | `created_at`    | Created time                         |
+| `permission_resources` | `updated_at`    | Updated time                         |
 
 ### 29.7 Role Permissions
 
-| Entity | Field | Description |
-|---|---|---|
-| `role_permissions` | `id` | Primary key |
-| `role_permissions` | `tenant_id` | Reserved tenant identifier |
-| `role_permissions` | `role_id` | Role id |
-| `role_permissions` | `permission_resource_id` | Permission resource id |
-| `role_permissions` | `effect` | Allow or deny, if supported by implementation |
-| `role_permissions` | `created_at` | Created time |
+| Entity             | Field                    | Description                                   |
+| ------------------ | ------------------------ | --------------------------------------------- |
+| `role_permissions` | `id`                     | Primary key                                   |
+| `role_permissions` | `tenant_id`              | Reserved tenant identifier                    |
+| `role_permissions` | `role_id`                | Role id                                       |
+| `role_permissions` | `permission_resource_id` | Permission resource id                        |
+| `role_permissions` | `effect`                 | Allow or deny, if supported by implementation |
+| `role_permissions` | `created_at`             | Created time                                  |
 
 ### 29.8 User Permission Overrides
 
-| Entity | Field | Description |
-|---|---|---|
-| `user_permission_overrides` | `id` | Primary key |
-| `user_permission_overrides` | `tenant_id` | Reserved tenant identifier |
-| `user_permission_overrides` | `user_id` | User id |
-| `user_permission_overrides` | `organization_id` | Organization context id |
-| `user_permission_overrides` | `permission_resource_id` | Permission resource id |
-| `user_permission_overrides` | `effect` | Allow or deny |
-| `user_permission_overrides` | `created_at` | Created time |
+| Entity                      | Field                    | Description                |
+| --------------------------- | ------------------------ | -------------------------- |
+| `user_permission_overrides` | `id`                     | Primary key                |
+| `user_permission_overrides` | `tenant_id`              | Reserved tenant identifier |
+| `user_permission_overrides` | `user_id`                | User id                    |
+| `user_permission_overrides` | `organization_id`        | Organization context id    |
+| `user_permission_overrides` | `permission_resource_id` | Permission resource id     |
+| `user_permission_overrides` | `effect`                 | Allow or deny              |
+| `user_permission_overrides` | `created_at`             | Created time               |
 
 ### 29.9 Organization Permission Policies
 
-| Entity | Field | Description |
-|---|---|---|
-| `organization_permission_policies` | `id` | Primary key |
-| `organization_permission_policies` | `tenant_id` | Reserved tenant identifier |
-| `organization_permission_policies` | `organization_id` | Organization id |
-| `organization_permission_policies` | `permission_resource_id` | Permission resource id |
-| `organization_permission_policies` | `effect` | Allow or deny |
-| `organization_permission_policies` | `created_at` | Created time |
+| Entity                             | Field                    | Description                |
+| ---------------------------------- | ------------------------ | -------------------------- |
+| `organization_permission_policies` | `id`                     | Primary key                |
+| `organization_permission_policies` | `tenant_id`              | Reserved tenant identifier |
+| `organization_permission_policies` | `organization_id`        | Organization id            |
+| `organization_permission_policies` | `permission_resource_id` | Permission resource id     |
+| `organization_permission_policies` | `effect`                 | Allow or deny              |
+| `organization_permission_policies` | `created_at`             | Created time               |
 
 ### 29.10 Menu
 
-| Entity | Field | Description |
-|---|---|---|
-| `menus` | `id` | Primary key |
-| `menus` | `tenant_id` | Reserved tenant identifier |
-| `menus` | `parent_id` | Parent menu id |
-| `menus` | `name` | Menu name |
-| `menus` | `i18n_key` | i18n key |
-| `menus` | `icon` | Icon key |
-| `menus` | `route_path` | Frontend route path |
-| `menus` | `component_key` | Frontend component key |
-| `menus` | `permission_code` | Menu/page permission code |
-| `menus` | `visible` | Whether shown in menu |
-| `menus` | `sort_order` | Sort order |
-| `menus` | `status` | Enabled or disabled |
-| `menus` | `created_at` | Created time |
-| `menus` | `updated_at` | Updated time |
+| Entity  | Field             | Description                |
+| ------- | ----------------- | -------------------------- |
+| `menus` | `id`              | Primary key                |
+| `menus` | `tenant_id`       | Reserved tenant identifier |
+| `menus` | `parent_id`       | Parent menu id             |
+| `menus` | `name`            | Menu name                  |
+| `menus` | `i18n_key`        | i18n key                   |
+| `menus` | `icon`            | Icon key                   |
+| `menus` | `route_path`      | Frontend route path        |
+| `menus` | `component_key`   | Frontend component key     |
+| `menus` | `permission_code` | Menu/page permission code  |
+| `menus` | `visible`         | Whether shown in menu      |
+| `menus` | `sort_order`      | Sort order                 |
+| `menus` | `status`          | Enabled or disabled        |
+| `menus` | `created_at`      | Created time               |
+| `menus` | `updated_at`      | Updated time               |
 
 ### 29.11 API Permission
 
-| Entity | Field | Description |
-|---|---|---|
-| `api_permissions` | `id` | Primary key |
-| `api_permissions` | `tenant_id` | Reserved tenant identifier |
-| `api_permissions` | `method` | HTTP method |
-| `api_permissions` | `path` | API path pattern |
-| `api_permissions` | `code` | API permission code |
-| `api_permissions` | `description` | Description |
-| `api_permissions` | `log_level` | None, basic, request, request_response |
-| `api_permissions` | `status` | Enabled or disabled |
-| `api_permissions` | `created_at` | Created time |
-| `api_permissions` | `updated_at` | Updated time |
+| Entity            | Field         | Description                            |
+| ----------------- | ------------- | -------------------------------------- |
+| `api_permissions` | `id`          | Primary key                            |
+| `api_permissions` | `tenant_id`   | Reserved tenant identifier             |
+| `api_permissions` | `method`      | HTTP method                            |
+| `api_permissions` | `path`        | API path pattern                       |
+| `api_permissions` | `code`        | API permission code                    |
+| `api_permissions` | `description` | Description                            |
+| `api_permissions` | `log_level`   | None, basic, request, request_response |
+| `api_permissions` | `status`      | Enabled or disabled                    |
+| `api_permissions` | `created_at`  | Created time                           |
+| `api_permissions` | `updated_at`  | Updated time                           |
 
 ### 29.12 Menu API Bindings
 
-| Entity | Field | Description |
-|---|---|---|
-| `menu_api_bindings` | `id` | Primary key |
-| `menu_api_bindings` | `tenant_id` | Reserved tenant identifier |
-| `menu_api_bindings` | `menu_id` | Menu or action id |
-| `menu_api_bindings` | `api_permission_id` | API permission id |
-| `menu_api_bindings` | `created_at` | Created time |
+| Entity              | Field               | Description                |
+| ------------------- | ------------------- | -------------------------- |
+| `menu_api_bindings` | `id`                | Primary key                |
+| `menu_api_bindings` | `tenant_id`         | Reserved tenant identifier |
+| `menu_api_bindings` | `menu_id`           | Menu or action id          |
+| `menu_api_bindings` | `api_permission_id` | API permission id          |
+| `menu_api_bindings` | `created_at`        | Created time               |
 
 ### 29.13 Data Permission Rules
 
-| Entity | Field | Description |
-|---|---|---|
-| `data_permission_rules` | `id` | Primary key |
-| `data_permission_rules` | `tenant_id` | Reserved tenant identifier |
-| `data_permission_rules` | `resource_type` | Resource type |
-| `data_permission_rules` | `name` | Rule name |
-| `data_permission_rules` | `scope_type` | Own, current_org, org_with_children, specified_orgs, all, custom_user, custom_role, resource_type, expression |
-| `data_permission_rules` | `rule_config` | Visual rule configuration |
-| `data_permission_rules` | `status` | Enabled or disabled |
-| `data_permission_rules` | `created_at` | Created time |
-| `data_permission_rules` | `updated_at` | Updated time |
+| Entity                  | Field           | Description                                                                                                   |
+| ----------------------- | --------------- | ------------------------------------------------------------------------------------------------------------- |
+| `data_permission_rules` | `id`            | Primary key                                                                                                   |
+| `data_permission_rules` | `tenant_id`     | Reserved tenant identifier                                                                                    |
+| `data_permission_rules` | `resource_type` | Resource type                                                                                                 |
+| `data_permission_rules` | `name`          | Rule name                                                                                                     |
+| `data_permission_rules` | `scope_type`    | Own, current_org, org_with_children, specified_orgs, all, custom_user, custom_role, resource_type, expression |
+| `data_permission_rules` | `rule_config`   | Visual rule configuration                                                                                     |
+| `data_permission_rules` | `status`        | Enabled or disabled                                                                                           |
+| `data_permission_rules` | `created_at`    | Created time                                                                                                  |
+| `data_permission_rules` | `updated_at`    | Updated time                                                                                                  |
 
 ### 29.14 Field Permission Rules
 
-| Entity | Field | Description |
-|---|---|---|
-| `field_permission_rules` | `id` | Primary key |
-| `field_permission_rules` | `tenant_id` | Reserved tenant identifier |
-| `field_permission_rules` | `resource_type` | Resource type |
-| `field_permission_rules` | `field_key` | Field key |
-| `field_permission_rules` | `field_name` | Field display name |
-| `field_permission_rules` | `scenario` | List, detail, create, edit, export, api_response |
-| `field_permission_rules` | `visible` | Whether field is visible |
-| `field_permission_rules` | `editable` | Whether field is editable |
-| `field_permission_rules` | `target_type` | User, role, organization, default |
-| `field_permission_rules` | `target_id` | Target id |
-| `field_permission_rules` | `created_at` | Created time |
-| `field_permission_rules` | `updated_at` | Updated time |
+| Entity                   | Field           | Description                                      |
+| ------------------------ | --------------- | ------------------------------------------------ |
+| `field_permission_rules` | `id`            | Primary key                                      |
+| `field_permission_rules` | `tenant_id`     | Reserved tenant identifier                       |
+| `field_permission_rules` | `resource_type` | Resource type                                    |
+| `field_permission_rules` | `field_key`     | Field key                                        |
+| `field_permission_rules` | `field_name`    | Field display name                               |
+| `field_permission_rules` | `scenario`      | List, detail, create, edit, export, api_response |
+| `field_permission_rules` | `visible`       | Whether field is visible                         |
+| `field_permission_rules` | `editable`      | Whether field is editable                        |
+| `field_permission_rules` | `target_type`   | User, role, organization, default                |
+| `field_permission_rules` | `target_id`     | Target id                                        |
+| `field_permission_rules` | `created_at`    | Created time                                     |
+| `field_permission_rules` | `updated_at`    | Updated time                                     |
 
 ### 29.15 Authentication Sessions
 
-| Entity | Field | Description |
-|---|---|---|
-| `auth_sessions` | `id` | Primary key |
-| `auth_sessions` | `tenant_id` | Reserved tenant identifier |
-| `auth_sessions` | `user_id` | User id |
-| `auth_sessions` | `refresh_token_hash` | Refresh token hash |
-| `auth_sessions` | `current_organization_id` | Current organization id |
-| `auth_sessions` | `ip_address` | IP address |
-| `auth_sessions` | `user_agent` | User agent |
-| `auth_sessions` | `expires_at` | Expiration time |
-| `auth_sessions` | `revoked_at` | Revocation time |
-| `auth_sessions` | `created_at` | Created time |
-| `auth_sessions` | `last_seen_at` | Last seen time |
+| Entity          | Field                     | Description                |
+| --------------- | ------------------------- | -------------------------- |
+| `auth_sessions` | `id`                      | Primary key                |
+| `auth_sessions` | `tenant_id`               | Reserved tenant identifier |
+| `auth_sessions` | `user_id`                 | User id                    |
+| `auth_sessions` | `refresh_token_hash`      | Refresh token hash         |
+| `auth_sessions` | `current_organization_id` | Current organization id    |
+| `auth_sessions` | `ip_address`              | IP address                 |
+| `auth_sessions` | `user_agent`              | User agent                 |
+| `auth_sessions` | `expires_at`              | Expiration time            |
+| `auth_sessions` | `revoked_at`              | Revocation time            |
+| `auth_sessions` | `created_at`              | Created time               |
+| `auth_sessions` | `last_seen_at`            | Last seen time             |
 
 ### 29.16 System Configuration
 
-| Entity | Field | Description |
-|---|---|---|
-| `system_configs` | `id` | Primary key |
-| `system_configs` | `tenant_id` | Reserved tenant identifier |
-| `system_configs` | `config_key` | Unique key |
-| `system_configs` | `config_value` | Value |
-| `system_configs` | `value_type` | String, number, boolean, JSON |
-| `system_configs` | `group_key` | Configuration group |
-| `system_configs` | `description` | Description |
-| `system_configs` | `editable` | Whether editable |
-| `system_configs` | `status` | Enabled or disabled |
-| `system_configs` | `updated_at` | Updated time |
+| Entity           | Field          | Description                   |
+| ---------------- | -------------- | ----------------------------- |
+| `system_configs` | `id`           | Primary key                   |
+| `system_configs` | `tenant_id`    | Reserved tenant identifier    |
+| `system_configs` | `config_key`   | Unique key                    |
+| `system_configs` | `config_value` | Value                         |
+| `system_configs` | `value_type`   | String, number, boolean, JSON |
+| `system_configs` | `group_key`    | Configuration group           |
+| `system_configs` | `description`  | Description                   |
+| `system_configs` | `editable`     | Whether editable              |
+| `system_configs` | `status`       | Enabled or disabled           |
+| `system_configs` | `updated_at`   | Updated time                  |
 
 ### 29.17 Dictionaries
 
-| Entity | Field | Description |
-|---|---|---|
-| `dictionary_types` | `id` | Primary key |
-| `dictionary_types` | `tenant_id` | Reserved tenant identifier |
-| `dictionary_types` | `code` | Dictionary type code |
-| `dictionary_types` | `name` | Type name |
-| `dictionary_types` | `description` | Description |
-| `dictionary_types` | `status` | Enabled or disabled |
-| `dictionary_items` | `id` | Primary key |
-| `dictionary_items` | `tenant_id` | Reserved tenant identifier |
-| `dictionary_items` | `type_id` | Dictionary type id |
-| `dictionary_items` | `item_value` | Stored value |
-| `dictionary_items` | `label_i18n_key` | i18n key for label |
-| `dictionary_items` | `sort_order` | Sort order |
-| `dictionary_items` | `status` | Enabled or disabled |
+| Entity             | Field            | Description                |
+| ------------------ | ---------------- | -------------------------- |
+| `dictionary_types` | `id`             | Primary key                |
+| `dictionary_types` | `tenant_id`      | Reserved tenant identifier |
+| `dictionary_types` | `code`           | Dictionary type code       |
+| `dictionary_types` | `name`           | Type name                  |
+| `dictionary_types` | `description`    | Description                |
+| `dictionary_types` | `status`         | Enabled or disabled        |
+| `dictionary_items` | `id`             | Primary key                |
+| `dictionary_items` | `tenant_id`      | Reserved tenant identifier |
+| `dictionary_items` | `type_id`        | Dictionary type id         |
+| `dictionary_items` | `item_value`     | Stored value               |
+| `dictionary_items` | `label_i18n_key` | i18n key for label         |
+| `dictionary_items` | `sort_order`     | Sort order                 |
+| `dictionary_items` | `status`         | Enabled or disabled        |
 
 ### 29.18 Files
 
-| Entity | Field | Description |
-|---|---|---|
-| `files` | `id` | Primary key |
-| `files` | `tenant_id` | Reserved tenant identifier |
-| `files` | `storage_type` | Local or S3-compatible |
-| `files` | `bucket` | Bucket/container if applicable |
-| `files` | `object_key` | Storage object key/path |
-| `files` | `original_name` | Original filename |
-| `files` | `extension` | File extension |
-| `files` | `mime_type` | MIME type |
-| `files` | `size_bytes` | File size |
-| `files` | `checksum` | File checksum if available |
-| `files` | `status` | Available, deleted, invalid |
-| `files` | `uploaded_by` | Uploader user id |
-| `files` | `created_at` | Uploaded time |
-| `file_references` | `id` | Primary key |
-| `file_references` | `tenant_id` | Reserved tenant identifier |
-| `file_references` | `file_id` | File id |
-| `file_references` | `resource_type` | Referencing resource type |
-| `file_references` | `resource_id` | Referencing resource id |
-| `file_references` | `status` | Active or invalid |
-| `file_references` | `created_at` | Created time |
+| Entity            | Field           | Description                    |
+| ----------------- | --------------- | ------------------------------ |
+| `files`           | `id`            | Primary key                    |
+| `files`           | `tenant_id`     | Reserved tenant identifier     |
+| `files`           | `storage_type`  | Local or S3-compatible         |
+| `files`           | `bucket`        | Bucket/container if applicable |
+| `files`           | `object_key`    | Storage object key/path        |
+| `files`           | `original_name` | Original filename              |
+| `files`           | `extension`     | File extension                 |
+| `files`           | `mime_type`     | MIME type                      |
+| `files`           | `size_bytes`    | File size                      |
+| `files`           | `checksum`      | File checksum if available     |
+| `files`           | `status`        | Available, deleted, invalid    |
+| `files`           | `uploaded_by`   | Uploader user id               |
+| `files`           | `created_at`    | Uploaded time                  |
+| `file_references` | `id`            | Primary key                    |
+| `file_references` | `tenant_id`     | Reserved tenant identifier     |
+| `file_references` | `file_id`       | File id                        |
+| `file_references` | `resource_type` | Referencing resource type      |
+| `file_references` | `resource_id`   | Referencing resource id        |
+| `file_references` | `status`        | Active or invalid              |
+| `file_references` | `created_at`    | Created time                   |
 
 ### 29.19 Notifications and Webhooks
 
-| Entity | Field | Description |
-|---|---|---|
-| `announcements` | `id` | Primary key |
-| `announcements` | `tenant_id` | Reserved tenant identifier |
-| `announcements` | `title` | Title |
-| `announcements` | `content` | Content |
-| `announcements` | `scope_type` | System or organization |
-| `announcements` | `status` | Draft, published, deleted |
-| `announcements` | `published_at` | Publish time |
-| `notifications` | `id` | Primary key |
-| `notifications` | `tenant_id` | Reserved tenant identifier |
-| `notifications` | `recipient_user_id` | Recipient user id |
-| `notifications` | `title` | Title |
-| `notifications` | `content` | Content |
-| `notifications` | `status` | Unread, read, archived, deleted |
-| `notifications` | `created_at` | Created time |
-| `notification_templates` | `id` | Primary key |
-| `notification_templates` | `tenant_id` | Reserved tenant identifier |
-| `notification_templates` | `channel` | In-app, email, SMS |
-| `notification_templates` | `template_code` | Template code |
-| `notification_templates` | `language` | Language |
-| `notification_templates` | `subject` | Subject/title |
-| `notification_templates` | `body` | Template body |
-| `notification_templates` | `variables` | Supported variables |
-| `webhook_subscriptions` | `id` | Primary key |
-| `webhook_subscriptions` | `tenant_id` | Reserved tenant identifier |
-| `webhook_subscriptions` | `name` | Webhook name |
-| `webhook_subscriptions` | `url` | Target URL |
-| `webhook_subscriptions` | `event_types` | Subscribed events |
-| `webhook_subscriptions` | `secret` | Signing secret if used |
-| `webhook_subscriptions` | `status` | Enabled or disabled |
+| Entity                   | Field               | Description                     |
+| ------------------------ | ------------------- | ------------------------------- |
+| `announcements`          | `id`                | Primary key                     |
+| `announcements`          | `tenant_id`         | Reserved tenant identifier      |
+| `announcements`          | `title`             | Title                           |
+| `announcements`          | `content`           | Content                         |
+| `announcements`          | `scope_type`        | System or organization          |
+| `announcements`          | `status`            | Draft, published, deleted       |
+| `announcements`          | `published_at`      | Publish time                    |
+| `notifications`          | `id`                | Primary key                     |
+| `notifications`          | `tenant_id`         | Reserved tenant identifier      |
+| `notifications`          | `recipient_user_id` | Recipient user id               |
+| `notifications`          | `title`             | Title                           |
+| `notifications`          | `content`           | Content                         |
+| `notifications`          | `status`            | Unread, read, archived, deleted |
+| `notifications`          | `created_at`        | Created time                    |
+| `notification_templates` | `id`                | Primary key                     |
+| `notification_templates` | `tenant_id`         | Reserved tenant identifier      |
+| `notification_templates` | `channel`           | In-app, email, SMS              |
+| `notification_templates` | `template_code`     | Template code                   |
+| `notification_templates` | `language`          | Language                        |
+| `notification_templates` | `subject`           | Subject/title                   |
+| `notification_templates` | `body`              | Template body                   |
+| `notification_templates` | `variables`         | Supported variables             |
+| `webhook_subscriptions`  | `id`                | Primary key                     |
+| `webhook_subscriptions`  | `tenant_id`         | Reserved tenant identifier      |
+| `webhook_subscriptions`  | `name`              | Webhook name                    |
+| `webhook_subscriptions`  | `url`               | Target URL                      |
+| `webhook_subscriptions`  | `event_types`       | Subscribed events               |
+| `webhook_subscriptions`  | `secret`            | Signing secret if used          |
+| `webhook_subscriptions`  | `status`            | Enabled or disabled             |
 
 ### 29.20 Scheduled Jobs
 
-| Entity | Field | Description |
-|---|---|---|
-| `scheduled_jobs` | `id` | Primary key |
-| `scheduled_jobs` | `tenant_id` | Reserved tenant identifier |
-| `scheduled_jobs` | `name` | Job name |
-| `scheduled_jobs` | `code` | Job code |
-| `scheduled_jobs` | `cron_expression` | Cron expression |
-| `scheduled_jobs` | `parameters` | Job parameters |
-| `scheduled_jobs` | `retry_policy` | Retry configuration |
-| `scheduled_jobs` | `timeout_seconds` | Timeout configuration |
-| `scheduled_jobs` | `lock_key` | Distributed lock key |
-| `scheduled_jobs` | `status` | Enabled or disabled |
-| `scheduled_jobs` | `created_at` | Created time |
-| `job_execution_logs` | `id` | Primary key |
-| `job_execution_logs` | `tenant_id` | Reserved tenant identifier |
-| `job_execution_logs` | `job_id` | Job id |
-| `job_execution_logs` | `started_at` | Start time |
-| `job_execution_logs` | `finished_at` | Finish time |
-| `job_execution_logs` | `status` | Success, failed, timeout |
-| `job_execution_logs` | `message` | Result message |
+| Entity               | Field             | Description                |
+| -------------------- | ----------------- | -------------------------- |
+| `scheduled_jobs`     | `id`              | Primary key                |
+| `scheduled_jobs`     | `tenant_id`       | Reserved tenant identifier |
+| `scheduled_jobs`     | `name`            | Job name                   |
+| `scheduled_jobs`     | `code`            | Job code                   |
+| `scheduled_jobs`     | `cron_expression` | Cron expression            |
+| `scheduled_jobs`     | `parameters`      | Job parameters             |
+| `scheduled_jobs`     | `retry_policy`    | Retry configuration        |
+| `scheduled_jobs`     | `timeout_seconds` | Timeout configuration      |
+| `scheduled_jobs`     | `lock_key`        | Distributed lock key       |
+| `scheduled_jobs`     | `status`          | Enabled or disabled        |
+| `scheduled_jobs`     | `created_at`      | Created time               |
+| `job_execution_logs` | `id`              | Primary key                |
+| `job_execution_logs` | `tenant_id`       | Reserved tenant identifier |
+| `job_execution_logs` | `job_id`          | Job id                     |
+| `job_execution_logs` | `started_at`      | Start time                 |
+| `job_execution_logs` | `finished_at`     | Finish time                |
+| `job_execution_logs` | `status`          | Success, failed, timeout   |
+| `job_execution_logs` | `message`         | Result message             |
 
 ### 29.21 Import/Export Tasks
 
-| Entity | Field | Description |
-|---|---|---|
-| `import_export_tasks` | `id` | Primary key |
-| `import_export_tasks` | `tenant_id` | Reserved tenant identifier |
-| `import_export_tasks` | `task_type` | Import or export |
-| `import_export_tasks` | `resource_type` | Target resource type |
-| `import_export_tasks` | `status` | Pending, running, success, failed |
-| `import_export_tasks` | `source_file_id` | Uploaded source file for import |
-| `import_export_tasks` | `result_file_id` | Generated export file |
-| `import_export_tasks` | `error_file_id` | Error report file |
-| `import_export_tasks` | `created_by` | Creator user id |
-| `import_export_tasks` | `created_at` | Created time |
-| `import_export_tasks` | `finished_at` | Finish time |
+| Entity                | Field            | Description                       |
+| --------------------- | ---------------- | --------------------------------- |
+| `import_export_tasks` | `id`             | Primary key                       |
+| `import_export_tasks` | `tenant_id`      | Reserved tenant identifier        |
+| `import_export_tasks` | `task_type`      | Import or export                  |
+| `import_export_tasks` | `resource_type`  | Target resource type              |
+| `import_export_tasks` | `status`         | Pending, running, success, failed |
+| `import_export_tasks` | `source_file_id` | Uploaded source file for import   |
+| `import_export_tasks` | `result_file_id` | Generated export file             |
+| `import_export_tasks` | `error_file_id`  | Error report file                 |
+| `import_export_tasks` | `created_by`     | Creator user id                   |
+| `import_export_tasks` | `created_at`     | Created time                      |
+| `import_export_tasks` | `finished_at`    | Finish time                       |
 
 ### 29.22 Logs
 
 The implementation may use separate tables or a partitioned unified log table. At the logical data model level, logs must contain these common fields:
 
-| Field | Description |
-|---|---|
-| `id` | Primary key |
-| `tenant_id` | Reserved tenant identifier |
-| `log_type` | Login, operation, access, API, exception, security, job, file |
-| `user_id` | Acting user |
-| `organization_id` | Current organization context |
-| `ip_address` | Client IP |
-| `user_agent` | User agent |
-| `request_id` | Request ID / Trace ID |
-| `resource_type` | Target resource type |
-| `resource_id` | Target resource id |
-| `action` | Operation/action name |
-| `status` | Success, failed, denied, etc. |
-| `message` | Summary message |
-| `metadata` | Structured metadata with sensitive fields masked |
-| `created_at` | Log time |
+| Field             | Description                                                   |
+| ----------------- | ------------------------------------------------------------- |
+| `id`              | Primary key                                                   |
+| `tenant_id`       | Reserved tenant identifier                                    |
+| `log_type`        | Login, operation, access, API, exception, security, job, file |
+| `user_id`         | Acting user                                                   |
+| `organization_id` | Current organization context                                  |
+| `ip_address`      | Client IP                                                     |
+| `user_agent`      | User agent                                                    |
+| `request_id`      | Request ID / Trace ID                                         |
+| `resource_type`   | Target resource type                                          |
+| `resource_id`     | Target resource id                                            |
+| `action`          | Operation/action name                                         |
+| `status`          | Success, failed, denied, etc.                                 |
+| `message`         | Summary message                                               |
+| `metadata`        | Structured metadata with sensitive fields masked              |
+| `created_at`      | Log time                                                      |
 
 ### 29.23 Internationalization
 
-| Entity | Field | Description |
-|---|---|---|
-| `i18n_messages` | `id` | Primary key |
-| `i18n_messages` | `tenant_id` | Reserved tenant identifier |
-| `i18n_messages` | `message_key` | Translation key |
-| `i18n_messages` | `language` | Language code |
-| `i18n_messages` | `message_value` | Translated value |
-| `i18n_messages` | `module` | Owning module |
-| `i18n_messages` | `updated_at` | Updated time |
+| Entity          | Field           | Description                |
+| --------------- | --------------- | -------------------------- |
+| `i18n_messages` | `id`            | Primary key                |
+| `i18n_messages` | `tenant_id`     | Reserved tenant identifier |
+| `i18n_messages` | `message_key`   | Translation key            |
+| `i18n_messages` | `language`      | Language code              |
+| `i18n_messages` | `message_value` | Translated value           |
+| `i18n_messages` | `module`        | Owning module              |
+| `i18n_messages` | `updated_at`    | Updated time               |
 
 ### 29.24 User Preferences
 
-| Entity | Field | Description |
-|---|---|---|
-| `user_preferences` | `id` | Primary key |
-| `user_preferences` | `tenant_id` | Reserved tenant identifier |
-| `user_preferences` | `user_id` | User id |
-| `user_preferences` | `language` | User language preference |
-| `user_preferences` | `theme_mode` | Light or dark |
-| `user_preferences` | `theme_color` | Theme color |
+| Entity             | Field               | Description                   |
+| ------------------ | ------------------- | ----------------------------- |
+| `user_preferences` | `id`                | Primary key                   |
+| `user_preferences` | `tenant_id`         | Reserved tenant identifier    |
+| `user_preferences` | `user_id`           | User id                       |
+| `user_preferences` | `language`          | User language preference      |
+| `user_preferences` | `theme_mode`        | Light or dark                 |
+| `user_preferences` | `theme_color`       | Theme color                   |
 | `user_preferences` | `page_tabs_enabled` | Whether page tabs are enabled |
-| `user_preferences` | `updated_at` | Updated time |
+| `user_preferences` | `updated_at`        | Updated time                  |
 
 ---
 
@@ -1872,19 +1872,19 @@ Recommended format:
 
 Examples:
 
-| Code | Category | Description |
-|---|---|---|
-| `AUTH_INVALID_CREDENTIALS` | Authentication | Username or password is invalid |
-| `AUTH_TOKEN_EXPIRED` | Authentication | Access token expired |
-| `AUTH_ACCOUNT_LOCKED` | Authentication | Account is locked |
-| `PERMISSION_DENIED` | Authorization | User lacks required permission |
-| `PERMISSION_API_DENIED` | Authorization | User lacks API permission |
-| `VALIDATION_REQUIRED_FIELD` | Validation | Required field missing |
-| `VALIDATION_DUPLICATE_EMAIL` | Validation | Email already exists |
-| `BUSINESS_ORG_DISABLED` | Business | Organization is disabled |
-| `BUSINESS_MAX_ORG_DEPTH_EXCEEDED` | Business | Organization max depth exceeded |
-| `SYSTEM_INTERNAL_ERROR` | System | Unexpected internal error |
-| `THIRD_PARTY_WEBHOOK_FAILED` | Third-party | Webhook delivery failed |
+| Code                              | Category       | Description                     |
+| --------------------------------- | -------------- | ------------------------------- |
+| `AUTH_INVALID_CREDENTIALS`        | Authentication | Username or password is invalid |
+| `AUTH_TOKEN_EXPIRED`              | Authentication | Access token expired            |
+| `AUTH_ACCOUNT_LOCKED`             | Authentication | Account is locked               |
+| `PERMISSION_DENIED`               | Authorization  | User lacks required permission  |
+| `PERMISSION_API_DENIED`           | Authorization  | User lacks API permission       |
+| `VALIDATION_REQUIRED_FIELD`       | Validation     | Required field missing          |
+| `VALIDATION_DUPLICATE_EMAIL`      | Validation     | Email already exists            |
+| `BUSINESS_ORG_DISABLED`           | Business       | Organization is disabled        |
+| `BUSINESS_MAX_ORG_DEPTH_EXCEEDED` | Business       | Organization max depth exceeded |
+| `SYSTEM_INTERNAL_ERROR`           | System         | Unexpected internal error       |
+| `THIRD_PARTY_WEBHOOK_FAILED`      | Third-party    | Webhook delivery failed         |
 
 ### 30.3 Acceptance Criteria
 
@@ -1996,49 +1996,48 @@ The first version is acceptable only when all of the following are true:
 
 ## 34. Appendix: Confirmed Decisions
 
-| Topic | Confirmed Decision |
-|---|---|
-| System type | Multi-organization web admin base |
-| Branch terminology | Organization |
-| Organization hierarchy | Tree structure |
-| Multiple root organizations | Allowed; initialize one default root |
-| Organization max depth | Configurable |
-| User organization membership | Multiple organizations per user |
-| Role per organization | One role per user per organization |
-| Data isolation | Partially isolated by organization, with global/shared data support for future modules |
-| Tenant | No tenant management in v1; reserve `tenant_id` |
-| Built-in roles | Super administrator, organization administrator, normal user |
-| Super administrator | Not restricted by organization |
-| Permission model | RBAC + custom data permission rules |
-| Permission dimensions | Menu, page, action, API, data, field |
-| Permission conflict order | User > role > organization > system default |
-| Login | Username + password |
-| Auth token | JWT Access Token + Refresh Token |
-| Token expiration | Configurable |
-| MFA | Reserved only |
-| SSO | Reserved only |
-| Password complexity default | Minimum 8 characters with letters and numbers |
-| Password expiration default | 365 days |
-| Login failure lock | Configurable attempts and duration |
-| Password recovery | Administrator reset only |
-| Online users | View only in v1 |
-| Logs | Login, operation, access, API, exception, security, job, file |
-| Log retention | Default 90 days per type, adjustable separately |
-| Log export | Asynchronous CSV |
-| API log | Configurable per interface; sensitive fields always masked |
-| Notification channels | Announcement, in-app, SMTP email, webhook; SMS reserved |
-| Webhook | Notification channel and event subscription |
-| Import/export | CSV in v1; Excel reserved |
-| File storage | Local file system and S3-compatible storage |
-| S3 access | Private bucket access through backend authentication |
-| File size default | 50 MB |
-| File whitelist | Images, documents, zip |
-| i18n languages | Chinese and English |
-| PRD language | English |
-| Frontend | React + shadcn/ui + Tailwind CSS + Zustand |
-| Backend | Hono |
-| Database | At least PostgreSQL and SQL Server |
-| API base path | `/api` in v1; future `/api/v2` allowed |
-| Initialization | Startup wizard and CLI/seed script |
-| Sample module | Cancelled; not included |
-
+| Topic                        | Confirmed Decision                                                                     |
+| ---------------------------- | -------------------------------------------------------------------------------------- |
+| System type                  | Multi-organization web admin base                                                      |
+| Branch terminology           | Organization                                                                           |
+| Organization hierarchy       | Tree structure                                                                         |
+| Multiple root organizations  | Allowed; initialize one default root                                                   |
+| Organization max depth       | Configurable                                                                           |
+| User organization membership | Multiple organizations per user                                                        |
+| Role per organization        | One role per user per organization                                                     |
+| Data isolation               | Partially isolated by organization, with global/shared data support for future modules |
+| Tenant                       | No tenant management in v1; reserve `tenant_id`                                        |
+| Built-in roles               | Super administrator, organization administrator, normal user                           |
+| Super administrator          | Not restricted by organization                                                         |
+| Permission model             | RBAC + custom data permission rules                                                    |
+| Permission dimensions        | Menu, page, action, API, data, field                                                   |
+| Permission conflict order    | User > role > organization > system default                                            |
+| Login                        | Username + password                                                                    |
+| Auth token                   | JWT Access Token + Refresh Token                                                       |
+| Token expiration             | Configurable                                                                           |
+| MFA                          | Reserved only                                                                          |
+| SSO                          | Reserved only                                                                          |
+| Password complexity default  | Minimum 8 characters with letters and numbers                                          |
+| Password expiration default  | 365 days                                                                               |
+| Login failure lock           | Configurable attempts and duration                                                     |
+| Password recovery            | Administrator reset only                                                               |
+| Online users                 | View only in v1                                                                        |
+| Logs                         | Login, operation, access, API, exception, security, job, file                          |
+| Log retention                | Default 90 days per type, adjustable separately                                        |
+| Log export                   | Asynchronous CSV                                                                       |
+| API log                      | Configurable per interface; sensitive fields always masked                             |
+| Notification channels        | Announcement, in-app, SMTP email, webhook; SMS reserved                                |
+| Webhook                      | Notification channel and event subscription                                            |
+| Import/export                | CSV in v1; Excel reserved                                                              |
+| File storage                 | Local file system and S3-compatible storage                                            |
+| S3 access                    | Private bucket access through backend authentication                                   |
+| File size default            | 50 MB                                                                                  |
+| File whitelist               | Images, documents, zip                                                                 |
+| i18n languages               | Chinese and English                                                                    |
+| PRD language                 | English                                                                                |
+| Frontend                     | React + shadcn/ui + Tailwind CSS + Zustand                                             |
+| Backend                      | Hono                                                                                   |
+| Database                     | At least PostgreSQL and SQL Server                                                     |
+| API base path                | `/api` in v1; future `/api/v2` allowed                                                 |
+| Initialization               | Startup wizard and CLI/seed script                                                     |
+| Sample module                | Cancelled; not included                                                                |

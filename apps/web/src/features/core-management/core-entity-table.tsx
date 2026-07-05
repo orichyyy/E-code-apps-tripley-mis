@@ -32,7 +32,7 @@ export function CoreEntityTable({
   onEdit,
   onSelect,
   onStatusAction,
-  statusActions
+  statusActions,
 }: CoreEntityTableProps) {
   if (isLoading) {
     return (
@@ -71,7 +71,10 @@ export function CoreEntityTable({
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr className={row.id === selectedId ? "bg-muted/60" : "hover:bg-muted/40"} key={row.id}>
+            <tr
+              className={row.id === selectedId ? "bg-muted/60" : "hover:bg-muted/40"}
+              key={row.id}
+            >
               {columns.map((column) => (
                 <td className="border-b px-4 py-3" key={column.key}>
                   {column.key === "status" ? (

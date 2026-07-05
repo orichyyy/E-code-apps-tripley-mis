@@ -1,11 +1,9 @@
-import {
-  randomBytes
-} from "node:crypto";
+import { randomBytes } from "node:crypto";
 import {
   changePasswordRequestSchema,
   loginRequestSchema,
   logoutRequestSchema,
-  switchCurrentOrganizationRequestSchema
+  switchCurrentOrganizationRequestSchema,
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
@@ -26,7 +24,7 @@ export function createAuthRoutes(services: BackendCoreServices) {
     const input = loginRequestSchema.parse(await context.req.json());
     const result = await services.login(input, {
       ipAddress: context.req.header("x-forwarded-for") ?? null,
-      userAgent: context.req.header("user-agent") ?? null
+      userAgent: context.req.header("user-agent") ?? null,
     });
 
     context.header(
@@ -36,9 +34,9 @@ export function createAuthRoutes(services: BackendCoreServices) {
         sameSite: result.refreshTokenCookie.sameSite,
         secure: result.refreshTokenCookie.secure,
         domain: result.refreshTokenCookie.domain,
-        maxAgeSeconds: result.refreshTokenCookie.maxAgeSeconds
+        maxAgeSeconds: result.refreshTokenCookie.maxAgeSeconds,
       }),
-      { append: true }
+      { append: true },
     );
     context.header(
       "set-cookie",
@@ -47,9 +45,9 @@ export function createAuthRoutes(services: BackendCoreServices) {
         sameSite: result.refreshTokenCookie.sameSite,
         secure: result.refreshTokenCookie.secure,
         domain: result.refreshTokenCookie.domain,
-        maxAgeSeconds: result.refreshTokenCookie.maxAgeSeconds
+        maxAgeSeconds: result.refreshTokenCookie.maxAgeSeconds,
       }),
-      { append: true }
+      { append: true },
     );
 
     return context.json({
@@ -63,8 +61,8 @@ export function createAuthRoutes(services: BackendCoreServices) {
         permissionCodes: result.permissionCodes,
         menus: result.menus,
         passwordChangeRequired: result.passwordChangeRequired,
-        preferences: result.preferences
-      }
+        preferences: result.preferences,
+      },
     });
   });
 
@@ -87,17 +85,17 @@ export function createAuthRoutes(services: BackendCoreServices) {
       "set-cookie",
       formatRefreshTokenCookie("", {
         ...services.getRefreshTokenCookieOptions(),
-        maxAgeSeconds: 0
+        maxAgeSeconds: 0,
       }),
-      { append: true }
+      { append: true },
     );
     context.header(
       "set-cookie",
       formatCsrfTokenCookie("", {
         ...services.getRefreshTokenCookieOptions(),
-        maxAgeSeconds: 0
+        maxAgeSeconds: 0,
       }),
-      { append: true }
+      { append: true },
     );
     return context.json({ data: result });
   });
@@ -155,15 +153,15 @@ export function createAuthRoutes(services: BackendCoreServices) {
     if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
     const onlineUsers = services.listOnlineUsers({
       currentOrganizationId: context.req.query("organizationId"),
-      userId: context.req.query("userId")
+      userId: context.req.query("userId"),
     });
     return context.json({
       data: hasPaginationQuery(context)
         ? pageItems(onlineUsers, {
             page: context.req.query("page"),
-            pageSize: context.req.query("pageSize")
+            pageSize: context.req.query("pageSize"),
           })
-        : onlineUsers
+        : onlineUsers,
     });
   });
 
@@ -201,14 +199,14 @@ function formatRefreshTokenCookie(
     secure: boolean;
     domain: string | null;
     maxAgeSeconds: number;
-  }
+  },
 ): string {
   const parts = [
     `refresh_token=${encodeURIComponent(value)}`,
     "HttpOnly",
     `SameSite=${options.sameSite}`,
     `Path=${options.path}`,
-    `Max-Age=${options.maxAgeSeconds}`
+    `Max-Age=${options.maxAgeSeconds}`,
   ];
   if (options.secure) parts.push("Secure");
   if (options.domain) parts.push(`Domain=${options.domain}`);
@@ -223,19 +221,21 @@ function formatCsrfTokenCookie(
     secure: boolean;
     domain: string | null;
     maxAgeSeconds: number;
-  }
+  },
 ): string {
   const parts = [
     `csrf_token=${encodeURIComponent(value)}`,
     `SameSite=${options.sameSite}`,
     `Path=${options.path}`,
-    `Max-Age=${options.maxAgeSeconds}`
+    `Max-Age=${options.maxAgeSeconds}`,
   ];
   if (options.secure) parts.push("Secure");
   if (options.domain) parts.push(`Domain=${options.domain}`);
   return parts.join("; ");
 }
 
-function hasPaginationQuery(context: { req: { query: (name: string) => string | undefined } }): boolean {
+function hasPaginationQuery(context: {
+  req: { query: (name: string) => string | undefined };
+}): boolean {
   return context.req.query("page") !== undefined || context.req.query("pageSize") !== undefined;
 }

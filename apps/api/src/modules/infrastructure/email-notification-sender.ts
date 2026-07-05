@@ -19,12 +19,12 @@ export async function sendTestEmailNotification(
   dependencies: {
     listTemplates: () => Promise<unknown[]>;
     notificationChannel: NotificationChannelAdapter;
-  }
+  },
 ) {
   const template = await findEnabledEmailTemplate(
     await dependencies.listTemplates(),
     input.templateCode,
-    input.locale
+    input.locale,
   );
   const subject = renderNotificationTemplate(template.subject ?? "", input.variables);
   const body = renderNotificationTemplate(template.body, input.variables);
@@ -39,8 +39,8 @@ export async function sendTestEmailNotification(
       templateCode: input.templateCode,
       locale: input.locale,
       variables: input.variables,
-      sentAt
-    }
+      sentAt,
+    },
   });
 
   return {
@@ -50,27 +50,27 @@ export async function sendTestEmailNotification(
     locale: input.locale,
     subject,
     status: "sent",
-    sentAt
+    sentAt,
   };
 }
 
 function findEnabledEmailTemplate(
   templates: unknown[],
   code: string,
-  locale: string
+  locale: string,
 ): NotificationTemplateRecord {
   const template = (templates as NotificationTemplateRecord[]).find(
     (item) =>
       item.code === code &&
       item.locale === locale &&
       item.channel === "email" &&
-      (item.status ?? "enabled") === "enabled"
+      (item.status ?? "enabled") === "enabled",
   );
   if (!template) {
     throw createKnownError("VALIDATION_INVALID_REQUEST", {
       templateCode: code,
       locale,
-      channel: "email"
+      channel: "email",
     });
   }
   return template;

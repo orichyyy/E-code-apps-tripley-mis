@@ -17,7 +17,7 @@ export function I18nMessageForm({ busy, initialRecord, onCancel, onSubmit }: I18
   const form = useForm({
     defaultValues: { messageValue: initialRecord.messageValue },
     validators: { onSubmit: i18nMessageFormSchema },
-    onSubmit: ({ value }) => onSubmit(toI18nMessageApiInput(value))
+    onSubmit: ({ value }) => onSubmit(toI18nMessageApiInput(value)),
   });
 
   return (

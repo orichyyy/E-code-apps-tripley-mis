@@ -1,7 +1,7 @@
 import {
   type CreateRoleRequest,
   type UpdateRolePermissionsRequest,
-  type UpdateRoleRequest
+  type UpdateRoleRequest,
 } from "@web-admin-base/contracts";
 
 import { createKnownError } from "../../core/errors/error-codes";
@@ -41,7 +41,7 @@ export class RoleService {
   createRecord(
     input: CreateRoleRequest,
     actorId: string | null = null,
-    options: { isBuiltin?: boolean; dataScopeRuleId?: string | null } = {}
+    options: { isBuiltin?: boolean; dataScopeRuleId?: string | null } = {},
   ): RoleRecord {
     const store = this.context.store;
     this.ensureUniqueRoleCode(input.code);
@@ -62,7 +62,7 @@ export class RoleService {
       createdAt: now,
       updatedAt: now,
       createdBy: actorId,
-      updatedBy: actorId
+      updatedBy: actorId,
     };
     store.roles.set(role.id, role);
     return role;
@@ -80,11 +80,7 @@ export class RoleService {
     return role;
   }
 
-  setStatus(
-    id: string,
-    status: "enabled" | "disabled",
-    actorId: string | null = null
-  ): RoleRecord {
+  setStatus(id: string, status: "enabled" | "disabled", actorId: string | null = null): RoleRecord {
     const role = requireRole(this.context.store, id);
     role.status = status;
     role.updatedAt = toUtcIso(nowUtc());
@@ -94,12 +90,16 @@ export class RoleService {
 
   copy(id: string, actorId: string | null = null): RoleRecord {
     const source = requireRole(this.context.store, id);
-    const copy = this.createRecord({
-      name: `${source.name} Copy`,
-      code: this.nextCopyCode(source.code),
-      description: source.description ?? undefined,
-      remark: source.remark ?? undefined
-    }, actorId, { dataScopeRuleId: source.dataScopeRuleId });
+    const copy = this.createRecord(
+      {
+        name: `${source.name} Copy`,
+        code: this.nextCopyCode(source.code),
+        description: source.description ?? undefined,
+        remark: source.remark ?? undefined,
+      },
+      actorId,
+      { dataScopeRuleId: source.dataScopeRuleId },
+    );
     const now = toUtcIso(nowUtc());
     const enabledPermissionCodes = this.listEnabledPermissionCodeSet();
     const copiedPermissionCodes = new Set<string>();
@@ -113,7 +113,7 @@ export class RoleService {
         permissionCode: permission.permissionCode,
         effect: permission.effect,
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
       });
     }
     return copy;
@@ -122,7 +122,7 @@ export class RoleService {
   updatePermissions(
     id: string,
     input: UpdateRolePermissionsRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ): RoleRecord {
     const role = requireRole(this.context.store, id);
     const knownPermissions = this.listEnabledPermissionCodeSet();
@@ -131,8 +131,14 @@ export class RoleService {
       if (!knownPermissions.has(permissionCode)) throw createKnownError("PERMISSION_UNKNOWN_CODE");
     });
 
-    const retained = this.context.store.rolePermissions.filter((permission) => permission.roleId !== id);
-    this.context.store.rolePermissions.splice(0, this.context.store.rolePermissions.length, ...retained);
+    const retained = this.context.store.rolePermissions.filter(
+      (permission) => permission.roleId !== id,
+    );
+    this.context.store.rolePermissions.splice(
+      0,
+      this.context.store.rolePermissions.length,
+      ...retained,
+    );
     const now = toUtcIso(nowUtc());
     permissionCodes.forEach((permissionCode) => {
       this.context.store.rolePermissions.push({
@@ -140,7 +146,7 @@ export class RoleService {
         permissionCode,
         effect: "allow",
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
       });
     });
     role.updatedAt = now;
@@ -158,7 +164,7 @@ export class RoleService {
         (permission) =>
           permission.roleId === id &&
           permission.effect === "allow" &&
-          enabledPermissionCodes.has(permission.permissionCode)
+          enabledPermissionCodes.has(permission.permissionCode),
       )
       .forEach((permission) => {
         if (seenPermissionCodes.has(permission.permissionCode)) return;
@@ -184,7 +190,7 @@ export class RoleService {
   private softDeleteRoleBindings(
     roleId: string,
     deletedAt: string,
-    deletedBy: string | null
+    deletedBy: string | null,
   ): void {
     for (const binding of this.context.store.userOrganizationRoles.values()) {
       if (binding.roleId !== roleId || binding.isDeleted) continue;
@@ -200,12 +206,12 @@ export class RoleService {
 
   private deleteRolePermissions(roleId: string): void {
     const retained = this.context.store.rolePermissions.filter(
-      (permission) => permission.roleId !== roleId
+      (permission) => permission.roleId !== roleId,
     );
     this.context.store.rolePermissions.splice(
       0,
       this.context.store.rolePermissions.length,
-      ...retained
+      ...retained,
     );
   }
 
@@ -226,7 +232,7 @@ export class RoleService {
 
   private roleCodeExists(code: string, currentRoleId?: string): boolean {
     return [...this.context.store.roles.values()].some(
-      (role) => role.id !== currentRoleId && role.code === code
+      (role) => role.id !== currentRoleId && role.code === code,
     );
   }
 
@@ -234,7 +240,7 @@ export class RoleService {
     return new Set(
       [...this.context.store.permissions.values()]
         .filter((permission) => permission.status === "enabled")
-        .map((permission) => permission.code)
+        .map((permission) => permission.code),
     );
   }
 }
@@ -244,9 +250,7 @@ function isRoleStatus(status: string): status is RoleRecord["status"] {
 }
 
 function matchesRoleKeyword(role: RoleRecord, keyword: string): boolean {
-  return [
-    role.name,
-    role.code,
-    role.description ?? ""
-  ].some((value) => value.toLocaleLowerCase().includes(keyword));
+  return [role.name, role.code, role.description ?? ""].some((value) =>
+    value.toLocaleLowerCase().includes(keyword),
+  );
 }

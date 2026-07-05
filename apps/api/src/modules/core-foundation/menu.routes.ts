@@ -2,7 +2,7 @@ import {
   createMenuRequestSchema,
   integerIdStringSchema,
   updateMenuApiBindingsRequestSchema,
-  updateMenuRequestSchema
+  updateMenuRequestSchema,
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
@@ -35,7 +35,7 @@ export function createMenuRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     await assertEmptyJsonBody(context.req.raw);
     return context.json({
-      data: await services.deleteMenu(context.req.param("id"), authContext?.userId ?? null)
+      data: await services.deleteMenu(context.req.param("id"), authContext?.userId ?? null),
     });
   });
 

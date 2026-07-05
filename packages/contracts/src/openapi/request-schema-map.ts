@@ -42,5 +42,5 @@ export const requestSchemaByOperationCode: Record<string, string> = {
   "api.notifications.email.test": "SendTestEmailNotificationRequest",
   "api.scheduled-tasks.create": "CreateScheduledTaskRequest",
   "api.scheduled-tasks.update": "UpdateScheduledTaskRequest",
-  "api.import-export.export.create": "CreateExportTaskRequest"
+  "api.import-export.export.create": "CreateExportTaskRequest",
 };

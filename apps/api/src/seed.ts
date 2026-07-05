@@ -20,7 +20,7 @@ export function readInitializationSeedInput(env: SeedEnvironment) {
     adminDisplayName: env.WEB_ADMIN_SEED_ADMIN_DISPLAY_NAME ?? "Super Admin",
     adminEmail: env.WEB_ADMIN_SEED_ADMIN_EMAIL ?? "admin@example.com",
     adminPhone: env.WEB_ADMIN_SEED_ADMIN_PHONE ?? "10000000000",
-    adminPassword
+    adminPassword,
   });
 }
 
@@ -38,7 +38,7 @@ export async function runInitializationSeed(env: SeedEnvironment = process.env) 
       permissionCount: result.permissions.length,
       apiPermissionCount: result.apiPermissions.length,
       menuCount: result.menus.length,
-      routeCount: result.routes.length
+      routeCount: result.routes.length,
     };
   } finally {
     await closeSeedServices(services);

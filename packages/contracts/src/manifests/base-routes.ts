@@ -6,7 +6,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     path: "/",
     titleI18nKey: "routes.dashboard",
     menuVisible: true,
-    sortOrder: 10
+    sortOrder: 10,
   },
   {
     routeCode: "system.organizations",
@@ -14,7 +14,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.system.organizations",
     requiredPermission: "organization:view",
     menuVisible: true,
-    sortOrder: 100
+    sortOrder: 100,
   },
   {
     routeCode: "system.users",
@@ -22,7 +22,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.system.users",
     requiredPermission: "user:view",
     menuVisible: true,
-    sortOrder: 110
+    sortOrder: 110,
   },
   {
     routeCode: "system.roles",
@@ -30,7 +30,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.system.roles",
     requiredPermission: "role:view",
     menuVisible: true,
-    sortOrder: 120
+    sortOrder: 120,
   },
   {
     routeCode: "system.permissions",
@@ -38,7 +38,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.system.permissions",
     requiredPermission: "permission:view",
     menuVisible: true,
-    sortOrder: 130
+    sortOrder: 130,
   },
   {
     routeCode: "system.menus",
@@ -46,7 +46,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.system.menus",
     requiredPermission: "menu:view",
     menuVisible: true,
-    sortOrder: 140
+    sortOrder: 140,
   },
   {
     routeCode: "system.config",
@@ -54,7 +54,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.system.config",
     requiredPermission: "system-config:view",
     menuVisible: true,
-    sortOrder: 150
+    sortOrder: 150,
   },
   {
     routeCode: "system.dictionaries",
@@ -62,7 +62,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.system.dictionaries",
     requiredPermission: "dictionary:view",
     menuVisible: true,
-    sortOrder: 160
+    sortOrder: 160,
   },
   {
     routeCode: "system.i18nMessages",
@@ -70,7 +70,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.system.i18nMessages",
     requiredPermission: "i18n:view",
     menuVisible: true,
-    sortOrder: 165
+    sortOrder: 165,
   },
   {
     routeCode: "system.files",
@@ -78,7 +78,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.system.files",
     requiredPermission: "file:view",
     menuVisible: true,
-    sortOrder: 170
+    sortOrder: 170,
   },
   {
     routeCode: "notifications.announcements",
@@ -86,7 +86,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.notifications.announcements",
     requiredPermission: "announcement:view",
     menuVisible: true,
-    sortOrder: 200
+    sortOrder: 200,
   },
   {
     routeCode: "notifications.in-app",
@@ -94,7 +94,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.notifications.inApp",
     requiredPermission: "notification:view",
     menuVisible: true,
-    sortOrder: 210
+    sortOrder: 210,
   },
   {
     routeCode: "notifications.templates",
@@ -102,7 +102,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.notifications.templates",
     requiredPermission: "notification-template:view",
     menuVisible: true,
-    sortOrder: 215
+    sortOrder: 215,
   },
   {
     routeCode: "notifications.webhooks",
@@ -110,7 +110,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.notifications.webhooks",
     requiredPermission: "webhook:view",
     menuVisible: true,
-    sortOrder: 220
+    sortOrder: 220,
   },
   {
     routeCode: "operations.online-users",
@@ -118,7 +118,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.operations.onlineUsers",
     requiredPermission: "online-user:view",
     menuVisible: true,
-    sortOrder: 300
+    sortOrder: 300,
   },
   {
     routeCode: "operations.scheduler",
@@ -126,7 +126,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.operations.scheduler",
     requiredPermission: "job:view",
     menuVisible: true,
-    sortOrder: 310
+    sortOrder: 310,
   },
   {
     routeCode: "operations.import-export",
@@ -134,7 +134,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.operations.importExport",
     requiredPermission: "import-export:view",
     menuVisible: true,
-    sortOrder: 320
+    sortOrder: 320,
   },
   {
     routeCode: "logs.login",
@@ -142,7 +142,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.logs.login",
     requiredPermission: "login-log:view",
     menuVisible: true,
-    sortOrder: 400
+    sortOrder: 400,
   },
   {
     routeCode: "logs.operation",
@@ -150,7 +150,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.logs.operation",
     requiredPermission: "operation-log:view",
     menuVisible: true,
-    sortOrder: 401
+    sortOrder: 401,
   },
   {
     routeCode: "logs.access",
@@ -158,7 +158,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.logs.access",
     requiredPermission: "access-log:view",
     menuVisible: true,
-    sortOrder: 402
+    sortOrder: 402,
   },
   {
     routeCode: "logs.api",
@@ -166,7 +166,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.logs.api",
     requiredPermission: "api-log:view",
     menuVisible: true,
-    sortOrder: 403
+    sortOrder: 403,
   },
   {
     routeCode: "logs.exception",
@@ -174,7 +174,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.logs.exception",
     requiredPermission: "exception-log:view",
     menuVisible: true,
-    sortOrder: 404
+    sortOrder: 404,
   },
   {
     routeCode: "logs.security",
@@ -182,7 +182,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.logs.security",
     requiredPermission: "security-log:view",
     menuVisible: true,
-    sortOrder: 405
+    sortOrder: 405,
   },
   {
     routeCode: "logs.scheduler",
@@ -190,7 +190,7 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.logs.scheduler",
     requiredPermission: "scheduler-log:view",
     menuVisible: true,
-    sortOrder: 406
+    sortOrder: 406,
   },
   {
     routeCode: "logs.files",
@@ -198,27 +198,27 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     titleI18nKey: "routes.logs.files",
     requiredPermission: "file-log:view",
     menuVisible: true,
-    sortOrder: 407
+    sortOrder: 407,
   },
   {
     routeCode: "account.profile",
     path: "/account/profile",
     titleI18nKey: "routes.account.profile",
     menuVisible: true,
-    sortOrder: 500
+    sortOrder: 500,
   },
   {
     routeCode: "account.password",
     path: "/account/password",
     titleI18nKey: "routes.account.password",
     menuVisible: true,
-    sortOrder: 510
+    sortOrder: 510,
   },
   {
     routeCode: "account.settings",
     path: "/account/settings",
     titleI18nKey: "routes.account.settings",
     menuVisible: true,
-    sortOrder: 520
-  }
+    sortOrder: 520,
+  },
 ];

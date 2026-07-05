@@ -7,18 +7,27 @@ import {
   nullableDateTimeSchema,
   nullableIdSchema,
   nullableStringSchema,
-  softDeleteProperties
+  softDeleteProperties,
 } from "./backend-core-schema-helpers";
 
 const coreAuditProperties: Record<string, OpenApiSchema> = {
   createdAt: dateTimeSchema,
-  updatedAt: dateTimeSchema
+  updatedAt: dateTimeSchema,
 };
 
 export const backendCoreEntitySchemas: OpenApiDocument["components"]["schemas"] = {
   InitializationState: {
     type: "object",
-    required: ["id", "tenantId", "status", "initializedAt", "initializedBy", "version", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "tenantId",
+      "status",
+      "initializedAt",
+      "initializedBy",
+      "version",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
       id: idSchema,
       tenantId: nullableIdSchema,
@@ -26,13 +35,25 @@ export const backendCoreEntitySchemas: OpenApiDocument["components"]["schemas"] 
       initializedAt: nullableDateTimeSchema,
       initializedBy: nullableIdSchema,
       version: { type: "string" },
-      ...coreAuditProperties
+      ...coreAuditProperties,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   Organization: {
     type: "object",
-    required: ["id", "tenantId", "path", "level", "segment", "name", "code", "status", "isDeleted", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "tenantId",
+      "path",
+      "level",
+      "segment",
+      "name",
+      "code",
+      "status",
+      "isDeleted",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
       id: idSchema,
       tenantId: nullableIdSchema,
@@ -49,9 +70,9 @@ export const backendCoreEntitySchemas: OpenApiDocument["components"]["schemas"] 
       status: enumSchema(["enabled", "disabled"]),
       remark: nullableStringSchema,
       ...softDeleteProperties,
-      ...actorAuditProperties
+      ...actorAuditProperties,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   OrganizationTreeNode: {
     type: "object",
@@ -65,13 +86,25 @@ export const backendCoreEntitySchemas: OpenApiDocument["components"]["schemas"] 
       name: { type: "string" },
       code: { type: "string" },
       status: enumSchema(["enabled", "disabled"]),
-      children: { type: "array", items: { $ref: "#/components/schemas/OrganizationTreeNode" } }
+      children: { type: "array", items: { $ref: "#/components/schemas/OrganizationTreeNode" } },
     },
-    additionalProperties: true
+    additionalProperties: true,
   },
   User: {
     type: "object",
-    required: ["id", "tenantId", "username", "displayName", "email", "phone", "primaryOrganizationId", "status", "isDeleted", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "tenantId",
+      "username",
+      "displayName",
+      "email",
+      "phone",
+      "primaryOrganizationId",
+      "status",
+      "isDeleted",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
       id: idSchema,
       tenantId: nullableIdSchema,
@@ -93,13 +126,22 @@ export const backendCoreEntitySchemas: OpenApiDocument["components"]["schemas"] 
       lastLoginAt: nullableDateTimeSchema,
       remark: nullableStringSchema,
       ...softDeleteProperties,
-      ...actorAuditProperties
+      ...actorAuditProperties,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   AuthSession: {
     type: "object",
-    required: ["id", "tenantId", "userId", "currentOrganizationId", "status", "expiresAt", "createdAt", "lastSeenAt"],
+    required: [
+      "id",
+      "tenantId",
+      "userId",
+      "currentOrganizationId",
+      "status",
+      "expiresAt",
+      "createdAt",
+      "lastSeenAt",
+    ],
     properties: {
       id: idSchema,
       tenantId: nullableIdSchema,
@@ -111,13 +153,24 @@ export const backendCoreEntitySchemas: OpenApiDocument["components"]["schemas"] 
       expiresAt: dateTimeSchema,
       revokedAt: nullableDateTimeSchema,
       createdAt: dateTimeSchema,
-      lastSeenAt: dateTimeSchema
+      lastSeenAt: dateTimeSchema,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UserOrganizationRole: {
     type: "object",
-    required: ["id", "tenantId", "userId", "organizationId", "roleId", "isPrimary", "status", "isDeleted", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "tenantId",
+      "userId",
+      "organizationId",
+      "roleId",
+      "isPrimary",
+      "status",
+      "isDeleted",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
       id: idSchema,
       tenantId: nullableIdSchema,
@@ -127,13 +180,23 @@ export const backendCoreEntitySchemas: OpenApiDocument["components"]["schemas"] 
       isPrimary: { type: "boolean" },
       status: enumSchema(["enabled", "disabled"]),
       ...softDeleteProperties,
-      ...actorAuditProperties
+      ...actorAuditProperties,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   Role: {
     type: "object",
-    required: ["id", "tenantId", "name", "code", "isBuiltin", "status", "isDeleted", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "tenantId",
+      "name",
+      "code",
+      "isBuiltin",
+      "status",
+      "isDeleted",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
       id: idSchema,
       tenantId: nullableIdSchema,
@@ -145,13 +208,27 @@ export const backendCoreEntitySchemas: OpenApiDocument["components"]["schemas"] 
       status: enumSchema(["enabled", "disabled"]),
       remark: nullableStringSchema,
       ...softDeleteProperties,
-      ...actorAuditProperties
+      ...actorAuditProperties,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   Permission: {
     type: "object",
-    required: ["id", "tenantId", "code", "name", "permissionType", "resource", "action", "module", "source", "manifestHash", "status", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "tenantId",
+      "code",
+      "name",
+      "permissionType",
+      "resource",
+      "action",
+      "module",
+      "source",
+      "manifestHash",
+      "status",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
       id: idSchema,
       tenantId: nullableIdSchema,
@@ -165,13 +242,25 @@ export const backendCoreEntitySchemas: OpenApiDocument["components"]["schemas"] 
       source: { type: "string" },
       manifestHash: { type: "string" },
       status: enumSchema(["enabled", "disabled"]),
-      ...coreAuditProperties
+      ...coreAuditProperties,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   ApiPermission: {
     type: "object",
-    required: ["id", "tenantId", "method", "path", "code", "module", "logLevel", "status", "public", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "tenantId",
+      "method",
+      "path",
+      "code",
+      "module",
+      "logLevel",
+      "status",
+      "public",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
       id: idSchema,
       tenantId: nullableIdSchema,
@@ -184,9 +273,9 @@ export const backendCoreEntitySchemas: OpenApiDocument["components"]["schemas"] 
       logLevel: enumSchema(["none", "basic", "request", "request_response"]),
       status: enumSchema(["enabled", "disabled"]),
       public: { type: "boolean" },
-      ...coreAuditProperties
+      ...coreAuditProperties,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   PermissionTreeNode: {
     type: "object",
@@ -199,8 +288,8 @@ export const backendCoreEntitySchemas: OpenApiDocument["components"]["schemas"] 
       resource: { type: "string" },
       action: { type: "string" },
       permissions: { type: "array", items: { $ref: "#/components/schemas/Permission" } },
-      children: { type: "array", items: { $ref: "#/components/schemas/PermissionTreeNode" } }
+      children: { type: "array", items: { $ref: "#/components/schemas/PermissionTreeNode" } },
     },
-    additionalProperties: false
-  }
+    additionalProperties: false,
+  },
 };

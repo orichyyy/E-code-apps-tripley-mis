@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   createInMemoryJobSchedulerAdapter,
-  createInMemoryQueueAdapter
+  createInMemoryQueueAdapter,
 } from "@web-admin-base/adapters";
 import { inAppNotificationDispatchJobType } from "@web-admin-base/contracts";
 import { createWorkerRuntime } from "../src/runners/worker-runtime";
@@ -12,7 +12,7 @@ describe("worker runtime", () => {
   it("uses the configured worker name", () => {
     const runtime = createWorkerRuntime({
       nodeEnv: "test",
-      workerName: "test-worker"
+      workerName: "test-worker",
     });
 
     expect(runtime.name).toBe("test-worker");
@@ -26,7 +26,7 @@ describe("worker runtime", () => {
     const runtime = createWorkerRuntime(
       {
         nodeEnv: "test",
-        workerName: "test-worker"
+        workerName: "test-worker",
       },
       {
         queue,
@@ -37,20 +37,20 @@ describe("worker runtime", () => {
             jobType: "log.write",
             handler: async (job) => {
               handledJobs.push(job.id);
-            }
-          }
+            },
+          },
         ],
         scheduledTasks: [
           {
             definition: {
               code: "cleanup",
               cronExpression: "0 0 * * *",
-              enabled: true
+              enabled: true,
             },
-            handler: async () => undefined
-          }
-        ]
-      }
+            handler: async () => undefined,
+          },
+        ],
+      },
     );
 
     await runtime.start();
@@ -65,17 +65,17 @@ describe("worker runtime", () => {
     const runtime = createWorkerRuntime(
       {
         nodeEnv: "test",
-        workerName: "durable-worker"
+        workerName: "durable-worker",
       },
       {
         durableQueue: {
-          processReady: async () => 2
+          processReady: async () => 2,
         },
         durableScheduler: {
-          processDue: async () => 1
+          processDue: async () => 1,
         },
-        log: () => undefined
-      }
+        log: () => undefined,
+      },
     );
 
     await expect(runtime.runOnce()).resolves.toEqual({ queueJobs: 2, scheduledJobs: 1 });
@@ -87,7 +87,7 @@ describe("worker runtime", () => {
     const runtime = createWorkerRuntime(
       {
         nodeEnv: "test",
-        workerName: "notification-worker"
+        workerName: "notification-worker",
       },
       {
         queue,
@@ -95,9 +95,9 @@ describe("worker runtime", () => {
         queueTasks: [
           createInAppNotificationDispatchTask(async (payload) => {
             handledTitles.push(payload.title);
-          })
-        ]
-      }
+          }),
+        ],
+      },
     );
 
     await runtime.start();
@@ -107,7 +107,7 @@ describe("worker runtime", () => {
       body: "Body",
       metadata: {},
       createdBy: null,
-      enqueuedAt: new Date().toISOString()
+      enqueuedAt: new Date().toISOString(),
     });
     await runtime.stop();
 

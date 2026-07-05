@@ -28,12 +28,12 @@ describe("manifest routes", () => {
         adminDisplayName: "Super Admin",
         adminEmail: "admin@example.com",
         adminPhone: "10000000000",
-        adminPassword: "password1"
-      })
+        adminPassword: "password1",
+      }),
     });
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "admin", password: "password1" })
+      body: JSON.stringify({ username: "admin", password: "password1" }),
     });
     const login = await loginResponse.json();
     const headers = { authorization: `Bearer ${login.data.accessToken}` };
@@ -44,21 +44,21 @@ describe("manifest routes", () => {
     await expect(permissions.json()).resolves.toMatchObject({
       data: expect.arrayContaining([expect.objectContaining({ code: "user:view" })]),
       apiPermissions: expect.arrayContaining([
-        expect.objectContaining({ code: "api.auth.login", path: "/api/auth/login" })
-      ])
+        expect.objectContaining({ code: "api.auth.login", path: "/api/auth/login" }),
+      ]),
     });
     await expect(routes.json()).resolves.toMatchObject({
-      data: expect.arrayContaining([expect.objectContaining({ routeCode: "system.users" })])
+      data: expect.arrayContaining([expect.objectContaining({ routeCode: "system.users" })]),
     });
     await expect(menus.json()).resolves.toMatchObject({
       data: expect.arrayContaining([
         expect.objectContaining({
           code: "system",
           children: expect.arrayContaining([
-            expect.objectContaining({ code: "system.users", children: [] })
-          ])
-        })
-      ])
+            expect.objectContaining({ code: "system.users", children: [] }),
+          ]),
+        }),
+      ]),
     });
   });
 });

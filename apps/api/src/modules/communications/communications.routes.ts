@@ -2,7 +2,7 @@ import {
   createAnnouncementRequestSchema,
   createWebhookSubscriptionRequestSchema,
   updateAnnouncementRequestSchema,
-  updateWebhookSubscriptionRequestSchema
+  updateWebhookSubscriptionRequestSchema,
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
@@ -21,24 +21,35 @@ export function createCommunicationsRoutes(services: CommunicationsServices) {
     })
     .post("/announcements", async (context) => {
       const input = createAnnouncementRequestSchema.parse(await context.req.json());
-      return context.json({ data: await services.createAnnouncement(input, actorId(context)) }, 201);
+      return context.json(
+        { data: await services.createAnnouncement(input, actorId(context)) },
+        201,
+      );
     })
     .patch("/announcements/:id", async (context) => {
       const input = updateAnnouncementRequestSchema.parse(await context.req.json());
       return context.json({
-        data: await services.updateAnnouncement(context.req.param("id"), input, actorId(context))
+        data: await services.updateAnnouncement(context.req.param("id"), input, actorId(context)),
       });
     })
     .post("/announcements/:id/publish", async (context) => {
       await assertEmptyJsonBody(context.req.raw);
       return context.json({
-        data: await services.setAnnouncementPublished(context.req.param("id"), true, actorId(context))
+        data: await services.setAnnouncementPublished(
+          context.req.param("id"),
+          true,
+          actorId(context),
+        ),
       });
     })
     .post("/announcements/:id/unpublish", async (context) => {
       await assertEmptyJsonBody(context.req.raw);
       return context.json({
-        data: await services.setAnnouncementPublished(context.req.param("id"), false, actorId(context))
+        data: await services.setAnnouncementPublished(
+          context.req.param("id"),
+          false,
+          actorId(context),
+        ),
       });
     })
     .get("/webhooks", async (context) => {
@@ -50,10 +61,14 @@ export function createCommunicationsRoutes(services: CommunicationsServices) {
     })
     .patch("/webhooks/:id", async (context) => {
       const input = updateWebhookSubscriptionRequestSchema.parse(await context.req.json());
-      return context.json({ data: await services.updateWebhook(context.req.param("id"), input, actorId(context)) });
+      return context.json({
+        data: await services.updateWebhook(context.req.param("id"), input, actorId(context)),
+      });
     });
 }
 
-function actorId(context: { get: (key: "authContext") => AuthContextVariables["authContext"] }): string | null {
+function actorId(context: {
+  get: (key: "authContext") => AuthContextVariables["authContext"];
+}): string | null {
   return context.get("authContext")?.userId ?? null;
 }

@@ -23,7 +23,7 @@ export function AnnouncementTable({
   onEdit,
   onPublish,
   onUnpublish,
-  rows
+  rows,
 }: AnnouncementTableProps) {
   if (isLoading) {
     return (
@@ -33,9 +33,12 @@ export function AnnouncementTable({
       </div>
     );
   }
-  if (isError) return <div className="p-8 text-sm text-destructive">The data could not be loaded.</div>;
+  if (isError)
+    return <div className="p-8 text-sm text-destructive">The data could not be loaded.</div>;
   if (rows.length === 0) {
-    return <div className="p-8 text-sm text-muted-foreground">No records match the current filters.</div>;
+    return (
+      <div className="p-8 text-sm text-muted-foreground">No records match the current filters.</div>
+    );
   }
 
   return (
@@ -64,8 +67,12 @@ export function AnnouncementTable({
               <td className="border-b px-4 py-3">
                 <AnnouncementStatusBadge status={record.status} />
               </td>
-              <td className="max-w-96 truncate border-b px-4 py-3 text-muted-foreground">{record.content}</td>
-              <td className="border-b px-4 py-3 text-muted-foreground">{record.publishedAt ?? "-"}</td>
+              <td className="max-w-96 truncate border-b px-4 py-3 text-muted-foreground">
+                {record.content}
+              </td>
+              <td className="border-b px-4 py-3 text-muted-foreground">
+                {record.publishedAt ?? "-"}
+              </td>
               <td className="border-b px-4 py-3 text-muted-foreground">{record.updatedAt}</td>
               <td className="border-b px-4 py-3">
                 <AnnouncementRowActions
@@ -91,7 +98,7 @@ function AnnouncementRowActions({
   onEdit,
   onPublish,
   onUnpublish,
-  record
+  record,
 }: {
   canPublish: boolean;
   canUpdate: boolean;
@@ -100,7 +107,8 @@ function AnnouncementRowActions({
   onUnpublish: (record: Announcement) => void;
   record: Announcement;
 }) {
-  if (!canUpdate && !canPublish) return <span className="text-xs text-muted-foreground">View only</span>;
+  if (!canUpdate && !canPublish)
+    return <span className="text-xs text-muted-foreground">View only</span>;
 
   return (
     <div className="flex gap-2">

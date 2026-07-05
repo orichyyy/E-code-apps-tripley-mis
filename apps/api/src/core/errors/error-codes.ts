@@ -15,7 +15,7 @@ const errorDefinitions = {
   BUSINESS_ORG_SEGMENT_RANGE_EXHAUSTED: [
     "Organization sibling segment range is exhausted",
     409,
-    "business"
+    "business",
   ],
   BUSINESS_ROLE_DISABLED: ["Role is disabled", 409, "business"],
   BUSINESS_SYSTEM_ALREADY_INITIALIZED: ["System is already initialized", 409, "business"],
@@ -44,7 +44,7 @@ const errorDefinitions = {
   VALIDATION_REQUIRED_FIELD: ["Required field is missing", 400, "validation"],
   PASSWORD_MIN_LENGTH: ["Password is too short", 400, "validation"],
   PASSWORD_REQUIRES_LETTER: ["Password must contain a letter", 400, "validation"],
-  PASSWORD_REQUIRES_NUMBER: ["Password must contain a number", 400, "validation"]
+  PASSWORD_REQUIRES_NUMBER: ["Password must contain a number", 400, "validation"],
 } as const satisfies Record<string, readonly [string, number, string]>;
 
 export type KnownErrorCode = keyof typeof errorDefinitions;
@@ -63,7 +63,7 @@ export function createKnownError(code: KnownErrorCode, details?: unknown): AppEr
     message,
     status,
     category: category as AppError["category"],
-    details
+    details,
   });
 }
 
@@ -76,6 +76,6 @@ export function listErrorCodeDefinitions(): ErrorCodeDefinition[] {
     code: code as KnownErrorCode,
     message,
     status,
-    category: category as AppError["category"]
+    category: category as AppError["category"],
   }));
 }

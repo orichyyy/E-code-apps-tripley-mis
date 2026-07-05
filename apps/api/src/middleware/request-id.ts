@@ -19,7 +19,9 @@ export const requestIdMiddleware: MiddlewareHandler<{
 }> = async (context: Context, next: Next) => {
   const incomingRequestId = context.req.header(requestIdHeader);
   const requestId =
-    incomingRequestId && isValidRequestId(incomingRequestId) ? incomingRequestId : createRequestId();
+    incomingRequestId && isValidRequestId(incomingRequestId)
+      ? incomingRequestId
+      : createRequestId();
 
   context.set("requestId", requestId);
   context.header(requestIdHeader, requestId);

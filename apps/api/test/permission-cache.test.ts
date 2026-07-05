@@ -10,11 +10,11 @@ describe("permission cache", () => {
     await cache.set({
       userId: "1",
       organizationId: "2",
-      permissionCodes: ["user:view"]
+      permissionCodes: ["user:view"],
     });
 
     await expect(cache.get("1", "2")).resolves.toMatchObject({
-      permissionCodes: ["user:view"]
+      permissionCodes: ["user:view"],
     });
 
     await cache.invalidate("1", "2");

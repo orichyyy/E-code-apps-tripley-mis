@@ -1,7 +1,7 @@
 import {
   updateOwnAvatarRequestSchema,
   updateOwnPreferencesRequestSchema,
-  updateOwnProfileRequestSchema
+  updateOwnProfileRequestSchema,
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 

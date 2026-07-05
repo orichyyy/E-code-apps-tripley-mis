@@ -8,8 +8,8 @@ describe("api health route", () => {
     const app = createApp();
     const response = await app.request("/api/health", {
       headers: {
-        "x-request-id": "test-request-123"
-      }
+        "x-request-id": "test-request-123",
+      },
     });
     const body = await response.json();
 
@@ -18,7 +18,7 @@ describe("api health route", () => {
     expect(body).toMatchObject({
       status: "ok",
       service: "api",
-      requestId: "test-request-123"
+      requestId: "test-request-123",
     });
   });
 
@@ -26,8 +26,8 @@ describe("api health route", () => {
     const app = createApp();
     const response = await app.request("/api/metrics", {
       headers: {
-        "x-request-id": "metrics-request-123"
-      }
+        "x-request-id": "metrics-request-123",
+      },
     });
     const body = await response.json();
 
@@ -37,8 +37,8 @@ describe("api health route", () => {
       data: {
         status: "reserved",
         service: "api",
-        requestId: "metrics-request-123"
-      }
+        requestId: "metrics-request-123",
+      },
     });
   });
 
@@ -51,13 +51,13 @@ describe("api health route", () => {
     expect(body.openapi).toBe("3.1.0");
     const operationCount = Object.values(body.paths).reduce(
       (count: number, methods) => count + Object.keys(methods as object).length,
-      0
+      0,
     );
 
     expect(operationCount).toBe(baseApiPermissionManifest.length);
     expect(body.paths["/auth/login"].post).toMatchObject({
       "x-permission-code": "api.auth.login",
-      "x-public": true
+      "x-public": true,
     });
   });
 
@@ -68,12 +68,12 @@ describe("api health route", () => {
       structuredLogSink: {
         write(entry) {
           entries.push(entry);
-        }
-      }
+        },
+      },
     });
 
     const response = await app.request("/api/health", {
-      headers: { "x-request-id": "log-request-123" }
+      headers: { "x-request-id": "log-request-123" },
     });
 
     expect(response.status).toBe(200);
@@ -83,8 +83,8 @@ describe("api health route", () => {
         requestId: "log-request-123",
         method: "GET",
         path: "/api/health",
-        status: 200
-      })
+        status: 200,
+      }),
     );
   });
 });

@@ -17,6 +17,6 @@ export function createAlertIntegrationPlaceholder(): AlertIntegration {
   return {
     async notify() {
       // Reserved extension point for production alert integrations.
-    }
+    },
   };
 }

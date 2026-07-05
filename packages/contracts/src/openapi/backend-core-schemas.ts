@@ -4,5 +4,5 @@ import { backendCoreResponseSchemas } from "./backend-core-response-schemas";
 
 export const backendCoreComponentSchemas: OpenApiDocument["components"]["schemas"] = {
   ...backendCoreEntitySchemas,
-  ...backendCoreResponseSchemas
+  ...backendCoreResponseSchemas,
 };

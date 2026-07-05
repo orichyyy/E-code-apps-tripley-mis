@@ -12,7 +12,11 @@ export function InAppNotificationStatusBadge({ status }: { status: InAppNotifica
           ? "bg-destructive/10 text-destructive"
           : "bg-muted text-muted-foreground";
 
-  return <span className={`inline-flex rounded-md px-2 py-1 text-xs font-medium ${className}`}>{status}</span>;
+  return (
+    <span className={`inline-flex rounded-md px-2 py-1 text-xs font-medium ${className}`}>
+      {status}
+    </span>
+  );
 }
 
 export function InAppNotificationSidePanel() {
@@ -25,8 +29,8 @@ export function InAppNotificationSidePanel() {
         <div>
           <h3 className="font-semibold">Notification boundary</h3>
           <p className="mt-2 text-muted-foreground">
-            This page manages the current user's durable in-app notification states only. Message creation and delivery
-            fan-out remain backend infrastructure concerns.
+            This page manages the current user's durable in-app notification states only. Message
+            creation and delivery fan-out remain backend infrastructure concerns.
           </p>
         </div>
       </div>

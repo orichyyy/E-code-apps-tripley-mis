@@ -10,33 +10,33 @@ export const initializationSetupRequestSchema = z
     adminDisplayName: z.string().min(1),
     adminEmail: z.string().email(),
     adminPhone: z.string().min(1),
-    adminPassword: z.string().min(1)
+    adminPassword: z.string().min(1),
   })
   .strict();
 
 export const loginRequestSchema = z
   .object({
     username: z.string().min(1),
-    password: z.string().min(1)
+    password: z.string().min(1),
   })
   .strict();
 
 export const logoutRequestSchema = z
   .object({
-    sessionId: integerIdStringSchema.optional()
+    sessionId: integerIdStringSchema.optional(),
   })
   .strict();
 
 export const changePasswordRequestSchema = z
   .object({
     oldPassword: z.string().min(1),
-    newPassword: z.string().min(1)
+    newPassword: z.string().min(1),
   })
   .strict();
 
 export const switchCurrentOrganizationRequestSchema = z
   .object({
-    organizationId: integerIdStringSchema
+    organizationId: integerIdStringSchema,
   })
   .strict();
 
@@ -50,7 +50,7 @@ export const createOrganizationRequestSchema = z
     email: z.string().email().optional(),
     address: z.string().min(1).optional(),
     sortOrder: z.number().int().optional(),
-    remark: z.string().optional()
+    remark: z.string().optional(),
   })
   .strict();
 
@@ -63,13 +63,13 @@ export const updateOrganizationRequestSchema = z
     email: z.string().email().nullable().optional(),
     address: z.string().min(1).nullable().optional(),
     sortOrder: z.number().int().optional(),
-    remark: z.string().nullable().optional()
+    remark: z.string().nullable().optional(),
   })
   .strict();
 
 export const updateOrganizationDepthConfigRequestSchema = z
   .object({
-    maxDepth: z.number().int().min(1).max(8)
+    maxDepth: z.number().int().min(1).max(8),
   })
   .strict();
 
@@ -84,7 +84,7 @@ export const createUserRequestSchema = z
     employeeNumber: z.string().min(1).optional(),
     password: z.string().min(1),
     primaryOrganizationId: integerIdStringSchema,
-    roleId: integerIdStringSchema
+    roleId: integerIdStringSchema,
   })
   .strict();
 
@@ -98,7 +98,7 @@ export const updateUserRequestSchema = z
     gender: z.string().min(1).nullable().optional(),
     employeeNumber: z.string().min(1).nullable().optional(),
     primaryOrganizationId: integerIdStringSchema.optional(),
-    remark: z.string().nullable().optional()
+    remark: z.string().nullable().optional(),
   })
   .strict();
 
@@ -113,7 +113,7 @@ export const updateOwnProfileRequestSchema = z
     phone: z.string().min(1).optional(),
     avatarFileId: integerIdStringSchema.nullable().optional(),
     gender: z.string().min(1).nullable().optional(),
-    employeeNumber: z.string().min(1).nullable().optional()
+    employeeNumber: z.string().min(1).nullable().optional(),
   })
   .strict();
 
@@ -122,26 +122,26 @@ export const updateOwnPreferencesRequestSchema = z
     language: userPreferenceLanguageSchema.optional(),
     themeMode: userPreferenceThemeModeSchema.optional(),
     themeColor: userPreferenceThemeColorSchema.optional(),
-    pageTabsEnabled: z.boolean().optional()
+    pageTabsEnabled: z.boolean().optional(),
   })
   .strict();
 
 export const updateOwnAvatarRequestSchema = z
   .object({
-    avatarFileId: integerIdStringSchema.nullable()
+    avatarFileId: integerIdStringSchema.nullable(),
   })
   .strict();
 
 export const resetPasswordRequestSchema = z
   .object({
-    password: z.string().min(1)
+    password: z.string().min(1),
   })
   .strict();
 
 export const assignUserOrganizationRoleRequestSchema = z
   .object({
     organizationId: integerIdStringSchema,
-    roleId: integerIdStringSchema
+    roleId: integerIdStringSchema,
   })
   .strict();
 
@@ -150,7 +150,7 @@ export const createRoleRequestSchema = z
     name: z.string().min(1),
     code: z.string().min(1),
     description: z.string().optional(),
-    remark: z.string().optional()
+    remark: z.string().optional(),
   })
   .strict();
 
@@ -159,13 +159,13 @@ export const updateRoleRequestSchema = z
     name: z.string().min(1).optional(),
     code: z.string().min(1).optional(),
     description: z.string().nullable().optional(),
-    remark: z.string().nullable().optional()
+    remark: z.string().nullable().optional(),
   })
   .strict();
 
 export const updateRolePermissionsRequestSchema = z
   .object({
-    permissionCodes: z.array(z.string().min(1))
+    permissionCodes: z.array(z.string().min(1)),
   })
   .strict();
 
@@ -180,10 +180,10 @@ export const updateRoleDataPermissionsRequestSchema = z
         .object({
           permissionCode: z.string().min(1),
           effect: dataPermissionEffectSchema.default("allow"),
-          rule: z.record(z.string(), z.unknown())
+          rule: z.record(z.string(), z.unknown()),
         })
-        .strict()
-    )
+        .strict(),
+    ),
   })
   .strict();
 
@@ -194,10 +194,10 @@ export const updateRoleFieldPermissionsRequestSchema = z
         .object({
           resource: z.string().min(1),
           field: z.string().min(1),
-          effect: fieldPermissionEffectSchema
+          effect: fieldPermissionEffectSchema,
         })
-        .strict()
-    )
+        .strict(),
+    ),
   })
   .strict();
 
@@ -207,10 +207,10 @@ export const updateUserPermissionOverridesRequestSchema = z
       z
         .object({
           permissionCode: z.string().min(1),
-          effect: dataPermissionEffectSchema
+          effect: dataPermissionEffectSchema,
         })
-        .strict()
-    )
+        .strict(),
+    ),
   })
   .strict();
 
@@ -225,7 +225,7 @@ export const createMenuRequestSchema = z
     icon: z.string().min(1).optional(),
     sortOrder: z.number().int().optional(),
     visible: z.boolean().optional(),
-    status: z.enum(["enabled", "disabled"]).optional()
+    status: z.enum(["enabled", "disabled"]).optional(),
   })
   .strict();
 
@@ -240,13 +240,13 @@ export const updateMenuRequestSchema = z
     icon: z.string().min(1).nullable().optional(),
     sortOrder: z.number().int().optional(),
     visible: z.boolean().optional(),
-    status: z.enum(["enabled", "disabled"]).optional()
+    status: z.enum(["enabled", "disabled"]).optional(),
   })
   .strict();
 
 export const updateMenuApiBindingsRequestSchema = z
   .object({
-    apiPermissionIds: z.array(integerIdStringSchema)
+    apiPermissionIds: z.array(integerIdStringSchema),
   })
   .strict();
 

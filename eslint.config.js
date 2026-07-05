@@ -11,8 +11,8 @@ export default [
       "**/coverage/**",
       "**/node_modules/**",
       "pnpm-lock.yaml",
-      "apps/web/src/routeTree.gen.ts"
-    ]
+      "apps/web/src/routeTree.gen.ts",
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -21,22 +21,22 @@ export default [
     languageOptions: {
       globals: {
         ...globals.browser,
-        ...globals.node
-      }
+        ...globals.node,
+      },
     },
     rules: {
-      "@typescript-eslint/no-empty-object-type": "off"
-    }
+      "@typescript-eslint/no-empty-object-type": "off",
+    },
   },
   {
     files: ["apps/web/**/*.{ts,tsx}"],
     plugins: {
       "react-hooks": reactHooks,
-      "react-refresh": reactRefresh
+      "react-refresh": reactRefresh,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      "react-refresh/only-export-components": "off"
-    }
-  }
+      "react-refresh/only-export-components": "off",
+    },
+  },
 ];

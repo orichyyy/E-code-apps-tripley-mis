@@ -18,6 +18,6 @@ export function createInProcessEventBusAdapter(): EventBusAdapter {
       const existing = handlers.get(eventType) ?? [];
       existing.push(handler as Handler);
       handlers.set(eventType, existing);
-    }
+    },
   };
 }

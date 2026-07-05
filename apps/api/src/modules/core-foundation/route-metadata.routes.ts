@@ -16,15 +16,15 @@ export function createRouteMetadataRoutes(services: BackendCoreServices) {
       path: context.req.query("path"),
       requiredPermission: context.req.query("requiredPermission"),
       routeCode: context.req.query("routeCode"),
-      status: context.req.query("status") as RouteMetadataListFilters["status"] | undefined
+      status: context.req.query("status") as RouteMetadataListFilters["status"] | undefined,
     });
     return context.json({
       data: hasPaginationQuery(context)
         ? pageItems(routeMetadata, {
             page: context.req.query("page"),
-            pageSize: context.req.query("pageSize")
+            pageSize: context.req.query("pageSize"),
           })
-        : routeMetadata
+        : routeMetadata,
     });
   });
 
@@ -36,7 +36,9 @@ export function createRouteMetadataRoutes(services: BackendCoreServices) {
   return routes;
 }
 
-function hasPaginationQuery(context: { req: { query: (name: string) => string | undefined } }): boolean {
+function hasPaginationQuery(context: {
+  req: { query: (name: string) => string | undefined };
+}): boolean {
   return context.req.query("page") !== undefined || context.req.query("pageSize") !== undefined;
 }
 

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createScheduledTaskRequestSchema,
   updateScheduledTaskRequestSchema,
-  type CreateScheduledTaskRequest
+  type CreateScheduledTaskRequest,
 } from "@web-admin-base/contracts";
 import { AlertCircle, Loader2, Play, Plus, RefreshCw, Search } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -19,7 +19,7 @@ import {
   runScheduledTask,
   setScheduledTaskStatus,
   updateScheduledTask,
-  type ScheduledTask
+  type ScheduledTask,
 } from "./operations-api";
 import { SchedulerForm } from "./scheduler-form";
 import { EmptyState, ErrorState, StatusBadge } from "./status-badge";
@@ -38,7 +38,7 @@ export function SchedulerPage({ route }: { route: WebAdminRouteMetadata }) {
   const query = useQuery({
     enabled: canView,
     queryKey: ["scheduled-tasks"],
-    queryFn: fetchScheduledTasks
+    queryFn: fetchScheduledTasks,
   });
   const invalidate = async () => {
     await queryClient.invalidateQueries({ queryKey: ["scheduled-tasks"] });
@@ -48,7 +48,7 @@ export function SchedulerPage({ route }: { route: WebAdminRouteMetadata }) {
     onSuccess: async () => {
       setCreating(false);
       await invalidate();
-    }
+    },
   });
   const updateMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: CreateScheduledTaskRequest }) =>
@@ -56,25 +56,32 @@ export function SchedulerPage({ route }: { route: WebAdminRouteMetadata }) {
     onSuccess: async () => {
       setEditing(null);
       await invalidate();
-    }
+    },
   });
   const statusMutation = useMutation({
-    mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) => setScheduledTaskStatus(id, enabled),
-    onSuccess: invalidate
+    mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
+      setScheduledTaskStatus(id, enabled),
+    onSuccess: invalidate,
   });
   const runMutation = useMutation({
     mutationFn: runScheduledTask,
-    onSuccess: invalidate
+    onSuccess: invalidate,
   });
   const rows = useMemo(
     () =>
       (query.data ?? []).filter((record) =>
-        [record.code, record.handlerType, record.cronExpression, record.status, record.lastError ?? ""]
+        [
+          record.code,
+          record.handlerType,
+          record.cronExpression,
+          record.status,
+          record.lastError ?? "",
+        ]
           .join(" ")
           .toLowerCase()
-          .includes(keyword.toLowerCase())
+          .includes(keyword.toLowerCase()),
       ),
-    [keyword, query.data]
+    [keyword, query.data],
   );
 
   if (!canView) return <PermissionDenied language={language} />;
@@ -136,7 +143,9 @@ export function SchedulerPage({ route }: { route: WebAdminRouteMetadata }) {
             busy={createMutation.isPending}
             mode="create"
             onCancel={() => setCreating(false)}
-            onSubmit={(input) => createMutation.mutate(createScheduledTaskRequestSchema.parse(input))}
+            onSubmit={(input) =>
+              createMutation.mutate(createScheduledTaskRequestSchema.parse(input))
+            }
           />
         ) : null}
         {editing ? (
@@ -150,7 +159,10 @@ export function SchedulerPage({ route }: { route: WebAdminRouteMetadata }) {
           />
         ) : null}
         {!creating && !editing ? <SchedulerHelp /> : null}
-        {createMutation.isError || updateMutation.isError || statusMutation.isError || runMutation.isError ? (
+        {createMutation.isError ||
+        updateMutation.isError ||
+        statusMutation.isError ||
+        runMutation.isError ? (
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
             The task mutation failed.
           </div>
@@ -168,7 +180,7 @@ function ScheduledTaskTable({
   onEdit,
   onRun,
   onStatus,
-  rows
+  rows,
 }: {
   canRun: boolean;
   canUpdate: boolean;
@@ -220,7 +232,9 @@ function ScheduledTaskTable({
               <td className="border-b px-4 py-3">
                 <StatusBadge>{record.status}</StatusBadge>
               </td>
-              <td className="border-b px-4 py-3 text-muted-foreground">{record.updatedAt || "-"}</td>
+              <td className="border-b px-4 py-3 text-muted-foreground">
+                {record.updatedAt || "-"}
+              </td>
               <td className="border-b px-4 py-3">
                 <div className="flex flex-wrap gap-2">
                   {canUpdate ? (
@@ -229,7 +243,11 @@ function ScheduledTaskTable({
                     </Button>
                   ) : null}
                   {canUpdate ? (
-                    <Button onClick={() => onStatus(record, !record.enabled)} size="sm" variant="ghost">
+                    <Button
+                      onClick={() => onStatus(record, !record.enabled)}
+                      size="sm"
+                      variant="ghost"
+                    >
                       {record.enabled ? "Disable" : "Enable"}
                     </Button>
                   ) : null}
@@ -254,7 +272,8 @@ function SchedulerHelp() {
     <section className="rounded-lg border bg-card p-4 text-sm shadow-sm">
       <h3 className="font-semibold">Worker execution boundary</h3>
       <p className="mt-2 text-muted-foreground">
-        Manual runs enqueue a scheduler job for the worker. Execution details appear in scheduler logs after the worker processes the task.
+        Manual runs enqueue a scheduler job for the worker. Execution details appear in scheduler
+        logs after the worker processes the task.
       </p>
     </section>
   );
@@ -264,7 +283,9 @@ function PermissionDenied({ language }: { language: "en" | "zh" }) {
   return (
     <section className="rounded-lg border bg-card p-8 text-center">
       <AlertCircle className="mx-auto size-8 text-destructive" aria-hidden="true" />
-      <h2 className="mt-3 text-base font-semibold">{translate(language, "common.permissionDenied")}</h2>
+      <h2 className="mt-3 text-base font-semibold">
+        {translate(language, "common.permissionDenied")}
+      </h2>
     </section>
   );
 }

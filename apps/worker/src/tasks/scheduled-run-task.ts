@@ -14,7 +14,7 @@ type ScheduledRunPayload = {
 
 export function createScheduledRunQueueTask(
   executor: DatabaseAdapterExecutor,
-  handlers: ScheduledTaskHandlerRegistry
+  handlers: ScheduledTaskHandlerRegistry,
 ) {
   return {
     jobType: scheduledRunJobType,
@@ -34,20 +34,20 @@ export function createScheduledRunQueueTask(
         taskCode: scheduledRunJobType,
         metadata: {
           scheduledTaskId: payload.scheduledTaskId ?? null,
-          handlerType
-        }
+          handlerType,
+        },
       });
-    }
+    },
   };
 }
 
 async function findScheduledTask(
   executor: DatabaseAdapterExecutor,
-  id: string
+  id: string,
 ): Promise<{ id: string; handlerType: string } | null> {
   const rows = await executor.all(
     `SELECT id, handler_type FROM scheduled_jobs WHERE id = ${p(executor, 1)} LIMIT 1`,
-    [id]
+    [id],
   );
   return rows[0] ? { id: String(rows[0].id), handlerType: String(rows[0].handler_type) } : null;
 }

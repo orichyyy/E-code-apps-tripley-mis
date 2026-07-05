@@ -15,13 +15,13 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     titleI18nKey: "routes.dashboard",
     path: "/",
     routeCode: "dashboard",
-    sortOrder: 10
+    sortOrder: 10,
   },
   {
     code: "system",
     titleI18nKey: "routes.system",
     path: "/system",
-    sortOrder: 100
+    sortOrder: 100,
   },
   {
     code: "system.organizations",
@@ -30,7 +30,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "system",
     requiredPermission: "organization:view",
     routeCode: "system.organizations",
-    sortOrder: 100
+    sortOrder: 100,
   },
   {
     code: "system.users",
@@ -39,7 +39,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "system",
     requiredPermission: "user:view",
     routeCode: "system.users",
-    sortOrder: 110
+    sortOrder: 110,
   },
   {
     code: "system.roles",
@@ -48,7 +48,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "system",
     requiredPermission: "role:view",
     routeCode: "system.roles",
-    sortOrder: 120
+    sortOrder: 120,
   },
   {
     code: "system.permissions",
@@ -57,7 +57,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "system",
     requiredPermission: "permission:view",
     routeCode: "system.permissions",
-    sortOrder: 130
+    sortOrder: 130,
   },
   {
     code: "system.menus",
@@ -66,7 +66,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "system",
     requiredPermission: "menu:view",
     routeCode: "system.menus",
-    sortOrder: 140
+    sortOrder: 140,
   },
   {
     code: "system.config",
@@ -75,7 +75,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "system",
     requiredPermission: "system-config:view",
     routeCode: "system.config",
-    sortOrder: 150
+    sortOrder: 150,
   },
   {
     code: "system.dictionaries",
@@ -84,7 +84,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "system",
     requiredPermission: "dictionary:view",
     routeCode: "system.dictionaries",
-    sortOrder: 160
+    sortOrder: 160,
   },
   {
     code: "system.i18nMessages",
@@ -93,7 +93,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "system",
     requiredPermission: "i18n:view",
     routeCode: "system.i18nMessages",
-    sortOrder: 165
+    sortOrder: 165,
   },
   {
     code: "system.files",
@@ -102,13 +102,13 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "system",
     requiredPermission: "file:view",
     routeCode: "system.files",
-    sortOrder: 170
+    sortOrder: 170,
   },
   {
     code: "notifications",
     titleI18nKey: "nav.notifications",
     path: "/notifications",
-    sortOrder: 200
+    sortOrder: 200,
   },
   {
     code: "notifications.announcements",
@@ -117,7 +117,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "notifications",
     requiredPermission: "announcement:view",
     routeCode: "notifications.announcements",
-    sortOrder: 200
+    sortOrder: 200,
   },
   {
     code: "notifications.in-app",
@@ -126,7 +126,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "notifications",
     requiredPermission: "notification:view",
     routeCode: "notifications.in-app",
-    sortOrder: 210
+    sortOrder: 210,
   },
   {
     code: "notifications.templates",
@@ -135,7 +135,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "notifications",
     requiredPermission: "notification-template:view",
     routeCode: "notifications.templates",
-    sortOrder: 215
+    sortOrder: 215,
   },
   {
     code: "notifications.webhooks",
@@ -144,13 +144,13 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "notifications",
     requiredPermission: "webhook:view",
     routeCode: "notifications.webhooks",
-    sortOrder: 220
+    sortOrder: 220,
   },
   {
     code: "operations",
     titleI18nKey: "nav.operations",
     path: "/operations",
-    sortOrder: 300
+    sortOrder: 300,
   },
   {
     code: "operations.online-users",
@@ -159,7 +159,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "operations",
     requiredPermission: "online-user:view",
     routeCode: "operations.online-users",
-    sortOrder: 300
+    sortOrder: 300,
   },
   {
     code: "operations.scheduler",
@@ -168,7 +168,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "operations",
     requiredPermission: "job:view",
     routeCode: "operations.scheduler",
-    sortOrder: 310
+    sortOrder: 310,
   },
   {
     code: "operations.import-export",
@@ -177,13 +177,13 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "operations",
     requiredPermission: "import-export:view",
     routeCode: "operations.import-export",
-    sortOrder: 320
+    sortOrder: 320,
   },
   {
     code: "logs",
     titleI18nKey: "nav.logs",
     path: "/logs",
-    sortOrder: 400
+    sortOrder: 400,
   },
   {
     code: "logs.login",
@@ -192,7 +192,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "logs",
     requiredPermission: "login-log:view",
     routeCode: "logs.login",
-    sortOrder: 400
+    sortOrder: 400,
   },
   {
     code: "logs.operation",
@@ -201,7 +201,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "logs",
     requiredPermission: "operation-log:view",
     routeCode: "logs.operation",
-    sortOrder: 401
+    sortOrder: 401,
   },
   {
     code: "logs.access",
@@ -210,7 +210,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "logs",
     requiredPermission: "access-log:view",
     routeCode: "logs.access",
-    sortOrder: 402
+    sortOrder: 402,
   },
   {
     code: "logs.api",
@@ -219,7 +219,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "logs",
     requiredPermission: "api-log:view",
     routeCode: "logs.api",
-    sortOrder: 403
+    sortOrder: 403,
   },
   {
     code: "logs.exception",
@@ -228,7 +228,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "logs",
     requiredPermission: "exception-log:view",
     routeCode: "logs.exception",
-    sortOrder: 404
+    sortOrder: 404,
   },
   {
     code: "logs.security",
@@ -237,7 +237,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "logs",
     requiredPermission: "security-log:view",
     routeCode: "logs.security",
-    sortOrder: 405
+    sortOrder: 405,
   },
   {
     code: "logs.scheduler",
@@ -246,7 +246,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "logs",
     requiredPermission: "scheduler-log:view",
     routeCode: "logs.scheduler",
-    sortOrder: 406
+    sortOrder: 406,
   },
   {
     code: "logs.files",
@@ -255,13 +255,13 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     parentCode: "logs",
     requiredPermission: "file-log:view",
     routeCode: "logs.files",
-    sortOrder: 407
+    sortOrder: 407,
   },
   {
     code: "account",
     titleI18nKey: "nav.account",
     path: "/account",
-    sortOrder: 500
+    sortOrder: 500,
   },
   {
     code: "account.profile",
@@ -269,7 +269,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     path: "/account/profile",
     parentCode: "account",
     routeCode: "account.profile",
-    sortOrder: 500
+    sortOrder: 500,
   },
   {
     code: "account.password",
@@ -277,7 +277,7 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     path: "/account/password",
     parentCode: "account",
     routeCode: "account.password",
-    sortOrder: 510
+    sortOrder: 510,
   },
   {
     code: "account.settings",
@@ -285,6 +285,6 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     path: "/account/settings",
     parentCode: "account",
     routeCode: "account.settings",
-    sortOrder: 520
-  }
+    sortOrder: 520,
+  },
 ];

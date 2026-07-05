@@ -6,7 +6,7 @@ import { BackendCoreAggregateRepositories } from "./backend-core-aggregate-repos
 import {
   createPostgresqlExecutor,
   createSqliteExecutor,
-  type QueryExecutor
+  type QueryExecutor,
 } from "./query-executor";
 import {
   authSessionStatus,
@@ -34,7 +34,7 @@ import {
   userPreferenceLanguage,
   userPreferenceThemeColor,
   userPreferenceThemeMode,
-  userStatus
+  userStatus,
 } from "./row-values";
 
 export class BackendCoreStoreRepository {
@@ -125,7 +125,7 @@ export class BackendCoreStoreRepository {
       "roles",
       "user_preferences",
       "users",
-      "organizations"
+      "organizations",
     ]) {
       await this.executor.run(`DELETE FROM ${table}`);
     }
@@ -133,245 +133,269 @@ export class BackendCoreStoreRepository {
 
   private async loadOrganizations(store: InMemoryBackendStore): Promise<void> {
     const rows = await this.executor.all("SELECT * FROM organizations ORDER BY id");
-    rows.forEach((row) => store.organizations.set(id(row.id), {
-      id: id(row.id),
-      tenantId: nullableId(row.tenant_id),
-      path: bigint(row.path),
-      level: numberValue(row.level),
-      segment: numberValue(row.segment),
-      name: stringValue(row.name),
-      code: stringValue(row.code),
-      managerUserId: nullableId(row.manager_user_id),
-      phone: nullableString(row.phone),
-      email: nullableString(row.email),
-      address: nullableString(row.address),
-      sortOrder: numberValue(row.sort_order),
-      status: entityStatus(row.status),
-      remark: nullableString(row.remark),
-      isDeleted: booleanValue(row.is_deleted),
-      deletedAt: nullableIso(row.deleted_at),
-      deletedBy: nullableId(row.deleted_by),
-      createdAt: iso(row.created_at),
-      updatedAt: iso(row.updated_at),
-      createdBy: nullableId(row.created_by),
-      updatedBy: nullableId(row.updated_by)
-    }));
+    rows.forEach((row) =>
+      store.organizations.set(id(row.id), {
+        id: id(row.id),
+        tenantId: nullableId(row.tenant_id),
+        path: bigint(row.path),
+        level: numberValue(row.level),
+        segment: numberValue(row.segment),
+        name: stringValue(row.name),
+        code: stringValue(row.code),
+        managerUserId: nullableId(row.manager_user_id),
+        phone: nullableString(row.phone),
+        email: nullableString(row.email),
+        address: nullableString(row.address),
+        sortOrder: numberValue(row.sort_order),
+        status: entityStatus(row.status),
+        remark: nullableString(row.remark),
+        isDeleted: booleanValue(row.is_deleted),
+        deletedAt: nullableIso(row.deleted_at),
+        deletedBy: nullableId(row.deleted_by),
+        createdAt: iso(row.created_at),
+        updatedAt: iso(row.updated_at),
+        createdBy: nullableId(row.created_by),
+        updatedBy: nullableId(row.updated_by),
+      }),
+    );
   }
 
   private async loadUsers(store: InMemoryBackendStore): Promise<void> {
     const rows = await this.executor.all("SELECT * FROM users ORDER BY id");
-    rows.forEach((row) => store.users.set(id(row.id), {
-      id: id(row.id),
-      tenantId: nullableId(row.tenant_id),
-      username: stringValue(row.username),
-      displayName: stringValue(row.display_name),
-      email: stringValue(row.email),
-      phone: stringValue(row.phone),
-      avatarFileId: nullableId(row.avatar_file_id),
-      gender: nullableString(row.gender),
-      employeeNumber: nullableString(row.employee_number),
-      passwordHash: stringValue(row.password_hash),
-      primaryOrganizationId: id(row.primary_organization_id),
-      status: userStatus(row.status),
-      firstLoginPasswordChangeRequired: booleanValue(row.first_login_password_change_required),
-      passwordChangedAt: nullableIso(row.password_changed_at),
-      passwordExpiresAt: nullableIso(row.password_expires_at),
-      failedLoginAttempts: numberValue(row.failed_login_attempts),
-      lockedUntil: nullableIso(row.locked_until),
-      tokenVersion: numberValue(row.token_version),
-      lastLoginAt: nullableIso(row.last_login_at),
-      remark: nullableString(row.remark),
-      isDeleted: booleanValue(row.is_deleted),
-      deletedAt: nullableIso(row.deleted_at),
-      deletedBy: nullableId(row.deleted_by),
-      createdAt: iso(row.created_at),
-      updatedAt: iso(row.updated_at),
-      createdBy: nullableId(row.created_by),
-      updatedBy: nullableId(row.updated_by)
-    }));
+    rows.forEach((row) =>
+      store.users.set(id(row.id), {
+        id: id(row.id),
+        tenantId: nullableId(row.tenant_id),
+        username: stringValue(row.username),
+        displayName: stringValue(row.display_name),
+        email: stringValue(row.email),
+        phone: stringValue(row.phone),
+        avatarFileId: nullableId(row.avatar_file_id),
+        gender: nullableString(row.gender),
+        employeeNumber: nullableString(row.employee_number),
+        passwordHash: stringValue(row.password_hash),
+        primaryOrganizationId: id(row.primary_organization_id),
+        status: userStatus(row.status),
+        firstLoginPasswordChangeRequired: booleanValue(row.first_login_password_change_required),
+        passwordChangedAt: nullableIso(row.password_changed_at),
+        passwordExpiresAt: nullableIso(row.password_expires_at),
+        failedLoginAttempts: numberValue(row.failed_login_attempts),
+        lockedUntil: nullableIso(row.locked_until),
+        tokenVersion: numberValue(row.token_version),
+        lastLoginAt: nullableIso(row.last_login_at),
+        remark: nullableString(row.remark),
+        isDeleted: booleanValue(row.is_deleted),
+        deletedAt: nullableIso(row.deleted_at),
+        deletedBy: nullableId(row.deleted_by),
+        createdAt: iso(row.created_at),
+        updatedAt: iso(row.updated_at),
+        createdBy: nullableId(row.created_by),
+        updatedBy: nullableId(row.updated_by),
+      }),
+    );
   }
 
   private async loadUserPreferences(store: InMemoryBackendStore): Promise<void> {
     const rows = await this.executor.all("SELECT * FROM user_preferences ORDER BY id");
-    rows.forEach((row) => store.userPreferences.set(id(row.id), {
-      id: id(row.id),
-      tenantId: nullableId(row.tenant_id),
-      userId: id(row.user_id),
-      language: userPreferenceLanguage(row.language),
-      themeMode: userPreferenceThemeMode(row.theme_mode),
-      themeColor: userPreferenceThemeColor(row.theme_color),
-      pageTabsEnabled: booleanValue(row.page_tabs_enabled),
-      updatedAt: iso(row.updated_at)
-    }));
+    rows.forEach((row) =>
+      store.userPreferences.set(id(row.id), {
+        id: id(row.id),
+        tenantId: nullableId(row.tenant_id),
+        userId: id(row.user_id),
+        language: userPreferenceLanguage(row.language),
+        themeMode: userPreferenceThemeMode(row.theme_mode),
+        themeColor: userPreferenceThemeColor(row.theme_color),
+        pageTabsEnabled: booleanValue(row.page_tabs_enabled),
+        updatedAt: iso(row.updated_at),
+      }),
+    );
   }
 
   private async loadRoles(store: InMemoryBackendStore): Promise<void> {
     const rows = await this.executor.all("SELECT * FROM roles ORDER BY id");
-    rows.forEach((row) => store.roles.set(id(row.id), {
-      id: id(row.id),
-      tenantId: nullableId(row.tenant_id),
-      name: stringValue(row.name),
-      code: stringValue(row.code),
-      description: nullableString(row.description),
-      dataScopeRuleId: nullableId(row.data_scope_rule_id),
-      isBuiltin: booleanValue(row.is_builtin),
-      status: entityStatus(row.status),
-      remark: nullableString(row.remark),
-      isDeleted: booleanValue(row.is_deleted),
-      deletedAt: nullableIso(row.deleted_at),
-      deletedBy: nullableId(row.deleted_by),
-      createdAt: iso(row.created_at),
-      updatedAt: iso(row.updated_at),
-      createdBy: nullableId(row.created_by),
-      updatedBy: nullableId(row.updated_by)
-    }));
+    rows.forEach((row) =>
+      store.roles.set(id(row.id), {
+        id: id(row.id),
+        tenantId: nullableId(row.tenant_id),
+        name: stringValue(row.name),
+        code: stringValue(row.code),
+        description: nullableString(row.description),
+        dataScopeRuleId: nullableId(row.data_scope_rule_id),
+        isBuiltin: booleanValue(row.is_builtin),
+        status: entityStatus(row.status),
+        remark: nullableString(row.remark),
+        isDeleted: booleanValue(row.is_deleted),
+        deletedAt: nullableIso(row.deleted_at),
+        deletedBy: nullableId(row.deleted_by),
+        createdAt: iso(row.created_at),
+        updatedAt: iso(row.updated_at),
+        createdBy: nullableId(row.created_by),
+        updatedBy: nullableId(row.updated_by),
+      }),
+    );
   }
 
   private async loadPermissions(store: InMemoryBackendStore): Promise<void> {
     const rows = await this.executor.all("SELECT * FROM permissions ORDER BY id");
-    rows.forEach((row) => store.permissions.set(id(row.id), {
-      id: id(row.id),
-      tenantId: nullableId(row.tenant_id),
-      code: stringValue(row.code),
-      name: stringValue(row.name),
-      permissionType: permissionType(row.permission_type),
-      resource: stringValue(row.resource),
-      action: stringValue(row.action),
-      description: nullableString(row.description),
-      module: stringValue(row.module),
-      source: stringValue(row.source),
-      manifestHash: stringValue(row.manifest_hash),
-      status: entityStatus(row.status),
-      createdAt: iso(row.created_at),
-      updatedAt: iso(row.updated_at)
-    }));
+    rows.forEach((row) =>
+      store.permissions.set(id(row.id), {
+        id: id(row.id),
+        tenantId: nullableId(row.tenant_id),
+        code: stringValue(row.code),
+        name: stringValue(row.name),
+        permissionType: permissionType(row.permission_type),
+        resource: stringValue(row.resource),
+        action: stringValue(row.action),
+        description: nullableString(row.description),
+        module: stringValue(row.module),
+        source: stringValue(row.source),
+        manifestHash: stringValue(row.manifest_hash),
+        status: entityStatus(row.status),
+        createdAt: iso(row.created_at),
+        updatedAt: iso(row.updated_at),
+      }),
+    );
   }
 
   private async loadApiPermissions(store: InMemoryBackendStore): Promise<void> {
     const rows = await this.executor.all("SELECT * FROM api_permissions ORDER BY id");
-    rows.forEach((row) => store.apiPermissions.set(id(row.id), {
-      id: id(row.id),
-      tenantId: nullableId(row.tenant_id),
-      method: stringValue(row.method),
-      path: stringValue(row.path),
-      code: stringValue(row.code),
-      description: nullableString(row.description),
-      module: stringValue(row.module),
-      requiredPermission: nullableString(row.required_permission),
-      logLevel: logLevel(row.log_level),
-      public: booleanValue(row.public),
-      status: entityStatus(row.status),
-      createdAt: iso(row.created_at),
-      updatedAt: iso(row.updated_at)
-    }));
+    rows.forEach((row) =>
+      store.apiPermissions.set(id(row.id), {
+        id: id(row.id),
+        tenantId: nullableId(row.tenant_id),
+        method: stringValue(row.method),
+        path: stringValue(row.path),
+        code: stringValue(row.code),
+        description: nullableString(row.description),
+        module: stringValue(row.module),
+        requiredPermission: nullableString(row.required_permission),
+        logLevel: logLevel(row.log_level),
+        public: booleanValue(row.public),
+        status: entityStatus(row.status),
+        createdAt: iso(row.created_at),
+        updatedAt: iso(row.updated_at),
+      }),
+    );
   }
 
   private async loadMenus(store: InMemoryBackendStore): Promise<void> {
     const rows = await this.executor.all("SELECT * FROM menus ORDER BY id");
-    rows.forEach((row) => store.menus.set(id(row.id), {
-      id: id(row.id),
-      tenantId: nullableId(row.tenant_id),
-      parentMenuId: nullableId(row.parent_menu_id),
-      code: stringValue(row.code),
-      titleI18nKey: stringValue(row.title_i18n_key),
-      path: stringValue(row.path),
-      requiredPermission: nullableString(row.permission_code),
-      routeCode: nullableString(row.route_code),
-      icon: nullableString(row.icon),
-      sortOrder: numberValue(row.sort_order),
-      visible: booleanValue(row.visible),
-      status: entityStatus(row.status),
-      isDeleted: booleanValue(row.is_deleted),
-      deletedAt: nullableIso(row.deleted_at),
-      deletedBy: nullableId(row.deleted_by),
-      createdAt: iso(row.created_at),
-      updatedAt: iso(row.updated_at)
-    }));
+    rows.forEach((row) =>
+      store.menus.set(id(row.id), {
+        id: id(row.id),
+        tenantId: nullableId(row.tenant_id),
+        parentMenuId: nullableId(row.parent_menu_id),
+        code: stringValue(row.code),
+        titleI18nKey: stringValue(row.title_i18n_key),
+        path: stringValue(row.path),
+        requiredPermission: nullableString(row.permission_code),
+        routeCode: nullableString(row.route_code),
+        icon: nullableString(row.icon),
+        sortOrder: numberValue(row.sort_order),
+        visible: booleanValue(row.visible),
+        status: entityStatus(row.status),
+        isDeleted: booleanValue(row.is_deleted),
+        deletedAt: nullableIso(row.deleted_at),
+        deletedBy: nullableId(row.deleted_by),
+        createdAt: iso(row.created_at),
+        updatedAt: iso(row.updated_at),
+      }),
+    );
   }
 
   private async loadMenuApiBindings(store: InMemoryBackendStore): Promise<void> {
     const rows = await this.executor.all("SELECT * FROM menu_api_bindings ORDER BY id");
-    rows.forEach((row) => store.menuApiBindings.set(id(row.id), {
-      id: id(row.id),
-      tenantId: nullableId(row.tenant_id),
-      menuId: id(row.menu_id),
-      apiPermissionId: id(row.api_permission_id),
-      createdAt: iso(row.created_at)
-    }));
+    rows.forEach((row) =>
+      store.menuApiBindings.set(id(row.id), {
+        id: id(row.id),
+        tenantId: nullableId(row.tenant_id),
+        menuId: id(row.menu_id),
+        apiPermissionId: id(row.api_permission_id),
+        createdAt: iso(row.created_at),
+      }),
+    );
   }
 
   private async loadRouteMetadata(store: InMemoryBackendStore): Promise<void> {
     const rows = await this.executor.all("SELECT * FROM route_metadata ORDER BY id");
-    rows.forEach((row) => store.routeMetadata.set(id(row.id), {
-      id: id(row.id),
-      tenantId: nullableId(row.tenant_id),
-      routeCode: stringValue(row.route_code),
-      path: stringValue(row.path),
-      titleI18nKey: stringValue(row.title_i18n_key),
-      requiredPermission: nullableString(row.required_permission),
-      metadataJson: jsonRecord(row.metadata_json),
-      manifestHash: stringValue(row.manifest_hash),
-      menuVisible: booleanValue(row.menu_visible),
-      icon: nullableString(row.icon),
-      sortOrder: numberValue(row.sort_order),
-      status: entityStatus(row.status),
-      createdAt: iso(row.created_at),
-      updatedAt: iso(row.updated_at)
-    }));
+    rows.forEach((row) =>
+      store.routeMetadata.set(id(row.id), {
+        id: id(row.id),
+        tenantId: nullableId(row.tenant_id),
+        routeCode: stringValue(row.route_code),
+        path: stringValue(row.path),
+        titleI18nKey: stringValue(row.title_i18n_key),
+        requiredPermission: nullableString(row.required_permission),
+        metadataJson: jsonRecord(row.metadata_json),
+        manifestHash: stringValue(row.manifest_hash),
+        menuVisible: booleanValue(row.menu_visible),
+        icon: nullableString(row.icon),
+        sortOrder: numberValue(row.sort_order),
+        status: entityStatus(row.status),
+        createdAt: iso(row.created_at),
+        updatedAt: iso(row.updated_at),
+      }),
+    );
   }
 
   private async loadUserOrganizationRoles(store: InMemoryBackendStore): Promise<void> {
     const rows = await this.executor.all("SELECT * FROM user_organization_roles ORDER BY id");
-    rows.forEach((row) => store.userOrganizationRoles.set(id(row.id), {
-      id: id(row.id),
-      tenantId: nullableId(row.tenant_id),
-      userId: id(row.user_id),
-      organizationId: id(row.organization_id),
-      roleId: id(row.role_id),
-      isPrimary: booleanValue(row.is_primary),
-      status: entityStatus(row.status),
-      isDeleted: booleanValue(row.is_deleted),
-      deletedAt: nullableIso(row.deleted_at),
-      deletedBy: nullableId(row.deleted_by),
-      createdAt: iso(row.created_at),
-      updatedAt: iso(row.updated_at),
-      createdBy: nullableId(row.created_by),
-      updatedBy: nullableId(row.updated_by)
-    }));
+    rows.forEach((row) =>
+      store.userOrganizationRoles.set(id(row.id), {
+        id: id(row.id),
+        tenantId: nullableId(row.tenant_id),
+        userId: id(row.user_id),
+        organizationId: id(row.organization_id),
+        roleId: id(row.role_id),
+        isPrimary: booleanValue(row.is_primary),
+        status: entityStatus(row.status),
+        isDeleted: booleanValue(row.is_deleted),
+        deletedAt: nullableIso(row.deleted_at),
+        deletedBy: nullableId(row.deleted_by),
+        createdAt: iso(row.created_at),
+        updatedAt: iso(row.updated_at),
+        createdBy: nullableId(row.created_by),
+        updatedBy: nullableId(row.updated_by),
+      }),
+    );
   }
 
   private async loadAuthSessions(store: InMemoryBackendStore): Promise<void> {
     const rows = await this.executor.all("SELECT * FROM auth_sessions ORDER BY id");
-    rows.forEach((row) => store.authSessions.set(id(row.id), {
-      id: id(row.id),
-      tenantId: nullableId(row.tenant_id),
-      userId: id(row.user_id),
-      refreshTokenHash: stringValue(row.refresh_token_hash),
-      currentOrganizationId: id(row.current_organization_id),
-      tokenVersion: numberValue(row.token_version),
-      status: authSessionStatus(row.status),
-      ipAddress: nullableString(row.ip_address),
-      userAgent: nullableString(row.user_agent),
-      expiresAt: iso(row.expires_at),
-      revokedAt: nullableIso(row.revoked_at),
-      createdAt: iso(row.created_at),
-      lastSeenAt: iso(row.last_seen_at)
-    }));
+    rows.forEach((row) =>
+      store.authSessions.set(id(row.id), {
+        id: id(row.id),
+        tenantId: nullableId(row.tenant_id),
+        userId: id(row.user_id),
+        refreshTokenHash: stringValue(row.refresh_token_hash),
+        currentOrganizationId: id(row.current_organization_id),
+        tokenVersion: numberValue(row.token_version),
+        status: authSessionStatus(row.status),
+        ipAddress: nullableString(row.ip_address),
+        userAgent: nullableString(row.user_agent),
+        expiresAt: iso(row.expires_at),
+        revokedAt: nullableIso(row.revoked_at),
+        createdAt: iso(row.created_at),
+        lastSeenAt: iso(row.last_seen_at),
+      }),
+    );
   }
 
   private async loadRefreshTokens(store: InMemoryBackendStore): Promise<void> {
     const rows = await this.executor.all("SELECT * FROM refresh_tokens ORDER BY id");
-    rows.forEach((row) => store.refreshTokens.set(id(row.id), {
-      id: id(row.id),
-      tenantId: nullableId(row.tenant_id),
-      sessionId: id(row.session_id),
-      userId: id(row.user_id),
-      tokenHash: stringValue(row.token_hash),
-      tokenVersion: numberValue(row.token_version),
-      expiresAt: iso(row.expires_at),
-      revokedAt: nullableIso(row.revoked_at),
-      createdAt: iso(row.created_at)
-    }));
+    rows.forEach((row) =>
+      store.refreshTokens.set(id(row.id), {
+        id: id(row.id),
+        tenantId: nullableId(row.tenant_id),
+        sessionId: id(row.session_id),
+        userId: id(row.user_id),
+        tokenHash: stringValue(row.token_hash),
+        tokenVersion: numberValue(row.token_version),
+        expiresAt: iso(row.expires_at),
+        revokedAt: nullableIso(row.revoked_at),
+        createdAt: iso(row.created_at),
+      }),
+    );
   }
 
   private async loadRolePermissions(store: InMemoryBackendStore): Promise<void> {
@@ -379,15 +403,17 @@ export class BackendCoreStoreRepository {
       `SELECT rp.role_id, rp.effect, rp.created_at, rp.updated_at, p.code AS permission_code
        FROM role_permissions rp
        JOIN permissions p ON p.id = rp.permission_id
-       ORDER BY rp.id`
+       ORDER BY rp.id`,
     );
-    rows.forEach((row) => store.rolePermissions.push({
-      roleId: id(row.role_id),
-      permissionCode: stringValue(row.permission_code),
-      effect: rolePermissionEffect(row.effect),
-      createdAt: iso(row.created_at),
-      updatedAt: iso(row.updated_at)
-    }));
+    rows.forEach((row) =>
+      store.rolePermissions.push({
+        roleId: id(row.role_id),
+        permissionCode: stringValue(row.permission_code),
+        effect: rolePermissionEffect(row.effect),
+        createdAt: iso(row.created_at),
+        updatedAt: iso(row.updated_at),
+      }),
+    );
   }
 
   private async loadRoleDataPermissions(store: InMemoryBackendStore): Promise<void> {
@@ -395,44 +421,48 @@ export class BackendCoreStoreRepository {
       `SELECT rdp.*, p.code AS permission_code
        FROM role_data_permissions rdp
        JOIN permissions p ON p.id = rdp.permission_id
-       ORDER BY rdp.id`
+       ORDER BY rdp.id`,
     );
-    rows.forEach((row) => store.roleDataPermissions.set(id(row.id), {
-      id: id(row.id),
-      tenantId: nullableId(row.tenant_id),
-      roleId: id(row.role_id),
-      permissionId: id(row.permission_id),
-      permissionCode: stringValue(row.permission_code),
-      effect: dataPermissionEffect(row.effect),
-      rule: jsonRecord(row.rule_json),
-      isDeleted: booleanValue(row.is_deleted),
-      deletedAt: nullableIso(row.deleted_at),
-      deletedBy: nullableId(row.deleted_by),
-      createdAt: iso(row.created_at),
-      updatedAt: iso(row.updated_at),
-      createdBy: nullableId(row.created_by),
-      updatedBy: nullableId(row.updated_by)
-    }));
+    rows.forEach((row) =>
+      store.roleDataPermissions.set(id(row.id), {
+        id: id(row.id),
+        tenantId: nullableId(row.tenant_id),
+        roleId: id(row.role_id),
+        permissionId: id(row.permission_id),
+        permissionCode: stringValue(row.permission_code),
+        effect: dataPermissionEffect(row.effect),
+        rule: jsonRecord(row.rule_json),
+        isDeleted: booleanValue(row.is_deleted),
+        deletedAt: nullableIso(row.deleted_at),
+        deletedBy: nullableId(row.deleted_by),
+        createdAt: iso(row.created_at),
+        updatedAt: iso(row.updated_at),
+        createdBy: nullableId(row.created_by),
+        updatedBy: nullableId(row.updated_by),
+      }),
+    );
   }
 
   private async loadFieldPermissionRules(store: InMemoryBackendStore): Promise<void> {
     const rows = await this.executor.all("SELECT * FROM field_permission_rules ORDER BY id");
-    rows.forEach((row) => store.fieldPermissionRules.set(id(row.id), {
-      id: id(row.id),
-      tenantId: nullableId(row.tenant_id),
-      targetType: "role",
-      targetId: id(row.target_id),
-      resource: stringValue(row.resource),
-      field: stringValue(row.field),
-      effect: fieldPermissionEffect(row.effect),
-      isDeleted: booleanValue(row.is_deleted),
-      deletedAt: nullableIso(row.deleted_at),
-      deletedBy: nullableId(row.deleted_by),
-      createdAt: iso(row.created_at),
-      updatedAt: iso(row.updated_at),
-      createdBy: nullableId(row.created_by),
-      updatedBy: nullableId(row.updated_by)
-    }));
+    rows.forEach((row) =>
+      store.fieldPermissionRules.set(id(row.id), {
+        id: id(row.id),
+        tenantId: nullableId(row.tenant_id),
+        targetType: "role",
+        targetId: id(row.target_id),
+        resource: stringValue(row.resource),
+        field: stringValue(row.field),
+        effect: fieldPermissionEffect(row.effect),
+        isDeleted: booleanValue(row.is_deleted),
+        deletedAt: nullableIso(row.deleted_at),
+        deletedBy: nullableId(row.deleted_by),
+        createdAt: iso(row.created_at),
+        updatedAt: iso(row.updated_at),
+        createdBy: nullableId(row.created_by),
+        updatedBy: nullableId(row.updated_by),
+      }),
+    );
   }
 
   private async loadUserPermissionOverrides(store: InMemoryBackendStore): Promise<void> {
@@ -440,27 +470,31 @@ export class BackendCoreStoreRepository {
       `SELECT upo.*, p.code AS permission_code
        FROM user_permission_overrides upo
        JOIN permissions p ON p.id = upo.permission_id
-       ORDER BY upo.id`
+       ORDER BY upo.id`,
     );
-    rows.forEach((row) => store.userPermissionOverrides.set(id(row.id), {
-      id: id(row.id),
-      tenantId: nullableId(row.tenant_id),
-      userId: id(row.user_id),
-      permissionId: id(row.permission_id),
-      permissionCode: stringValue(row.permission_code),
-      effect: dataPermissionEffect(row.effect),
-      isDeleted: booleanValue(row.is_deleted),
-      deletedAt: nullableIso(row.deleted_at),
-      deletedBy: nullableId(row.deleted_by),
-      createdAt: iso(row.created_at),
-      updatedAt: iso(row.updated_at),
-      createdBy: nullableId(row.created_by),
-      updatedBy: nullableId(row.updated_by)
-    }));
+    rows.forEach((row) =>
+      store.userPermissionOverrides.set(id(row.id), {
+        id: id(row.id),
+        tenantId: nullableId(row.tenant_id),
+        userId: id(row.user_id),
+        permissionId: id(row.permission_id),
+        permissionCode: stringValue(row.permission_code),
+        effect: dataPermissionEffect(row.effect),
+        isDeleted: booleanValue(row.is_deleted),
+        deletedAt: nullableIso(row.deleted_at),
+        deletedBy: nullableId(row.deleted_by),
+        createdAt: iso(row.created_at),
+        updatedAt: iso(row.updated_at),
+        createdBy: nullableId(row.created_by),
+        updatedBy: nullableId(row.updated_by),
+      }),
+    );
   }
 
   private async loadInitializationState(store: InMemoryBackendStore): Promise<void> {
-    const rows = await this.executor.all("SELECT * FROM system_initialization_state ORDER BY id LIMIT 1");
+    const rows = await this.executor.all(
+      "SELECT * FROM system_initialization_state ORDER BY id LIMIT 1",
+    );
     const row = rows[0];
     if (!row) return;
     store.initializationState = {
@@ -471,7 +505,7 @@ export class BackendCoreStoreRepository {
       initializedBy: nullableId(row.initialized_by),
       version: stringValue(row.version),
       createdAt: iso(row.created_at),
-      updatedAt: iso(row.updated_at)
+      updatedAt: iso(row.updated_at),
     };
   }
 
@@ -497,155 +531,474 @@ export class BackendCoreStoreRepository {
   }
 
   private async saveOrganizations(store: InMemoryBackendStore): Promise<void> {
-    await this.insertMany("organizations", [
-      "id", "tenant_id", "path", "level", "segment", "name", "code", "manager_user_id", "phone", "email",
-      "address", "sort_order", "status", "remark", "is_deleted", "deleted_at", "deleted_by",
-      "created_at", "updated_at", "created_by", "updated_by"
-    ], [...store.organizations.values()].map((record) => [
-      record.id, record.tenantId, record.path, record.level, record.segment, record.name, record.code,
-      record.managerUserId, record.phone, record.email, record.address, record.sortOrder, record.status,
-      record.remark, record.isDeleted, record.deletedAt, record.deletedBy, record.createdAt,
-      record.updatedAt, record.createdBy, record.updatedBy
-    ]));
+    await this.insertMany(
+      "organizations",
+      [
+        "id",
+        "tenant_id",
+        "path",
+        "level",
+        "segment",
+        "name",
+        "code",
+        "manager_user_id",
+        "phone",
+        "email",
+        "address",
+        "sort_order",
+        "status",
+        "remark",
+        "is_deleted",
+        "deleted_at",
+        "deleted_by",
+        "created_at",
+        "updated_at",
+        "created_by",
+        "updated_by",
+      ],
+      [...store.organizations.values()].map((record) => [
+        record.id,
+        record.tenantId,
+        record.path,
+        record.level,
+        record.segment,
+        record.name,
+        record.code,
+        record.managerUserId,
+        record.phone,
+        record.email,
+        record.address,
+        record.sortOrder,
+        record.status,
+        record.remark,
+        record.isDeleted,
+        record.deletedAt,
+        record.deletedBy,
+        record.createdAt,
+        record.updatedAt,
+        record.createdBy,
+        record.updatedBy,
+      ]),
+    );
   }
 
   private async saveUsers(store: InMemoryBackendStore): Promise<void> {
-    await this.insertMany("users", [
-      "id", "tenant_id", "username", "display_name", "email", "phone", "avatar_file_id", "gender",
-      "employee_number", "password_hash", "primary_organization_id", "status",
-      "first_login_password_change_required", "password_changed_at", "password_expires_at",
-      "failed_login_attempts", "locked_until", "token_version", "last_login_at", "remark",
-      "is_deleted", "deleted_at", "deleted_by", "created_at", "updated_at", "created_by", "updated_by"
-    ], [...store.users.values()].map((record) => [
-      record.id, record.tenantId, record.username, record.displayName, record.email, record.phone,
-      record.avatarFileId, record.gender, record.employeeNumber, record.passwordHash,
-      record.primaryOrganizationId, record.status, record.firstLoginPasswordChangeRequired,
-      record.passwordChangedAt, record.passwordExpiresAt, record.failedLoginAttempts, record.lockedUntil,
-      record.tokenVersion, record.lastLoginAt, record.remark, record.isDeleted, record.deletedAt,
-      record.deletedBy, record.createdAt, record.updatedAt, record.createdBy, record.updatedBy
-    ]));
+    await this.insertMany(
+      "users",
+      [
+        "id",
+        "tenant_id",
+        "username",
+        "display_name",
+        "email",
+        "phone",
+        "avatar_file_id",
+        "gender",
+        "employee_number",
+        "password_hash",
+        "primary_organization_id",
+        "status",
+        "first_login_password_change_required",
+        "password_changed_at",
+        "password_expires_at",
+        "failed_login_attempts",
+        "locked_until",
+        "token_version",
+        "last_login_at",
+        "remark",
+        "is_deleted",
+        "deleted_at",
+        "deleted_by",
+        "created_at",
+        "updated_at",
+        "created_by",
+        "updated_by",
+      ],
+      [...store.users.values()].map((record) => [
+        record.id,
+        record.tenantId,
+        record.username,
+        record.displayName,
+        record.email,
+        record.phone,
+        record.avatarFileId,
+        record.gender,
+        record.employeeNumber,
+        record.passwordHash,
+        record.primaryOrganizationId,
+        record.status,
+        record.firstLoginPasswordChangeRequired,
+        record.passwordChangedAt,
+        record.passwordExpiresAt,
+        record.failedLoginAttempts,
+        record.lockedUntil,
+        record.tokenVersion,
+        record.lastLoginAt,
+        record.remark,
+        record.isDeleted,
+        record.deletedAt,
+        record.deletedBy,
+        record.createdAt,
+        record.updatedAt,
+        record.createdBy,
+        record.updatedBy,
+      ]),
+    );
   }
 
   private async saveUserPreferences(store: InMemoryBackendStore): Promise<void> {
-    await this.insertMany("user_preferences", [
-      "id", "tenant_id", "user_id", "language", "theme_mode", "theme_color",
-      "page_tabs_enabled", "updated_at"
-    ], [...store.userPreferences.values()].map((record) => [
-      record.id, record.tenantId, record.userId, record.language, record.themeMode,
-      record.themeColor, record.pageTabsEnabled, record.updatedAt
-    ]));
+    await this.insertMany(
+      "user_preferences",
+      [
+        "id",
+        "tenant_id",
+        "user_id",
+        "language",
+        "theme_mode",
+        "theme_color",
+        "page_tabs_enabled",
+        "updated_at",
+      ],
+      [...store.userPreferences.values()].map((record) => [
+        record.id,
+        record.tenantId,
+        record.userId,
+        record.language,
+        record.themeMode,
+        record.themeColor,
+        record.pageTabsEnabled,
+        record.updatedAt,
+      ]),
+    );
   }
 
   private async saveRoles(store: InMemoryBackendStore): Promise<void> {
-    await this.insertMany("roles", [
-      "id", "tenant_id", "name", "code", "description", "data_scope_rule_id", "is_builtin", "status",
-      "remark", "is_deleted", "deleted_at", "deleted_by", "created_at", "updated_at", "created_by",
-      "updated_by"
-    ], [...store.roles.values()].map((record) => [
-      record.id, record.tenantId, record.name, record.code, record.description, record.dataScopeRuleId,
-      record.isBuiltin, record.status, record.remark, record.isDeleted, record.deletedAt, record.deletedBy,
-      record.createdAt, record.updatedAt, record.createdBy, record.updatedBy
-    ]));
+    await this.insertMany(
+      "roles",
+      [
+        "id",
+        "tenant_id",
+        "name",
+        "code",
+        "description",
+        "data_scope_rule_id",
+        "is_builtin",
+        "status",
+        "remark",
+        "is_deleted",
+        "deleted_at",
+        "deleted_by",
+        "created_at",
+        "updated_at",
+        "created_by",
+        "updated_by",
+      ],
+      [...store.roles.values()].map((record) => [
+        record.id,
+        record.tenantId,
+        record.name,
+        record.code,
+        record.description,
+        record.dataScopeRuleId,
+        record.isBuiltin,
+        record.status,
+        record.remark,
+        record.isDeleted,
+        record.deletedAt,
+        record.deletedBy,
+        record.createdAt,
+        record.updatedAt,
+        record.createdBy,
+        record.updatedBy,
+      ]),
+    );
   }
 
   private async savePermissions(store: InMemoryBackendStore): Promise<void> {
-    await this.insertMany("permissions", [
-      "id", "tenant_id", "code", "name", "permission_type", "resource", "action", "description",
-      "module", "source", "manifest_hash", "status", "created_at", "updated_at"
-    ], [...store.permissions.values()].map((record) => [
-      record.id, record.tenantId, record.code, record.name, record.permissionType, record.resource,
-      record.action, record.description, record.module, record.source, record.manifestHash, record.status,
-      record.createdAt, record.updatedAt
-    ]));
+    await this.insertMany(
+      "permissions",
+      [
+        "id",
+        "tenant_id",
+        "code",
+        "name",
+        "permission_type",
+        "resource",
+        "action",
+        "description",
+        "module",
+        "source",
+        "manifest_hash",
+        "status",
+        "created_at",
+        "updated_at",
+      ],
+      [...store.permissions.values()].map((record) => [
+        record.id,
+        record.tenantId,
+        record.code,
+        record.name,
+        record.permissionType,
+        record.resource,
+        record.action,
+        record.description,
+        record.module,
+        record.source,
+        record.manifestHash,
+        record.status,
+        record.createdAt,
+        record.updatedAt,
+      ]),
+    );
   }
 
   private async saveApiPermissions(store: InMemoryBackendStore): Promise<void> {
-    await this.insertMany("api_permissions", [
-      "id", "tenant_id", "method", "path", "code", "description", "module", "required_permission",
-      "log_level", "public", "status", "created_at", "updated_at"
-    ], [...store.apiPermissions.values()].map((record) => [
-      record.id, record.tenantId, record.method, record.path, record.code, record.description,
-      record.module, record.requiredPermission, record.logLevel, record.public, record.status,
-      record.createdAt, record.updatedAt
-    ]));
+    await this.insertMany(
+      "api_permissions",
+      [
+        "id",
+        "tenant_id",
+        "method",
+        "path",
+        "code",
+        "description",
+        "module",
+        "required_permission",
+        "log_level",
+        "public",
+        "status",
+        "created_at",
+        "updated_at",
+      ],
+      [...store.apiPermissions.values()].map((record) => [
+        record.id,
+        record.tenantId,
+        record.method,
+        record.path,
+        record.code,
+        record.description,
+        record.module,
+        record.requiredPermission,
+        record.logLevel,
+        record.public,
+        record.status,
+        record.createdAt,
+        record.updatedAt,
+      ]),
+    );
   }
 
   private async saveMenus(store: InMemoryBackendStore): Promise<void> {
-    await this.insertMany("menus", [
-      "id", "tenant_id", "parent_menu_id", "permission_code", "code", "route_code", "title_i18n_key",
-      "path", "icon", "sort_order", "visible", "status", "is_deleted", "deleted_at", "deleted_by",
-      "created_at", "updated_at"
-    ], [...store.menus.values()].map((record) => [
-      record.id, record.tenantId, record.parentMenuId, record.requiredPermission, record.code,
-      record.routeCode, record.titleI18nKey, record.path, record.icon, record.sortOrder, record.visible,
-      record.status, record.isDeleted, record.deletedAt, record.deletedBy, record.createdAt,
-      record.updatedAt
-    ]));
+    await this.insertMany(
+      "menus",
+      [
+        "id",
+        "tenant_id",
+        "parent_menu_id",
+        "permission_code",
+        "code",
+        "route_code",
+        "title_i18n_key",
+        "path",
+        "icon",
+        "sort_order",
+        "visible",
+        "status",
+        "is_deleted",
+        "deleted_at",
+        "deleted_by",
+        "created_at",
+        "updated_at",
+      ],
+      [...store.menus.values()].map((record) => [
+        record.id,
+        record.tenantId,
+        record.parentMenuId,
+        record.requiredPermission,
+        record.code,
+        record.routeCode,
+        record.titleI18nKey,
+        record.path,
+        record.icon,
+        record.sortOrder,
+        record.visible,
+        record.status,
+        record.isDeleted,
+        record.deletedAt,
+        record.deletedBy,
+        record.createdAt,
+        record.updatedAt,
+      ]),
+    );
   }
 
   private async saveMenuApiBindings(store: InMemoryBackendStore): Promise<void> {
-    await this.insertMany("menu_api_bindings", [
-      "id", "tenant_id", "menu_id", "api_permission_id", "created_at"
-    ], [...store.menuApiBindings.values()].map((record) => [
-      record.id, record.tenantId, record.menuId, record.apiPermissionId, record.createdAt
-    ]));
+    await this.insertMany(
+      "menu_api_bindings",
+      ["id", "tenant_id", "menu_id", "api_permission_id", "created_at"],
+      [...store.menuApiBindings.values()].map((record) => [
+        record.id,
+        record.tenantId,
+        record.menuId,
+        record.apiPermissionId,
+        record.createdAt,
+      ]),
+    );
   }
 
   private async saveRouteMetadata(store: InMemoryBackendStore): Promise<void> {
-    await this.insertMany("route_metadata", [
-      "id", "tenant_id", "route_code", "path", "title_i18n_key", "required_permission",
-      "metadata_json", "manifest_hash", "menu_visible", "icon", "sort_order", "status",
-      "created_at", "updated_at"
-    ], [...store.routeMetadata.values()].map((record) => [
-      record.id, record.tenantId, record.routeCode, record.path, record.titleI18nKey,
-      record.requiredPermission, jsonValue(record.metadataJson), record.manifestHash, record.menuVisible,
-      record.icon, record.sortOrder, record.status, record.createdAt, record.updatedAt
-    ]));
+    await this.insertMany(
+      "route_metadata",
+      [
+        "id",
+        "tenant_id",
+        "route_code",
+        "path",
+        "title_i18n_key",
+        "required_permission",
+        "metadata_json",
+        "manifest_hash",
+        "menu_visible",
+        "icon",
+        "sort_order",
+        "status",
+        "created_at",
+        "updated_at",
+      ],
+      [...store.routeMetadata.values()].map((record) => [
+        record.id,
+        record.tenantId,
+        record.routeCode,
+        record.path,
+        record.titleI18nKey,
+        record.requiredPermission,
+        jsonValue(record.metadataJson),
+        record.manifestHash,
+        record.menuVisible,
+        record.icon,
+        record.sortOrder,
+        record.status,
+        record.createdAt,
+        record.updatedAt,
+      ]),
+    );
   }
 
   private async saveUserOrganizationRoles(store: InMemoryBackendStore): Promise<void> {
-    await this.insertMany("user_organization_roles", [
-      "id", "tenant_id", "user_id", "organization_id", "role_id", "is_primary", "status",
-      "is_deleted", "deleted_at", "deleted_by", "created_at", "updated_at", "created_by", "updated_by"
-    ], [...store.userOrganizationRoles.values()].map((record) => [
-      record.id, record.tenantId, record.userId, record.organizationId, record.roleId, record.isPrimary,
-      record.status, record.isDeleted, record.deletedAt, record.deletedBy, record.createdAt,
-      record.updatedAt, record.createdBy, record.updatedBy
-    ]));
+    await this.insertMany(
+      "user_organization_roles",
+      [
+        "id",
+        "tenant_id",
+        "user_id",
+        "organization_id",
+        "role_id",
+        "is_primary",
+        "status",
+        "is_deleted",
+        "deleted_at",
+        "deleted_by",
+        "created_at",
+        "updated_at",
+        "created_by",
+        "updated_by",
+      ],
+      [...store.userOrganizationRoles.values()].map((record) => [
+        record.id,
+        record.tenantId,
+        record.userId,
+        record.organizationId,
+        record.roleId,
+        record.isPrimary,
+        record.status,
+        record.isDeleted,
+        record.deletedAt,
+        record.deletedBy,
+        record.createdAt,
+        record.updatedAt,
+        record.createdBy,
+        record.updatedBy,
+      ]),
+    );
   }
 
   private async saveAuthSessions(store: InMemoryBackendStore): Promise<void> {
-    await this.insertMany("auth_sessions", [
-      "id", "tenant_id", "user_id", "refresh_token_hash", "current_organization_id", "token_version",
-      "status", "ip_address", "user_agent", "expires_at", "revoked_at", "created_at", "last_seen_at"
-    ], [...store.authSessions.values()].map((record) => [
-      record.id, record.tenantId, record.userId, record.refreshTokenHash, record.currentOrganizationId,
-      record.tokenVersion, record.status, record.ipAddress, record.userAgent, record.expiresAt,
-      record.revokedAt, record.createdAt, record.lastSeenAt
-    ]));
+    await this.insertMany(
+      "auth_sessions",
+      [
+        "id",
+        "tenant_id",
+        "user_id",
+        "refresh_token_hash",
+        "current_organization_id",
+        "token_version",
+        "status",
+        "ip_address",
+        "user_agent",
+        "expires_at",
+        "revoked_at",
+        "created_at",
+        "last_seen_at",
+      ],
+      [...store.authSessions.values()].map((record) => [
+        record.id,
+        record.tenantId,
+        record.userId,
+        record.refreshTokenHash,
+        record.currentOrganizationId,
+        record.tokenVersion,
+        record.status,
+        record.ipAddress,
+        record.userAgent,
+        record.expiresAt,
+        record.revokedAt,
+        record.createdAt,
+        record.lastSeenAt,
+      ]),
+    );
   }
 
   private async saveRefreshTokens(store: InMemoryBackendStore): Promise<void> {
-    await this.insertMany("refresh_tokens", [
-      "id", "tenant_id", "session_id", "user_id", "token_hash", "token_version", "expires_at",
-      "revoked_at", "created_at"
-    ], [...store.refreshTokens.values()].map((record) => [
-      record.id, record.tenantId, record.sessionId, record.userId, record.tokenHash, record.tokenVersion,
-      record.expiresAt, record.revokedAt, record.createdAt
-    ]));
+    await this.insertMany(
+      "refresh_tokens",
+      [
+        "id",
+        "tenant_id",
+        "session_id",
+        "user_id",
+        "token_hash",
+        "token_version",
+        "expires_at",
+        "revoked_at",
+        "created_at",
+      ],
+      [...store.refreshTokens.values()].map((record) => [
+        record.id,
+        record.tenantId,
+        record.sessionId,
+        record.userId,
+        record.tokenHash,
+        record.tokenVersion,
+        record.expiresAt,
+        record.revokedAt,
+        record.createdAt,
+      ]),
+    );
   }
 
   private async saveRolePermissions(store: InMemoryBackendStore): Promise<void> {
     const permissionIdsByCode = new Map(
-      [...store.permissions.values()].map((permission) => [permission.code, permission.id])
+      [...store.permissions.values()].map((permission) => [permission.code, permission.id]),
     );
-    await this.insertMany("role_permissions", [
-      "role_id", "permission_id", "effect", "created_at", "updated_at"
-    ], store.rolePermissions.flatMap((record) => {
-      const permissionId = permissionIdsByCode.get(record.permissionCode);
-      if (!permissionId) return [];
-      return [[record.roleId, permissionId, record.effect, record.createdAt, record.updatedAt]];
-    }));
+    await this.insertMany(
+      "role_permissions",
+      ["role_id", "permission_id", "effect", "created_at", "updated_at"],
+      store.rolePermissions.flatMap((record) => {
+        const permissionId = permissionIdsByCode.get(record.permissionCode);
+        if (!permissionId) return [];
+        return [[record.roleId, permissionId, record.effect, record.createdAt, record.updatedAt]];
+      }),
+    );
   }
 
   private async savePermissionExtensions(store: InMemoryBackendStore): Promise<void> {
@@ -654,19 +1007,40 @@ export class BackendCoreStoreRepository {
 
   private async saveInitializationState(store: InMemoryBackendStore): Promise<void> {
     const record = store.initializationState;
-    await this.insertMany("system_initialization_state", [
-      "id", "tenant_id", "status", "initialized_at", "initialized_by", "version", "created_at", "updated_at"
-    ], record ? [[
-      record.id, record.tenantId, record.status, record.initializedAt, record.initializedBy,
-      record.version, record.createdAt, record.updatedAt
-    ]] : []);
+    await this.insertMany(
+      "system_initialization_state",
+      [
+        "id",
+        "tenant_id",
+        "status",
+        "initialized_at",
+        "initialized_by",
+        "version",
+        "created_at",
+        "updated_at",
+      ],
+      record
+        ? [
+            [
+              record.id,
+              record.tenantId,
+              record.status,
+              record.initializedAt,
+              record.initializedBy,
+              record.version,
+              record.createdAt,
+              record.updatedAt,
+            ],
+          ]
+        : [],
+    );
   }
 
   private async insertMany(table: string, columns: string[], rows: unknown[][]): Promise<void> {
     for (const row of rows) {
       await this.executor.run(
         `INSERT INTO ${table} (${columns.join(", ")}) VALUES (${placeholders(row.length, this.executor.dialect)})`,
-        row.map((value) => normalizeParam(value, this.executor.dialect))
+        row.map((value) => normalizeParam(value, this.executor.dialect)),
       );
     }
   }

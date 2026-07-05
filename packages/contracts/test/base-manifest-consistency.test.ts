@@ -21,15 +21,17 @@ describe("base route and menu manifests", () => {
 
   it("only references declared base permissions", () => {
     const declaredPermissionCodes = new Set(
-      basePermissionManifest.map((permission) => permission.code)
+      basePermissionManifest.map((permission) => permission.code),
     );
     const requiredPermissionCodes = [
       ...baseRouteManifest.map((route) => route.requiredPermission),
-      ...baseMenuManifest.map((menu) => menu.requiredPermission)
+      ...baseMenuManifest.map((menu) => menu.requiredPermission),
     ].filter((permissionCode): permissionCode is string => Boolean(permissionCode));
 
     expect(
-      requiredPermissionCodes.every((permissionCode) => declaredPermissionCodes.has(permissionCode))
+      requiredPermissionCodes.every((permissionCode) =>
+        declaredPermissionCodes.has(permissionCode),
+      ),
     ).toBe(true);
   });
 
@@ -38,10 +40,10 @@ describe("base route and menu manifests", () => {
     const menuCodes = new Set(baseMenuManifest.map((menu) => menu.code));
 
     expect(
-      baseMenuManifest.every((menu) => !menu.routeCode || routeCodes.has(menu.routeCode))
+      baseMenuManifest.every((menu) => !menu.routeCode || routeCodes.has(menu.routeCode)),
     ).toBe(true);
     expect(
-      baseMenuManifest.every((menu) => !menu.parentCode || menuCodes.has(menu.parentCode))
+      baseMenuManifest.every((menu) => !menu.parentCode || menuCodes.has(menu.parentCode)),
     ).toBe(true);
   });
 });

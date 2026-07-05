@@ -9,7 +9,7 @@ export type LocalFileStorageOptions = {
 };
 
 export function createLocalFileStorageAdapter(
-  options: LocalFileStorageOptions
+  options: LocalFileStorageOptions,
 ): FileStorageAdapter {
   const root = normalize(options.rootDirectory);
 
@@ -27,7 +27,7 @@ export function createLocalFileStorageAdapter(
       return {
         objectKey,
         contentType,
-        sizeBytes: body.byteLength
+        sizeBytes: body.byteLength,
       };
     },
     async get(objectKey) {
@@ -40,7 +40,7 @@ export function createLocalFileStorageAdapter(
     },
     async delete(objectKey) {
       await rm(resolveObjectPath(root, objectKey), { force: true });
-    }
+    },
   };
 }
 

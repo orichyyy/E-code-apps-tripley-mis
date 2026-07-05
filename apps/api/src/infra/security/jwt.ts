@@ -33,7 +33,7 @@ export function signAccessToken(claims: AccessTokenClaims, config: JwtConfig): s
     token_version: claims.tokenVersion,
     exp: claims.exp,
     iat: claims.iat,
-    iss: config.issuer
+    iss: config.issuer,
   });
   const signature = sign(`${header}.${payload}`, config.secret);
 
@@ -73,7 +73,7 @@ export function verifyAccessToken(token: string, config: JwtConfig): AccessToken
     currentOrganizationId: decodedPayload.currentOrganizationId,
     tokenVersion: decodedPayload.token_version,
     exp: decodedPayload.exp,
-    iat: decodedPayload.iat
+    iat: decodedPayload.iat,
   };
 }
 
@@ -82,7 +82,7 @@ type SerializedAccessTokenClaims = Omit<AccessTokenClaims, "tokenVersion"> & {
 };
 
 function assertAccessTokenClaims(
-  value: SerializedAccessTokenClaims & { iss?: string }
+  value: SerializedAccessTokenClaims & { iss?: string },
 ): asserts value is SerializedAccessTokenClaims & { iss: string } {
   if (
     !isNonEmptyString(value.sub) ||

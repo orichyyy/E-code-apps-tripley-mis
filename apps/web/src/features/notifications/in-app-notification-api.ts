@@ -20,21 +20,30 @@ export async function fetchInAppNotifications(): Promise<InAppNotification[]> {
 }
 
 export async function markNotificationRead(id: string) {
-  return requestJson<{ data: InAppNotification | NotificationStateResponse }>(`/notifications/${id}/read`, {
-    method: "POST"
-  });
+  return requestJson<{ data: InAppNotification | NotificationStateResponse }>(
+    `/notifications/${id}/read`,
+    {
+      method: "POST",
+    },
+  );
 }
 
 export async function archiveNotification(id: string) {
-  return requestJson<{ data: InAppNotification | NotificationStateResponse }>(`/notifications/${id}/archive`, {
-    method: "POST"
-  });
+  return requestJson<{ data: InAppNotification | NotificationStateResponse }>(
+    `/notifications/${id}/archive`,
+    {
+      method: "POST",
+    },
+  );
 }
 
 export async function deleteNotification(id: string) {
-  return requestJson<{ data: InAppNotification | NotificationStateResponse }>(`/notifications/${id}`, {
-    method: "DELETE"
-  });
+  return requestJson<{ data: InAppNotification | NotificationStateResponse }>(
+    `/notifications/${id}`,
+    {
+      method: "DELETE",
+    },
+  );
 }
 
 type NotificationStateResponse = {
@@ -54,7 +63,7 @@ function toInAppNotification(record: Record<string, unknown>): InAppNotification
     readAt: typeof record.readAt === "string" ? record.readAt : null,
     archivedAt: typeof record.archivedAt === "string" ? record.archivedAt : null,
     createdAt: stringField(record.createdAt, ""),
-    updatedAt: stringField(record.updatedAt, "")
+    updatedAt: stringField(record.updatedAt, ""),
   };
 }
 

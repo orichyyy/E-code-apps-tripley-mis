@@ -3,20 +3,25 @@ import type {
   CreateNotificationTemplateRequest,
   InAppNotificationDispatchPayload,
   SendTestEmailNotificationRequest,
-  UpdateNotificationTemplateRequest
+  UpdateNotificationTemplateRequest,
 } from "@web-admin-base/contracts";
 
-import { sendTestEmailNotification, type NotificationTemplateRecord } from "./email-notification-sender";
+import {
+  sendTestEmailNotification,
+  type NotificationTemplateRecord,
+} from "./email-notification-sender";
 import {
   dispatchInAppNotificationJob,
   enqueueInAppNotificationDispatch,
   type EnqueueInAppNotificationInput,
-  type InAppNotificationRecordInput
+  type InAppNotificationRecordInput,
 } from "./in-app-notification-dispatcher";
 import type { InfrastructureRepository } from "./infrastructure.repository";
 
 export type NotificationMemory = {
-  notifications: Array<Record<string, unknown> & { id: string; status: string; userId?: string | null }>;
+  notifications: Array<
+    Record<string, unknown> & { id: string; status: string; userId?: string | null }
+  >;
   templates: NotificationTemplateRecord[];
 };
 
@@ -29,17 +34,25 @@ export class InfrastructureNotificationService {
       queue: QueueAdapter;
       nextId: () => string;
       organizationUserResolver?: (organizationId: string) => Promise<string[]>;
-    }
+    },
   ) {}
 
   listNotifications(userId: string) {
     return (
       this.dependencies.repository?.listNotifications(userId) ??
-      Promise.resolve(this.dependencies.memory.notifications.filter((notification) => notification.userId === userId))
+      Promise.resolve(
+        this.dependencies.memory.notifications.filter(
+          (notification) => notification.userId === userId,
+        ),
+      )
     );
   }
 
-  updateNotificationStatus(id: string, status: "read" | "archived" | "deleted", actorId: string | null) {
+  updateNotificationStatus(
+    id: string,
+    status: "read" | "archived" | "deleted",
+    actorId: string | null,
+  ) {
     if (this.dependencies.repository) {
       return this.dependencies.repository.updateNotificationStatus(id, status, actorId);
     }
@@ -49,11 +62,15 @@ export class InfrastructureNotificationService {
   }
 
   listNotificationTemplates() {
-    return this.dependencies.repository?.listNotificationTemplates() ?? Promise.resolve(this.dependencies.memory.templates);
+    return (
+      this.dependencies.repository?.listNotificationTemplates() ??
+      Promise.resolve(this.dependencies.memory.templates)
+    );
   }
 
   createNotificationTemplate(input: CreateNotificationTemplateRequest) {
-    if (this.dependencies.repository) return this.dependencies.repository.createNotificationTemplate(input);
+    if (this.dependencies.repository)
+      return this.dependencies.repository.createNotificationTemplate(input);
     const now = new Date().toISOString();
     const template = {
       id: this.dependencies.nextId(),
@@ -61,14 +78,15 @@ export class InfrastructureNotificationService {
       subject: input.subject ?? null,
       status: "enabled",
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
     this.dependencies.memory.templates.unshift(template);
     return Promise.resolve(template);
   }
 
   updateNotificationTemplate(id: string, input: UpdateNotificationTemplateRequest) {
-    if (this.dependencies.repository) return this.dependencies.repository.updateNotificationTemplate(id, input);
+    if (this.dependencies.repository)
+      return this.dependencies.repository.updateNotificationTemplate(id, input);
     const template = this.dependencies.memory.templates.find((item) => item.id === id);
     if (!template) return Promise.resolve(null);
     Object.assign(template, input, { updatedAt: new Date().toISOString() });
@@ -78,21 +96,22 @@ export class InfrastructureNotificationService {
   sendTestEmail(input: SendTestEmailNotificationRequest) {
     return sendTestEmailNotification(input, {
       listTemplates: () => this.listNotificationTemplates(),
-      notificationChannel: this.dependencies.notificationChannel
+      notificationChannel: this.dependencies.notificationChannel,
     });
   }
 
   enqueueInAppNotification(input: EnqueueInAppNotificationInput) {
     return enqueueInAppNotificationDispatch(input, {
       listTemplates: () => this.listNotificationTemplates(),
-      resolveOrganizationUserIds: (organizationId) => this.resolveOrganizationUserIds(organizationId),
-      queue: this.dependencies.queue
+      resolveOrganizationUserIds: (organizationId) =>
+        this.resolveOrganizationUserIds(organizationId),
+      queue: this.dependencies.queue,
     });
   }
 
   dispatchInAppNotificationJob(payload: InAppNotificationDispatchPayload) {
     return dispatchInAppNotificationJob(payload, {
-      createNotifications: (records) => this.createInAppNotifications(records)
+      createNotifications: (records) => this.createInAppNotifications(records),
     });
   }
 
@@ -122,7 +141,7 @@ export class InfrastructureNotificationService {
         archivedAt: null,
         isDeleted: false,
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
       });
     }
   }

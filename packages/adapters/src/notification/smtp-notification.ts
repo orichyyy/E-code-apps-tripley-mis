@@ -38,19 +38,21 @@ type SmtpResponse = {
 
 export function createSmtpNotificationChannelAdapter(
   config: SmtpNotificationConfig,
-  transport: SmtpTransport = createNodeSmtpTransport()
+  transport: SmtpTransport = createNodeSmtpTransport(),
 ): NotificationChannelAdapter {
   return {
     async healthCheck() {
       if (transport.healthCheck) return transport.healthCheck();
       return {
         ok: Boolean(config.host && config.port > 0 && config.from),
-        details: { host: config.host, port: config.port, secure: config.secure }
+        details: { host: config.host, port: config.port, secure: config.secure },
       };
     },
     async send(message: NotificationMessage) {
       if (message.channel !== "email") {
-        throw new Error(`SMTP notification channel only supports email messages, received ${message.channel}.`);
+        throw new Error(
+          `SMTP notification channel only supports email messages, received ${message.channel}.`,
+        );
       }
 
       await transport.send(
@@ -59,11 +61,11 @@ export function createSmtpNotificationChannelAdapter(
           recipient: message.recipient,
           subject: message.subject,
           body: message.body,
-          messageId: `<${randomUUID()}@web-admin-base.local>`
+          messageId: `<${randomUUID()}@web-admin-base.local>`,
         },
-        config
+        config,
       );
-    }
+    },
   };
 }
 
@@ -88,7 +90,7 @@ export function createNodeSmtpTransport(): SmtpTransport {
       } finally {
         client.close();
       }
-    }
+    },
   };
 }
 
@@ -97,7 +99,7 @@ class SmtpClient {
 
   private constructor(
     private readonly socket: SmtpSocket,
-    private readonly timeoutMs: number
+    private readonly timeoutMs: number,
   ) {
     this.socket.setEncoding("utf8");
   }
@@ -209,9 +211,9 @@ function consumeSmtpResponse(buffer: string): { response: SmtpResponse; remainin
       return {
         response: {
           code,
-          text: completeLines.slice(0, index + 1).join("\n")
+          text: completeLines.slice(0, index + 1).join("\n"),
         },
-        remaining: buffer.slice(consumed)
+        remaining: buffer.slice(consumed),
       };
     }
   }
@@ -228,7 +230,7 @@ function formatEmailMessage(message: SmtpTransportMessage): string {
     `Message-ID: ${sanitizeHeader(message.messageId)}`,
     "MIME-Version: 1.0",
     'Content-Type: text/plain; charset="UTF-8"',
-    "Content-Transfer-Encoding: 8bit"
+    "Content-Transfer-Encoding: 8bit",
   ];
   return [...headers, "", dotStuff(message.body)].join("\r\n");
 }

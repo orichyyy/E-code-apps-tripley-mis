@@ -8,7 +8,7 @@ import {
   nullableDateTimeSchema,
   nullableIdSchema,
   nullableStringSchema,
-  objectEnvelope
+  objectEnvelope,
 } from "./backend-core-schema-helpers";
 
 const metadataSchema: OpenApiSchema = { type: "object", additionalProperties: true };
@@ -18,10 +18,30 @@ const nullableEntityEnvelope = (schemaRef: string): OpenApiSchema =>
 export const infrastructureComponentSchemas: OpenApiDocument["components"]["schemas"] = {
   LogEntry: {
     type: "object",
-    required: ["id", "logType", "level", "message", "traceId", "userId", "ipAddress", "metadata", "occurredAt", "createdAt"],
+    required: [
+      "id",
+      "logType",
+      "level",
+      "message",
+      "traceId",
+      "userId",
+      "ipAddress",
+      "metadata",
+      "occurredAt",
+      "createdAt",
+    ],
     properties: {
       id: idSchema,
-      logType: enumSchema(["login", "operation", "access", "api_call", "exception", "security", "scheduler", "file_operation"]),
+      logType: enumSchema([
+        "login",
+        "operation",
+        "access",
+        "api_call",
+        "exception",
+        "security",
+        "scheduler",
+        "file_operation",
+      ]),
       level: { type: "string" },
       message: { type: "string" },
       traceId: nullableStringSchema,
@@ -29,13 +49,26 @@ export const infrastructureComponentSchemas: OpenApiDocument["components"]["sche
       ipAddress: nullableStringSchema,
       metadata: metadataSchema,
       occurredAt: dateTimeSchema,
-      createdAt: dateTimeSchema
+      createdAt: dateTimeSchema,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   FileObject: {
     type: "object",
-    required: ["id", "objectKey", "originalName", "contentType", "extension", "sizeBytes", "storageDriver", "status", "referenced", "isDeleted", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "objectKey",
+      "originalName",
+      "contentType",
+      "extension",
+      "sizeBytes",
+      "storageDriver",
+      "status",
+      "referenced",
+      "isDeleted",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
       id: idSchema,
       objectKey: { type: "string" },
@@ -50,13 +83,21 @@ export const infrastructureComponentSchemas: OpenApiDocument["components"]["sche
       createdAt: dateTimeSchema,
       updatedAt: dateTimeSchema,
       deletedAt: nullableDateTimeSchema,
-      deletedBy: nullableIdSchema
+      deletedBy: nullableIdSchema,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   FileReference: {
     type: "object",
-    required: ["id", "fileObjectId", "resourceType", "resourceId", "referenceType", "status", "createdAt"],
+    required: [
+      "id",
+      "fileObjectId",
+      "resourceType",
+      "resourceId",
+      "referenceType",
+      "status",
+      "createdAt",
+    ],
     properties: {
       id: idSchema,
       fileObjectId: idSchema,
@@ -65,13 +106,25 @@ export const infrastructureComponentSchemas: OpenApiDocument["components"]["sche
       referenceType: { type: "string" },
       status: enumSchema(["active", "invalid"]),
       createdAt: dateTimeSchema,
-      createdBy: nullableIdSchema
+      createdBy: nullableIdSchema,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   Notification: {
     type: "object",
-    required: ["id", "userId", "channel", "title", "body", "status", "metadata", "readAt", "archivedAt", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "userId",
+      "channel",
+      "title",
+      "body",
+      "status",
+      "metadata",
+      "readAt",
+      "archivedAt",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
       id: idSchema,
       userId: nullableIdSchema,
@@ -83,13 +136,24 @@ export const infrastructureComponentSchemas: OpenApiDocument["components"]["sche
       readAt: nullableDateTimeSchema,
       archivedAt: nullableDateTimeSchema,
       createdAt: dateTimeSchema,
-      updatedAt: dateTimeSchema
+      updatedAt: dateTimeSchema,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   NotificationTemplate: {
     type: "object",
-    required: ["id", "code", "channel", "locale", "subject", "body", "variables", "status", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "code",
+      "channel",
+      "locale",
+      "subject",
+      "body",
+      "variables",
+      "status",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
       id: idSchema,
       code: { type: "string" },
@@ -100,13 +164,26 @@ export const infrastructureComponentSchemas: OpenApiDocument["components"]["sche
       variables: { type: "array", items: { type: "string" } },
       status: enumSchema(["enabled", "disabled"]),
       createdAt: dateTimeSchema,
-      updatedAt: dateTimeSchema
+      updatedAt: dateTimeSchema,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   ScheduledTask: {
     type: "object",
-    required: ["id", "code", "cronExpression", "handlerType", "payload", "enabled", "status", "nextRunAt", "attempt", "maxAttempts", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "code",
+      "cronExpression",
+      "handlerType",
+      "payload",
+      "enabled",
+      "status",
+      "nextRunAt",
+      "attempt",
+      "maxAttempts",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
       id: idSchema,
       code: { type: "string" },
@@ -121,13 +198,24 @@ export const infrastructureComponentSchemas: OpenApiDocument["components"]["sche
       maxAttempts: { type: "integer" },
       lastError: nullableStringSchema,
       createdAt: dateTimeSchema,
-      updatedAt: dateTimeSchema
+      updatedAt: dateTimeSchema,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   ImportExportTask: {
     type: "object",
-    required: ["id", "taskType", "resourceType", "status", "totalRows", "successRows", "failedRows", "errorPreview", "createdAt", "updatedAt"],
+    required: [
+      "id",
+      "taskType",
+      "resourceType",
+      "status",
+      "totalRows",
+      "successRows",
+      "failedRows",
+      "errorPreview",
+      "createdAt",
+      "updatedAt",
+    ],
     properties: {
       id: idSchema,
       taskType: enumSchema(["import", "export"]),
@@ -143,9 +231,9 @@ export const infrastructureComponentSchemas: OpenApiDocument["components"]["sche
       resultExpiresAt: nullableDateTimeSchema,
       createdAt: dateTimeSchema,
       updatedAt: dateTimeSchema,
-      createdBy: nullableIdSchema
+      createdBy: nullableIdSchema,
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   LogEntryListResponse: arrayEnvelope("LogEntry"),
   FileObjectListResponse: arrayEnvelope("FileObject"),
@@ -157,9 +245,9 @@ export const infrastructureComponentSchemas: OpenApiDocument["components"]["sche
     required: ["id", "status"],
     properties: {
       id: idSchema,
-      status: enumSchema(["read", "archived", "deleted"])
+      status: enumSchema(["read", "archived", "deleted"]),
     },
-    additionalProperties: false
+    additionalProperties: false,
   }),
   NotificationTemplateListResponse: arrayEnvelope("NotificationTemplate"),
   NotificationTemplateResponse: nullableEntityEnvelope("NotificationTemplate"),
@@ -178,8 +266,8 @@ export const infrastructureComponentSchemas: OpenApiDocument["components"]["sche
       locale: { type: "string" },
       subject: { type: "string" },
       status: enumSchema(["sent"]),
-      sentAt: dateTimeSchema
+      sentAt: dateTimeSchema,
     },
-    additionalProperties: false
-  }
+    additionalProperties: false,
+  },
 };

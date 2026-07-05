@@ -9,7 +9,7 @@ import {
   resetUserPassword,
   setUserStatus,
   updateMenuApiBindings,
-  updateRolePermissions
+  updateRolePermissions,
 } from "../src/features/core-management/core-management-api";
 
 describe("core management API", () => {
@@ -26,9 +26,9 @@ describe("core management API", () => {
         return Promise.resolve(
           jsonResponse({
             data: {
-              items: [{ id: "1", username: "admin", displayName: "Super Administrator" }]
-            }
-          })
+              items: [{ id: "1", username: "admin", displayName: "Super Administrator" }],
+            },
+          }),
         );
       }
       return Promise.resolve(
@@ -38,10 +38,10 @@ describe("core management API", () => {
               id: "1",
               name: "Root",
               code: "root",
-              children: [{ id: "2", name: "Child", code: "child" }]
-            }
-          ]
-        })
+              children: [{ id: "2", name: "Child", code: "child" }],
+            },
+          ],
+        }),
       );
     });
 
@@ -50,7 +50,7 @@ describe("core management API", () => {
     const menus = await fetchMenus();
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/users?page=1&pageSize=100&keyword=adm", {
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(users).toEqual([expect.objectContaining({ id: "1", username: "admin" })]);
     expect(organizations.map((item) => item.id)).toEqual(["1", "2"]);
@@ -59,9 +59,9 @@ describe("core management API", () => {
 
   it("creates users and executes user lifecycle actions", async () => {
     localStorage.setItem("web-admin.access-token", "token");
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(() =>
-      Promise.resolve(jsonResponse({ data: { id: "1" } }))
-    );
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(() => Promise.resolve(jsonResponse({ data: { id: "1" } })));
 
     await createUser({
       username: "operator",
@@ -71,7 +71,7 @@ describe("core management API", () => {
       password: "Password1",
       primaryOrganizationId: "1",
       roleId: "3",
-      sortOrder: ""
+      sortOrder: "",
     });
     await setUserStatus("1", "disable");
     await resetUserPassword("1", "Reset1234");
@@ -85,24 +85,24 @@ describe("core management API", () => {
         phone: "10000000001",
         password: "Password1",
         primaryOrganizationId: "1",
-        roleId: "3"
+        roleId: "3",
       }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/users/1/disable", {
       method: "POST",
-      headers: { authorization: "Bearer token" }
+      headers: { authorization: "Bearer token" },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/users/1/reset-password", {
       method: "POST",
       body: JSON.stringify({ password: "Reset1234" }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
   });
 
@@ -126,16 +126,16 @@ describe("core management API", () => {
       body: JSON.stringify({ permissionCodes: ["user:view", "role:view"] }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
     expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/menus/2/api-bindings", {
       method: "PUT",
       body: JSON.stringify({ apiPermissionIds: ["7", "8"] }),
       headers: {
         authorization: "Bearer token",
-        "content-type": "application/json"
-      }
+        "content-type": "application/json",
+      },
     });
   });
 });
@@ -143,6 +143,6 @@ describe("core management API", () => {
 function jsonResponse(body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status: 200,
-    headers: { "content-type": "application/json" }
+    headers: { "content-type": "application/json" },
   });
 }

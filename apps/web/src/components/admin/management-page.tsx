@@ -25,14 +25,16 @@ export function ManagementPage({ route }: ManagementPageProps) {
   const query = useQuery({
     enabled: canView,
     queryKey: ["page-dataset", route.routeCode],
-    queryFn: () => fetchPageDataset(route.routeCode)
+    queryFn: () => fetchPageDataset(route.routeCode),
   });
 
   if (!canView) {
     return (
       <section className="rounded-lg border bg-card p-8 text-center">
         <AlertCircle className="mx-auto size-8 text-destructive" aria-hidden="true" />
-        <h2 className="mt-3 text-base font-semibold">{translate(language, "common.permissionDenied")}</h2>
+        <h2 className="mt-3 text-base font-semibold">
+          {translate(language, "common.permissionDenied")}
+        </h2>
       </section>
     );
   }
@@ -40,12 +42,15 @@ export function ManagementPage({ route }: ManagementPageProps) {
   const rows =
     query.data?.records.filter((record) =>
       [record.name, record.code, record.status].some((value) =>
-        value.toLowerCase().includes(keyword.toLowerCase())
-      )
+        value.toLowerCase().includes(keyword.toLowerCase()),
+      ),
     ) ?? [];
   const routeHiddenFields = {
     ...hiddenFields,
-    [route.routeCode]: [...(hiddenFields[route.routeCode] ?? []), ...(query.data?.hiddenFields ?? [])]
+    [route.routeCode]: [
+      ...(hiddenFields[route.routeCode] ?? []),
+      ...(query.data?.hiddenFields ?? []),
+    ],
   };
 
   return (
@@ -96,7 +101,9 @@ export function ManagementPage({ route }: ManagementPageProps) {
         ) : query.isError ? (
           <div className="p-8 text-sm text-destructive">{translate(language, "common.error")}</div>
         ) : rows.length === 0 ? (
-          <div className="p-8 text-sm text-muted-foreground">{translate(language, "common.empty")}</div>
+          <div className="p-8 text-sm text-muted-foreground">
+            {translate(language, "common.empty")}
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left text-sm">
@@ -116,7 +123,9 @@ export function ManagementPage({ route }: ManagementPageProps) {
                 {rows.map((row) => (
                   <tr className="hover:bg-muted/40" key={row.id}>
                     {columns
-                      .filter((column) => !isFieldHidden(routeHiddenFields, route.routeCode, column))
+                      .filter(
+                        (column) => !isFieldHidden(routeHiddenFields, route.routeCode, column),
+                      )
                       .map((column) => (
                         <td className="border-b px-4 py-3" key={column}>
                           {row[column]}

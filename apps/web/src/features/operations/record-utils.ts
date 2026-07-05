@@ -1,5 +1,7 @@
 export function asRecord(value: unknown): Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {};
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
 }
 
 export function stringValue(value: unknown, fallback = ""): string {
@@ -33,5 +35,7 @@ export function objectValue(value: unknown): Record<string, unknown> {
 }
 
 export function arrayValue(value: unknown): Array<Record<string, unknown>> {
-  return Array.isArray(value) ? value.filter((item) => Object.keys(asRecord(item)).length > 0).map(asRecord) : [];
+  return Array.isArray(value)
+    ? value.filter((item) => Object.keys(asRecord(item)).length > 0).map(asRecord)
+    : [];
 }

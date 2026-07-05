@@ -28,7 +28,7 @@ export function DictionaryTypeList({
   onSelect,
   onStatus,
   rows,
-  selectedId
+  selectedId,
 }: DictionaryTypeListProps) {
   return (
     <div className="rounded-lg border bg-card shadow-sm">
@@ -59,7 +59,7 @@ export function DictionaryTypeList({
             <div
               className={cn(
                 "block w-full cursor-pointer p-4 text-left text-sm hover:bg-muted/40",
-                record.id === selectedId ? "bg-muted/40" : ""
+                record.id === selectedId ? "bg-muted/40" : "",
               )}
               key={record.id}
               onClick={() => onSelect(record)}

@@ -19,7 +19,7 @@ export function WebhookSubscriptionTable({
   isLoading,
   onEdit,
   onToggle,
-  rows
+  rows,
 }: WebhookTableProps) {
   if (isLoading) {
     return (
@@ -29,9 +29,12 @@ export function WebhookSubscriptionTable({
       </div>
     );
   }
-  if (isError) return <div className="p-8 text-sm text-destructive">The data could not be loaded.</div>;
+  if (isError)
+    return <div className="p-8 text-sm text-destructive">The data could not be loaded.</div>;
   if (rows.length === 0) {
-    return <div className="p-8 text-sm text-muted-foreground">No records match the current filters.</div>;
+    return (
+      <div className="p-8 text-sm text-muted-foreground">No records match the current filters.</div>
+    );
   }
 
   return (
@@ -52,7 +55,9 @@ export function WebhookSubscriptionTable({
           {rows.map((record) => (
             <tr className="hover:bg-muted/40" key={record.id}>
               <td className="border-b px-4 py-3 font-medium">{record.name}</td>
-              <td className="max-w-72 truncate border-b px-4 py-3 text-muted-foreground">{record.url}</td>
+              <td className="max-w-72 truncate border-b px-4 py-3 text-muted-foreground">
+                {record.url}
+              </td>
               <td className="border-b px-4 py-3">{record.eventTypes.join(", ") || "-"}</td>
               <td className="border-b px-4 py-3">
                 <SecretState configured={record.secretConfigured} />
@@ -62,7 +67,12 @@ export function WebhookSubscriptionTable({
               </td>
               <td className="border-b px-4 py-3 text-muted-foreground">{record.updatedAt}</td>
               <td className="border-b px-4 py-3">
-                <WebhookRowActions canUpdate={canUpdate} onEdit={onEdit} onToggle={onToggle} record={record} />
+                <WebhookRowActions
+                  canUpdate={canUpdate}
+                  onEdit={onEdit}
+                  onToggle={onToggle}
+                  record={record}
+                />
               </td>
             </tr>
           ))}
@@ -87,7 +97,7 @@ function WebhookRowActions({
   canUpdate,
   onEdit,
   onToggle,
-  record
+  record,
 }: {
   canUpdate: boolean;
   onEdit: (record: WebhookSubscription) => void;

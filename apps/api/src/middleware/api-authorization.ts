@@ -10,13 +10,14 @@ type AuthorizationBindings = {
 };
 
 export function createApiAuthorizationMiddleware(
-  services: BackendCoreServices
+  services: BackendCoreServices,
 ): MiddlewareHandler<AuthorizationBindings> {
   return async (context: Context<AuthorizationBindings>, next: Next) => {
     const apiPermission = findApiPermission(context.req.method, context.req.path);
-    const authContext = apiPermission && !apiPermission.public
-      ? services.findAuthContext(context.req.header("authorization"))
-      : null;
+    const authContext =
+      apiPermission && !apiPermission.public
+        ? services.findAuthContext(context.req.header("authorization"))
+        : null;
 
     context.set("authContext", authContext);
 
@@ -30,7 +31,7 @@ export function createApiAuthorizationMiddleware(
 
 function findApiPermission(method: string, path: string) {
   return baseApiPermissionManifest.find(
-    (entry) => entry.method === method && matchesPathPattern(entry.path, path)
+    (entry) => entry.method === method && matchesPathPattern(entry.path, path),
   );
 }
 

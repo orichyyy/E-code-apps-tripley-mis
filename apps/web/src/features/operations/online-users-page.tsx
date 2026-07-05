@@ -19,7 +19,7 @@ export function OnlineUsersPage({ route }: { route: WebAdminRouteMetadata }) {
   const query = useQuery({
     enabled: canView,
     queryKey: ["online-users"],
-    queryFn: fetchOnlineUsers
+    queryFn: fetchOnlineUsers,
   });
   const rows = useMemo(
     () =>
@@ -29,10 +29,13 @@ export function OnlineUsersPage({ route }: { route: WebAdminRouteMetadata }) {
           record.displayName,
           record.organizationName,
           record.ipAddress ?? "",
-          record.userAgent ?? ""
-        ].join(" ").toLowerCase().includes(keyword.toLowerCase())
+          record.userAgent ?? "",
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(keyword.toLowerCase()),
       ),
-    [keyword, query.data]
+    [keyword, query.data],
   );
 
   if (!canView) return <PermissionDenied language={language} />;
@@ -73,7 +76,15 @@ export function OnlineUsersPage({ route }: { route: WebAdminRouteMetadata }) {
   );
 }
 
-function OnlineUsersTable({ isError, isLoading, rows }: { isError: boolean; isLoading: boolean; rows: OnlineUser[] }) {
+function OnlineUsersTable({
+  isError,
+  isLoading,
+  rows,
+}: {
+  isError: boolean;
+  isLoading: boolean;
+  rows: OnlineUser[];
+}) {
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 p-8 text-sm text-muted-foreground">
@@ -103,21 +114,29 @@ function OnlineUsersTable({ isError, isLoading, rows }: { isError: boolean; isLo
             <tr className="hover:bg-muted/40" key={record.id}>
               <td className="border-b px-4 py-3">
                 <div className="font-medium">{record.displayName || record.username}</div>
-                <div className="text-xs text-muted-foreground">{record.username || record.userId}</div>
+                <div className="text-xs text-muted-foreground">
+                  {record.username || record.userId}
+                </div>
               </td>
               <td className="border-b px-4 py-3">
                 <div>{record.organizationName || "-"}</div>
-                <div className="text-xs text-muted-foreground">ID {record.currentOrganizationId || record.organizationId || "-"}</div>
+                <div className="text-xs text-muted-foreground">
+                  ID {record.currentOrganizationId || record.organizationId || "-"}
+                </div>
               </td>
               <td className="max-w-80 border-b px-4 py-3">
                 <div>{record.ipAddress ?? "-"}</div>
-                <div className="truncate text-xs text-muted-foreground">{record.userAgent ?? "-"}</div>
+                <div className="truncate text-xs text-muted-foreground">
+                  {record.userAgent ?? "-"}
+                </div>
               </td>
               <td className="border-b px-4 py-3 text-muted-foreground">
                 <div>{record.createdAt || "-"}</div>
                 <div className="text-xs">Expires {record.expiresAt || "-"}</div>
               </td>
-              <td className="border-b px-4 py-3 text-muted-foreground">{record.lastSeenAt || "-"}</td>
+              <td className="border-b px-4 py-3 text-muted-foreground">
+                {record.lastSeenAt || "-"}
+              </td>
               <td className="border-b px-4 py-3">
                 <StatusBadge>{record.status}</StatusBadge>
               </td>
@@ -133,7 +152,9 @@ function PermissionDenied({ language }: { language: "en" | "zh" }) {
   return (
     <section className="rounded-lg border bg-card p-8 text-center">
       <AlertCircle className="mx-auto size-8 text-destructive" aria-hidden="true" />
-      <h2 className="mt-3 text-base font-semibold">{translate(language, "common.permissionDenied")}</h2>
+      <h2 className="mt-3 text-base font-semibold">
+        {translate(language, "common.permissionDenied")}
+      </h2>
     </section>
   );
 }

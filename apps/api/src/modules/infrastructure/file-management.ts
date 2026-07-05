@@ -17,7 +17,7 @@ export const allowedFileExtensions = new Set([
   "xlsx",
   "csv",
   "txt",
-  "zip"
+  "zip",
 ]);
 
 const imagePreviewContentTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
@@ -39,7 +39,10 @@ export type StoredFileMetadataInput = {
   actorId: string | null;
 };
 
-export function validateUploadInput(input: FileUploadInput, maxFileSizeBytes = defaultMaxFileSizeBytes) {
+export function validateUploadInput(
+  input: FileUploadInput,
+  maxFileSizeBytes = defaultMaxFileSizeBytes,
+) {
   const extension = getFileExtension(input.originalName);
   if (!allowedFileExtensions.has(extension)) {
     throw createKnownError("FILE_TYPE_NOT_ALLOWED", { extension });
@@ -47,13 +50,13 @@ export function validateUploadInput(input: FileUploadInput, maxFileSizeBytes = d
   if (input.body.byteLength > maxFileSizeBytes) {
     throw createKnownError("FILE_TOO_LARGE", {
       maxFileSizeBytes,
-      sizeBytes: input.body.byteLength
+      sizeBytes: input.body.byteLength,
     });
   }
   return {
     extension,
     originalName: sanitizeOriginalName(input.originalName),
-    contentType: input.contentType || "application/octet-stream"
+    contentType: input.contentType || "application/octet-stream",
   };
 }
 
@@ -83,7 +86,8 @@ function sanitizeOriginalName(filename: string) {
 }
 
 function encodeRFC5987ValueChars(value: string) {
-  return encodeURIComponent(value).replace(/['()*]/g, (character) =>
-    `%${character.charCodeAt(0).toString(16).toUpperCase()}`
+  return encodeURIComponent(value).replace(
+    /['()*]/g,
+    (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`,
   );
 }

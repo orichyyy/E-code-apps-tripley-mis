@@ -14,7 +14,7 @@ export function createInMemoryQueueAdapter(): QueueAdapter {
       const job = {
         id: (++nextId).toString(),
         type,
-        payload
+        payload,
       };
       for (const handler of handlers.get(type) ?? []) {
         await handler(job);
@@ -25,6 +25,6 @@ export function createInMemoryQueueAdapter(): QueueAdapter {
       const existing = handlers.get(type) ?? [];
       existing.push(handler as Handler);
       handlers.set(type, existing);
-    }
+    },
   };
 }

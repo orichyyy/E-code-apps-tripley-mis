@@ -11,84 +11,92 @@ import { createPostgresqlInfrastructureExecutor } from "../src/modules/infrastru
 const postgresqlUrl = process.env.TEST_DATABASE_URL;
 
 describe("database-backed communications routes", () => {
-  it.runIf(postgresqlUrl)("persists announcement and webhook subscription mutations in PostgreSQL", async () => {
-    const url = getPostgresqlUrl();
-    await runPostgresqlMigrations({ url });
-    const executor = createPostgresqlInfrastructureExecutor(url);
-    const communicationsServices = CommunicationsServices.database(new CommunicationsRepository(executor));
-    const app = createApp({
-      communicationsServices,
-      backendCoreServices: createInMemoryBackendCoreServices()
-    });
-
-    try {
-      await clearCommunicationsTables(executor);
-      await initialize(app);
-      const headers = await loginHeaders(app);
-
-      const announcementResponse = await app.request("/api/announcements", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          title: "DB Announcement",
-          content: "Persisted content",
-          scopeType: "organization"
-        })
-      });
-      const announcementBody = await announcementResponse.json();
-      const publishResponse = await app.request(`/api/announcements/${announcementBody.data.id}/publish`, {
-        method: "POST",
-        headers
-      });
-      const webhookResponse = await app.request("/api/webhooks", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          name: "DB Webhook",
-          url: "https://example.com/db-webhook",
-          eventTypes: ["announcement.published"],
-          secret: "db-secret",
-          status: "enabled"
-        })
-      });
-      const webhookBody = await webhookResponse.json();
-      const persistedAnnouncements = await executor.all(
-        "SELECT id, title, scope_type, status, published_at FROM announcements WHERE id = $1",
-        [announcementBody.data.id]
+  it.runIf(postgresqlUrl)(
+    "persists announcement and webhook subscription mutations in PostgreSQL",
+    async () => {
+      const url = getPostgresqlUrl();
+      await runPostgresqlMigrations({ url });
+      const executor = createPostgresqlInfrastructureExecutor(url);
+      const communicationsServices = CommunicationsServices.database(
+        new CommunicationsRepository(executor),
       );
-      const persistedWebhooks = await executor.all(
-        "SELECT id, name, event_types, secret, status FROM webhook_subscriptions WHERE id = $1",
-        [webhookBody.data.id]
-      );
+      const app = createApp({
+        communicationsServices,
+        backendCoreServices: createInMemoryBackendCoreServices(),
+      });
 
-      expect(announcementResponse.status).toBe(201);
-      expect(publishResponse.status).toBe(200);
-      expect(webhookResponse.status).toBe(201);
-      expect(webhookBody.data).toEqual(
-        expect.objectContaining({ id: webhookBody.data.id, secretConfigured: true })
-      );
-      expect(webhookBody.data).not.toHaveProperty("secret");
-      expect(persistedAnnouncements).toEqual([
-        expect.objectContaining({
-          title: "DB Announcement",
-          scope_type: "organization",
-          status: "published",
-          published_at: expect.any(Date)
-        })
-      ]);
-      expect(persistedWebhooks).toEqual([
-        expect.objectContaining({
-          name: "DB Webhook",
-          event_types: ["announcement.published"],
-          secret: "db-secret",
-          status: "enabled"
-        })
-      ]);
-    } finally {
-      await clearCommunicationsTables(executor);
-      await communicationsServices.close();
-    }
-  });
+      try {
+        await clearCommunicationsTables(executor);
+        await initialize(app);
+        const headers = await loginHeaders(app);
+
+        const announcementResponse = await app.request("/api/announcements", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            title: "DB Announcement",
+            content: "Persisted content",
+            scopeType: "organization",
+          }),
+        });
+        const announcementBody = await announcementResponse.json();
+        const publishResponse = await app.request(
+          `/api/announcements/${announcementBody.data.id}/publish`,
+          {
+            method: "POST",
+            headers,
+          },
+        );
+        const webhookResponse = await app.request("/api/webhooks", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            name: "DB Webhook",
+            url: "https://example.com/db-webhook",
+            eventTypes: ["announcement.published"],
+            secret: "db-secret",
+            status: "enabled",
+          }),
+        });
+        const webhookBody = await webhookResponse.json();
+        const persistedAnnouncements = await executor.all(
+          "SELECT id, title, scope_type, status, published_at FROM announcements WHERE id = $1",
+          [announcementBody.data.id],
+        );
+        const persistedWebhooks = await executor.all(
+          "SELECT id, name, event_types, secret, status FROM webhook_subscriptions WHERE id = $1",
+          [webhookBody.data.id],
+        );
+
+        expect(announcementResponse.status).toBe(201);
+        expect(publishResponse.status).toBe(200);
+        expect(webhookResponse.status).toBe(201);
+        expect(webhookBody.data).toEqual(
+          expect.objectContaining({ id: webhookBody.data.id, secretConfigured: true }),
+        );
+        expect(webhookBody.data).not.toHaveProperty("secret");
+        expect(persistedAnnouncements).toEqual([
+          expect.objectContaining({
+            title: "DB Announcement",
+            scope_type: "organization",
+            status: "published",
+            published_at: expect.any(Date),
+          }),
+        ]);
+        expect(persistedWebhooks).toEqual([
+          expect.objectContaining({
+            name: "DB Webhook",
+            event_types: ["announcement.published"],
+            secret: "db-secret",
+            status: "enabled",
+          }),
+        ]);
+      } finally {
+        await clearCommunicationsTables(executor);
+        await communicationsServices.close();
+      }
+    },
+  );
 });
 
 async function initialize(app: ReturnType<typeof createApp>): Promise<void> {
@@ -101,8 +109,8 @@ async function initialize(app: ReturnType<typeof createApp>): Promise<void> {
       adminDisplayName: "Super Admin",
       adminEmail: "admin@example.com",
       adminPhone: "10000000000",
-      adminPassword: "password1"
-    })
+      adminPassword: "password1",
+    }),
   });
   expect(response.status).toBe(201);
 }
@@ -110,7 +118,7 @@ async function initialize(app: ReturnType<typeof createApp>): Promise<void> {
 async function loginHeaders(app: ReturnType<typeof createApp>) {
   const response = await app.request("/api/auth/login", {
     method: "POST",
-    body: JSON.stringify({ username: "admin", password: "password1" })
+    body: JSON.stringify({ username: "admin", password: "password1" }),
   });
   const body = await response.json();
   expect(response.status).toBe(200);

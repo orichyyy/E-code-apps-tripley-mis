@@ -3,7 +3,9 @@ import type { DatabaseAdapterExecutor, DatabaseRow } from "@web-admin-base/adapt
 
 export function createPostgresqlInfrastructureExecutor(url: string): DatabaseAdapterExecutor {
   const pool = createPostgresqlPool(url);
-  let activeClient: { query(sql: string, params?: unknown[]): Promise<{ rows: unknown[] }> } | null = null;
+  let activeClient: {
+    query(sql: string, params?: unknown[]): Promise<{ rows: unknown[] }>;
+  } | null = null;
 
   return {
     dialect: "postgresql",
@@ -33,7 +35,7 @@ export function createPostgresqlInfrastructureExecutor(url: string): DatabaseAda
     },
     async close() {
       await pool.end();
-    }
+    },
   };
 }
 
@@ -73,6 +75,6 @@ export function createSqliteInfrastructureExecutor(url: string): DatabaseAdapter
     },
     async close() {
       client.close();
-    }
+    },
   };
 }

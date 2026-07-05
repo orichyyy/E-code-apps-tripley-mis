@@ -1,5 +1,8 @@
 import { useForm } from "@tanstack/react-form";
-import { updateSystemConfigRequestSchema, type UpdateSystemConfigRequest } from "@web-admin-base/contracts";
+import {
+  updateSystemConfigRequestSchema,
+  type UpdateSystemConfigRequest,
+} from "@web-admin-base/contracts";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
@@ -30,7 +33,7 @@ export function SystemConfigForm({ busy, record, onCancel, onSubmit }: SystemCon
       }
       setParseError(null);
       onSubmit(updateSystemConfigRequestSchema.parse({ configValue: parsed.value }));
-    }
+    },
   });
 
   return (
@@ -115,26 +118,32 @@ export function SystemConfigForm({ busy, record, onCancel, onSubmit }: SystemCon
 
 function toFormValues(record: SystemConfig): SystemConfigFormValues {
   return {
-    rawValue: record.valueType === "json"
-      ? JSON.stringify(record.configValue, null, 2)
-      : String(record.configValue ?? ""),
-    booleanValue: record.configValue === true
+    rawValue:
+      record.valueType === "json"
+        ? JSON.stringify(record.configValue, null, 2)
+        : String(record.configValue ?? ""),
+    booleanValue: record.configValue === true,
   };
 }
 
 function parseConfigValue(
   valueType: SystemConfig["valueType"],
-  value: SystemConfigFormValues
-): { ok: true; value: string | number | boolean | Record<string, unknown> | unknown[] } | { ok: false; message: string } {
+  value: SystemConfigFormValues,
+):
+  | { ok: true; value: string | number | boolean | Record<string, unknown> | unknown[] }
+  | { ok: false; message: string } {
   if (valueType === "boolean") return { ok: true, value: value.booleanValue };
   if (valueType === "number") {
     const parsed = Number(value.rawValue);
-    return Number.isFinite(parsed) ? { ok: true, value: parsed } : { ok: false, message: "Value must be a valid number." };
+    return Number.isFinite(parsed)
+      ? { ok: true, value: parsed }
+      : { ok: false, message: "Value must be a valid number." };
   }
   if (valueType === "json") {
     try {
       const parsed = JSON.parse(value.rawValue) as unknown;
-      if (typeof parsed !== "object" || parsed === null) return { ok: false, message: "JSON value must be an object or array." };
+      if (typeof parsed !== "object" || parsed === null)
+        return { ok: false, message: "JSON value must be an object or array." };
       return { ok: true, value: parsed as Record<string, unknown> | unknown[] };
     } catch {
       return { ok: false, message: "Value must be valid JSON." };

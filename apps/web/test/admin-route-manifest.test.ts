@@ -9,13 +9,17 @@ describe("admin route metadata manifest alignment", () => {
     const baseMenuRouteCodes = new Set(
       baseMenuManifest
         .map((menu) => menu.routeCode)
-        .filter((routeCode): routeCode is string => Boolean(routeCode))
+        .filter((routeCode): routeCode is string => Boolean(routeCode)),
     );
     const visibleFrontendRouteCodes = adminRoutes
       .filter((route) => route.menuVisible)
       .map((route) => route.routeCode);
 
-    expect(visibleFrontendRouteCodes.every((routeCode) => baseRouteCodes.has(routeCode))).toBe(true);
-    expect(visibleFrontendRouteCodes.every((routeCode) => baseMenuRouteCodes.has(routeCode))).toBe(true);
+    expect(visibleFrontendRouteCodes.every((routeCode) => baseRouteCodes.has(routeCode))).toBe(
+      true,
+    );
+    expect(visibleFrontendRouteCodes.every((routeCode) => baseMenuRouteCodes.has(routeCode))).toBe(
+      true,
+    );
   });
 });

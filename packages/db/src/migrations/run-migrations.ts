@@ -13,10 +13,12 @@ await runMigrationTarget(target, process.env);
 
 export async function runMigrationTarget(
   migrationTarget: DatabaseDialect | "all",
-  env: NodeJS.ProcessEnv
+  env: NodeJS.ProcessEnv,
 ): Promise<void> {
   if (migrationTarget === "sqlite") {
-    const applied = runSqliteMigrations({ url: loadDatabaseConfig({ ...env, DATABASE_DIALECT: "sqlite" }).url });
+    const applied = runSqliteMigrations({
+      url: loadDatabaseConfig({ ...env, DATABASE_DIALECT: "sqlite" }).url,
+    });
     reportApplied("sqlite", applied);
     return;
   }
@@ -29,13 +31,15 @@ export async function runMigrationTarget(
   }
 
   const sqliteApplied = runSqliteMigrations({
-    url: loadDatabaseConfig({ ...env, DATABASE_DIALECT: "sqlite" }).url
+    url: loadDatabaseConfig({ ...env, DATABASE_DIALECT: "sqlite" }).url,
   });
   reportApplied("sqlite", sqliteApplied);
 
   const postgresqlUrl = getPostgresqlUrl(env, false);
   if (!postgresqlUrl) {
-    console.info("Skipping PostgreSQL migrations because TEST_DATABASE_URL/DATABASE_URL is not set.");
+    console.info(
+      "Skipping PostgreSQL migrations because TEST_DATABASE_URL/DATABASE_URL is not set.",
+    );
     return;
   }
 

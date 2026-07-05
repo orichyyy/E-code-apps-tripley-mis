@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 export function ExportTaskForm({
   busy,
   onCancel,
-  onSubmit
+  onSubmit,
 }: {
   busy: boolean;
   onCancel: () => void;
@@ -14,7 +14,7 @@ export function ExportTaskForm({
 }) {
   const form = useForm({
     defaultValues: { resourceType: "logs:login" },
-    onSubmit: ({ value }) => onSubmit(value.resourceType)
+    onSubmit: ({ value }) => onSubmit(value.resourceType),
   });
 
   return (
@@ -27,7 +27,9 @@ export function ExportTaskForm({
       }}
     >
       <h3 className="font-semibold">Create export task</h3>
-      <p className="mt-1 text-muted-foreground">Use confirmed resource types such as logs:login or logs:operation.</p>
+      <p className="mt-1 text-muted-foreground">
+        Use confirmed resource types such as logs:login or logs:operation.
+      </p>
       <form.Field name="resourceType">
         {(field) => (
           <label className="mt-4 flex flex-col gap-1">
@@ -47,7 +49,11 @@ export function ExportTaskForm({
           Cancel
         </Button>
         <Button disabled={busy} size="sm" type="submit">
-          {busy ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Download className="size-4" aria-hidden="true" />}
+          {busy ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Download className="size-4" aria-hidden="true" />
+          )}
           Create
         </Button>
       </div>

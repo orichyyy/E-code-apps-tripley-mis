@@ -15,9 +15,10 @@ export function createInMemoryRateLimitAdapter(): RateLimitAdapter {
     async check(key, limit, windowSeconds) {
       const now = Date.now();
       const current = counters.get(key);
-      const counter = !current || current.resetAt <= now
-        ? { count: 0, resetAt: now + windowSeconds * 1000 }
-        : current;
+      const counter =
+        !current || current.resetAt <= now
+          ? { count: 0, resetAt: now + windowSeconds * 1000 }
+          : current;
 
       counter.count += 1;
       counters.set(key, counter);
@@ -25,8 +26,8 @@ export function createInMemoryRateLimitAdapter(): RateLimitAdapter {
       return {
         allowed: counter.count <= limit,
         remaining: Math.max(0, limit - counter.count),
-        resetAt: new Date(counter.resetAt).toISOString()
+        resetAt: new Date(counter.resetAt).toISOString(),
       };
-    }
+    },
   };
 }

@@ -1,11 +1,18 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { updateOwnPreferencesRequestSchema, type UpdateOwnPreferencesRequest } from "@web-admin-base/contracts";
+import {
+  updateOwnPreferencesRequestSchema,
+  type UpdateOwnPreferencesRequest,
+} from "@web-admin-base/contracts";
 import { AlertCircle, Loader2, Save } from "lucide-react";
 import { useCallback, useEffect, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import { fetchProfile, updateOwnPreferences, type UserPreferences } from "@/features/account/profile-api";
+import {
+  fetchProfile,
+  updateOwnPreferences,
+  type UserPreferences,
+} from "@/features/account/profile-api";
 import { translate } from "@/i18n/messages";
 import { useAuthStore } from "@/stores/auth.store";
 import { useLayoutStore, type ThemeColor } from "@/stores/layout.store";
@@ -24,7 +31,7 @@ export function PersonalSettingsPage() {
   const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: ["profile"],
-    queryFn: fetchProfile
+    queryFn: fetchProfile,
   });
   const mutation = useMutation({
     mutationFn: updateOwnPreferences,
@@ -32,7 +39,7 @@ export function PersonalSettingsPage() {
       applyPreferences(preferences);
       updateUser({ language: preferences.language });
       await queryClient.invalidateQueries({ queryKey: ["profile"] });
-    }
+    },
   });
 
   useEffect(() => {
@@ -40,7 +47,9 @@ export function PersonalSettingsPage() {
   }, [applyPreferences, query.data?.preferences]);
 
   if (query.isLoading) {
-    return <SettingsState icon={<Loader2 className="size-5 animate-spin" />} title="Loading settings" />;
+    return (
+      <SettingsState icon={<Loader2 className="size-5 animate-spin" />} title="Loading settings" />
+    );
   }
 
   if (query.isError || !query.data) {
@@ -67,7 +76,7 @@ function SettingsForm({
   busy,
   language,
   onSubmit,
-  preferences
+  preferences,
 }: {
   busy: boolean;
   language: "en" | "zh";
@@ -77,18 +86,26 @@ function SettingsForm({
   const colors: ThemeColor[] = ["blue", "emerald", "violet", "slate"];
   const form = useForm({
     defaultValues: toSettingsFormValues(preferences),
-    onSubmit: ({ value }) => onSubmit(value)
+    onSubmit: ({ value }) => onSubmit(value),
   });
 
   return (
     <section className="max-w-3xl rounded-lg border bg-card p-5 shadow-sm">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-base font-semibold">{translate(language, "routes.account.settings")}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Persist layout preferences for this account.</p>
+          <h2 className="text-base font-semibold">
+            {translate(language, "routes.account.settings")}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Persist layout preferences for this account.
+          </p>
         </div>
         <Button disabled={busy} form="personal-settings-form" size="sm" type="submit">
-          {busy ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Save className="size-4" aria-hidden="true" />}
+          {busy ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Save className="size-4" aria-hidden="true" />
+          )}
           Save
         </Button>
       </div>
@@ -106,7 +123,9 @@ function SettingsForm({
             <label className="flex items-center justify-between gap-6 text-sm">
               <span>
                 <span className="font-medium">{translate(language, "layout.tabs")}</span>
-                <span className="mt-1 block text-muted-foreground">Enable persistent page tabs.</span>
+                <span className="mt-1 block text-muted-foreground">
+                  Enable persistent page tabs.
+                </span>
               </span>
               <input
                 checked={field.state.value}
@@ -180,7 +199,9 @@ function SettingsForm({
 function SettingsState({ icon, title }: { icon: ReactNode; title: string }) {
   return (
     <section className="max-w-3xl rounded-lg border bg-card p-8 text-center shadow-sm">
-      <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-muted">{icon}</div>
+      <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-muted">
+        {icon}
+      </div>
       <h2 className="mt-3 text-base font-semibold">{title}</h2>
     </section>
   );
@@ -192,12 +213,15 @@ function usePreferenceApplier() {
   const setDarkModeEnabled = useLayoutStore((state) => state.setDarkModeEnabled);
   const setThemeColor = useLayoutStore((state) => state.setThemeColor);
 
-  return useCallback((preferences: UserPreferences) => {
-    setLanguage(preferences.language);
-    setPageTabsEnabled(preferences.pageTabsEnabled);
-    setDarkModeEnabled(preferences.themeMode === "dark");
-    setThemeColor(preferences.themeColor);
-  }, [setDarkModeEnabled, setLanguage, setPageTabsEnabled, setThemeColor]);
+  return useCallback(
+    (preferences: UserPreferences) => {
+      setLanguage(preferences.language);
+      setPageTabsEnabled(preferences.pageTabsEnabled);
+      setDarkModeEnabled(preferences.themeMode === "dark");
+      setThemeColor(preferences.themeColor);
+    },
+    [setDarkModeEnabled, setLanguage, setPageTabsEnabled, setThemeColor],
+  );
 }
 
 function toSettingsFormValues(preferences: UserPreferences): SettingsFormValues {
@@ -205,6 +229,6 @@ function toSettingsFormValues(preferences: UserPreferences): SettingsFormValues 
     language: preferences.language,
     themeMode: preferences.themeMode,
     themeColor: preferences.themeColor,
-    pageTabsEnabled: preferences.pageTabsEnabled
+    pageTabsEnabled: preferences.pageTabsEnabled,
   };
 }

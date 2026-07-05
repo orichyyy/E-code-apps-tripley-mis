@@ -39,7 +39,7 @@ export async function fetchFileDetail(id: string): Promise<FileRecord | null> {
 
 export async function deleteFile(id: string) {
   return requestJson<{ data: FileRecord | null }>(`/files/${id}`, {
-    method: "DELETE"
+    method: "DELETE",
   });
 }
 
@@ -76,7 +76,7 @@ function toFileRecord(record: Record<string, unknown>): FileRecord {
     referenced: booleanField(record.referenced),
     isDeleted: booleanField(record.isDeleted),
     createdAt: stringField(record.createdAt, ""),
-    updatedAt: stringField(record.updatedAt, "")
+    updatedAt: stringField(record.updatedAt, ""),
   };
 }
 
@@ -89,7 +89,7 @@ function toFileReference(record: Record<string, unknown>): FileReference {
     referenceType: stringField(record.referenceType, ""),
     status: stringField(record.status, "active"),
     createdAt: stringField(record.createdAt, ""),
-    createdBy: typeof record.createdBy === "string" ? record.createdBy : null
+    createdBy: typeof record.createdBy === "string" ? record.createdBy : null,
   };
 }
 
@@ -117,7 +117,7 @@ async function requestMultipart<T>(endpoint: string, body: FormData): Promise<T>
   const response = await fetch(`${internalApiClient.basePath}${endpoint}`, {
     method: "POST",
     body,
-    headers: authHeaders()
+    headers: authHeaders(),
   });
   if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
   return (await response.json()) as T;
@@ -125,13 +125,14 @@ async function requestMultipart<T>(endpoint: string, body: FormData): Promise<T>
 
 async function requestBlob(endpoint: string): Promise<Blob> {
   const response = await fetch(`${internalApiClient.basePath}${endpoint}`, {
-    headers: authHeaders()
+    headers: authHeaders(),
   });
   if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
   return response.blob();
 }
 
 function authHeaders(): HeadersInit {
-  const token = typeof localStorage === "undefined" ? null : localStorage.getItem("web-admin.access-token");
+  const token =
+    typeof localStorage === "undefined" ? null : localStorage.getItem("web-admin.access-token");
   return token ? { authorization: `Bearer ${token}` } : {};
 }

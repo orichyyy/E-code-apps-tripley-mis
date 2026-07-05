@@ -12,12 +12,12 @@ import { useLayoutStore } from "@/stores/layout.store";
 
 const loginSchema = z.object({
   username: z.string().min(1),
-  password: z.string().min(1)
+  password: z.string().min(1),
 });
 
 const passwordSchema = z.object({
   oldPassword: z.string().min(1),
-  newPassword: z.string().min(8)
+  newPassword: z.string().min(8),
 });
 
 export function LoginPage() {
@@ -32,7 +32,7 @@ export function LoginPage() {
       const result = await loginWithPassword(value);
       signIn(result);
       await navigate({ to: result.user.forcePasswordChange ? "/forced-password-change" : "/" });
-    }
+    },
   });
 
   return (
@@ -40,7 +40,9 @@ export function LoginPage() {
       <section className="w-full max-w-md rounded-lg border bg-background p-6 shadow-sm">
         <div className="mb-6">
           <h1 className="text-xl font-semibold">{translate(language, "auth.login")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Username and password authentication.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Username and password authentication.
+          </p>
         </div>
         <form
           className="space-y-4"
@@ -130,13 +132,15 @@ function PasswordChangeForm({ forced = false }: { forced?: boolean }) {
       markPasswordChanged();
       signOut();
       await navigate({ to: "/login" });
-    }
+    },
   });
 
   return (
     <section className="mx-auto max-w-xl rounded-lg border bg-card p-5 shadow-sm">
       <h2 className="text-base font-semibold">
-        {forced ? translate(language, "auth.forcedPasswordChange") : translate(language, "auth.changePassword")}
+        {forced
+          ? translate(language, "auth.forcedPasswordChange")
+          : translate(language, "auth.changePassword")}
       </h2>
       <form
         className="mt-5 space-y-4"

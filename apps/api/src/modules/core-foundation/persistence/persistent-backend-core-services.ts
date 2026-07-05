@@ -1,6 +1,6 @@
 import {
   createInMemoryCacheAdapter,
-  createInMemoryTokenStoreAdapter
+  createInMemoryTokenStoreAdapter,
 } from "@web-admin-base/adapters";
 import type {
   AssignUserOrganizationRoleRequest,
@@ -24,16 +24,13 @@ import type {
   UpdateRolePermissionsRequest,
   UpdateRoleRequest,
   UpdateUserPermissionOverridesRequest,
-  UpdateUserRequest
+  UpdateUserRequest,
 } from "@web-admin-base/contracts";
 
 import { PermissionCache } from "../../permissions/permission-cache";
 import type { AuthService, OnlineUserListFilters } from "../auth.service";
 import { BackendCoreServices } from "../services";
-import {
-  defaultBackendCoreConfig,
-  type BackendCoreConfig
-} from "../service-context";
+import { defaultBackendCoreConfig, type BackendCoreConfig } from "../service-context";
 import { BackendCoreStoreRepository } from "./backend-core-store-repository";
 
 type PersistenceScope =
@@ -55,14 +52,14 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
 
   private constructor(
     private readonly repository: BackendCoreStoreRepository,
-    context: ConstructorParameters<typeof BackendCoreServices>[0]
+    context: ConstructorParameters<typeof BackendCoreServices>[0],
   ) {
     super(context);
   }
 
   static async create(
     repository: BackendCoreStoreRepository,
-    config?: Partial<BackendCoreConfig>
+    config?: Partial<BackendCoreConfig>,
   ): Promise<PersistentBackendCoreServices> {
     const store = await repository.load();
     const tokenStore = createInMemoryTokenStoreAdapter();
@@ -74,7 +71,7 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
         tokenVersion: token.tokenVersion,
         expiresAt: token.expiresAt,
         createdAt: token.createdAt,
-        revokedAt: token.revokedAt
+        revokedAt: token.revokedAt,
       });
     }
     return new PersistentBackendCoreServices(repository, {
@@ -83,8 +80,8 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
       tokenStore,
       config: {
         ...defaultBackendCoreConfig,
-        ...config
-      }
+        ...config,
+      },
     });
   }
 
@@ -100,7 +97,10 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
     return this.persistAfter(() => super.seedInitialization(input), ["all"]);
   }
 
-  override async login(input: Parameters<BackendCoreServices["login"]>[0], request: Parameters<BackendCoreServices["login"]>[1]) {
+  override async login(
+    input: Parameters<BackendCoreServices["login"]>[0],
+    request: Parameters<BackendCoreServices["login"]>[1],
+  ) {
     return this.persistAfter(() => super.login(input, request), ["users", "authSessions"]);
   }
 
@@ -110,16 +110,19 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
 
   override async changePassword(
     authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
-    input: ChangePasswordRequest
+    input: ChangePasswordRequest,
   ) {
     return this.persistAfter(() => super.changePassword(authContext, input), ["users"]);
   }
 
   override async switchCurrentOrganization(
     authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
-    input: SwitchCurrentOrganizationRequest
+    input: SwitchCurrentOrganizationRequest,
   ) {
-    return this.persistAfter(() => super.switchCurrentOrganization(authContext, input), ["authSessions"]);
+    return this.persistAfter(
+      () => super.switchCurrentOrganization(authContext, input),
+      ["authSessions"],
+    );
   }
 
   override logout(sessionId: string) {
@@ -132,45 +135,49 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
 
   override async updateOwnProfile(
     authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
-    input: UpdateOwnProfileRequest
+    input: UpdateOwnProfileRequest,
   ) {
-    return this.persistAfter(() => super.updateOwnProfile(authContext, input), [
-      "users",
-      "userPreferences"
-    ]);
+    return this.persistAfter(
+      () => super.updateOwnProfile(authContext, input),
+      ["users", "userPreferences"],
+    );
   }
 
   override async updateOwnPreferences(
     authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
-    input: UpdateOwnPreferencesRequest
+    input: UpdateOwnPreferencesRequest,
   ) {
-    return this.persistAfter(() => super.updateOwnPreferences(authContext, input), [
-      "userPreferences"
-    ]);
+    return this.persistAfter(
+      () => super.updateOwnPreferences(authContext, input),
+      ["userPreferences"],
+    );
   }
 
   override async updateOwnAvatar(
     authContext: NonNullable<ReturnType<AuthService["findAuthContext"]>>,
-    input: UpdateOwnAvatarRequest
+    input: UpdateOwnAvatarRequest,
   ) {
-    return this.persistAfter(() => super.updateOwnAvatar(authContext, input), [
-      "users",
-      "userPreferences"
-    ]);
+    return this.persistAfter(
+      () => super.updateOwnAvatar(authContext, input),
+      ["users", "userPreferences"],
+    );
   }
 
   override updateOrganizationDepthConfig(input: UpdateOrganizationDepthConfigRequest) {
     return super.updateOrganizationDepthConfig(input);
   }
 
-  override async createOrganization(input: CreateOrganizationRequest, actorId: string | null = null) {
+  override async createOrganization(
+    input: CreateOrganizationRequest,
+    actorId: string | null = null,
+  ) {
     return this.persistAfter(() => super.createOrganization(input, actorId), ["organizations"]);
   }
 
   override async updateOrganization(
     id: string,
     input: UpdateOrganizationRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ) {
     return this.persistAfter(() => super.updateOrganization(id, input, actorId), ["organizations"]);
   }
@@ -184,27 +191,30 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
   }
 
   override async deleteOrganization(id: string, deletedBy: string | null = null) {
-    return this.persistAfter(() => super.deleteOrganization(id, deletedBy), [
-      "organizations",
-      "userOrganizationRoles"
-    ]);
+    return this.persistAfter(
+      () => super.deleteOrganization(id, deletedBy),
+      ["organizations", "userOrganizationRoles"],
+    );
   }
 
   override async createUser(input: CreateUserRequest, actorId: string | null = null) {
-    return this.persistAfter(() => super.createUser(input, actorId), ["users", "userOrganizationRoles"]);
+    return this.persistAfter(
+      () => super.createUser(input, actorId),
+      ["users", "userOrganizationRoles"],
+    );
   }
 
   override async updateUser(id: string, input: UpdateUserRequest, actorId: string | null = null) {
-    return this.persistAfter(() => super.updateUser(id, input, actorId), [
-      "users",
-      "userOrganizationRoles"
-    ]);
+    return this.persistAfter(
+      () => super.updateUser(id, input, actorId),
+      ["users", "userOrganizationRoles"],
+    );
   }
 
   override async setUserStatus(
     id: string,
     status: "enabled" | "disabled" | "locked",
-    actorId: string | null = null
+    actorId: string | null = null,
   ) {
     return this.persistAfter(() => super.setUserStatus(id, status, actorId), ["users"]);
   }
@@ -212,35 +222,38 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
   override async resetUserPassword(
     id: string,
     input: ResetPasswordRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ) {
     return this.persistAfter(() => super.resetUserPassword(id, input, actorId), ["users"]);
   }
 
   override async deleteUser(id: string, deletedBy: string | null = null) {
-    return this.persistAfter(() => super.deleteUser(id, deletedBy), ["users", "userOrganizationRoles"]);
+    return this.persistAfter(
+      () => super.deleteUser(id, deletedBy),
+      ["users", "userOrganizationRoles"],
+    );
   }
 
   override async assignUserOrganizationRole(
     userId: string,
     input: AssignUserOrganizationRoleRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ) {
-    return this.persistAfter(() => super.assignUserOrganizationRole(userId, input, actorId), [
-      "users",
-      "userOrganizationRoles"
-    ]);
+    return this.persistAfter(
+      () => super.assignUserOrganizationRole(userId, input, actorId),
+      ["users", "userOrganizationRoles"],
+    );
   }
 
   override async removeUserOrganizationRole(
     userId: string,
     organizationId: string,
-    deletedBy: string | null = null
+    deletedBy: string | null = null,
   ) {
-    return this.persistAfter(() => super.removeUserOrganizationRole(userId, organizationId, deletedBy), [
-      "users",
-      "userOrganizationRoles"
-    ]);
+    return this.persistAfter(
+      () => super.removeUserOrganizationRole(userId, organizationId, deletedBy),
+      ["users", "userOrganizationRoles"],
+    );
   }
 
   override createRole(input: CreateRoleRequest, actorId: string | null = null) {
@@ -254,7 +267,7 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
   override async setRoleStatus(
     id: string,
     status: "enabled" | "disabled",
-    actorId: string | null = null
+    actorId: string | null = null,
   ) {
     return this.persistAfter(() => super.setRoleStatus(id, status, actorId), ["roles"]);
   }
@@ -266,7 +279,7 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
   override async updateRolePermissions(
     id: string,
     input: UpdateRolePermissionsRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ) {
     return this.persistAfter(() => super.updateRolePermissions(id, input, actorId), ["roles"]);
   }
@@ -274,38 +287,41 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
   override async updateRoleDataPermissions(
     id: string,
     input: UpdateRoleDataPermissionsRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ) {
-    return this.persistAfter(() => super.updateRoleDataPermissions(id, input, actorId), [
-      "permissionExtensions"
-    ]);
+    return this.persistAfter(
+      () => super.updateRoleDataPermissions(id, input, actorId),
+      ["permissionExtensions"],
+    );
   }
 
   override async updateRoleFieldPermissions(
     id: string,
     input: UpdateRoleFieldPermissionsRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ) {
-    return this.persistAfter(() => super.updateRoleFieldPermissions(id, input, actorId), [
-      "permissionExtensions"
-    ]);
+    return this.persistAfter(
+      () => super.updateRoleFieldPermissions(id, input, actorId),
+      ["permissionExtensions"],
+    );
   }
 
   override async updateUserPermissionOverrides(
     userId: string,
     input: UpdateUserPermissionOverridesRequest,
-    actorId: string | null = null
+    actorId: string | null = null,
   ) {
-    return this.persistAfter(() => super.updateUserPermissionOverrides(userId, input, actorId), [
-      "permissionExtensions"
-    ]);
+    return this.persistAfter(
+      () => super.updateUserPermissionOverrides(userId, input, actorId),
+      ["permissionExtensions"],
+    );
   }
 
   override async deleteRole(id: string, deletedBy: string | null = null) {
-    return this.persistAfter(() => super.deleteRole(id, deletedBy), [
-      "roles",
-      "userOrganizationRoles"
-    ]);
+    return this.persistAfter(
+      () => super.deleteRole(id, deletedBy),
+      ["roles", "userOrganizationRoles"],
+    );
   }
 
   override syncPermissions() {
@@ -334,7 +350,7 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
 
   private async persistAfter<T>(
     operation: () => T | Promise<T>,
-    scopes: PersistenceScope[]
+    scopes: PersistenceScope[],
   ): Promise<Awaited<T>> {
     const result = await operation();
     await this.persistNow(scopes);
@@ -424,7 +440,7 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
 
 export async function createPersistentBackendCoreServices(
   config?: Partial<BackendCoreConfig>,
-  repository = BackendCoreStoreRepository.fromEnvironment()
+  repository = BackendCoreStoreRepository.fromEnvironment(),
 ) {
   return PersistentBackendCoreServices.create(repository, config);
 }

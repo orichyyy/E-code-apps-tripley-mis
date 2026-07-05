@@ -11,7 +11,7 @@ export type EventBusAdapter = HealthCheckableAdapter & {
   publish: <TPayload>(event: DomainEvent<TPayload>) => Promise<void>;
   subscribe: <TPayload>(
     eventType: string,
-    handler: (event: DomainEvent<TPayload>) => Promise<void>
+    handler: (event: DomainEvent<TPayload>) => Promise<void>,
   ) => Promise<void>;
 };
 

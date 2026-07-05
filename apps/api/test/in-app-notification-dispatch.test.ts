@@ -1,7 +1,7 @@
 import {
   createDatabaseQueueAdapter,
   createInMemoryQueueAdapter,
-  type DatabaseAdapterExecutor
+  type DatabaseAdapterExecutor,
 } from "@web-admin-base/adapters";
 import { inAppNotificationDispatchPayloadSchema } from "@web-admin-base/contracts";
 import { runPostgresqlMigrations } from "@web-admin-base/db";
@@ -19,10 +19,12 @@ describe("in-app notification dispatch", () => {
     const services = InfrastructureServices.inMemory({
       queue,
       organizationUserResolver: async (organizationId) =>
-        organizationId === "org-1" ? ["10", "10", "11"] : []
+        organizationId === "org-1" ? ["10", "10", "11"] : [],
     });
     await queue.consume("notification.in_app.dispatch", async (job) => {
-      await services.dispatchInAppNotificationJob(inAppNotificationDispatchPayloadSchema.parse(job.payload));
+      await services.dispatchInAppNotificationJob(
+        inAppNotificationDispatchPayloadSchema.parse(job.payload),
+      );
     });
     await services.createNotificationTemplate({
       code: "task-ready",
@@ -30,7 +32,7 @@ describe("in-app notification dispatch", () => {
       locale: "en",
       subject: "Task {taskName}",
       body: "Task {{taskName}} is ready for {userName}.",
-      variables: ["taskName", "userName"]
+      variables: ["taskName", "userName"],
     });
 
     const result = await services.enqueueInAppNotification({
@@ -39,13 +41,13 @@ describe("in-app notification dispatch", () => {
       audience: { type: "organization", organizationId: "org-1" },
       variables: { taskName: "Review", userName: "Ada" },
       metadata: { source: "test" },
-      createdBy: "1"
+      createdBy: "1",
     });
 
     expect(result).toEqual({
       jobId: "1",
       jobType: "notification.in_app.dispatch",
-      recipientCount: 2
+      recipientCount: 2,
     });
     await expect(services.listNotifications("10")).resolves.toEqual([
       expect.objectContaining({
@@ -53,14 +55,14 @@ describe("in-app notification dispatch", () => {
         channel: "in_app",
         title: "Task Review",
         body: "Task Review is ready for Ada.",
-        status: "unread"
-      })
+        status: "unread",
+      }),
     ]);
     await expect(services.listNotifications("11")).resolves.toEqual([
       expect.objectContaining({
         userId: "11",
-        title: "Task Review"
-      })
+        title: "Task Review",
+      }),
     ]);
   });
 
@@ -71,71 +73,82 @@ describe("in-app notification dispatch", () => {
       channel: "in_app",
       locale: "en",
       body: "Body",
-      variables: []
+      variables: [],
     });
 
     await expect(
       services.enqueueInAppNotification({
         templateCode: "missing-title",
         locale: "en",
-        audience: { type: "users", userIds: ["1"] }
-      })
+        audience: { type: "users", userIds: ["1"] },
+      }),
     ).rejects.toMatchObject({ code: "VALIDATION_INVALID_REQUEST" });
   });
 
-  it.runIf(postgresqlUrl)("persists queued dispatch jobs and notification records in PostgreSQL", async () => {
-    const url = getPostgresqlUrl();
-    await runPostgresqlMigrations({ url });
-    const executor = createPostgresqlInfrastructureExecutor(url);
-    const queue = createDatabaseQueueAdapter(executor, { workerId: "notification-test-worker" });
-    const services = InfrastructureServices.database(new InfrastructureRepository(executor), { queue });
-
-    try {
-      await clearTables(executor);
-      await services.createNotificationTemplate({
-        code: "db-notice",
-        channel: "in_app",
-        locale: "en",
-        subject: "Notice {name}",
-        body: "Hello {name}",
-        variables: ["name"]
-      });
-      await queue.consume("notification.in_app.dispatch", async (job) => {
-        await services.dispatchInAppNotificationJob(inAppNotificationDispatchPayloadSchema.parse(job.payload));
+  it.runIf(postgresqlUrl)(
+    "persists queued dispatch jobs and notification records in PostgreSQL",
+    async () => {
+      const url = getPostgresqlUrl();
+      await runPostgresqlMigrations({ url });
+      const executor = createPostgresqlInfrastructureExecutor(url);
+      const queue = createDatabaseQueueAdapter(executor, { workerId: "notification-test-worker" });
+      const services = InfrastructureServices.database(new InfrastructureRepository(executor), {
+        queue,
       });
 
-      const enqueueResult = await services.enqueueInAppNotification({
-        templateCode: "db-notice",
-        locale: "en",
-        audience: { type: "users", userIds: ["101", "101", "102"] },
-        variables: { name: "Ada" },
-        createdBy: "1"
-      });
-      const pendingRows = await executor.all("SELECT type, status FROM queue_jobs ORDER BY id ASC");
-      const processed = await queue.processReady();
-      const succeededRows = await executor.all("SELECT type, status FROM queue_jobs ORDER BY id ASC");
+      try {
+        await clearTables(executor);
+        await services.createNotificationTemplate({
+          code: "db-notice",
+          channel: "in_app",
+          locale: "en",
+          subject: "Notice {name}",
+          body: "Hello {name}",
+          variables: ["name"],
+        });
+        await queue.consume("notification.in_app.dispatch", async (job) => {
+          await services.dispatchInAppNotificationJob(
+            inAppNotificationDispatchPayloadSchema.parse(job.payload),
+          );
+        });
 
-      expect(enqueueResult.recipientCount).toBe(2);
-      expect(pendingRows).toEqual([
-        expect.objectContaining({ type: "notification.in_app.dispatch", status: "pending" })
-      ]);
-      expect(processed).toBe(1);
-      expect(succeededRows).toEqual([
-        expect.objectContaining({ type: "notification.in_app.dispatch", status: "succeeded" })
-      ]);
-      await expect(services.listNotifications("101")).resolves.toEqual([
-        expect.objectContaining({
-          userId: "101",
-          title: "Notice Ada",
-          body: "Hello Ada",
-          status: "unread"
-        })
-      ]);
-    } finally {
-      await clearTables(executor);
-      await services.close();
-    }
-  });
+        const enqueueResult = await services.enqueueInAppNotification({
+          templateCode: "db-notice",
+          locale: "en",
+          audience: { type: "users", userIds: ["101", "101", "102"] },
+          variables: { name: "Ada" },
+          createdBy: "1",
+        });
+        const pendingRows = await executor.all(
+          "SELECT type, status FROM queue_jobs ORDER BY id ASC",
+        );
+        const processed = await queue.processReady();
+        const succeededRows = await executor.all(
+          "SELECT type, status FROM queue_jobs ORDER BY id ASC",
+        );
+
+        expect(enqueueResult.recipientCount).toBe(2);
+        expect(pendingRows).toEqual([
+          expect.objectContaining({ type: "notification.in_app.dispatch", status: "pending" }),
+        ]);
+        expect(processed).toBe(1);
+        expect(succeededRows).toEqual([
+          expect.objectContaining({ type: "notification.in_app.dispatch", status: "succeeded" }),
+        ]);
+        await expect(services.listNotifications("101")).resolves.toEqual([
+          expect.objectContaining({
+            userId: "101",
+            title: "Notice Ada",
+            body: "Hello Ada",
+            status: "unread",
+          }),
+        ]);
+      } finally {
+        await clearTables(executor);
+        await services.close();
+      }
+    },
+  );
 });
 
 async function clearTables(executor: DatabaseAdapterExecutor): Promise<void> {
@@ -145,6 +158,7 @@ async function clearTables(executor: DatabaseAdapterExecutor): Promise<void> {
 }
 
 function getPostgresqlUrl(): string {
-  if (!postgresqlUrl) throw new Error("TEST_DATABASE_URL is required for PostgreSQL notification tests.");
+  if (!postgresqlUrl)
+    throw new Error("TEST_DATABASE_URL is required for PostgreSQL notification tests.");
   return postgresqlUrl;
 }

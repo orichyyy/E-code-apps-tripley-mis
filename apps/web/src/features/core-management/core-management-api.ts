@@ -4,7 +4,7 @@ import {
   flattenTree,
   parseCoreEntities,
   type CoreEntity,
-  type CoreFormValues
+  type CoreFormValues,
 } from "./core-management-model";
 
 type Envelope<T> = {
@@ -51,18 +51,21 @@ export async function fetchMenus(): Promise<CoreEntity[]> {
 export async function createUser(values: CoreFormValues): Promise<unknown> {
   return requestJson("/users", {
     method: "POST",
-    body: JSON.stringify(compactPayload(values))
+    body: JSON.stringify(compactPayload(values)),
   });
 }
 
 export async function updateUser(id: string, values: CoreFormValues): Promise<unknown> {
   return requestJson(`/users/${id}`, {
     method: "PATCH",
-    body: JSON.stringify(compactPayload(values))
+    body: JSON.stringify(compactPayload(values)),
   });
 }
 
-export async function setUserStatus(id: string, action: "enable" | "disable" | "lock" | "unlock"): Promise<unknown> {
+export async function setUserStatus(
+  id: string,
+  action: "enable" | "disable" | "lock" | "unlock",
+): Promise<unknown> {
   return requestJson(`/users/${id}/${action}`, { method: "POST" });
 }
 
@@ -73,25 +76,28 @@ export async function deleteUser(id: string): Promise<unknown> {
 export async function resetUserPassword(id: string, password: string): Promise<unknown> {
   return requestJson(`/users/${id}/reset-password`, {
     method: "POST",
-    body: JSON.stringify({ password })
+    body: JSON.stringify({ password }),
   });
 }
 
 export async function createOrganization(values: CoreFormValues): Promise<unknown> {
   return requestJson("/organizations", {
     method: "POST",
-    body: JSON.stringify(compactPayload(values))
+    body: JSON.stringify(compactPayload(values)),
   });
 }
 
 export async function updateOrganization(id: string, values: CoreFormValues): Promise<unknown> {
   return requestJson(`/organizations/${id}`, {
     method: "PATCH",
-    body: JSON.stringify(compactPayload(values))
+    body: JSON.stringify(compactPayload(values)),
   });
 }
 
-export async function setOrganizationStatus(id: string, action: "enable" | "disable"): Promise<unknown> {
+export async function setOrganizationStatus(
+  id: string,
+  action: "enable" | "disable",
+): Promise<unknown> {
   return requestJson(`/organizations/${id}/${action}`, { method: "POST" });
 }
 
@@ -102,14 +108,14 @@ export async function deleteOrganization(id: string): Promise<unknown> {
 export async function createRole(values: CoreFormValues): Promise<unknown> {
   return requestJson("/roles", {
     method: "POST",
-    body: JSON.stringify(compactPayload(values))
+    body: JSON.stringify(compactPayload(values)),
   });
 }
 
 export async function updateRole(id: string, values: CoreFormValues): Promise<unknown> {
   return requestJson(`/roles/${id}`, {
     method: "PATCH",
-    body: JSON.stringify(compactPayload(values))
+    body: JSON.stringify(compactPayload(values)),
   });
 }
 
@@ -127,13 +133,18 @@ export async function copyRole(id: string): Promise<unknown> {
 
 export async function fetchRolePermissions(id: string): Promise<string[]> {
   const envelope = await requestJson<Envelope<unknown>>(`/roles/${id}/permissions`);
-  return Array.isArray(envelope.data) ? envelope.data.filter((code): code is string => typeof code === "string") : [];
+  return Array.isArray(envelope.data)
+    ? envelope.data.filter((code): code is string => typeof code === "string")
+    : [];
 }
 
-export async function updateRolePermissions(id: string, permissionCodes: string[]): Promise<unknown> {
+export async function updateRolePermissions(
+  id: string,
+  permissionCodes: string[],
+): Promise<unknown> {
   return requestJson(`/roles/${id}/permissions`, {
     method: "PUT",
-    body: JSON.stringify({ permissionCodes })
+    body: JSON.stringify({ permissionCodes }),
   });
 }
 
@@ -144,14 +155,14 @@ export async function syncPermissions(): Promise<unknown> {
 export async function createMenu(values: CoreFormValues): Promise<unknown> {
   return requestJson("/menus", {
     method: "POST",
-    body: JSON.stringify(compactPayload(values))
+    body: JSON.stringify(compactPayload(values)),
   });
 }
 
 export async function updateMenu(id: string, values: CoreFormValues): Promise<unknown> {
   return requestJson(`/menus/${id}`, {
     method: "PATCH",
-    body: JSON.stringify(compactPayload(values))
+    body: JSON.stringify(compactPayload(values)),
   });
 }
 
@@ -159,9 +170,12 @@ export async function deleteMenu(id: string): Promise<unknown> {
   return requestJson(`/menus/${id}`, { method: "DELETE" });
 }
 
-export async function updateMenuApiBindings(id: string, apiPermissionIds: string[]): Promise<unknown> {
+export async function updateMenuApiBindings(
+  id: string,
+  apiPermissionIds: string[],
+): Promise<unknown> {
   return requestJson(`/menus/${id}/api-bindings`, {
     method: "PUT",
-    body: JSON.stringify({ apiPermissionIds })
+    body: JSON.stringify({ apiPermissionIds }),
   });
 }

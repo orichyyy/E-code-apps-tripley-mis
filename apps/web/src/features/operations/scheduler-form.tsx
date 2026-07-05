@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import {
   createScheduledTaskRequestSchema,
-  type CreateScheduledTaskRequest
+  type CreateScheduledTaskRequest,
 } from "@web-admin-base/contracts";
 import { Loader2 } from "lucide-react";
 import { z } from "zod";
@@ -39,19 +39,27 @@ const payloadSchema = z.string().transform((value, context) => {
   }
 });
 
-export function SchedulerForm({ busy, initialRecord, mode, onCancel, onSubmit }: SchedulerFormProps) {
+export function SchedulerForm({
+  busy,
+  initialRecord,
+  mode,
+  onCancel,
+  onSubmit,
+}: SchedulerFormProps) {
   const form = useForm({
     defaultValues: toDefaultValues(initialRecord),
     onSubmit: ({ value }) => {
       const payload = payloadSchema.parse(value.payloadJson);
-      onSubmit(createScheduledTaskRequestSchema.parse({
-        code: value.code,
-        cronExpression: value.cronExpression,
-        handlerType: value.handlerType,
-        payload,
-        enabled: value.enabled
-      }));
-    }
+      onSubmit(
+        createScheduledTaskRequestSchema.parse({
+          code: value.code,
+          cronExpression: value.cronExpression,
+          handlerType: value.handlerType,
+          payload,
+          enabled: value.enabled,
+        }),
+      );
+    },
   });
 
   return (
@@ -64,8 +72,12 @@ export function SchedulerForm({ busy, initialRecord, mode, onCancel, onSubmit }:
       }}
     >
       <div className="mb-4">
-        <h3 className="font-semibold">{mode === "create" ? "Create scheduled task" : "Edit scheduled task"}</h3>
-        <p className="mt-1 text-muted-foreground">Cron uses the confirmed five-field expression format.</p>
+        <h3 className="font-semibold">
+          {mode === "create" ? "Create scheduled task" : "Edit scheduled task"}
+        </h3>
+        <p className="mt-1 text-muted-foreground">
+          Cron uses the confirmed five-field expression format.
+        </p>
       </div>
       <div className="flex flex-col gap-3">
         <form.Field name="code">
@@ -158,6 +170,6 @@ function toDefaultValues(record?: ScheduledTask): SchedulerFormValues {
     cronExpression: record?.cronExpression ?? "*/15 * * * *",
     handlerType: record?.handlerType ?? "",
     payloadJson: JSON.stringify(record?.payload ?? {}, null, 2),
-    enabled: record?.enabled ?? true
+    enabled: record?.enabled ?? true,
   };
 }

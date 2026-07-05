@@ -10,7 +10,7 @@ export type QueueAdapter = HealthCheckableAdapter & {
   enqueue: <TPayload>(type: string, payload: TPayload) => Promise<QueueJob<TPayload>>;
   consume: <TPayload>(
     type: string,
-    handler: (job: QueueJob<TPayload>) => Promise<void>
+    handler: (job: QueueJob<TPayload>) => Promise<void>,
   ) => Promise<void>;
 };
 

@@ -3,7 +3,7 @@ import {
   createDatabaseQueueAdapter,
   type FileStorageAdapter,
   type NotificationChannelAdapter,
-  type QueueAdapter
+  type QueueAdapter,
 } from "@web-admin-base/adapters";
 import type { InAppNotificationDispatchPayload } from "@web-admin-base/contracts";
 import type {
@@ -13,7 +13,7 @@ import type {
   CreateScheduledTaskRequest,
   SendTestEmailNotificationRequest,
   UpdateNotificationTemplateRequest,
-  UpdateScheduledTaskRequest
+  UpdateScheduledTaskRequest,
 } from "@web-admin-base/contracts";
 
 import { createKnownError } from "../../core/errors/error-codes";
@@ -22,7 +22,7 @@ import {
   createObjectKey,
   isPreviewableImage,
   validateUploadInput,
-  type FileUploadInput
+  type FileUploadInput,
 } from "./file-management";
 import type { EnqueueInAppNotificationInput } from "./in-app-notification-dispatcher";
 import { InfrastructureNotificationService } from "./infrastructure-notification.service";
@@ -33,18 +33,24 @@ import {
   createDefaultQueue,
   readMaxFileSizeBytes,
   resolveInfrastructureServiceOptions,
-  type InfrastructureServiceOptions
+  type InfrastructureServiceOptions,
 } from "./infrastructure-service-options";
 import type { LogType, ScheduledTaskInput } from "./infrastructure.types";
 
 export class InfrastructureServices {
   private readonly memory = {
     files: [] as Array<Record<string, unknown> & { id: string }>,
-    importExportTasks: [] as Array<Record<string, unknown> & { id: string; resourceType: string; taskType: string }>,
+    importExportTasks: [] as Array<
+      Record<string, unknown> & { id: string; resourceType: string; taskType: string }
+    >,
     logs: [] as Array<Record<string, unknown> & { id: string; logType: LogType }>,
-    notifications: [] as Array<Record<string, unknown> & { id: string; status: string; userId?: string | null }>,
-    scheduledTasks: [] as Array<Record<string, unknown> & { id: string; code: string; enabled: boolean }>,
-    templates: [] as NotificationTemplateRecord[]
+    notifications: [] as Array<
+      Record<string, unknown> & { id: string; status: string; userId?: string | null }
+    >,
+    scheduledTasks: [] as Array<
+      Record<string, unknown> & { id: string; code: string; enabled: boolean }
+    >,
+    templates: [] as NotificationTemplateRecord[],
   };
   private sequence = 1;
   private readonly notificationService: InfrastructureNotificationService;
@@ -55,22 +61,24 @@ export class InfrastructureServices {
     private readonly maxFileSizeBytes = readMaxFileSizeBytes(),
     notificationChannel: NotificationChannelAdapter = createDefaultNotificationChannel(),
     queue: QueueAdapter = createDefaultQueue(),
-    organizationUserResolver?: (organizationId: string) => Promise<string[]>
+    organizationUserResolver?: (organizationId: string) => Promise<string[]>,
   ) {
     this.notificationService = new InfrastructureNotificationService({
       repository,
       memory: {
         notifications: this.memory.notifications,
-        templates: this.memory.templates
+        templates: this.memory.templates,
       },
       notificationChannel,
       queue,
       nextId: () => this.nextId(),
-      organizationUserResolver
+      organizationUserResolver,
     });
   }
 
-  static inMemory(options?: FileStorageAdapter | InfrastructureServiceOptions): InfrastructureServices {
+  static inMemory(
+    options?: FileStorageAdapter | InfrastructureServiceOptions,
+  ): InfrastructureServices {
     const resolved = resolveInfrastructureServiceOptions(options);
     return new InfrastructureServices(
       undefined,
@@ -78,13 +86,13 @@ export class InfrastructureServices {
       resolved.maxFileSizeBytes,
       resolved.notificationChannel,
       resolved.queue,
-      resolved.organizationUserResolver
+      resolved.organizationUserResolver,
     );
   }
 
   static database(
     repository = InfrastructureRepository.fromEnvironment(),
-    options?: FileStorageAdapter | InfrastructureServiceOptions
+    options?: FileStorageAdapter | InfrastructureServiceOptions,
   ): InfrastructureServices {
     const resolved = resolveInfrastructureServiceOptions(options);
     const queue = resolved.queue ?? createDatabaseQueueAdapter(repository.executor);
@@ -94,7 +102,7 @@ export class InfrastructureServices {
       resolved.maxFileSizeBytes,
       resolved.notificationChannel,
       queue,
-      resolved.organizationUserResolver
+      resolved.organizationUserResolver,
     );
   }
 
@@ -103,11 +111,17 @@ export class InfrastructureServices {
   }
 
   listLogs(logType: LogType) {
-    return this.repository?.listLogs(logType) ?? Promise.resolve(this.memory.logs.filter((log) => log.logType === logType));
+    return (
+      this.repository?.listLogs(logType) ??
+      Promise.resolve(this.memory.logs.filter((log) => log.logType === logType))
+    );
   }
 
   createLogExportTask(input: CreateLogExportTaskRequest, actorId: string | null) {
-    return this.repository?.createLogExportTask(input.logType, actorId) ?? this.createMemoryExportTask(`logs:${input.logType}`, actorId);
+    return (
+      this.repository?.createLogExportTask(input.logType, actorId) ??
+      this.createMemoryExportTask(`logs:${input.logType}`, actorId)
+    );
   }
 
   listFiles() {
@@ -115,7 +129,10 @@ export class InfrastructureServices {
   }
 
   getFile(id: string) {
-    return this.repository?.getFile(id) ?? Promise.resolve(this.memory.files.find((file) => file.id === id) ?? null);
+    return (
+      this.repository?.getFile(id) ??
+      Promise.resolve(this.memory.files.find((file) => file.id === id) ?? null)
+    );
   }
 
   async uploadFile(input: FileUploadInput) {
@@ -129,7 +146,7 @@ export class InfrastructureServices {
       extension: normalized.extension,
       sizeBytes: stored.sizeBytes,
       storageDriver: "local",
-      actorId: input.actorId
+      actorId: input.actorId,
     };
     if (this.repository) return this.repository.createFile(metadata);
     const now = new Date().toISOString();
@@ -140,7 +157,7 @@ export class InfrastructureServices {
       referenced: false,
       isDeleted: false,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
     this.memory.files.unshift(file);
     return file;
@@ -148,7 +165,8 @@ export class InfrastructureServices {
 
   async getFileContent(id: string, mode: "download" | "preview") {
     const file = await this.getFile(id);
-    if (!file || file.isDeleted || file.status === "invalid") throw createKnownError("FILE_NOT_FOUND");
+    if (!file || file.isDeleted || file.status === "invalid")
+      throw createKnownError("FILE_NOT_FOUND");
     if (mode === "preview" && !isPreviewableImage(String(file.contentType))) {
       throw createKnownError("FILE_PREVIEW_NOT_SUPPORTED");
     }
@@ -165,7 +183,7 @@ export class InfrastructureServices {
       status: "invalid",
       isDeleted: true,
       deletedBy: actorId,
-      deletedAt: new Date().toISOString()
+      deletedAt: new Date().toISOString(),
     });
     return Promise.resolve(file);
   }
@@ -178,7 +196,11 @@ export class InfrastructureServices {
     return this.notificationService.listNotifications(userId);
   }
 
-  updateNotificationStatus(id: string, status: "read" | "archived" | "deleted", actorId: string | null) {
+  updateNotificationStatus(
+    id: string,
+    status: "read" | "archived" | "deleted",
+    actorId: string | null,
+  ) {
     return this.notificationService.updateNotificationStatus(id, status, actorId);
   }
 
@@ -216,7 +238,7 @@ export class InfrastructureServices {
       cronExpression: input.cronExpression,
       handlerType: input.handlerType,
       payload: input.payload,
-      enabled: input.enabled
+      enabled: input.enabled,
     };
     if (this.repository) return this.repository.createScheduledTask(normalized);
     const now = new Date().toISOString();
@@ -224,9 +246,11 @@ export class InfrastructureServices {
       id: this.nextId(),
       ...normalized,
       status: normalized.enabled ? "enabled" : "disabled",
-      nextRunAt: normalized.enabled ? nextScheduledRunOrThrow(normalized.cronExpression, now) : null,
+      nextRunAt: normalized.enabled
+        ? nextScheduledRunOrThrow(normalized.cronExpression, now)
+        : null,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     };
     this.memory.scheduledTasks.unshift(task);
     return Promise.resolve(task);
@@ -240,7 +264,7 @@ export class InfrastructureServices {
     const next = { ...task, ...input };
     Object.assign(task, input, {
       nextRunAt: next.enabled ? nextScheduledRunOrThrow(String(next.cronExpression), now) : null,
-      updatedAt: now
+      updatedAt: now,
     });
     return Promise.resolve(task);
   }
@@ -257,19 +281,30 @@ export class InfrastructureServices {
   }
 
   enqueueScheduledTaskRun(id: string) {
-    return this.repository?.enqueueScheduledTaskRun(id) ?? Promise.resolve(this.memory.scheduledTasks.find((item) => item.id === id) ?? null);
+    return (
+      this.repository?.enqueueScheduledTaskRun(id) ??
+      Promise.resolve(this.memory.scheduledTasks.find((item) => item.id === id) ?? null)
+    );
   }
 
   listImportExportTasks() {
-    return this.repository?.listImportExportTasks() ?? Promise.resolve(this.memory.importExportTasks);
+    return (
+      this.repository?.listImportExportTasks() ?? Promise.resolve(this.memory.importExportTasks)
+    );
   }
 
   getImportExportTask(id: string) {
-    return this.repository?.getImportExportTask(id) ?? Promise.resolve(this.memory.importExportTasks.find((task) => task.id === id) ?? null);
+    return (
+      this.repository?.getImportExportTask(id) ??
+      Promise.resolve(this.memory.importExportTasks.find((task) => task.id === id) ?? null)
+    );
   }
 
   createExportTask(input: CreateExportTaskRequest, actorId: string | null) {
-    return this.repository?.createExportTask(input.resourceType, actorId) ?? this.createMemoryExportTask(input.resourceType, actorId);
+    return (
+      this.repository?.createExportTask(input.resourceType, actorId) ??
+      this.createMemoryExportTask(input.resourceType, actorId)
+    );
   }
 
   private createMemoryExportTask(resourceType: string, actorId: string | null) {
@@ -286,7 +321,7 @@ export class InfrastructureServices {
       resultExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       createdAt: now,
       updatedAt: now,
-      createdBy: actorId
+      createdBy: actorId,
     };
     this.memory.importExportTasks.unshift(task);
     return Promise.resolve(task);
@@ -305,7 +340,7 @@ function nextScheduledRunOrThrow(cronExpression: string, nowIsoValue: string): s
   } catch (error) {
     throw createKnownError("VALIDATION_INVALID_REQUEST", {
       field: "cronExpression",
-      message: error instanceof Error ? error.message : String(error)
+      message: error instanceof Error ? error.message : String(error),
     });
   }
 }

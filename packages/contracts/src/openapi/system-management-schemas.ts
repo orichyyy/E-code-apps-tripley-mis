@@ -2,14 +2,14 @@ import type { OpenApiDocument, OpenApiSchema } from "./types";
 
 const idStringSchema: OpenApiSchema = {
   type: "string",
-  description: "Database auto-increment ID serialized as a string."
+  description: "Database auto-increment ID serialized as a string.",
 };
 
 const envelopeSchema = (data: OpenApiSchema): OpenApiSchema => ({
   type: "object",
   required: ["data"],
   properties: { data },
-  additionalProperties: true
+  additionalProperties: true,
 });
 
 const systemConfigSchema: OpenApiSchema = {
@@ -24,7 +24,7 @@ const systemConfigSchema: OpenApiSchema = {
     "description",
     "editable",
     "status",
-    "updatedAt"
+    "updatedAt",
   ],
   properties: {
     id: idStringSchema,
@@ -36,9 +36,9 @@ const systemConfigSchema: OpenApiSchema = {
     description: { type: "string", nullable: true },
     editable: { type: "boolean" },
     status: { type: "string", enum: ["enabled", "disabled"] },
-    updatedAt: { type: "string", format: "date-time" }
+    updatedAt: { type: "string", format: "date-time" },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 const dictionaryTypeSchema: OpenApiSchema = {
@@ -50,9 +50,9 @@ const dictionaryTypeSchema: OpenApiSchema = {
     code: { type: "string" },
     name: { type: "string" },
     description: { type: "string", nullable: true },
-    status: { type: "string", enum: ["enabled", "disabled"] }
+    status: { type: "string", enum: ["enabled", "disabled"] },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 const dictionaryItemSchema: OpenApiSchema = {
@@ -65,9 +65,9 @@ const dictionaryItemSchema: OpenApiSchema = {
     itemValue: { type: "string" },
     labelI18nKey: { type: "string" },
     sortOrder: { type: "integer" },
-    status: { type: "string", enum: ["enabled", "disabled"] }
+    status: { type: "string", enum: ["enabled", "disabled"] },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 const i18nMessageSchema: OpenApiSchema = {
@@ -80,9 +80,9 @@ const i18nMessageSchema: OpenApiSchema = {
     language: { type: "string" },
     messageValue: { type: "string" },
     module: { type: "string" },
-    updatedAt: { type: "string", format: "date-time" }
+    updatedAt: { type: "string", format: "date-time" },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 export const systemManagementComponentSchemas: OpenApiDocument["components"]["schemas"] = {
@@ -90,9 +90,9 @@ export const systemManagementComponentSchemas: OpenApiDocument["components"]["sc
     type: "object",
     required: ["configValue"],
     properties: {
-      configValue: {}
+      configValue: {},
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   CreateDictionaryTypeRequest: {
     type: "object",
@@ -101,9 +101,9 @@ export const systemManagementComponentSchemas: OpenApiDocument["components"]["sc
       code: { type: "string" },
       name: { type: "string" },
       description: { type: "string", nullable: true },
-      status: { type: "string", enum: ["enabled", "disabled"] }
+      status: { type: "string", enum: ["enabled", "disabled"] },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateDictionaryTypeRequest: {
     type: "object",
@@ -111,9 +111,9 @@ export const systemManagementComponentSchemas: OpenApiDocument["components"]["sc
       code: { type: "string" },
       name: { type: "string" },
       description: { type: "string", nullable: true },
-      status: { type: "string", enum: ["enabled", "disabled"] }
+      status: { type: "string", enum: ["enabled", "disabled"] },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   CreateDictionaryItemRequest: {
     type: "object",
@@ -122,9 +122,9 @@ export const systemManagementComponentSchemas: OpenApiDocument["components"]["sc
       itemValue: { type: "string" },
       labelI18nKey: { type: "string" },
       sortOrder: { type: "integer" },
-      status: { type: "string", enum: ["enabled", "disabled"] }
+      status: { type: "string", enum: ["enabled", "disabled"] },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateDictionaryItemRequest: {
     type: "object",
@@ -132,17 +132,17 @@ export const systemManagementComponentSchemas: OpenApiDocument["components"]["sc
       itemValue: { type: "string" },
       labelI18nKey: { type: "string" },
       sortOrder: { type: "integer" },
-      status: { type: "string", enum: ["enabled", "disabled"] }
+      status: { type: "string", enum: ["enabled", "disabled"] },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateI18nMessageRequest: {
     type: "object",
     required: ["messageValue"],
     properties: {
-      messageValue: { type: "string" }
+      messageValue: { type: "string" },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   SystemConfig: systemConfigSchema,
   DictionaryType: dictionaryTypeSchema,
@@ -150,30 +150,30 @@ export const systemManagementComponentSchemas: OpenApiDocument["components"]["sc
   I18nMessage: i18nMessageSchema,
   SystemConfigListResponse: envelopeSchema({
     type: "array",
-    items: { $ref: "#/components/schemas/SystemConfig" }
+    items: { $ref: "#/components/schemas/SystemConfig" },
   }),
   SystemConfigResponse: envelopeSchema({
-    anyOf: [{ $ref: "#/components/schemas/SystemConfig" }, { type: "null" }]
+    anyOf: [{ $ref: "#/components/schemas/SystemConfig" }, { type: "null" }],
   }),
   DictionaryTypeListResponse: envelopeSchema({
     type: "array",
-    items: { $ref: "#/components/schemas/DictionaryType" }
+    items: { $ref: "#/components/schemas/DictionaryType" },
   }),
   DictionaryTypeResponse: envelopeSchema({
-    anyOf: [{ $ref: "#/components/schemas/DictionaryType" }, { type: "null" }]
+    anyOf: [{ $ref: "#/components/schemas/DictionaryType" }, { type: "null" }],
   }),
   DictionaryItemListResponse: envelopeSchema({
     type: "array",
-    items: { $ref: "#/components/schemas/DictionaryItem" }
+    items: { $ref: "#/components/schemas/DictionaryItem" },
   }),
   DictionaryItemResponse: envelopeSchema({
-    anyOf: [{ $ref: "#/components/schemas/DictionaryItem" }, { type: "null" }]
+    anyOf: [{ $ref: "#/components/schemas/DictionaryItem" }, { type: "null" }],
   }),
   I18nMessageListResponse: envelopeSchema({
     type: "array",
-    items: { $ref: "#/components/schemas/I18nMessage" }
+    items: { $ref: "#/components/schemas/I18nMessage" },
   }),
   I18nMessageResponse: envelopeSchema({
-    anyOf: [{ $ref: "#/components/schemas/I18nMessage" }, { type: "null" }]
-  })
+    anyOf: [{ $ref: "#/components/schemas/I18nMessage" }, { type: "null" }],
+  }),
 };

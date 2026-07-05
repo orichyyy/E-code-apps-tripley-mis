@@ -15,8 +15,8 @@ export function createDatabaseInAppNotificationDispatchHandler(executor: Databas
             payload.body,
             jsonParam({ ...payload.metadata, createdBy: payload.createdBy }, executor.dialect),
             now,
-            now
-          ]
+            now,
+          ],
         );
       }
     });

@@ -9,21 +9,29 @@ export function FileStatusBadge({ isDeleted, status }: { isDeleted: boolean; sta
       ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
       : "bg-destructive/10 text-destructive";
 
-  return <span className={`inline-flex rounded-md px-2 py-1 text-xs font-medium ${className}`}>{normalizedStatus}</span>;
+  return (
+    <span className={`inline-flex rounded-md px-2 py-1 text-xs font-medium ${className}`}>
+      {normalizedStatus}
+    </span>
+  );
 }
 
 export function ReferencedBadge({ referenced }: { referenced: boolean }) {
   return referenced ? (
-    <span className="inline-flex rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">Referenced</span>
+    <span className="inline-flex rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+      Referenced
+    </span>
   ) : (
-    <span className="inline-flex rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">Unreferenced</span>
+    <span className="inline-flex rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+      Unreferenced
+    </span>
   );
 }
 
 export function FileDetailPanel({
   previewUrl,
   record,
-  references
+  references,
 }: {
   previewUrl: string | null;
   record: FileRecord | null;
@@ -38,7 +46,8 @@ export function FileDetailPanel({
         <div>
           <h3 className="font-semibold">{record ? record.originalName : "File metadata"}</h3>
           <p className="mt-2 text-muted-foreground">
-            Review stored metadata, preview supported images, and confirm invalidation state for referenced data.
+            Review stored metadata, preview supported images, and confirm invalidation state for
+            referenced data.
           </p>
         </div>
       </div>
@@ -46,7 +55,11 @@ export function FileDetailPanel({
         <>
           {previewUrl ? (
             <div className="mt-4 overflow-hidden rounded-md border bg-muted">
-              <img alt={record.originalName} className="max-h-72 w-full object-contain" src={previewUrl} />
+              <img
+                alt={record.originalName}
+                className="max-h-72 w-full object-contain"
+                src={previewUrl}
+              />
             </div>
           ) : null}
           <dl className="mt-4 space-y-3">
@@ -90,7 +103,9 @@ function FileReferences({ references }: { references: FileReference[] }) {
     <div className="mt-5 border-t pt-4">
       <h4 className="text-xs font-semibold uppercase text-muted-foreground">References</h4>
       {references.length === 0 ? (
-        <p className="mt-2 text-sm text-muted-foreground">No references are currently recorded for this file.</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          No references are currently recorded for this file.
+        </p>
       ) : (
         <div className="mt-3 space-y-2">
           {references.map((reference) => (

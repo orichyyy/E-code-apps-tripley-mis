@@ -21,11 +21,11 @@ export type StructuredLogSink = {
 export const noopStructuredLogSink: StructuredLogSink = {
   write() {
     // Default local/test sink keeps logging structured without forcing console output.
-  }
+  },
 };
 
 export function createStructuredLoggingMiddleware(
-  sink: StructuredLogSink = noopStructuredLogSink
+  sink: StructuredLogSink = noopStructuredLogSink,
 ): MiddlewareHandler {
   return async (context: Context, next: Next) => {
     const startedAt = Date.now();
@@ -39,7 +39,7 @@ export function createStructuredLoggingMiddleware(
       path: context.req.path,
       status: context.res.status,
       durationMs: Date.now() - startedAt,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   };
 }

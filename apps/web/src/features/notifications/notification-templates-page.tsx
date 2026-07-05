@@ -3,7 +3,7 @@ import {
   createNotificationTemplateRequestSchema,
   updateNotificationTemplateRequestSchema,
   type CreateNotificationTemplateRequest,
-  type UpdateNotificationTemplateRequest
+  type UpdateNotificationTemplateRequest,
 } from "@web-admin-base/contracts";
 import { AlertCircle, Plus, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -15,7 +15,7 @@ import {
   createNotificationTemplate,
   fetchNotificationTemplates,
   updateNotificationTemplate,
-  type NotificationTemplate
+  type NotificationTemplate,
 } from "./notification-template-api";
 import type { WebAdminRouteMetadata } from "@/route-metadata";
 import { useAuthStore } from "@/stores/auth.store";
@@ -41,14 +41,14 @@ export function NotificationTemplatesPage({ route }: NotificationTemplatesPagePr
   const query = useQuery({
     enabled: canView,
     queryKey: ["notification-templates"],
-    queryFn: fetchNotificationTemplates
+    queryFn: fetchNotificationTemplates,
   });
   const createMutation = useMutation({
     mutationFn: createNotificationTemplate,
     onSuccess: async () => {
       setCreating(false);
       await queryClient.invalidateQueries({ queryKey: ["notification-templates"] });
-    }
+    },
   });
   const updateMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: UpdateNotificationTemplateRequest }) =>
@@ -56,24 +56,33 @@ export function NotificationTemplatesPage({ route }: NotificationTemplatesPagePr
     onSuccess: async () => {
       setEditing(null);
       await queryClient.invalidateQueries({ queryKey: ["notification-templates"] });
-    }
+    },
   });
   const rows = useMemo(
     () =>
       (query.data ?? []).filter((record) =>
-        [record.code, record.channel, record.locale, record.subject ?? "", record.body, record.variables.join(",")]
+        [
+          record.code,
+          record.channel,
+          record.locale,
+          record.subject ?? "",
+          record.body,
+          record.variables.join(","),
+        ]
           .join(" ")
           .toLowerCase()
-          .includes(keyword.toLowerCase())
+          .includes(keyword.toLowerCase()),
       ),
-    [keyword, query.data]
+    [keyword, query.data],
   );
 
   if (!canView) {
     return (
       <section className="rounded-lg border bg-card p-8 text-center">
         <AlertCircle className="mx-auto size-8 text-destructive" aria-hidden="true" />
-        <h2 className="mt-3 text-base font-semibold">{translate(language, "common.permissionDenied")}</h2>
+        <h2 className="mt-3 text-base font-semibold">
+          {translate(language, "common.permissionDenied")}
+        </h2>
       </section>
     );
   }
@@ -106,11 +115,13 @@ export function NotificationTemplatesPage({ route }: NotificationTemplatesPagePr
         error={createMutation.isError || updateMutation.isError}
         onCancelCreate={() => setCreating(false)}
         onCancelEdit={() => setEditing(null)}
-        onCreate={(input) => createMutation.mutate(createNotificationTemplateRequestSchema.parse(input))}
+        onCreate={(input) =>
+          createMutation.mutate(createNotificationTemplateRequestSchema.parse(input))
+        }
         onUpdate={(id, input) =>
           updateMutation.mutate({
             id,
-            input: updateNotificationTemplateRequestSchema.parse(input)
+            input: updateNotificationTemplateRequestSchema.parse(input),
           })
         }
         updatePending={updateMutation.isPending}
@@ -124,7 +135,7 @@ function NotificationTemplateToolbar({
   language,
   onCreate,
   onRefresh,
-  route
+  route,
 }: {
   canCreate: boolean;
   language: "en" | "zh";
@@ -137,7 +148,8 @@ function NotificationTemplateToolbar({
       <div>
         <h2 className="text-base font-semibold">{translate(language, route.titleI18nKey)}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Manage persisted notification template records for in-app, email, and reserved SMS channels.
+          Manage persisted notification template records for in-app, email, and reserved SMS
+          channels.
         </p>
       </div>
       <div className="flex gap-2">
@@ -159,7 +171,7 @@ function NotificationTemplateToolbar({
 function NotificationTemplateFilter({
   keyword,
   language,
-  onChange
+  onChange,
 }: {
   keyword: string;
   language: "en" | "zh";
@@ -193,7 +205,7 @@ function NotificationTemplateEditorPanel({
   onCancelEdit,
   onCreate,
   onUpdate,
-  updatePending
+  updatePending,
 }: {
   creating: boolean;
   createPending: boolean;
@@ -202,13 +214,21 @@ function NotificationTemplateEditorPanel({
   onCancelCreate: () => void;
   onCancelEdit: () => void;
   onCreate: (input: CreateNotificationTemplateRequest | UpdateNotificationTemplateRequest) => void;
-  onUpdate: (id: string, input: CreateNotificationTemplateRequest | UpdateNotificationTemplateRequest) => void;
+  onUpdate: (
+    id: string,
+    input: CreateNotificationTemplateRequest | UpdateNotificationTemplateRequest,
+  ) => void;
   updatePending: boolean;
 }) {
   return (
     <aside className="space-y-4">
       {creating ? (
-        <NotificationTemplateForm busy={createPending} mode="create" onCancel={onCancelCreate} onSubmit={onCreate} />
+        <NotificationTemplateForm
+          busy={createPending}
+          mode="create"
+          onCancel={onCancelCreate}
+          onSubmit={onCreate}
+        />
       ) : null}
       {editing ? (
         <NotificationTemplateForm

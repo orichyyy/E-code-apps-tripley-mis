@@ -26,14 +26,14 @@ describe("SMTP notification adapter", () => {
       port: activeServer.port,
       secure: false,
       from: "sender@example.com",
-      timeoutMs: 2_000
+      timeoutMs: 2_000,
     });
 
     await adapter.send({
       channel: "email",
       recipient: "recipient@example.com",
       subject: "Hello",
-      body: "Welcome to the admin system."
+      body: "Welcome to the admin system.",
     });
 
     expect(activeServer.commands).toContain("MAIL FROM:<sender@example.com>");
@@ -47,15 +47,15 @@ describe("SMTP notification adapter", () => {
       host: "smtp.example.com",
       port: 25,
       secure: false,
-      from: "sender@example.com"
+      from: "sender@example.com",
     });
 
     await expect(
       adapter.send({
         channel: "webhook",
         recipient: "https://example.com/hook",
-        body: "payload"
-      })
+        body: "payload",
+      }),
     ).rejects.toThrow("only supports email");
   });
 });
@@ -109,13 +109,14 @@ async function startFakeSmtpServer(): Promise<FakeSmtpServer> {
 
   await listen(server);
   const address = server.address();
-  if (typeof address !== "object" || !address) throw new Error("Fake SMTP server did not expose a port.");
+  if (typeof address !== "object" || !address)
+    throw new Error("Fake SMTP server did not expose a port.");
 
   return {
     port: address.port,
     commands,
     messages,
-    close: () => close(server)
+    close: () => close(server),
   };
 }
 

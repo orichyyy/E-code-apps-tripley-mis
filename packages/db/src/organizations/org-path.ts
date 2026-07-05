@@ -71,11 +71,15 @@ export function getOrgPathRange(path: bigint, level: number): OrgPathRange {
 
   return {
     min,
-    max: encodeOrgPath(maxSegments)
+    max: encodeOrgPath(maxSegments),
   };
 }
 
-export function isDescendantPath(candidate: bigint, ancestor: bigint, ancestorLevel: number): boolean {
+export function isDescendantPath(
+  candidate: bigint,
+  ancestor: bigint,
+  ancestorLevel: number,
+): boolean {
   const range = getOrgPathRange(ancestor, ancestorLevel);
   return candidate >= range.min && candidate <= range.max && candidate !== ancestor;
 }
@@ -103,7 +107,9 @@ function validateSegments(segments: number[]): void {
     const maxSegment = level === 1 ? rootMaxSegment : childMaxSegment;
 
     if (!Number.isInteger(segment) || segment < 1 || segment > maxSegment) {
-      throw new Error(`Organization path segment at level ${level} must be between 1 and ${maxSegment}`);
+      throw new Error(
+        `Organization path segment at level ${level} must be between 1 and ${maxSegment}`,
+      );
     }
   });
 }

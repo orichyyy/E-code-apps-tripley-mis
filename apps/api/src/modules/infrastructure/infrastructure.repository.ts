@@ -4,14 +4,14 @@ import {
   nowIso,
   readJson,
   type DatabaseAdapterExecutor,
-  type DatabaseRow
+  type DatabaseRow,
 } from "@web-admin-base/adapters";
 import { loadDatabaseConfig } from "@web-admin-base/db";
 
 import { createKnownError } from "../../core/errors/error-codes";
 import {
   createPostgresqlInfrastructureExecutor,
-  createSqliteInfrastructureExecutor
+  createSqliteInfrastructureExecutor,
 } from "./infrastructure.executor";
 import type { StoredFileMetadataInput } from "./file-management";
 import type { InAppNotificationRecordInput } from "./in-app-notification-dispatcher";
@@ -37,7 +37,7 @@ export class InfrastructureRepository {
     const rows = await this.executor.all(
       `SELECT id, log_type, level, message, trace_id, user_id, ip_address, metadata_json, occurred_at, created_at
        FROM log_entries WHERE log_type = ${this.p(1)} ORDER BY occurred_at DESC, id DESC LIMIT 100`,
-      [logType]
+      [logType],
     );
     return rows.map((row) => ({
       id: String(row.id),
@@ -49,7 +49,7 @@ export class InfrastructureRepository {
       ipAddress: nullableString(row.ip_address),
       metadata: readJson(row.metadata_json),
       occurredAt: iso(row.occurred_at),
-      createdAt: iso(row.created_at)
+      createdAt: iso(row.created_at),
     }));
   }
 
@@ -60,7 +60,7 @@ export class InfrastructureRepository {
   async listFiles() {
     const rows = await this.executor.all(
       `SELECT id, object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at
-       FROM file_objects ORDER BY id DESC LIMIT 100`
+       FROM file_objects ORDER BY id DESC LIMIT 100`,
     );
     return rows.map(toFileRecord);
   }
@@ -69,7 +69,7 @@ export class InfrastructureRepository {
     const rows = await this.executor.all(
       `SELECT id, object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at
        FROM file_objects WHERE id = ${this.p(1)} LIMIT 1`,
-      [id]
+      [id],
     );
     return rows[0] ? toFileRecord(rows[0]) : null;
   }
@@ -89,13 +89,13 @@ export class InfrastructureRepository {
         now,
         now,
         input.actorId,
-        input.actorId
-      ]
+        input.actorId,
+      ],
     );
     const rows = await this.executor.all(
       `SELECT id, object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at
        FROM file_objects WHERE object_key = ${this.p(1)} LIMIT 1`,
-      [input.objectKey]
+      [input.objectKey],
     );
     return rows[0] ? toFileRecord(rows[0]) : null;
   }
@@ -105,11 +105,11 @@ export class InfrastructureRepository {
     await this.executor.transaction(async () => {
       await this.executor.run(
         `UPDATE file_objects SET status = 'invalid', is_deleted = ${this.bool(true)}, deleted_at = ${this.p(1)}, deleted_by = ${this.p(2)}, updated_at = ${this.p(3)} WHERE id = ${this.p(4)}`,
-        [now, deletedBy, now, id]
+        [now, deletedBy, now, id],
       );
       await this.executor.run(
         `UPDATE file_references SET status = 'invalid' WHERE file_object_id = ${this.p(1)}`,
-        [id]
+        [id],
       );
     });
     return this.getFile(id);
@@ -119,7 +119,7 @@ export class InfrastructureRepository {
     const rows = await this.executor.all(
       `SELECT id, file_object_id, resource_type, resource_id, reference_type, status, created_at, created_by
        FROM file_references WHERE file_object_id = ${this.p(1)} ORDER BY id DESC LIMIT 100`,
-      [fileId]
+      [fileId],
     );
     return rows.map((row) => ({
       id: String(row.id),
@@ -129,7 +129,7 @@ export class InfrastructureRepository {
       referenceType: String(row.reference_type),
       status: String(row.status),
       createdAt: iso(row.created_at),
-      createdBy: nullableId(row.created_by)
+      createdBy: nullableId(row.created_by),
     }));
   }
 
@@ -138,7 +138,7 @@ export class InfrastructureRepository {
       `SELECT id, user_id, channel, title, body, status, metadata_json, read_at, archived_at, created_at, updated_at
        FROM notifications WHERE is_deleted = ${this.bool(false)}
        AND (user_id IS NULL OR user_id = ${this.p(1)}) ORDER BY id DESC LIMIT 100`,
-      [userId]
+      [userId],
     );
     return rows.map((row) => ({
       id: String(row.id),
@@ -151,26 +151,30 @@ export class InfrastructureRepository {
       readAt: nullableIso(row.read_at),
       archivedAt: nullableIso(row.archived_at),
       createdAt: iso(row.created_at),
-      updatedAt: iso(row.updated_at)
+      updatedAt: iso(row.updated_at),
     }));
   }
 
-  async updateNotificationStatus(id: string, status: "read" | "archived" | "deleted", deletedBy: string | null) {
+  async updateNotificationStatus(
+    id: string,
+    status: "read" | "archived" | "deleted",
+    deletedBy: string | null,
+  ) {
     const now = nowIso();
     if (status === "read") {
       await this.executor.run(
         `UPDATE notifications SET status = ${this.p(1)}, read_at = ${this.p(2)}, updated_at = ${this.p(3)} WHERE id = ${this.p(4)}`,
-        [status, now, now, id]
+        [status, now, now, id],
       );
     } else if (status === "archived") {
       await this.executor.run(
         `UPDATE notifications SET status = ${this.p(1)}, archived_at = ${this.p(2)}, updated_at = ${this.p(3)} WHERE id = ${this.p(4)}`,
-        [status, now, now, id]
+        [status, now, now, id],
       );
     } else {
       await this.executor.run(
         `UPDATE notifications SET status = ${this.p(1)}, is_deleted = ${this.bool(true)}, deleted_at = ${this.p(2)}, deleted_by = ${this.p(3)}, updated_at = ${this.p(4)} WHERE id = ${this.p(5)}`,
-        [status, now, deletedBy, now, id]
+        [status, now, deletedBy, now, id],
       );
     }
     return { id, status };
@@ -190,8 +194,8 @@ export class InfrastructureRepository {
             record.body,
             jsonParam({ ...record.metadata, createdBy: record.createdBy }, this.executor.dialect),
             now,
-            now
-          ]
+            now,
+          ],
         );
       }
     });
@@ -211,7 +215,7 @@ export class InfrastructureRepository {
        AND o.status = 'enabled'
        AND o.is_deleted = ${this.bool(false)}
        ORDER BY u.id ASC`,
-      [organizationId]
+      [organizationId],
     );
     return rows.map((row) => String(row.id));
   }
@@ -219,7 +223,7 @@ export class InfrastructureRepository {
   async listNotificationTemplates() {
     const rows = await this.executor.all(
       `SELECT id, code, channel, locale, subject, body, variables_json, status, created_at, updated_at
-       FROM notification_templates ORDER BY code, locale LIMIT 100`
+       FROM notification_templates ORDER BY code, locale LIMIT 100`,
     );
     return rows.map((row) => ({
       id: String(row.id),
@@ -231,7 +235,7 @@ export class InfrastructureRepository {
       variables: readJson(row.variables_json),
       status: String(row.status),
       createdAt: iso(row.created_at),
-      updatedAt: iso(row.updated_at)
+      updatedAt: iso(row.updated_at),
     }));
   }
 
@@ -255,8 +259,8 @@ export class InfrastructureRepository {
         input.body,
         jsonParam(input.variables, this.executor.dialect),
         now,
-        now
-      ]
+        now,
+      ],
     );
     return lastByCode(this.listNotificationTemplates(), input.code, input.locale);
   }
@@ -276,8 +280,8 @@ export class InfrastructureRepository {
         next.body,
         jsonParam(next.variables, this.executor.dialect),
         nowIso(),
-        id
-      ]
+        id,
+      ],
     );
     return (await this.listNotificationTemplates()).find((template) => template.id === id) ?? null;
   }
@@ -285,7 +289,7 @@ export class InfrastructureRepository {
   async listScheduledTasks() {
     const rows = await this.executor.all(
       `SELECT id, code, cron_expression, handler_type, payload_json, status, last_run_at, next_run_at, attempt, max_attempts, last_error, created_at, updated_at
-       FROM scheduled_jobs ORDER BY id DESC LIMIT 100`
+       FROM scheduled_jobs ORDER BY id DESC LIMIT 100`,
     );
     return rows.map(toScheduledTask);
   }
@@ -303,8 +307,8 @@ export class InfrastructureRepository {
         input.enabled ? "enabled" : "disabled",
         input.enabled ? nextScheduledRunOrThrow(input.cronExpression, now) : null,
         now,
-        now
-      ]
+        now,
+      ],
     );
     return lastByCode(this.listScheduledTasks(), input.code);
   }
@@ -324,8 +328,8 @@ export class InfrastructureRepository {
         next.enabled ? "enabled" : "disabled",
         next.enabled ? nextScheduledRunOrThrow(next.cronExpression, now) : null,
         now,
-        id
-      ]
+        id,
+      ],
     );
     return (await this.listScheduledTasks()).find((task) => task.id === id) ?? null;
   }
@@ -340,8 +344,8 @@ export class InfrastructureRepository {
         enabled ? "enabled" : "disabled",
         enabled ? nextScheduledRunOrThrow(current.cronExpression, now) : null,
         now,
-        id
-      ]
+        id,
+      ],
     );
     return (await this.listScheduledTasks()).find((task) => task.id === id) ?? null;
   }
@@ -353,7 +357,12 @@ export class InfrastructureRepository {
     await this.executor.run(
       `INSERT INTO queue_jobs (type, payload_json, status, attempt, max_attempts, available_at, created_at, updated_at)
        VALUES ('scheduled.run', ${this.p(1)}, 'pending', 0, 1, ${this.p(2)}, ${this.p(3)}, ${this.p(4)})`,
-      [jsonParam({ scheduledTaskId: id, handlerType: task.handlerType }, this.executor.dialect), now, now, now]
+      [
+        jsonParam({ scheduledTaskId: id, handlerType: task.handlerType }, this.executor.dialect),
+        now,
+        now,
+        now,
+      ],
     );
     return task;
   }
@@ -362,7 +371,7 @@ export class InfrastructureRepository {
     const rows = await this.executor.all(
       `SELECT id, task_type, resource_type, status, file_object_id, result_file_object_id, error_file_object_id,
         total_rows, success_rows, failed_rows, error_preview_json, result_expires_at, created_at, updated_at, created_by
-       FROM import_export_tasks ORDER BY id DESC LIMIT 100`
+       FROM import_export_tasks ORDER BY id DESC LIMIT 100`,
     );
     return rows.map((row) => ({
       id: String(row.id),
@@ -379,7 +388,7 @@ export class InfrastructureRepository {
       resultExpiresAt: nullableIso(row.result_expires_at),
       createdAt: iso(row.created_at),
       updatedAt: iso(row.updated_at),
-      createdBy: nullableId(row.created_by)
+      createdBy: nullableId(row.created_by),
     }));
   }
 
@@ -391,16 +400,31 @@ export class InfrastructureRepository {
     return this.createImportExportTask("export", resourceType, createdBy);
   }
 
-  private async createImportExportTask(taskType: "export" | "import", resourceType: string, createdBy: string | null) {
+  private async createImportExportTask(
+    taskType: "export" | "import",
+    resourceType: string,
+    createdBy: string | null,
+  ) {
     const now = nowIso();
     const resultExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     await this.executor.run(
       `INSERT INTO import_export_tasks (task_type, resource_type, status, error_preview_json, result_expires_at, created_at, updated_at, created_by)
        VALUES (${this.p(1)}, ${this.p(2)}, 'pending', ${this.p(3)}, ${this.p(4)}, ${this.p(5)}, ${this.p(6)}, ${this.p(7)})`,
-      [taskType, resourceType, jsonParam([], this.executor.dialect), resultExpiresAt, now, now, createdBy]
+      [
+        taskType,
+        resourceType,
+        jsonParam([], this.executor.dialect),
+        resultExpiresAt,
+        now,
+        now,
+        createdBy,
+      ],
     );
     const tasks = await this.listImportExportTasks();
-    return tasks.find((task) => task.resourceType === resourceType && task.taskType === taskType) ?? tasks[0];
+    return (
+      tasks.find((task) => task.resourceType === resourceType && task.taskType === taskType) ??
+      tasks[0]
+    );
   }
 
   private p(index: number): string {
@@ -427,7 +451,7 @@ function toScheduledTask(row: DatabaseRow) {
     maxAttempts: Number(row.max_attempts),
     lastError: nullableString(row.last_error),
     createdAt: iso(row.created_at),
-    updatedAt: iso(row.updated_at)
+    updatedAt: iso(row.updated_at),
   };
 }
 
@@ -444,17 +468,22 @@ function toFileRecord(row: DatabaseRow) {
     referenced: Boolean(row.referenced),
     isDeleted: Boolean(row.is_deleted),
     createdAt: iso(row.created_at),
-    updatedAt: iso(row.updated_at)
+    updatedAt: iso(row.updated_at),
   };
 }
 
 async function lastByCode<T extends { code: string; id: string }>(
   recordsPromise: Promise<T[]>,
   code: string,
-  locale?: string
+  locale?: string,
 ) {
   const records = await recordsPromise;
-  return records.find((record) => record.code === code && (!locale || "locale" in record && record.locale === locale)) ?? records[0];
+  return (
+    records.find(
+      (record) =>
+        record.code === code && (!locale || ("locale" in record && record.locale === locale)),
+    ) ?? records[0]
+  );
 }
 
 function iso(value: unknown): string {
@@ -479,7 +508,7 @@ function nextScheduledRunOrThrow(cronExpression: string, nowIsoValue: string): s
   } catch (error) {
     throw createKnownError("VALIDATION_INVALID_REQUEST", {
       field: "cronExpression",
-      message: error instanceof Error ? error.message : String(error)
+      message: error instanceof Error ? error.message : String(error),
     });
   }
 }

@@ -7,7 +7,9 @@ export type PostgresqlMigrationOptions = {
   url: string;
 };
 
-export async function runPostgresqlMigrations(options: PostgresqlMigrationOptions): Promise<string[]> {
+export async function runPostgresqlMigrations(
+  options: PostgresqlMigrationOptions,
+): Promise<string[]> {
   const pool = createPostgresqlPool(options.url);
 
   try {

@@ -1,7 +1,12 @@
 import type { CreateLogExportTaskRequest } from "@web-admin-base/contracts";
 
 import { requestJson, unwrapRecords } from "@/lib/api-request";
-import { nullableString, numberValue, objectValue, stringValue } from "@/features/operations/record-utils";
+import {
+  nullableString,
+  numberValue,
+  objectValue,
+  stringValue,
+} from "@/features/operations/record-utils";
 import type { ImportExportTask } from "@/features/operations/operations-api";
 
 export type LogRouteCode =
@@ -37,7 +42,7 @@ const logConfigByRouteCode: Record<LogRouteCode, { endpoint: string; logType: Lo
   "logs.exception": { endpoint: "/logs/exception", logType: "exception" },
   "logs.security": { endpoint: "/logs/security", logType: "security" },
   "logs.scheduler": { endpoint: "/logs/jobs", logType: "scheduler" },
-  "logs.files": { endpoint: "/logs/files", logType: "file_operation" }
+  "logs.files": { endpoint: "/logs/files", logType: "file_operation" },
 };
 
 export function isLogRouteCode(routeCode: string): routeCode is LogRouteCode {
@@ -56,7 +61,7 @@ export async function fetchLogs(routeCode: LogRouteCode): Promise<LogEntry[]> {
 export async function createLogExportTask(logType: LogType): Promise<ImportExportTask> {
   const envelope = await requestJson<{ data: unknown }>("/logs/export", {
     method: "POST",
-    body: JSON.stringify({ logType })
+    body: JSON.stringify({ logType }),
   });
   return toImportExportTask(envelope.data);
 }
@@ -72,12 +77,15 @@ function toLogEntry(record: Record<string, unknown>): LogEntry {
     ipAddress: nullableString(record.ipAddress),
     metadata: objectValue(record.metadata),
     occurredAt: stringValue(record.occurredAt, stringValue(record.createdAt)),
-    createdAt: stringValue(record.createdAt, stringValue(record.occurredAt))
+    createdAt: stringValue(record.createdAt, stringValue(record.occurredAt)),
   };
 }
 
 function toImportExportTask(value: unknown): ImportExportTask {
-  const record = typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {};
+  const record =
+    typeof value === "object" && value !== null && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : {};
   return {
     id: stringValue(record.id),
     taskType: stringValue(record.taskType),
@@ -90,11 +98,14 @@ function toImportExportTask(value: unknown): ImportExportTask {
     successRows: numberValue(record.successRows),
     failedRows: numberValue(record.failedRows),
     errorPreview: Array.isArray(record.errorPreview)
-      ? record.errorPreview.filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null && !Array.isArray(item))
+      ? record.errorPreview.filter(
+          (item): item is Record<string, unknown> =>
+            typeof item === "object" && item !== null && !Array.isArray(item),
+        )
       : [],
     resultExpiresAt: nullableString(record.resultExpiresAt),
     createdAt: stringValue(record.createdAt),
     updatedAt: stringValue(record.updatedAt),
-    createdBy: nullableString(record.createdBy)
+    createdBy: nullableString(record.createdBy),
   };
 }

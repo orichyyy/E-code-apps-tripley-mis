@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  readInitializationSeedInput,
-  runInitializationSeed
-} from "../src/seed";
+import { readInitializationSeedInput, runInitializationSeed } from "../src/seed";
 import { createApp } from "../src/app";
 import { createInMemoryBackendCoreServices } from "../src/modules/core-foundation/services";
 
@@ -14,13 +11,13 @@ const seedEnv = {
   WEB_ADMIN_SEED_ADMIN_DISPLAY_NAME: "Seed Admin",
   WEB_ADMIN_SEED_ADMIN_EMAIL: "seed-admin@example.com",
   WEB_ADMIN_SEED_ADMIN_PHONE: "10000000999",
-  WEB_ADMIN_SEED_ADMIN_PASSWORD: "password1"
+  WEB_ADMIN_SEED_ADMIN_PASSWORD: "password1",
 };
 
 describe("initialization seed", () => {
   it("requires the seed admin password to come from the environment", () => {
     expect(() => readInitializationSeedInput({})).toThrow(
-      "WEB_ADMIN_SEED_ADMIN_PASSWORD is required"
+      "WEB_ADMIN_SEED_ADMIN_PASSWORD is required",
     );
   });
 
@@ -28,11 +25,11 @@ describe("initialization seed", () => {
     await expect(
       runInitializationSeed({
         ...seedEnv,
-        WEB_ADMIN_SEED_ADMIN_PASSWORD: "password"
-      })
+        WEB_ADMIN_SEED_ADMIN_PASSWORD: "password",
+      }),
     ).rejects.toMatchObject({
       code: "PASSWORD_REQUIRES_NUMBER",
-      status: 400
+      status: 400,
     });
   });
 
@@ -43,7 +40,7 @@ describe("initialization seed", () => {
       initialized: true,
       seeded: true,
       organizationId: "1",
-      adminId: "1"
+      adminId: "1",
     });
     expect(summary.roleCount).toBe(3);
     expect(summary.permissionCount).toBeGreaterThan(0);
@@ -80,7 +77,7 @@ describe("initialization seed", () => {
       code: "super_admin",
       description: "Built-in role",
       isBuiltin: true,
-      status: "enabled"
+      status: "enabled",
     });
   });
 
@@ -101,7 +98,7 @@ describe("initialization seed", () => {
       isDeleted: false,
       deletedAt: null,
       deletedBy: null,
-      status: "enabled"
+      status: "enabled",
     });
   });
 
@@ -116,7 +113,7 @@ describe("initialization seed", () => {
     const bindings = services.listUserOrganizationRoles("1");
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "seed-admin", password: "password1" })
+      body: JSON.stringify({ username: "seed-admin", password: "password1" }),
     });
     const login = await loginResponse.json();
 
@@ -130,8 +127,8 @@ describe("initialization seed", () => {
         status: "enabled",
         isDeleted: false,
         deletedAt: null,
-        deletedBy: null
-      })
+        deletedBy: null,
+      }),
     ]);
     expect(loginResponse.status).toBe(200);
     expect(login.data.permissionCodes).toEqual(expect.arrayContaining(["user:view"]));
@@ -158,7 +155,9 @@ describe("initialization seed", () => {
     if (!menu) throw new Error("Expected system.users base menu to exist");
     await services.deleteMenu(menu.id);
     const result = await services.seedInitialization(input);
-    const restoredMenu = services.listMenus().find((candidate) => candidate.code === "system.users");
+    const restoredMenu = services
+      .listMenus()
+      .find((candidate) => candidate.code === "system.users");
 
     expect(result.seeded).toBe(false);
     expect(restoredMenu).toMatchObject({
@@ -168,7 +167,7 @@ describe("initialization seed", () => {
       deletedAt: null,
       deletedBy: null,
       status: "enabled",
-      visible: true
+      visible: true,
     });
   });
 
@@ -192,8 +191,8 @@ describe("initialization seed", () => {
         code: "system.users",
         path: "/system/users",
         status: "enabled",
-        isDeleted: false
-      })
+        isDeleted: false,
+      }),
     ]);
   });
 
@@ -214,7 +213,7 @@ describe("initialization seed", () => {
     expect(restoredRoute).toMatchObject({
       id: route.id,
       routeCode: "system.users",
-      status: "enabled"
+      status: "enabled",
     });
   });
 
@@ -237,7 +236,7 @@ describe("initialization seed", () => {
     expect(restoredApiPermission).toMatchObject({
       id: apiPermission.id,
       code: "api.users.list",
-      status: "enabled"
+      status: "enabled",
     });
   });
 
@@ -254,7 +253,7 @@ describe("initialization seed", () => {
     permission.status = "disabled";
     const loginResponse = await app.request("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username: "seed-admin", password: "password1" })
+      body: JSON.stringify({ username: "seed-admin", password: "password1" }),
     });
     const login = await loginResponse.json();
     const authHeaders = { authorization: `Bearer ${login.data.accessToken}` };
@@ -263,7 +262,7 @@ describe("initialization seed", () => {
     const stale = await staleResponse.json();
     await services.seedInitialization(input);
     const refreshedResponse = await app.request("/api/context/permissions", {
-      headers: authHeaders
+      headers: authHeaders,
     });
     const refreshed = await refreshedResponse.json();
 
@@ -292,14 +291,14 @@ describe("initialization seed", () => {
       manifestHash: "obsolete",
       status: "enabled",
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     });
     store.rolePermissions.push({
       roleId: "1",
       permissionCode: "obsolete:view",
       effect: "allow",
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     });
 
     await services.seedInitialization(input);
@@ -307,7 +306,7 @@ describe("initialization seed", () => {
 
     expect(stalePermission).toMatchObject({ status: "disabled" });
     expect(store.rolePermissions).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ permissionCode: "obsolete:view" })])
+      expect.arrayContaining([expect.objectContaining({ permissionCode: "obsolete:view" })]),
     );
   });
 
@@ -317,20 +316,20 @@ describe("initialization seed", () => {
 
     await services.seedInitialization(input);
     const userViewGrant = services["context"].store.rolePermissions.find(
-      (permission) => permission.roleId === "1" && permission.permissionCode === "user:view"
+      (permission) => permission.roleId === "1" && permission.permissionCode === "user:view",
     );
     if (!userViewGrant) throw new Error("Expected super administrator user:view grant");
     userViewGrant.effect = "deny";
 
     await services.seedInitialization(input);
     const repairedGrant = services["context"].store.rolePermissions.find(
-      (permission) => permission.roleId === "1" && permission.permissionCode === "user:view"
+      (permission) => permission.roleId === "1" && permission.permissionCode === "user:view",
     );
 
     expect(repairedGrant).toMatchObject({
       roleId: "1",
       permissionCode: "user:view",
-      effect: "allow"
+      effect: "allow",
     });
   });
 
@@ -345,20 +344,20 @@ describe("initialization seed", () => {
       permissionCode: "user:view",
       effect: "deny",
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     });
 
     await services.seedInitialization(input);
     const userViewGrants = services["context"].store.rolePermissions.filter(
-      (permission) => permission.roleId === "1" && permission.permissionCode === "user:view"
+      (permission) => permission.roleId === "1" && permission.permissionCode === "user:view",
     );
 
     expect(userViewGrants).toEqual([
       expect.objectContaining({
         roleId: "1",
         permissionCode: "user:view",
-        effect: "allow"
-      })
+        effect: "allow",
+      }),
     ]);
   });
 });

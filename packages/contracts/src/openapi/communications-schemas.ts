@@ -2,14 +2,14 @@ import type { OpenApiDocument, OpenApiSchema } from "./types";
 
 const idStringSchema: OpenApiSchema = {
   type: "string",
-  description: "Database auto-increment ID serialized as a string."
+  description: "Database auto-increment ID serialized as a string.",
 };
 
 const envelopeSchema = (data: OpenApiSchema): OpenApiSchema => ({
   type: "object",
   required: ["data"],
   properties: { data },
-  additionalProperties: true
+  additionalProperties: true,
 });
 
 const auditProperties: Record<string, OpenApiSchema> = {
@@ -19,7 +19,7 @@ const auditProperties: Record<string, OpenApiSchema> = {
   updatedBy: { ...idStringSchema, nullable: true },
   isDeleted: { type: "boolean" },
   deletedAt: { type: "string", format: "date-time", nullable: true },
-  deletedBy: { ...idStringSchema, nullable: true }
+  deletedBy: { ...idStringSchema, nullable: true },
 };
 
 const announcementSchema: OpenApiSchema = {
@@ -38,7 +38,7 @@ const announcementSchema: OpenApiSchema = {
     "createdAt",
     "updatedAt",
     "createdBy",
-    "updatedBy"
+    "updatedBy",
   ],
   properties: {
     id: idStringSchema,
@@ -48,9 +48,9 @@ const announcementSchema: OpenApiSchema = {
     scopeType: { type: "string", enum: ["system", "organization"] },
     status: { type: "string", enum: ["draft", "published", "deleted"] },
     publishedAt: { type: "string", format: "date-time", nullable: true },
-    ...auditProperties
+    ...auditProperties,
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 const webhookSubscriptionSchema: OpenApiSchema = {
@@ -69,7 +69,7 @@ const webhookSubscriptionSchema: OpenApiSchema = {
     "createdAt",
     "updatedAt",
     "createdBy",
-    "updatedBy"
+    "updatedBy",
   ],
   properties: {
     id: idStringSchema,
@@ -79,9 +79,9 @@ const webhookSubscriptionSchema: OpenApiSchema = {
     eventTypes: { type: "array", items: { type: "string" } },
     secretConfigured: { type: "boolean" },
     status: { type: "string", enum: ["enabled", "disabled"] },
-    ...auditProperties
+    ...auditProperties,
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 export const communicationsComponentSchemas: OpenApiDocument["components"]["schemas"] = {
@@ -91,18 +91,18 @@ export const communicationsComponentSchemas: OpenApiDocument["components"]["sche
     properties: {
       title: { type: "string" },
       content: { type: "string" },
-      scopeType: { type: "string", enum: ["system", "organization"] }
+      scopeType: { type: "string", enum: ["system", "organization"] },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateAnnouncementRequest: {
     type: "object",
     properties: {
       title: { type: "string" },
       content: { type: "string" },
-      scopeType: { type: "string", enum: ["system", "organization"] }
+      scopeType: { type: "string", enum: ["system", "organization"] },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   CreateWebhookSubscriptionRequest: {
     type: "object",
@@ -112,9 +112,9 @@ export const communicationsComponentSchemas: OpenApiDocument["components"]["sche
       url: { type: "string", format: "uri" },
       eventTypes: { type: "array", items: { type: "string" } },
       secret: { type: "string", nullable: true },
-      status: { type: "string", enum: ["enabled", "disabled"] }
+      status: { type: "string", enum: ["enabled", "disabled"] },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   UpdateWebhookSubscriptionRequest: {
     type: "object",
@@ -123,24 +123,24 @@ export const communicationsComponentSchemas: OpenApiDocument["components"]["sche
       url: { type: "string", format: "uri" },
       eventTypes: { type: "array", items: { type: "string" } },
       secret: { type: "string", nullable: true },
-      status: { type: "string", enum: ["enabled", "disabled"] }
+      status: { type: "string", enum: ["enabled", "disabled"] },
     },
-    additionalProperties: false
+    additionalProperties: false,
   },
   Announcement: announcementSchema,
   WebhookSubscription: webhookSubscriptionSchema,
   AnnouncementListResponse: envelopeSchema({
     type: "array",
-    items: { $ref: "#/components/schemas/Announcement" }
+    items: { $ref: "#/components/schemas/Announcement" },
   }),
   AnnouncementResponse: envelopeSchema({
-    anyOf: [{ $ref: "#/components/schemas/Announcement" }, { type: "null" }]
+    anyOf: [{ $ref: "#/components/schemas/Announcement" }, { type: "null" }],
   }),
   WebhookSubscriptionListResponse: envelopeSchema({
     type: "array",
-    items: { $ref: "#/components/schemas/WebhookSubscription" }
+    items: { $ref: "#/components/schemas/WebhookSubscription" },
   }),
   WebhookSubscriptionResponse: envelopeSchema({
-    anyOf: [{ $ref: "#/components/schemas/WebhookSubscription" }, { type: "null" }]
-  })
+    anyOf: [{ $ref: "#/components/schemas/WebhookSubscription" }, { type: "null" }],
+  }),
 };

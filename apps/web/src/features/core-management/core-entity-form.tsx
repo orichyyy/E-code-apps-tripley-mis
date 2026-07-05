@@ -21,11 +21,11 @@ export function CoreEntityForm({
   mode,
   title,
   onCancel,
-  onSubmit
+  onSubmit,
 }: CoreEntityFormProps) {
   const form = useForm({
     defaultValues: initialValues,
-    onSubmit: ({ value }) => onSubmit(value)
+    onSubmit: ({ value }) => onSubmit(value),
   });
 
   return (

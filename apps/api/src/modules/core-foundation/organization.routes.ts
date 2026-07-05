@@ -1,7 +1,7 @@
 import {
   createOrganizationRequestSchema,
   updateOrganizationDepthConfigRequestSchema,
-  updateOrganizationRequestSchema
+  updateOrganizationRequestSchema,
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
@@ -32,9 +32,12 @@ export function createOrganizationRoutes(services: BackendCoreServices) {
   routes.post("/organizations", async (context) => {
     const authContext = context.get("authContext");
     const input = createOrganizationRequestSchema.parse(await context.req.json());
-    return context.json({
-      data: await services.createOrganization(input, authContext?.userId ?? null)
-    }, 201);
+    return context.json(
+      {
+        data: await services.createOrganization(input, authContext?.userId ?? null),
+      },
+      201,
+    );
   });
 
   routes.get("/organizations/:id", (context) => {
@@ -45,7 +48,11 @@ export function createOrganizationRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     const input = updateOrganizationRequestSchema.parse(await context.req.json());
     return context.json({
-      data: await services.updateOrganization(context.req.param("id"), input, authContext?.userId ?? null)
+      data: await services.updateOrganization(
+        context.req.param("id"),
+        input,
+        authContext?.userId ?? null,
+      ),
     });
   });
 
@@ -53,7 +60,10 @@ export function createOrganizationRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     await assertEmptyJsonBody(context.req.raw);
     return context.json({
-      data: await services.disableOrganization(context.req.param("id"), authContext?.userId ?? null)
+      data: await services.disableOrganization(
+        context.req.param("id"),
+        authContext?.userId ?? null,
+      ),
     });
   });
 
@@ -61,7 +71,7 @@ export function createOrganizationRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     await assertEmptyJsonBody(context.req.raw);
     return context.json({
-      data: await services.enableOrganization(context.req.param("id"), authContext?.userId ?? null)
+      data: await services.enableOrganization(context.req.param("id"), authContext?.userId ?? null),
     });
   });
 
@@ -69,7 +79,7 @@ export function createOrganizationRoutes(services: BackendCoreServices) {
     const authContext = context.get("authContext");
     await assertEmptyJsonBody(context.req.raw);
     return context.json({
-      data: await services.deleteOrganization(context.req.param("id"), authContext?.userId ?? null)
+      data: await services.deleteOrganization(context.req.param("id"), authContext?.userId ?? null),
     });
   });
 

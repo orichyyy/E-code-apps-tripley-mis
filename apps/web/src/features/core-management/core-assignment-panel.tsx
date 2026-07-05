@@ -23,7 +23,7 @@ export function CoreAssignmentPanel({
   selectedRecordName,
   title,
   valueKey,
-  onSave
+  onSave,
 }: CoreAssignmentPanelProps) {
   const [keyword, setKeyword] = useState("");
   const [selected, setSelected] = useState<string[]>(initialSelected);
@@ -31,15 +31,15 @@ export function CoreAssignmentPanel({
   const visibleItems = items.filter((item) =>
     [
       displayValue(item, ["code"], ""),
-      displayValue(item, ["name", "titleI18nKey", "path", "method"], "")
+      displayValue(item, ["name", "titleI18nKey", "path", "method"], ""),
     ]
       .join(" ")
       .toLowerCase()
-      .includes(keyword.toLowerCase())
+      .includes(keyword.toLowerCase()),
   );
   const toggle = (value: string) => {
     setSelected((current) =>
-      current.includes(value) ? current.filter((item) => item !== value) : [...current, value]
+      current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
     );
   };
 

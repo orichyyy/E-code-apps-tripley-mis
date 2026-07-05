@@ -4,7 +4,7 @@ import {
   createLocalFileStorageAdapter,
   type FileStorageAdapter,
   type NotificationChannelAdapter,
-  type QueueAdapter
+  type QueueAdapter,
 } from "@web-admin-base/adapters";
 
 export type InfrastructureServiceOptions = {
@@ -16,7 +16,7 @@ export type InfrastructureServiceOptions = {
 };
 
 export function resolveInfrastructureServiceOptions(
-  options?: FileStorageAdapter | InfrastructureServiceOptions
+  options?: FileStorageAdapter | InfrastructureServiceOptions,
 ): InfrastructureServiceOptions {
   if (!options) return {};
   if (isFileStorageAdapter(options)) return { storage: options };
@@ -25,7 +25,7 @@ export function resolveInfrastructureServiceOptions(
 
 export function createDefaultFileStorage(): FileStorageAdapter {
   return createLocalFileStorageAdapter({
-    rootDirectory: process.env.FILE_STORAGE_ROOT ?? ".web-admin-storage"
+    rootDirectory: process.env.FILE_STORAGE_ROOT ?? ".web-admin-storage",
   });
 }
 

@@ -4,7 +4,12 @@ import { responseSchemaByOperationCode } from "./response-schema-map";
 import { componentSchemas, errorSchema, idStringSchema } from "./schemas";
 import type { OpenApiDocument, OpenApiOperation } from "./types";
 
-export type { OpenApiDocument, OpenApiDocumentFactory, OpenApiOperation, OpenApiSchema } from "./types";
+export type {
+  OpenApiDocument,
+  OpenApiDocumentFactory,
+  OpenApiOperation,
+  OpenApiSchema,
+} from "./types";
 
 export function createOpenApiDocument(): OpenApiDocument {
   return {
@@ -12,7 +17,8 @@ export function createOpenApiDocument(): OpenApiDocument {
     info: {
       title: "Web Admin Base System API",
       version: "0.1.0",
-      description: "OpenAPI document generated from implemented API manifests and Zod-backed contracts."
+      description:
+        "OpenAPI document generated from implemented API manifests and Zod-backed contracts.",
     },
     servers: [{ url: "/api" }],
     paths: createOpenApiPaths(),
@@ -21,16 +27,16 @@ export function createOpenApiDocument(): OpenApiDocument {
         bearerAuth: {
           type: "http",
           scheme: "bearer",
-          bearerFormat: "JWT"
+          bearerFormat: "JWT",
         },
         refreshCookie: {
           type: "apiKey",
           in: "cookie",
-          name: "refresh_token"
-        }
+          name: "refresh_token",
+        },
       },
-      schemas: componentSchemas
-    }
+      schemas: componentSchemas,
+    },
   };
 }
 
@@ -39,10 +45,12 @@ function createOpenApiPaths(): OpenApiDocument["paths"] {
 
   for (const entry of baseApiPermissionManifest) {
     const path = toOpenApiPath(entry.path);
-    const method = entry.method.toLowerCase() as Lowercase<BaseApiPermissionManifestEntry["method"]>;
+    const method = entry.method.toLowerCase() as Lowercase<
+      BaseApiPermissionManifestEntry["method"]
+    >;
     paths[path] = {
       ...paths[path],
-      [method]: createOperation(entry)
+      [method]: createOperation(entry),
     };
   }
 
@@ -68,7 +76,7 @@ function createOperation(entry: BaseApiPermissionManifestEntry): OpenApiOperatio
     "x-permission-code": entry.code,
     ...(entry.requiredPermission ? { "x-required-permission": entry.requiredPermission } : {}),
     "x-log-level": entry.logLevel,
-    "x-public": entry.public
+    "x-public": entry.public,
   };
 }
 
@@ -78,9 +86,9 @@ function createRequestBody(schemaName: string): NonNullable<OpenApiOperation["re
       required: true,
       content: {
         "multipart/form-data": {
-          schema: { $ref: `#/components/schemas/${schemaName}` }
-        }
-      }
+          schema: { $ref: `#/components/schemas/${schemaName}` },
+        },
+      },
     };
   }
 
@@ -88,9 +96,9 @@ function createRequestBody(schemaName: string): NonNullable<OpenApiOperation["re
     required: true,
     content: {
       "application/json": {
-        schema: { $ref: `#/components/schemas/${schemaName}` }
-      }
-    }
+        schema: { $ref: `#/components/schemas/${schemaName}` },
+      },
+    },
   };
 }
 
@@ -102,26 +110,26 @@ function createStandardResponses(responseSchemaName?: string): OpenApiOperation[
         "application/json": {
           schema: responseSchemaName
             ? { $ref: `#/components/schemas/${responseSchemaName}` }
-            : { type: "object", description: "Response envelope for this endpoint." }
-        }
-      }
+            : { type: "object", description: "Response envelope for this endpoint." },
+        },
+      },
     },
     "400": {
       description: "Validation error",
-      content: { "application/json": { schema: errorSchema } }
+      content: { "application/json": { schema: errorSchema } },
     },
     "401": {
       description: "Authentication error",
-      content: { "application/json": { schema: errorSchema } }
+      content: { "application/json": { schema: errorSchema } },
     },
     "403": {
       description: "Authorization or business-rule denial",
-      content: { "application/json": { schema: errorSchema } }
+      content: { "application/json": { schema: errorSchema } },
     },
     "500": {
       description: "System error",
-      content: { "application/json": { schema: errorSchema } }
-    }
+      content: { "application/json": { schema: errorSchema } },
+    },
   };
 }
 
@@ -135,12 +143,10 @@ function createPathParameters(path: string) {
     name: match[1],
     in: "path" as const,
     required: true,
-    schema: idStringSchema
+    schema: idStringSchema,
   }));
 }
 
 function toOperationId(entry: BaseApiPermissionManifestEntry) {
-  return entry.code.replace(/[^A-Za-z0-9]+(.)/g, (_, character: string) =>
-    character.toUpperCase()
-  );
+  return entry.code.replace(/[^A-Za-z0-9]+(.)/g, (_, character: string) => character.toUpperCase());
 }

@@ -16,7 +16,7 @@ import {
   fetchFiles,
   previewFileBlob,
   uploadFile,
-  type FileRecord
+  type FileRecord,
 } from "./file-api";
 import { FileDetailPanel } from "./file-status";
 import { FileTable } from "./file-table";
@@ -41,38 +41,38 @@ export function FilesPage({ route }: FilesPageProps) {
   const listQuery = useQuery({
     enabled: canView,
     queryKey: ["files"],
-    queryFn: fetchFiles
+    queryFn: fetchFiles,
   });
   const detailQuery = useQuery({
     enabled: canView && selectedId !== null,
     queryKey: ["files", selectedId],
-    queryFn: () => fetchFileDetail(selectedId ?? "")
+    queryFn: () => fetchFileDetail(selectedId ?? ""),
   });
   const referencesQuery = useQuery({
     enabled: canView && canViewReferences && selectedId !== null,
     queryKey: ["files", selectedId, "references"],
-    queryFn: () => fetchFileReferences(selectedId ?? "")
+    queryFn: () => fetchFileReferences(selectedId ?? ""),
   });
   const uploadMutation = useMutation({
     mutationFn: uploadFile,
     onSuccess: async (record) => {
       if (record) setSelectedId(record.id);
       await queryClient.invalidateQueries({ queryKey: ["files"] });
-    }
+    },
   });
   const deleteMutation = useMutation({
     mutationFn: deleteFile,
     onSuccess: async (_result, id) => {
       await queryClient.invalidateQueries({ queryKey: ["files"] });
       await queryClient.invalidateQueries({ queryKey: ["files", id] });
-    }
+    },
   });
   const previewMutation = useMutation({
     mutationFn: previewFileBlob,
     onSuccess: (blob) => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewUrl(URL.createObjectURL(blob));
-    }
+    },
   });
   const rows = useMemo(
     () =>
@@ -84,25 +84,31 @@ export function FilesPage({ route }: FilesPageProps) {
           record.extension,
           record.storageDriver,
           record.status,
-          record.referenced ? "referenced" : "unreferenced"
+          record.referenced ? "referenced" : "unreferenced",
         ]
           .join(" ")
           .toLowerCase()
-          .includes(keyword.toLowerCase())
+          .includes(keyword.toLowerCase()),
       ),
-    [keyword, listQuery.data]
+    [keyword, listQuery.data],
   );
-  const selectedRecord = detailQuery.data ?? listQuery.data?.find((record) => record.id === selectedId) ?? null;
+  const selectedRecord =
+    detailQuery.data ?? listQuery.data?.find((record) => record.id === selectedId) ?? null;
 
-  useEffect(() => () => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-  }, [previewUrl]);
+  useEffect(
+    () => () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    },
+    [previewUrl],
+  );
 
   if (!canView) {
     return (
       <section className="rounded-lg border bg-card p-8 text-center">
         <AlertCircle className="mx-auto size-8 text-destructive" aria-hidden="true" />
-        <h2 className="mt-3 text-base font-semibold">{translate(language, "common.permissionDenied")}</h2>
+        <h2 className="mt-3 text-base font-semibold">
+          {translate(language, "common.permissionDenied")}
+        </h2>
       </section>
     );
   }
@@ -147,7 +153,11 @@ export function FilesPage({ route }: FilesPageProps) {
           />
         </div>
       </div>
-      <FileDetailPanel previewUrl={previewUrl} record={selectedRecord} references={referencesQuery.data ?? []} />
+      <FileDetailPanel
+        previewUrl={previewUrl}
+        record={selectedRecord}
+        references={referencesQuery.data ?? []}
+      />
     </section>
   );
 
@@ -168,7 +178,7 @@ function FilesToolbar({
   onUpload,
   onRefresh,
   route,
-  totalCount
+  totalCount,
 }: {
   canUpload: boolean;
   language: "en" | "zh";
@@ -182,7 +192,8 @@ function FilesToolbar({
       <div>
         <h2 className="text-base font-semibold">{translate(language, route.titleI18nKey)}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Review stored file metadata and invalidate files while preserving referenced business data state.
+          Review stored file metadata and invalidate files while preserving referenced business data
+          state.
         </p>
       </div>
       <div className="flex items-center gap-3">
@@ -214,7 +225,7 @@ function FilesToolbar({
 function FilesFilter({
   keyword,
   language,
-  onChange
+  onChange,
 }: {
   keyword: string;
   language: "en" | "zh";

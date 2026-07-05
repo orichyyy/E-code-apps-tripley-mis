@@ -5,7 +5,7 @@ import { loadDatabaseConfig } from "@web-admin-base/db";
 const workerConfigSchema = z.object({
   nodeEnv: z.enum(["development", "test", "demo", "production"]).default("development"),
   workerName: z.string().min(1).default("web-admin-base-worker"),
-  pollIntervalMs: z.coerce.number().int().nonnegative().default(0)
+  pollIntervalMs: z.coerce.number().int().nonnegative().default(0),
 });
 
 export type WorkerConfig = z.infer<typeof workerConfigSchema> & {
@@ -17,8 +17,8 @@ export function loadWorkerConfig(env: NodeJS.ProcessEnv = process.env): WorkerCo
     ...workerConfigSchema.parse({
       nodeEnv: env.NODE_ENV,
       workerName: env.WORKER_NAME,
-      pollIntervalMs: env.WORKER_POLL_INTERVAL_MS
+      pollIntervalMs: env.WORKER_POLL_INTERVAL_MS,
     }),
-    database: loadDatabaseConfig(env)
+    database: loadDatabaseConfig(env),
   };
 }

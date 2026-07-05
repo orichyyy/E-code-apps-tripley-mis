@@ -8,13 +8,13 @@ export const webhookSubscriptionStatusSchema = z.enum(["enabled", "disabled"]);
 export const createAnnouncementRequestSchema = strictObject({
   title: z.string().min(1),
   content: z.string().min(1),
-  scopeType: announcementScopeTypeSchema.default("system")
+  scopeType: announcementScopeTypeSchema.default("system"),
 });
 
 export const updateAnnouncementRequestSchema = strictObject({
   title: z.string().min(1).optional(),
   content: z.string().min(1).optional(),
-  scopeType: announcementScopeTypeSchema.optional()
+  scopeType: announcementScopeTypeSchema.optional(),
 });
 
 export const createWebhookSubscriptionRequestSchema = strictObject({
@@ -22,7 +22,7 @@ export const createWebhookSubscriptionRequestSchema = strictObject({
   url: z.string().url(),
   eventTypes: z.array(z.string().min(1)).default([]),
   secret: z.string().nullable().optional(),
-  status: webhookSubscriptionStatusSchema.default("enabled")
+  status: webhookSubscriptionStatusSchema.default("enabled"),
 });
 
 export const updateWebhookSubscriptionRequestSchema = strictObject({
@@ -30,10 +30,14 @@ export const updateWebhookSubscriptionRequestSchema = strictObject({
   url: z.string().url().optional(),
   eventTypes: z.array(z.string().min(1)).optional(),
   secret: z.string().nullable().optional(),
-  status: webhookSubscriptionStatusSchema.optional()
+  status: webhookSubscriptionStatusSchema.optional(),
 });
 
 export type CreateAnnouncementRequest = z.infer<typeof createAnnouncementRequestSchema>;
 export type UpdateAnnouncementRequest = z.infer<typeof updateAnnouncementRequestSchema>;
-export type CreateWebhookSubscriptionRequest = z.infer<typeof createWebhookSubscriptionRequestSchema>;
-export type UpdateWebhookSubscriptionRequest = z.infer<typeof updateWebhookSubscriptionRequestSchema>;
+export type CreateWebhookSubscriptionRequest = z.infer<
+  typeof createWebhookSubscriptionRequestSchema
+>;
+export type UpdateWebhookSubscriptionRequest = z.infer<
+  typeof updateWebhookSubscriptionRequestSchema
+>;

@@ -1,9 +1,6 @@
 import type { TokenStoreAdapter } from "@web-admin-base/adapters";
 
-import {
-  defaultPasswordPolicy,
-  type PasswordPolicy
-} from "../../infra/security/password-policy";
+import { defaultPasswordPolicy, type PasswordPolicy } from "../../infra/security/password-policy";
 import type { InMemoryBackendStore } from "./in-memory-store";
 import type { PermissionCache } from "../permissions/permission-cache";
 
@@ -34,7 +31,7 @@ export const defaultBackendCoreConfig: BackendCoreConfig = {
   failedLoginMaxAttempts: 5,
   failedLoginLockMinutes: 30,
   maxOrganizationDepth: 8,
-  passwordPolicy: defaultPasswordPolicy
+  passwordPolicy: defaultPasswordPolicy,
 };
 
 export type BackendCoreContext = {

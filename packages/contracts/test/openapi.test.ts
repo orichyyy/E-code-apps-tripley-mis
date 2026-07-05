@@ -10,24 +10,28 @@ describe("OpenAPI document generation", () => {
         Object.entries(methods).map(([method, operation]) => ({
           method: method.toUpperCase(),
           path: `/api${path}`,
-          operation
-        }))
+          operation,
+        })),
       )
-      .sort((left, right) => `${left.method} ${left.path}`.localeCompare(`${right.method} ${right.path}`));
+      .sort((left, right) =>
+        `${left.method} ${left.path}`.localeCompare(`${right.method} ${right.path}`),
+      );
     const manifestOperations = baseApiPermissionManifest
       .map((entry) => ({
         method: entry.method,
         path: toOpenApiTestPath(entry.path),
-        code: entry.code
+        code: entry.code,
       }))
-      .sort((left, right) => `${left.method} ${left.path}`.localeCompare(`${right.method} ${right.path}`));
+      .sort((left, right) =>
+        `${left.method} ${left.path}`.localeCompare(`${right.method} ${right.path}`),
+      );
 
     expect(
       documentedOperations.map((operation) => ({
         method: operation.method,
         path: operation.path,
-        code: operation.operation?.["x-permission-code"]
-      }))
+        code: operation.operation?.["x-permission-code"],
+      })),
     ).toEqual(manifestOperations);
   });
 
@@ -48,31 +52,33 @@ describe("OpenAPI document generation", () => {
     expect(document.paths["/auth/login"]?.post?.requestBody).toMatchObject({
       content: {
         "application/json": {
-          schema: { $ref: "#/components/schemas/LoginRequest" }
-        }
-      }
+          schema: { $ref: "#/components/schemas/LoginRequest" },
+        },
+      },
     });
-    expect(document.components.schemas.CreateUserRequest.required).toContain("primaryOrganizationId");
+    expect(document.components.schemas.CreateUserRequest.required).toContain(
+      "primaryOrganizationId",
+    );
     expect(document.paths["/roles/{id}/data-permissions"]?.put?.requestBody).toMatchObject({
       content: {
         "application/json": {
-          schema: { $ref: "#/components/schemas/UpdateRoleDataPermissionsRequest" }
-        }
-      }
+          schema: { $ref: "#/components/schemas/UpdateRoleDataPermissionsRequest" },
+        },
+      },
     });
     expect(document.paths["/roles/{id}/field-permissions"]?.put?.requestBody).toMatchObject({
       content: {
         "application/json": {
-          schema: { $ref: "#/components/schemas/UpdateRoleFieldPermissionsRequest" }
-        }
-      }
+          schema: { $ref: "#/components/schemas/UpdateRoleFieldPermissionsRequest" },
+        },
+      },
     });
     expect(document.paths["/permissions/user-overrides/{userId}"]?.put?.requestBody).toMatchObject({
       content: {
         "application/json": {
-          schema: { $ref: "#/components/schemas/UpdateUserPermissionOverridesRequest" }
-        }
-      }
+          schema: { $ref: "#/components/schemas/UpdateUserPermissionOverridesRequest" },
+        },
+      },
     });
   });
 
@@ -82,30 +88,32 @@ describe("OpenAPI document generation", () => {
     expect(document.paths["/roles/{id}/data-permissions"]?.get?.responses["200"]).toMatchObject({
       content: {
         "application/json": {
-          schema: { $ref: "#/components/schemas/RoleDataPermissionListResponse" }
-        }
-      }
+          schema: { $ref: "#/components/schemas/RoleDataPermissionListResponse" },
+        },
+      },
     });
     expect(document.paths["/roles/{id}/field-permissions"]?.get?.responses["200"]).toMatchObject({
       content: {
         "application/json": {
-          schema: { $ref: "#/components/schemas/RoleFieldPermissionListResponse" }
-        }
-      }
+          schema: { $ref: "#/components/schemas/RoleFieldPermissionListResponse" },
+        },
+      },
     });
-    expect(document.paths["/permissions/user-overrides/{userId}"]?.get?.responses["200"]).toMatchObject({
+    expect(
+      document.paths["/permissions/user-overrides/{userId}"]?.get?.responses["200"],
+    ).toMatchObject({
       content: {
         "application/json": {
-          schema: { $ref: "#/components/schemas/UserPermissionOverrideListResponse" }
-        }
-      }
+          schema: { $ref: "#/components/schemas/UserPermissionOverrideListResponse" },
+        },
+      },
     });
     expect(document.paths["/permissions/effective"]?.get?.responses["200"]).toMatchObject({
       content: {
         "application/json": {
-          schema: { $ref: "#/components/schemas/PermissionContextResponse" }
-        }
-      }
+          schema: { $ref: "#/components/schemas/PermissionContextResponse" },
+        },
+      },
     });
     expect(document.components.schemas.PermissionContextResponse).toMatchObject({
       properties: {
@@ -113,10 +121,10 @@ describe("OpenAPI document generation", () => {
           properties: {
             dataPermissions: { type: "array" },
             fieldPermissions: { type: "array" },
-            userPermissionOverrides: { type: "array" }
-          }
-        }
-      }
+            userPermissionOverrides: { type: "array" },
+          },
+        },
+      },
     });
   });
 
@@ -130,21 +138,24 @@ describe("OpenAPI document generation", () => {
       "roles",
       "permissions",
       "routes",
-      "menus"
+      "menus",
     ]);
 
     const backendCoreOperations = baseApiPermissionManifest.filter((entry) =>
-      backendCoreModules.has(entry.module)
+      backendCoreModules.has(entry.module),
     );
 
     expect(backendCoreOperations.length).toBeGreaterThan(0);
     for (const entry of backendCoreOperations) {
       const path = toOpenApiTestPath(entry.path).replace(/^\/api/, "");
-      const method = entry.method.toLowerCase() as keyof NonNullable<typeof document.paths[string]>;
-      const responseSchema = document.paths[path]?.[method]?.responses["200"]?.content?.["application/json"]?.schema;
+      const method = entry.method.toLowerCase() as keyof NonNullable<
+        (typeof document.paths)[string]
+      >;
+      const responseSchema =
+        document.paths[path]?.[method]?.responses["200"]?.content?.["application/json"]?.schema;
 
       expect(responseSchema, `${entry.code} should use a named response schema`).toMatchObject({
-        $ref: expect.stringMatching(/^#\/components\/schemas\/.+Response$/)
+        $ref: expect.stringMatching(/^#\/components\/schemas\/.+Response$/),
       });
     }
   });
@@ -171,7 +182,7 @@ describe("OpenAPI document generation", () => {
       "NotificationListResponse",
       "NotificationTemplateListResponse",
       "ScheduledTaskListResponse",
-      "ImportExportTaskListResponse"
+      "ImportExportTaskListResponse",
     ];
     const itemSchemas = [
       "LogEntry",
@@ -180,21 +191,25 @@ describe("OpenAPI document generation", () => {
       "Notification",
       "NotificationTemplate",
       "ScheduledTask",
-      "ImportExportTask"
+      "ImportExportTask",
     ];
 
     for (const responseName of listResponses) {
       const responseSchema = document.components.schemas[responseName];
-      expect(responseSchema.properties?.data.items?.$ref, `${responseName} should reference a concrete item`).toMatch(
-        /^#\/components\/schemas\/.+/
-      );
+      expect(
+        responseSchema.properties?.data.items?.$ref,
+        `${responseName} should reference a concrete item`,
+      ).toMatch(/^#\/components\/schemas\/.+/);
     }
 
     for (const schemaName of itemSchemas) {
       const schema = document.components.schemas[schemaName];
       expect(schema, `${schemaName} should exist`).toBeDefined();
       expect(schema.type, `${schemaName} should be an object schema`).toBe("object");
-      expect(schema.required?.length, `${schemaName} should define required fields`).toBeGreaterThan(0);
+      expect(
+        schema.required?.length,
+        `${schemaName} should define required fields`,
+      ).toBeGreaterThan(0);
       expect(schema.additionalProperties, `${schemaName} should not be a broad object`).toBe(false);
     }
   });

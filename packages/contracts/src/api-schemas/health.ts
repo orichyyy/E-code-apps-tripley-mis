@@ -4,7 +4,7 @@ export const healthResponseSchema = z.object({
   status: z.literal("ok"),
   service: z.literal("api"),
   requestId: z.string().min(1),
-  timestamp: z.string().datetime()
+  timestamp: z.string().datetime(),
 });
 
 export type HealthResponse = z.infer<typeof healthResponseSchema>;
