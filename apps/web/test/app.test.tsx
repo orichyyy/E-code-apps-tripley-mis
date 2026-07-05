@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "../src/app/App";
@@ -50,6 +50,31 @@ describe("web admin frontend", () => {
     expect(await screen.findByText("Web Admin Base")).toBeInTheDocument();
     expect(await screen.findByText("User management")).toBeInTheDocument();
     expect(await screen.findByLabelText("Current organization")).toBeInTheDocument();
+  });
+
+  it("only marks the exact current sidebar link active", async () => {
+    window.history.pushState(null, "", "/system/config");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse({ data: [] }));
+    useAuthStore.getState().signIn({
+      accessToken: "test-token",
+      user: {
+        id: "1",
+        username: "admin",
+        displayName: "Super Administrator",
+        language: "en",
+        forcePasswordChange: false
+      },
+      permissionCodes: ["*"]
+    });
+
+    render(<App />);
+
+    const primaryNavigation = await screen.findByRole("navigation", { name: "Primary" });
+    const dashboardLink = within(primaryNavigation).getByRole("link", { name: "Dashboard" });
+    const sidebarSystemConfigLink = within(primaryNavigation).getByRole("link", { name: "System configuration" });
+
+    expect(dashboardLink).not.toHaveClass("active");
+    expect(sidebarSystemConfigLink).toHaveClass("active");
   });
 
   it("renders personal settings with tab and theme controls", async () => {

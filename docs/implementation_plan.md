@@ -760,3 +760,17 @@ The system configuration and dictionary frontend slice completed the following:
 - Wired dictionary type and item list/create/update/status flows to the existing backend APIs.
 - Kept organization-level dictionary overrides and ad hoc i18n key creation reserved.
 - Added frontend API and route rendering coverage for the new system configuration and dictionary pages.
+
+## Local Browser Smoke Hardening Progress
+
+The local browser smoke hardening slice completed the following:
+
+- Ran the local SQLite DB-backed API, Vite web app, and worker together against `data/ui-smoke.sqlite`.
+- Re-seeded the DB-backed runtime and found that the shared route/menu manifests lagged behind the implemented frontend routes.
+- Expanded `baseRouteManifest` and `baseMenuManifest` to include system configuration, dictionaries, operations, logs, and account pages so seed/login menu context exposes the implemented base pages.
+- Added frontend manifest alignment coverage so every menu-visible frontend admin route must exist in the shared base route and menu manifests.
+- Fixed the login form label structure to use explicit `htmlFor`/`id` pairs, avoiding ambiguous password input and password-visibility button labeling.
+- Fixed sidebar and tab active state matching to require exact route matches, preventing the dashboard root route from appearing active on every admin page.
+- Verified live health, login, menu context, core/system/operations/logs/files/notifications/webhook APIs, and a system Chrome browser smoke through Vite.
+
+Remaining implementation boundaries are tracked in `docs/known_gaps.md`; this slice did not add example business modules, SQL Server support, or optional external integration drivers.

@@ -52,31 +52,37 @@ export function LoginPage() {
           <form.Field
             name="username"
             children={(field) => (
-              <label className="block text-sm font-medium">
-                Username
+              <div>
+                <label className="block text-sm font-medium" htmlFor="login-username">
+                  Username
+                </label>
                 <span className="mt-2 flex h-10 items-center gap-2 rounded-md border bg-background px-3">
                   <UserRound className="size-4 text-muted-foreground" aria-hidden="true" />
                   <input
                     autoComplete="username"
                     className="w-full bg-transparent outline-none"
+                    id="login-username"
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
                     value={field.state.value}
                   />
                 </span>
-              </label>
+              </div>
             )}
           />
           <form.Field
             name="password"
             children={(field) => (
-              <label className="block text-sm font-medium">
-                Password
+              <div>
+                <label className="block text-sm font-medium" htmlFor="login-password">
+                  Password
+                </label>
                 <span className="mt-2 flex h-10 items-center gap-2 rounded-md border bg-background px-3">
                   <LockKeyhole className="size-4 text-muted-foreground" aria-hidden="true" />
                   <input
                     autoComplete="current-password"
                     className="w-full bg-transparent outline-none"
+                    id="login-password"
                     onBlur={field.handleBlur}
                     onChange={(event) => field.handleChange(event.target.value)}
                     type={showPassword ? "text" : "password"}
@@ -91,7 +97,7 @@ export function LoginPage() {
                     {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </span>
-              </label>
+              </div>
             )}
           />
           <Button className="w-full" type="submit">

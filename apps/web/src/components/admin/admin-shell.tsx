@@ -100,6 +100,7 @@ export function AdminShell() {
                       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
                       .map((route) => (
                         <Link
+                          activeOptions={{ exact: true }}
                           className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground [&.active]:bg-primary [&.active]:text-primary-foreground"
                           key={route.routeCode}
                           to={route.path}
@@ -176,7 +177,7 @@ export function AdminShell() {
               const tabRoute = adminRouteMetadata.find((route) => route.path === tab);
               return (
                 <div className="flex items-center rounded-md border bg-card" key={tab}>
-                  <Link className="px-3 py-1.5 text-xs [&.active]:font-semibold" to={tab}>
+                  <Link activeOptions={{ exact: true }} className="px-3 py-1.5 text-xs [&.active]:font-semibold" to={tab}>
                     {translate(language, tabRoute?.titleI18nKey ?? "routes.dashboard")}
                   </Link>
                   {tab !== "/" ? (

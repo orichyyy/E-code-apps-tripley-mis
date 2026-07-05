@@ -49,6 +49,22 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     sortOrder: 140
   },
   {
+    routeCode: "system.config",
+    path: "/system/config",
+    titleI18nKey: "routes.system.config",
+    requiredPermission: "system-config:view",
+    menuVisible: true,
+    sortOrder: 150
+  },
+  {
+    routeCode: "system.dictionaries",
+    path: "/system/dictionaries",
+    titleI18nKey: "routes.system.dictionaries",
+    requiredPermission: "dictionary:view",
+    menuVisible: true,
+    sortOrder: 160
+  },
+  {
     routeCode: "system.i18nMessages",
     path: "/system/i18n-messages",
     titleI18nKey: "routes.system.i18nMessages",
@@ -95,5 +111,114 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     requiredPermission: "webhook:view",
     menuVisible: true,
     sortOrder: 220
+  },
+  {
+    routeCode: "operations.online-users",
+    path: "/operations/online-users",
+    titleI18nKey: "routes.operations.onlineUsers",
+    requiredPermission: "online-user:view",
+    menuVisible: true,
+    sortOrder: 300
+  },
+  {
+    routeCode: "operations.scheduler",
+    path: "/operations/scheduler",
+    titleI18nKey: "routes.operations.scheduler",
+    requiredPermission: "job:view",
+    menuVisible: true,
+    sortOrder: 310
+  },
+  {
+    routeCode: "operations.import-export",
+    path: "/operations/import-export",
+    titleI18nKey: "routes.operations.importExport",
+    requiredPermission: "import-export:view",
+    menuVisible: true,
+    sortOrder: 320
+  },
+  {
+    routeCode: "logs.login",
+    path: "/logs/login",
+    titleI18nKey: "routes.logs.login",
+    requiredPermission: "login-log:view",
+    menuVisible: true,
+    sortOrder: 400
+  },
+  {
+    routeCode: "logs.operation",
+    path: "/logs/operation",
+    titleI18nKey: "routes.logs.operation",
+    requiredPermission: "operation-log:view",
+    menuVisible: true,
+    sortOrder: 401
+  },
+  {
+    routeCode: "logs.access",
+    path: "/logs/access",
+    titleI18nKey: "routes.logs.access",
+    requiredPermission: "access-log:view",
+    menuVisible: true,
+    sortOrder: 402
+  },
+  {
+    routeCode: "logs.api",
+    path: "/logs/api",
+    titleI18nKey: "routes.logs.api",
+    requiredPermission: "api-log:view",
+    menuVisible: true,
+    sortOrder: 403
+  },
+  {
+    routeCode: "logs.exception",
+    path: "/logs/exception",
+    titleI18nKey: "routes.logs.exception",
+    requiredPermission: "exception-log:view",
+    menuVisible: true,
+    sortOrder: 404
+  },
+  {
+    routeCode: "logs.security",
+    path: "/logs/security",
+    titleI18nKey: "routes.logs.security",
+    requiredPermission: "security-log:view",
+    menuVisible: true,
+    sortOrder: 405
+  },
+  {
+    routeCode: "logs.scheduler",
+    path: "/logs/scheduler",
+    titleI18nKey: "routes.logs.scheduler",
+    requiredPermission: "scheduler-log:view",
+    menuVisible: true,
+    sortOrder: 406
+  },
+  {
+    routeCode: "logs.files",
+    path: "/logs/files",
+    titleI18nKey: "routes.logs.files",
+    requiredPermission: "file-log:view",
+    menuVisible: true,
+    sortOrder: 407
+  },
+  {
+    routeCode: "account.profile",
+    path: "/account/profile",
+    titleI18nKey: "routes.account.profile",
+    menuVisible: true,
+    sortOrder: 500
+  },
+  {
+    routeCode: "account.password",
+    path: "/account/password",
+    titleI18nKey: "routes.account.password",
+    menuVisible: true,
+    sortOrder: 510
+  },
+  {
+    routeCode: "account.settings",
+    path: "/account/settings",
+    titleI18nKey: "routes.account.settings",
+    menuVisible: true,
+    sortOrder: 520
   }
 ];
