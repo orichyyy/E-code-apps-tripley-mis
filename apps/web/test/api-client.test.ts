@@ -39,6 +39,18 @@ import {
   uploadFile
 } from "../src/features/system/file-api";
 import { fetchI18nMessages, updateI18nMessage } from "../src/features/system/i18n-message-api";
+import { createLogExportTask, fetchLogs } from "../src/features/logs/log-api";
+import {
+  createExportTask,
+  createScheduledTask,
+  fetchImportExportTask,
+  fetchImportExportTasks,
+  fetchOnlineUsers,
+  fetchScheduledTasks,
+  runScheduledTask,
+  setScheduledTaskStatus,
+  updateScheduledTask
+} from "../src/features/operations/operations-api";
 import { changeOwnPassword, fetchPageDataset, loginWithPassword } from "../src/lib/api-client";
 
 describe("frontend API client", () => {
@@ -81,6 +93,90 @@ describe("frontend API client", () => {
         source: "available-api"
       })
     ]);
+  });
+
+  it("loads and mutates operation infrastructure APIs", async () => {
+    localStorage.setItem("web-admin.access-token", "token");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url === "/api/online-users") {
+        return Promise.resolve(jsonResponse({ data: [{ id: "s1", userId: "1", username: "admin", status: "active" }] }));
+      }
+      if (url === "/api/scheduled-tasks") {
+        return Promise.resolve(
+          jsonResponse({
+            data: [{ id: "7", code: "cleanup", cronExpression: "*/15 * * * *", handlerType: "cleanup", enabled: true }]
+          })
+        );
+      }
+      if (url === "/api/import-export/tasks" || url === "/api/import-export/tasks/9") {
+        return Promise.resolve(jsonResponse({ data: [{ id: "9", taskType: "export", resourceType: "logs:login", status: "pending" }] }));
+      }
+      return Promise.resolve(jsonResponse({ data: { id: "7" } }));
+    });
+
+    await fetchOnlineUsers();
+    await fetchScheduledTasks();
+    await createScheduledTask({ code: "cleanup", cronExpression: "*/15 * * * *", handlerType: "cleanup", payload: {}, enabled: true });
+    await updateScheduledTask("7", { enabled: false });
+    await setScheduledTaskStatus("7", false);
+    await runScheduledTask("7");
+    await fetchImportExportTasks();
+    await fetchImportExportTask("9");
+    await createExportTask({ resourceType: "logs:login" });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/online-users", {
+      headers: { authorization: "Bearer token" }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/scheduled-tasks", {
+      method: "POST",
+      body: JSON.stringify({ code: "cleanup", cronExpression: "*/15 * * * *", handlerType: "cleanup", payload: {}, enabled: true }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(5, "/api/scheduled-tasks/7/disable", {
+      method: "POST",
+      headers: { authorization: "Bearer token" }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(6, "/api/scheduled-tasks/7/run", {
+      method: "POST",
+      headers: { authorization: "Bearer token" }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(9, "/api/import-export/export", {
+      method: "POST",
+      body: JSON.stringify({ resourceType: "logs:login" }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
+  });
+
+  it("loads logs and creates log export tasks", async () => {
+    localStorage.setItem("web-admin.access-token", "token");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url === "/api/logs/login") {
+        return Promise.resolve(jsonResponse({ data: [{ id: "1", logType: "login", level: "info", message: "Login ok" }] }));
+      }
+      return Promise.resolve(jsonResponse({ data: { id: "12", taskType: "export", resourceType: "logs:login", status: "pending" } }));
+    });
+
+    const logs = await fetchLogs("logs.login");
+    const task = await createLogExportTask("login");
+
+    expect(logs[0]).toEqual(expect.objectContaining({ id: "1", message: "Login ok" }));
+    expect(task).toEqual(expect.objectContaining({ id: "12", resourceType: "logs:login" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/logs/export", {
+      method: "POST",
+      body: JSON.stringify({ logType: "login" }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
   });
 
   it("logs in and changes passwords through the backend API", async () => {
@@ -802,3 +898,10 @@ describe("frontend API client", () => {
     });
   });
 });
+
+function jsonResponse(body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { "content-type": "application/json" }
+  });
+}

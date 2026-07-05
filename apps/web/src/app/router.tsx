@@ -10,12 +10,17 @@ import { AnnouncementsPage } from "@/features/notifications/announcements-page";
 import { InAppNotificationsPage } from "@/features/notifications/in-app-notifications-page";
 import { NotificationTemplatesPage } from "@/features/notifications/notification-templates-page";
 import { WebhookSubscriptionsPage } from "@/features/notifications/webhook-subscriptions-page";
+import { LogsPage } from "@/features/logs/logs-page";
+import { ImportExportPage } from "@/features/operations/import-export-page";
+import { OnlineUsersPage } from "@/features/operations/online-users-page";
+import { SchedulerPage } from "@/features/operations/scheduler-page";
 import { FilesPage } from "@/features/system/files-page";
 import { I18nMessagesPage } from "@/features/system/i18n-messages-page";
 import { PersonalSettingsPage } from "@/features/account/settings-page";
 import { ProfilePage } from "@/features/account/profile-page";
 import { adminRouteMetadata } from "@/route-metadata";
 import { hasPermission } from "@/features/permissions/permission-utils";
+import { isLogRouteCode } from "@/features/logs/log-api";
 import { useAuthStore } from "@/stores/auth.store";
 
 function RootLayout() {
@@ -97,6 +102,12 @@ const managementRoutes = adminRouteMetadata
             <NotificationTemplatesPage route={route} />
           ) : route.routeCode === "notifications.webhooks" ? (
             <WebhookSubscriptionsPage route={route} />
+          ) : route.routeCode === "operations.online-users" ? (
+            <OnlineUsersPage route={route} />
+          ) : route.routeCode === "operations.scheduler" ? (
+            <SchedulerPage route={route} />
+          ) : route.routeCode === "operations.import-export" ? (
+            <ImportExportPage route={route} />
           ) : route.routeCode === "system.users" ? (
             <CoreManagementPage kind="users" route={route} />
           ) : route.routeCode === "system.organizations" ? (
@@ -107,6 +118,8 @@ const managementRoutes = adminRouteMetadata
             <CoreManagementPage kind="permissions" route={route} />
           ) : route.routeCode === "system.menus" ? (
             <CoreManagementPage kind="menus" route={route} />
+          ) : isLogRouteCode(route.routeCode) ? (
+            <LogsPage route={{ ...route, routeCode: route.routeCode }} />
           ) : (
             <ManagementPage route={route} />
           )}

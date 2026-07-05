@@ -736,3 +736,15 @@ The core management UI slice completed the following:
 - Added menu API-permission binding through the existing menu API-binding API.
 - Added permission manifest sync access on the permission page when the current user has `permission:sync`.
 - Added frontend API and component coverage for the new core management API/page behavior.
+
+## Operations and Logs UI Productization Progress
+
+The operations and logs frontend slice completed the following:
+
+- Added dedicated frontend operation pages for online users, scheduled tasks, and import/export tasks.
+- Kept online users read-only, matching the confirmed v1 boundary that kick-out is reserved.
+- Wired scheduled task management to the existing backend APIs for list, create, update, enable/disable, and manual run.
+- Wired import/export task management to the existing backend APIs for task list, task detail, and asynchronous CSV export task creation.
+- Added a reusable log management page for login, operation, access, API call, exception, security, scheduler, and file operation logs.
+- Wired log pages to the implemented backend log endpoints and `POST /api/logs/export`, creating asynchronous CSV export tasks instead of direct downloads.
+- Added frontend API and route rendering coverage for the newly productized operation and log pages.

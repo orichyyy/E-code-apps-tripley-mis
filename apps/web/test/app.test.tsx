@@ -418,6 +418,108 @@ describe("web admin frontend", () => {
     expect(screen.getByRole("button", { name: /create/i })).toBeInTheDocument();
     expect(screen.getAllByText("User management").length).toBeGreaterThan(0);
   });
+
+  it("renders operation pages with real API-backed records", async () => {
+    window.history.pushState(null, "", "/operations/scheduler");
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url === "/api/scheduled-tasks") {
+        return Promise.resolve(
+          jsonResponse({
+            data: [
+              {
+                id: "7",
+                code: "log-retention",
+                cronExpression: "0 2 * * *",
+                handlerType: "logs.retention",
+                payload: {},
+                enabled: true,
+                status: "enabled",
+                nextRunAt: "2026-07-04T02:00:00.000Z",
+                attempt: 0,
+                maxAttempts: 3,
+                createdAt: "2026-07-03T00:00:00.000Z",
+                updatedAt: "2026-07-03T00:00:00.000Z"
+              }
+            ]
+          })
+        );
+      }
+      return Promise.resolve(jsonResponse({ data: [] }));
+    });
+    useAuthStore.getState().signIn({
+      accessToken: "test-token",
+      user: {
+        id: "1",
+        username: "admin",
+        displayName: "Super Administrator",
+        language: "en",
+        forcePasswordChange: false
+      },
+      permissionCodes: ["job:view", "job:create", "job:update", "job:run"]
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText("log-retention")).toBeInTheDocument();
+    expect(screen.getByText("logs.retention")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /run/i })).toBeInTheDocument();
+  });
+
+  it("renders log pages and creates async export tasks", async () => {
+    window.history.pushState(null, "", "/logs/login");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url === "/api/logs/login") {
+        return Promise.resolve(
+          jsonResponse({
+            data: [
+              {
+                id: "91",
+                logType: "login",
+                level: "info",
+                message: "Login succeeded",
+                traceId: "trace-1",
+                userId: "1",
+                ipAddress: "127.0.0.1",
+                metadata: { username: "admin" },
+                occurredAt: "2026-07-03T00:00:00.000Z",
+                createdAt: "2026-07-03T00:00:00.000Z"
+              }
+            ]
+          })
+        );
+      }
+      return Promise.resolve(jsonResponse({ data: { id: "101", taskType: "export", resourceType: "logs:login", status: "pending" } }));
+    });
+    useAuthStore.getState().signIn({
+      accessToken: "test-token",
+      user: {
+        id: "1",
+        username: "admin",
+        displayName: "Super Administrator",
+        language: "en",
+        forcePasswordChange: false
+      },
+      permissionCodes: ["login-log:view", "log:export"]
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText("Login succeeded")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /export/i }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/logs/export", {
+        method: "POST",
+        body: JSON.stringify({ logType: "login" }),
+        headers: {
+          authorization: "Bearer test-token",
+          "content-type": "application/json"
+        }
+      });
+    });
+  });
 });
 
 function profileFixture() {
