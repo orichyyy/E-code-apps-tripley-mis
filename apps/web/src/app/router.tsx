@@ -14,8 +14,10 @@ import { LogsPage } from "@/features/logs/logs-page";
 import { ImportExportPage } from "@/features/operations/import-export-page";
 import { OnlineUsersPage } from "@/features/operations/online-users-page";
 import { SchedulerPage } from "@/features/operations/scheduler-page";
+import { DictionaryPage } from "@/features/system/dictionary-page";
 import { FilesPage } from "@/features/system/files-page";
 import { I18nMessagesPage } from "@/features/system/i18n-messages-page";
+import { SystemConfigPage } from "@/features/system/system-config-page";
 import { PersonalSettingsPage } from "@/features/account/settings-page";
 import { ProfilePage } from "@/features/account/profile-page";
 import { adminRouteMetadata } from "@/route-metadata";
@@ -108,6 +110,10 @@ const managementRoutes = adminRouteMetadata
             <SchedulerPage route={route} />
           ) : route.routeCode === "operations.import-export" ? (
             <ImportExportPage route={route} />
+          ) : route.routeCode === "system.config" ? (
+            <SystemConfigPage route={route} />
+          ) : route.routeCode === "system.dictionaries" ? (
+            <DictionaryPage route={route} />
           ) : route.routeCode === "system.users" ? (
             <CoreManagementPage kind="users" route={route} />
           ) : route.routeCode === "system.organizations" ? (

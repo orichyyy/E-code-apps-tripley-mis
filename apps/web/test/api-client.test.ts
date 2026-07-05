@@ -39,6 +39,16 @@ import {
   uploadFile
 } from "../src/features/system/file-api";
 import { fetchI18nMessages, updateI18nMessage } from "../src/features/system/i18n-message-api";
+import {
+  createDictionaryItem,
+  createDictionaryType,
+  fetchDictionaryItems,
+  fetchDictionaryTypes,
+  fetchSystemConfigs,
+  updateDictionaryItem,
+  updateDictionaryType,
+  updateSystemConfig
+} from "../src/features/system/system-management-api";
 import { createLogExportTask, fetchLogs } from "../src/features/logs/log-api";
 import {
   createExportTask,
@@ -274,6 +284,105 @@ describe("frontend API client", () => {
         source: "available-api"
       })
     ]);
+  });
+
+  it("loads and updates system configuration through the backend API", async () => {
+    localStorage.setItem("web-admin.access-token", "token");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(() =>
+      Promise.resolve(
+        jsonResponse({
+          data: [
+            {
+              id: "11",
+              tenantId: null,
+              configKey: "password.minimumLength",
+              configValue: 8,
+              valueType: "number",
+              groupKey: "password",
+              description: "Minimum length",
+              editable: true,
+              status: "enabled",
+              updatedAt: "2026-07-03T00:00:00.000Z"
+            }
+          ]
+        })
+      )
+    );
+
+    const records = await fetchSystemConfigs();
+    await updateSystemConfig("password.minimumLength", { configValue: 10 });
+
+    expect(records[0]).toEqual(expect.objectContaining({ configKey: "password.minimumLength", configValue: 8 }));
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/system-config", {
+      headers: { authorization: "Bearer token" }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/system-config/password.minimumLength", {
+      method: "PATCH",
+      body: JSON.stringify({ configValue: 10 }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
+  });
+
+  it("loads and mutates dictionaries through the backend API", async () => {
+    localStorage.setItem("web-admin.access-token", "token");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url === "/api/dictionary-types") {
+        return Promise.resolve(jsonResponse({ data: [{ id: "21", code: "status", name: "Status", status: "enabled" }] }));
+      }
+      if (url === "/api/dictionary-types/21/items") {
+        return Promise.resolve(
+          jsonResponse({ data: [{ id: "31", typeId: "21", itemValue: "enabled", labelI18nKey: "dictionary.status.enabled", sortOrder: 1, status: "enabled" }] })
+        );
+      }
+      return Promise.resolve(jsonResponse({ data: { id: "21" } }));
+    });
+
+    await fetchDictionaryTypes();
+    await createDictionaryType({ code: "status", name: "Status", description: null, status: "enabled" });
+    await updateDictionaryType("21", { status: "disabled" });
+    await fetchDictionaryItems("21");
+    await createDictionaryItem("21", { itemValue: "disabled", labelI18nKey: "dictionary.status.disabled", sortOrder: 2, status: "enabled" });
+    await updateDictionaryItem("31", { status: "disabled" });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/dictionary-types", {
+      headers: { authorization: "Bearer token" }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/dictionary-types", {
+      method: "POST",
+      body: JSON.stringify({ code: "status", name: "Status", description: null, status: "enabled" }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/dictionary-types/21", {
+      method: "PATCH",
+      body: JSON.stringify({ status: "disabled" }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(5, "/api/dictionary-types/21/items", {
+      method: "POST",
+      body: JSON.stringify({ itemValue: "disabled", labelI18nKey: "dictionary.status.disabled", sortOrder: 2, status: "enabled" }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(6, "/api/dictionary-items/31", {
+      method: "PATCH",
+      body: JSON.stringify({ status: "disabled" }),
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "application/json"
+      }
+    });
   });
 
   it("loads announcement pages from the backend API", async () => {

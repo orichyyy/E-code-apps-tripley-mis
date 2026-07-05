@@ -419,6 +419,141 @@ describe("web admin frontend", () => {
     expect(screen.getAllByText("User management").length).toBeGreaterThan(0);
   });
 
+  it("renders system configuration with editable typed values", async () => {
+    window.history.pushState(null, "", "/system/config");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url === "/api/system-config") {
+        return Promise.resolve(
+          jsonResponse({
+            data: [
+              {
+                id: "11",
+                tenantId: null,
+                configKey: "password.minimumLength",
+                configValue: 8,
+                valueType: "number",
+                groupKey: "password",
+                description: "Minimum password length",
+                editable: true,
+                status: "enabled",
+                updatedAt: "2026-07-03T00:00:00.000Z"
+              }
+            ]
+          })
+        );
+      }
+      return Promise.resolve(jsonResponse({ data: { id: "11" } }));
+    });
+    useAuthStore.getState().signIn({
+      accessToken: "test-token",
+      user: {
+        id: "1",
+        username: "admin",
+        displayName: "Super Administrator",
+        language: "en",
+        forcePasswordChange: false
+      },
+      permissionCodes: ["system-config:view", "system-config:update"]
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText("password.minimumLength")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
+    fireEvent.change(screen.getByLabelText("Value"), { target: { value: "10" } });
+    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/system-config/password.minimumLength", {
+        method: "PATCH",
+        body: JSON.stringify({ configValue: 10 }),
+        headers: {
+          authorization: "Bearer test-token",
+          "content-type": "application/json"
+        }
+      });
+    });
+  });
+
+  it("renders dictionaries and creates dictionary items", async () => {
+    window.history.pushState(null, "", "/system/dictionaries");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url === "/api/dictionary-types") {
+        return Promise.resolve(
+          jsonResponse({
+            data: [
+              {
+                id: "21",
+                tenantId: null,
+                code: "status",
+                name: "Status",
+                description: "Base status values",
+                status: "enabled"
+              }
+            ]
+          })
+        );
+      }
+      if (url === "/api/dictionary-types/21/items") {
+        return Promise.resolve(
+          jsonResponse({
+            data: [
+              {
+                id: "31",
+                tenantId: null,
+                typeId: "21",
+                itemValue: "enabled",
+                labelI18nKey: "dictionary.status.enabled",
+                sortOrder: 1,
+                status: "enabled"
+              }
+            ]
+          })
+        );
+      }
+      return Promise.resolve(jsonResponse({ data: { id: "32" } }));
+    });
+    useAuthStore.getState().signIn({
+      accessToken: "test-token",
+      user: {
+        id: "1",
+        username: "admin",
+        displayName: "Super Administrator",
+        language: "en",
+        forcePasswordChange: false
+      },
+      permissionCodes: ["dictionary:view", "dictionary:create", "dictionary:update"]
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText("Status")).toBeInTheDocument();
+    expect(await screen.findByText("dictionary.status.enabled")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^item$/i }));
+    fireEvent.change(screen.getByLabelText("Item value"), { target: { value: "disabled" } });
+    fireEvent.change(screen.getByLabelText("Label i18n key"), { target: { value: "dictionary.status.disabled" } });
+    fireEvent.change(screen.getByLabelText("Sort order"), { target: { value: "2" } });
+    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/dictionary-types/21/items", {
+        method: "POST",
+        body: JSON.stringify({
+          itemValue: "disabled",
+          labelI18nKey: "dictionary.status.disabled",
+          sortOrder: 2,
+          status: "enabled"
+        }),
+        headers: {
+          authorization: "Bearer test-token",
+          "content-type": "application/json"
+        }
+      });
+    });
+  });
+
   it("renders operation pages with real API-backed records", async () => {
     window.history.pushState(null, "", "/operations/scheduler");
     vi.spyOn(globalThis, "fetch").mockImplementation((input) => {

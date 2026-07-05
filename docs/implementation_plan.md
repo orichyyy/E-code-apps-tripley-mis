@@ -748,3 +748,15 @@ The operations and logs frontend slice completed the following:
 - Added a reusable log management page for login, operation, access, API call, exception, security, scheduler, and file operation logs.
 - Wired log pages to the implemented backend log endpoints and `POST /api/logs/export`, creating asynchronous CSV export tasks instead of direct downloads.
 - Added frontend API and route rendering coverage for the newly productized operation and log pages.
+
+## System Configuration and Dictionary UI Productization Progress
+
+The system configuration and dictionary frontend slice completed the following:
+
+- Added a dedicated system configuration page using TanStack Query and TanStack Form over the existing backend APIs.
+- Kept configuration creation out of scope; the page only edits existing editable global configuration records and preserves the v1 global-only boundary.
+- Added typed value editing for string, number, boolean, and JSON configuration values.
+- Added a dedicated dictionary management page for global dictionary types and dictionary items.
+- Wired dictionary type and item list/create/update/status flows to the existing backend APIs.
+- Kept organization-level dictionary overrides and ad hoc i18n key creation reserved.
+- Added frontend API and route rendering coverage for the new system configuration and dictionary pages.
