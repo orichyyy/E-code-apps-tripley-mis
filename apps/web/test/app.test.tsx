@@ -367,6 +367,57 @@ describe("web admin frontend", () => {
     expect(screen.getByText("Download")).toBeInTheDocument();
     expect(screen.getAllByText("File management").length).toBeGreaterThan(0);
   });
+
+  it("renders core user management with backend records", async () => {
+    window.history.pushState(null, "", "/system/users");
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url.startsWith("/api/users")) {
+        return Promise.resolve(
+          jsonResponse({
+            data: {
+              items: [
+                {
+                  id: "1",
+                  username: "admin",
+                  displayName: "Super Administrator",
+                  email: "admin@example.com",
+                  phone: "10000000000",
+                  status: "enabled",
+                  updatedAt: "2026-07-03T00:00:00.000Z"
+                }
+              ]
+            }
+          })
+        );
+      }
+      if (url === "/api/organizations/tree") {
+        return Promise.resolve(jsonResponse({ data: [{ id: "1", name: "Main Organization", code: "main" }] }));
+      }
+      if (url.startsWith("/api/roles")) {
+        return Promise.resolve(jsonResponse({ data: { items: [{ id: "1", name: "Super Admin", code: "super_admin" }] } }));
+      }
+      return Promise.resolve(jsonResponse({ data: [] }));
+    });
+    useAuthStore.getState().signIn({
+      accessToken: "test-token",
+      user: {
+        id: "1",
+        username: "admin",
+        displayName: "Super Administrator",
+        language: "en",
+        forcePasswordChange: false
+      },
+      permissionCodes: ["user:view", "user:create", "user:update", "user:delete"]
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText("Super Administrator")).toBeInTheDocument();
+    expect(screen.getByText("admin@example.com")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /create/i })).toBeInTheDocument();
+    expect(screen.getAllByText("User management").length).toBeGreaterThan(0);
+  });
 });
 
 function profileFixture() {

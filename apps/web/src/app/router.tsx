@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { AdminShell, DashboardPage } from "@/components/admin/admin-shell";
 import { ManagementPage } from "@/components/admin/management-page";
 import { PasswordChangePage, ForcedPasswordChangePage, LoginPage } from "@/features/auth/auth-pages";
+import { CoreManagementPage } from "@/features/core-management/core-management-page";
 import { AnnouncementsPage } from "@/features/notifications/announcements-page";
 import { InAppNotificationsPage } from "@/features/notifications/in-app-notifications-page";
 import { NotificationTemplatesPage } from "@/features/notifications/notification-templates-page";
@@ -96,6 +97,16 @@ const managementRoutes = adminRouteMetadata
             <NotificationTemplatesPage route={route} />
           ) : route.routeCode === "notifications.webhooks" ? (
             <WebhookSubscriptionsPage route={route} />
+          ) : route.routeCode === "system.users" ? (
+            <CoreManagementPage kind="users" route={route} />
+          ) : route.routeCode === "system.organizations" ? (
+            <CoreManagementPage kind="organizations" route={route} />
+          ) : route.routeCode === "system.roles" ? (
+            <CoreManagementPage kind="roles" route={route} />
+          ) : route.routeCode === "system.permissions" ? (
+            <CoreManagementPage kind="permissions" route={route} />
+          ) : route.routeCode === "system.menus" ? (
+            <CoreManagementPage kind="menus" route={route} />
           ) : (
             <ManagementPage route={route} />
           )}

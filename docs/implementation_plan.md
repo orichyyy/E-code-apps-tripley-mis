@@ -723,3 +723,16 @@ The local smoke slice completed the following:
 - Replaced the frontend demo login/password-change stubs with real backend API calls.
 - Updated frontend generic management-page endpoint mapping for users, organizations, roles, permissions, menus, and scheduler logs.
 - Verified live API, live Vite web server, Vite `/api` proxy, login context, OpenAPI, core management APIs, files, announcements, webhooks, logs, scheduled tasks, and import/export task list over HTTP.
+
+## Core Management UI Productization Progress
+
+The core management UI slice completed the following:
+
+- Added a focused `features/core-management` frontend module for users, organizations, roles, permissions, and menus.
+- Replaced the generic placeholder management page for those core routes with real API-backed React pages.
+- Added list/search/loading/empty/error states and create/edit side-panel forms for users, organizations, roles, and menus.
+- Added lifecycle table actions for user status, user password reset, organization enable/disable/delete, role enable/disable/copy/delete, and menu delete.
+- Added role permission assignment through the existing role-permissions API.
+- Added menu API-permission binding through the existing menu API-binding API.
+- Added permission manifest sync access on the permission page when the current user has `permission:sync`.
+- Added frontend API and component coverage for the new core management API/page behavior.
