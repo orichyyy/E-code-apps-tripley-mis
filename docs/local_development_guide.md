@@ -75,6 +75,16 @@ Scheduled jobs use standard five-field cron expressions and persist their comput
 
 For PostgreSQL integration testing, set `TEST_DATABASE_URL` before running `pnpm test` or `pnpm db:migrate:postgresql`.
 
+## CI Verification
+
+The repository includes `.github/workflows/verify.yml` for GitHub Actions. It starts PostgreSQL 16, sets `TEST_DATABASE_URL`, installs dependencies with `pnpm install --frozen-lockfile`, installs Playwright Chromium, and runs:
+
+```bash
+pnpm verify
+```
+
+The CI path intentionally uses the same verification command as local development. Optional integrations such as Redis, RabbitMQ, S3-compatible storage, SMTP, SMS, and outbound webhook delivery stay disabled unless a future confirmed goal adds dedicated coverage for them.
+
 ## Local Smoke
 
 Run a repeatable SQLite DB-backed local smoke check:

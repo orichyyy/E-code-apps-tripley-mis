@@ -795,3 +795,12 @@ The unified verification slice completed the following:
 - Added root `pnpm verify` as the complete local quality gate.
 - Chained format, lint, typecheck, tests, SQLite/PostgreSQL migrations, local smoke, and production build in fail-fast order.
 - Documented the `TEST_DATABASE_URL` / `DATABASE_URL` prerequisite for the PostgreSQL migration step in `README.md` and `docs/local_development_guide.md`.
+
+## CI Verification Progress
+
+The CI verification slice completed the following:
+
+- Added GitHub Actions workflow `.github/workflows/verify.yml`.
+- Runs PostgreSQL 16 as a CI service and provides `TEST_DATABASE_URL` for PostgreSQL tests and migrations.
+- Installs dependencies with pnpm 10.13.1 and Node.js 22, installs Playwright Chromium for the browser smoke check, and executes the same `pnpm verify` quality gate used locally.
+- Keeps optional Redis, RabbitMQ, S3-compatible storage, SMTP, SMS, and outbound webhook integrations disabled by default in CI.

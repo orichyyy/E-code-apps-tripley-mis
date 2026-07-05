@@ -34,6 +34,10 @@ pnpm build
 
 Set `TEST_DATABASE_URL` or `DATABASE_URL` before running `pnpm verify`; the PostgreSQL migration step requires one of those variables.
 
+## CI Verification
+
+GitHub Actions runs the same `pnpm verify` command on pushes to `main` and pull requests. The workflow starts a PostgreSQL 16 service, sets `TEST_DATABASE_URL`, installs Playwright Chromium for the browser smoke check, and keeps Redis, RabbitMQ, S3-compatible storage, SMTP, SMS, and outbound webhook delivery disabled.
+
 For a persistent local SQLite run, use `.env.example` as the variable checklist and set the variables in the shell that starts the processes:
 
 ```powershell
