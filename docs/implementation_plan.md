@@ -774,3 +774,16 @@ The local browser smoke hardening slice completed the following:
 - Verified live health, login, menu context, core/system/operations/logs/files/notifications/webhook APIs, and a system Chrome browser smoke through Vite.
 
 Remaining implementation boundaries are tracked in `docs/known_gaps.md`; this slice did not add example business modules, SQL Server support, or optional external integration drivers.
+
+## Repeatable Local Smoke Script Progress
+
+The repeatable local smoke slice completed the following:
+
+- Added `pnpm smoke:local` backed by the focused modules in `scripts/local-smoke/`.
+- Automated SQLite migration, DB-backed seed initialization, API/Web/Worker startup, readiness checks, authenticated API smoke checks, and browser login/navigation checks.
+- Covered menu manifest synchronization by asserting implemented system, operations, logs, and account menus are present after login.
+- Covered the admin shell active-link behavior by asserting only the current sidebar route is active after navigating to system configuration.
+- Added local smoke documentation to `README.md` and `docs/local_development_guide.md`.
+- Ignored generated `.tmp/` and root `data/` smoke artifacts so local validation output is not accidentally committed.
+
+The script keeps optional integrations disabled by default and does not add example business modules or SQL Server support.

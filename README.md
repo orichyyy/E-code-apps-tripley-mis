@@ -20,6 +20,7 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm db:migrate
+pnpm smoke:local
 pnpm build
 ```
 
@@ -41,6 +42,8 @@ Relative SQLite paths in root `pnpm` scripts resolve from the original command d
 `pnpm db:migrate` runs SQLite migrations with `better-sqlite3` by default. PostgreSQL migrations run when `TEST_DATABASE_URL` or `DATABASE_URL` is provided; `pnpm db:migrate:postgresql` requires one of those variables.
 
 Set `BACKEND_CORE_STORE=database` with `DATABASE_URL` to run DB-backed backend-core persistence, infrastructure services, and system-management services. PostgreSQL remains the supported deployment database; SQLite remains usable for local/demo compatibility.
+
+`pnpm smoke:local` is a repeatable SQLite DB-backed smoke check. It runs local migrations and seed, starts API/Web/Worker, verifies implemented base APIs through the Vite proxy, and runs a browser login/navigation check against the admin shell. It tries system Chrome/Edge first and can use Playwright's bundled Chromium after `pnpm exec playwright install chromium`.
 
 The worker uses the same `DATABASE_DIALECT` and `DATABASE_URL` settings for durable queue and scheduler processing. Set `WORKER_POLL_INTERVAL_MS` to a positive value to poll continuously; the default `0` keeps polling disabled for explicit `runOnce()` execution and tests. Database queue jobs use stored attempts, delayed retry, stale-running recovery, and the existing `dead_letter` status when attempts are exhausted. Scheduled jobs use standard five-field cron expressions, compute `next_run_at`, and write scheduler execution logs. The default worker catalog registers in-app notification dispatch, manual `scheduled.run`, log retention cleanup, local invalid-file cleanup, CSV log export processing, and import/export result cleanup.
 

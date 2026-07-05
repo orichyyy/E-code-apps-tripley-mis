@@ -61,6 +61,37 @@ Scheduled jobs use standard five-field cron expressions and persist their comput
 
 For PostgreSQL integration testing, set `TEST_DATABASE_URL` before running `pnpm test` or `pnpm db:migrate:postgresql`.
 
+## Local Smoke
+
+Run a repeatable SQLite DB-backed local smoke check:
+
+```bash
+pnpm smoke:local
+```
+
+The script runs SQLite migrations, seeds the default administrator, starts API/Web/Worker, verifies live API endpoints through the Vite proxy, and runs a browser login/navigation check. By default it uses:
+
+- API: `http://localhost:3100`
+- Web: `http://localhost:5174`
+- SQLite: `data/local-smoke.sqlite`
+- Admin: `admin` / `Admin1234`
+
+The browser check first tries system Chrome and Edge, then falls back to Playwright's bundled Chromium. If no browser is available, install one or run:
+
+```bash
+pnpm exec playwright install chromium
+```
+
+Optional overrides:
+
+```powershell
+$env:SMOKE_API_PORT = "3101"
+$env:SMOKE_WEB_PORT = "5175"
+$env:SMOKE_ADMIN_PASSWORD = "Admin1234"
+$env:SMOKE_KEEP_DATA = "1"
+pnpm smoke:local
+```
+
 SMTP email sending is disabled by default. For local SMTP testing, point the API at a local SMTP capture tool:
 
 ```powershell
