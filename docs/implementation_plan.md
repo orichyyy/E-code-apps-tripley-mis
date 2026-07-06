@@ -813,3 +813,12 @@ The local run acceptance slice completed the following:
 - Documented automated acceptance through `pnpm verify` and `pnpm smoke:local`.
 - Documented the persistent SQLite manual run path with seed credentials, worker startup, browser page checklist, API documentation check, evidence to record, and cleanup steps.
 - Kept optional Redis, RabbitMQ, S3-compatible storage, SMS, and real outbound webhook delivery outside the acceptance scope unless explicitly configured by a future goal.
+
+## Deployment Acceptance Progress
+
+The deployment acceptance slice completed the following:
+
+- Added `docs/deployment_acceptance.md` as the PostgreSQL-backed deployment acceptance runbook.
+- Documented required production variables, deployment order, initialization choices, static SPA serving requirements, API checks, browser checks, worker checks, security/consistency checks, and acceptance evidence.
+- Added rollback and troubleshooting entry points for migration, login, worker, file access, OpenAPI, and permission consistency failures.
+- Kept Redis, RabbitMQ, S3-compatible storage, SMS, and real outbound webhook delivery outside the required deployment acceptance path unless explicitly configured by a future goal.

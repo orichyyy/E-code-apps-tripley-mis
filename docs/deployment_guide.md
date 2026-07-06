@@ -34,6 +34,8 @@ File upload/download works with local filesystem storage through `FILE_STORAGE_R
 
 SMTP email sending is optional and disabled by default. To enable it, configure `SMTP_ENABLED=true`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, optional `SMTP_USERNAME`/`SMTP_PASSWORD`, and `SMTP_FROM`. Redis, RabbitMQ, S3-compatible storage, and real outbound webhook delivery integrations remain optional placeholders unless explicitly configured in a future slice.
 
+Use `docs/deployment_acceptance.md` for the deployment pre-checks, production environment checklist, post-deployment browser walkthrough, worker acceptance checks, and rollback/troubleshooting entry points.
+
 ## Observability
 
 Implemented observability foundation:
