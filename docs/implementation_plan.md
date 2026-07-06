@@ -822,3 +822,11 @@ The deployment acceptance slice completed the following:
 - Documented required production variables, deployment order, initialization choices, static SPA serving requirements, API checks, browser checks, worker checks, security/consistency checks, and acceptance evidence.
 - Added rollback and troubleshooting entry points for migration, login, worker, file access, OpenAPI, and permission consistency failures.
 - Kept Redis, RabbitMQ, S3-compatible storage, SMS, and real outbound webhook delivery outside the required deployment acceptance path unless explicitly configured by a future goal.
+
+## Release Readiness Progress
+
+The release readiness slice completed the following:
+
+- Added `docs/release_readiness.md` as the final go/no-go entry point for handoff or release decisions.
+- Linked local acceptance, deployment acceptance, CI verification, unified `pnpm verify`, known-gaps review, Node.js-only runtime, SQLite local/demo support, PostgreSQL deployment support, no SQL Server support, no example business module, adapter abstraction checks, and optional integration status into one checklist.
+- Documented evidence to record and Go, No-Go, and Conditional Go decision outcomes.
