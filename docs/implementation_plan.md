@@ -830,3 +830,11 @@ The release readiness slice completed the following:
 - Added `docs/release_readiness.md` as the final go/no-go entry point for handoff or release decisions.
 - Linked local acceptance, deployment acceptance, CI verification, unified `pnpm verify`, known-gaps review, Node.js-only runtime, SQLite local/demo support, PostgreSQL deployment support, no SQL Server support, no example business module, adapter abstraction checks, and optional integration status into one checklist.
 - Documented evidence to record and Go, No-Go, and Conditional Go decision outcomes.
+
+## Release Readiness Record Progress
+
+The first release readiness record slice completed the following:
+
+- Added `docs/release_readiness_records/2026-07-06-base-system.md`.
+- Recorded audited commit `708b6ee`, local OS, Node.js, pnpm, `pnpm verify` result, SQLite/PostgreSQL migration result, local smoke result, SQL Server scan, example business-module scan, known-gaps review, and Go/No-Go decision.
+- Marked target-environment deployment acceptance and hosted CI run observation as follow-up evidence to collect when a staging/production-like environment or hosted branch is available.
