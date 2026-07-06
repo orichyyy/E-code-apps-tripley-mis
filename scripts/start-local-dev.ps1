@@ -36,10 +36,10 @@ param(
   [int]$ApiPort = 3000,
 
   # Web port used by the Vite development server.
-  [int]$WebPort = 5173,
+  [int]$WebPort = 12345,
 
   # Positive value enables continuous worker polling for queue/scheduler tasks.
-  [int]$WorkerPollIntervalMs = 1000,
+  [int]$WorkerPollIntervalMs = 10000,
 
   # Skip dependency installation check. Useful after dependencies are already installed.
   [switch]$SkipInstall,
