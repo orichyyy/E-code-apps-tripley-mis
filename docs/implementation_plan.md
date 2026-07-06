@@ -871,3 +871,12 @@ The admin sidebar navigation slice completed the following:
 - Kept the current route's group automatically expanded so page context remains visible after navigation or refresh.
 - Preserved multiple expanded groups and stored the user's expanded group choices in browser local storage.
 - Updated frontend tests and local browser smoke checks so validation reflects the collapsible sidebar behavior.
+
+## Production Deployment Acceptance Progress
+
+The production deployment acceptance slice completed the following:
+
+- Reproduced a PostgreSQL-backed deployment acceptance flow against a fresh `tripley_mis_acceptance` database.
+- Found and fixed the Node ESM production start path for API and worker services by bundling their built entrypoints with esbuild while keeping `start` as `node dist/main.js`.
+- Verified production-built API, worker, and static SPA serving with `/api` reverse proxy behavior.
+- Confirmed API health, metrics, OpenAPI, login, core API checks, asynchronous log export task creation, and browser navigation through representative admin pages.

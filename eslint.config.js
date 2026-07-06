@@ -10,6 +10,8 @@ export default [
       "**/dist/**",
       "**/coverage/**",
       "**/node_modules/**",
+      ".tmp/**",
+      "data/**",
       "pnpm-lock.yaml",
       "apps/web/src/routeTree.gen.ts",
     ],
