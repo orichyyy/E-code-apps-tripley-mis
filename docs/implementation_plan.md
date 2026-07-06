@@ -846,3 +846,11 @@ The README navigation slice completed the following:
 - Added a `Project Runbooks` section organized by role and task.
 - Linked new developers, local operators, CI maintainers, deployment operators, release owners, business-module developers, adapter extenders, permission extenders, and troubleshooters to the relevant command or runbook.
 - Kept the full guide index while adding `.github/workflows/verify.yml` and `docs/release_readiness_records/` as explicit navigation entries.
+
+## Base System Status Matrix Progress
+
+The base-system status matrix slice completed the following:
+
+- Added `docs/base_system_status_matrix.md` as a handoff-oriented module status overview.
+- Summarized backend, frontend, persistence, tests/verification, known boundary/gap, and main documentation links for core foundation, infrastructure, communication, file, OpenAPI, CI, and readiness modules.
+- Linked the matrix from the README guide index and kept `docs/known_gaps.md` as the authoritative source for incomplete, reserved, or environment-dependent work.

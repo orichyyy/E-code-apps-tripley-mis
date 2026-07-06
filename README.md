@@ -108,6 +108,7 @@ The contracts build also writes `packages/contracts/generated/base-system-manife
 - `docs/deployment_acceptance.md`
 - `docs/release_readiness.md`
 - `docs/release_readiness_records/`
+- `docs/base_system_status_matrix.md`
 - `docs/database_migration_guide.md`
 - `docs/adapter_extension_guide.md`
 - `docs/business_module_extension_guide.md`
