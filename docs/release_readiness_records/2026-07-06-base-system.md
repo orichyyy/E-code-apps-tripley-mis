@@ -2,7 +2,7 @@
 
 ## Summary
 
-- Audited commit: `9a6cbaa`
+- Audited commit: `71e52f4`
 - Record date: 2026-07-06
 - Environment used for verification: local development workstation
 - Operating system: Microsoft Windows NT 10.0.26200.0
@@ -15,7 +15,9 @@
 
 ## Verification Results
 
-`pnpm verify` passed on 2026-07-06 for commit `9a6cbaa`.
+`pnpm verify` passed locally on 2026-07-06 for commit `9a6cbaa`.
+
+GitHub Actions Verify passed on the `codex/verify-release-readiness` pull-request branch for commit `71e52f4`, as user-observed after the smoke process-group cleanup fix.
 
 Covered commands:
 
@@ -101,7 +103,7 @@ Before production release, execute `docs/deployment_acceptance.md` against the a
 ## Go / No-Go Checklist
 
 - `pnpm verify` passed: yes
-- CI Verify passed: not observed in this local record; required when a hosted branch or pull request is available
+- CI Verify passed: yes, user-observed on the pull-request branch for commit `71e52f4`
 - Local automated smoke passed: yes
 - Local manual acceptance completed: partially, automated browser smoke only
 - Deployment acceptance completed: local PostgreSQL-backed simulation only; target-environment acceptance remains required for production
@@ -115,6 +117,6 @@ Before production release, execute `docs/deployment_acceptance.md` against the a
 
 ## Follow-Up Items
 
-- Re-run GitHub Actions Verify on `origin/codex/verify-release-readiness` and record the result. The first downloaded workflow log showed `pnpm verify` reached `Local smoke passed.` and was then canceled with orphan Node/esbuild processes, so the local smoke process-group cleanup was tightened and pushed for a new CI run.
+- Confirm the final pull-request check remains green after this documentation-only update, then merge the pull request.
 - Run `docs/deployment_acceptance.md` in the first target staging/production-like environment and replace the local simulation evidence with target-environment evidence.
 - Create a new readiness record for every release candidate that changes runtime behavior, migrations, authentication, authorization, worker execution, file handling, or deployment configuration.
