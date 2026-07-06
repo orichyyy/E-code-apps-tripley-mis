@@ -52,6 +52,18 @@ Expected result:
 Use this path when manually checking the UI in a browser:
 
 ```powershell
+pnpm dev:local
+```
+
+The script prints the browser URL and seeded administrator account. Its default Web URL is:
+
+```text
+http://localhost:5173/login
+```
+
+Equivalent manual setup:
+
+```powershell
 $env:BACKEND_CORE_STORE = "database"
 $env:DATABASE_DIALECT = "sqlite"
 $env:DATABASE_URL = "file:./data/web-admin-base.sqlite"

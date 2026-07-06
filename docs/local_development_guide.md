@@ -48,6 +48,16 @@ pnpm build
 For a persistent DB-backed local SQLite run, set variables in the shell that starts the apps. `.env.example` is a reference checklist; the current runtime reads process environment variables directly.
 When using root `pnpm` scripts, relative SQLite paths such as `file:./data/web-admin-base.sqlite` resolve from the original command directory, so run the commands from the repository root.
 
+The simplest startup path on Windows PowerShell is:
+
+```powershell
+pnpm dev:local
+```
+
+This script sets the local SQLite environment, applies migrations, seeds the administrator, starts API/Web/Worker, and prints the browser URL and login account.
+
+Equivalent manual setup:
+
 ```powershell
 $env:BACKEND_CORE_STORE = "database"
 $env:DATABASE_DIALECT = "sqlite"

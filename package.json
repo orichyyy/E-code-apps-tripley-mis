@@ -6,6 +6,7 @@
   "packageManager": "pnpm@10.13.1",
   "scripts": {
     "dev": "pnpm --parallel --filter @web-admin-base/api --filter @web-admin-base/web --filter @web-admin-base/worker dev",
+    "dev:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local-dev.ps1",
     "dev:api": "pnpm --filter @web-admin-base/api dev",
     "dev:web": "pnpm --filter @web-admin-base/web dev",
     "dev:worker": "pnpm --filter @web-admin-base/worker dev",

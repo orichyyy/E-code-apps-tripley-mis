@@ -55,6 +55,12 @@ GitHub Actions runs the same `pnpm verify` command on pushes to `main` and pull 
 For a persistent local SQLite run, use `.env.example` as the variable checklist and set the variables in the shell that starts the processes:
 
 ```powershell
+pnpm dev:local
+```
+
+The script applies SQLite migrations, seeds the default administrator, starts API/Web/Worker, and prints the browser URL and login account. The equivalent manual commands are:
+
+```powershell
 $env:BACKEND_CORE_STORE = "database"
 $env:DATABASE_DIALECT = "sqlite"
 $env:DATABASE_URL = "file:./data/web-admin-base.sqlite"

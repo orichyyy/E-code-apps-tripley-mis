@@ -854,3 +854,11 @@ The base-system status matrix slice completed the following:
 - Added `docs/base_system_status_matrix.md` as a handoff-oriented module status overview.
 - Summarized backend, frontend, persistence, tests/verification, known boundary/gap, and main documentation links for core foundation, infrastructure, communication, file, OpenAPI, CI, and readiness modules.
 - Linked the matrix from the README guide index and kept `docs/known_gaps.md` as the authoritative source for incomplete, reserved, or environment-dependent work.
+
+## One-Command Local Startup Progress
+
+The one-command local startup slice completed the following:
+
+- Added `scripts/start-local-dev.ps1` with detailed comments and configurable parameters for administrator password, SQLite database URL, file storage root, API port, Web port, worker polling, install skip, and seed skip.
+- Added root `pnpm dev:local` as a convenience wrapper for the PowerShell startup script.
+- Updated README, local development guide, and local run acceptance guide so users can start the local SQLite API/Web/Worker stack and open the printed browser URL without manually setting every environment variable.
