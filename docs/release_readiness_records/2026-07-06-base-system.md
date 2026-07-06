@@ -2,18 +2,19 @@
 
 ## Summary
 
-- Audited commit: `708b6ee`
+- Audited commit: `fddb2a3`
 - Record date: 2026-07-06
 - Environment used for verification: local development workstation
 - Operating system: Microsoft Windows NT 10.0.26200.0
 - Node.js: `v22.18.0`
 - pnpm: `10.13.1`
 - Database coverage: SQLite local/demo migrations and smoke path, PostgreSQL migrations/tests through `TEST_DATABASE_URL`
+- PostgreSQL verification service: Docker `dev-postgres` container using `postgres:16-alpine` on `localhost:5432/devdb`
 - Decision: Go for base-system foundation handoff and continued development. Production deployment still requires target-environment execution of `docs/deployment_acceptance.md`.
 
 ## Verification Results
 
-`pnpm verify` passed on 2026-07-06.
+`pnpm verify` passed on 2026-07-06 for commit `fddb2a3`.
 
 Covered commands:
 
@@ -25,6 +26,8 @@ Covered commands:
 - `pnpm db:migrate:postgresql`: passed
 - `pnpm smoke:local`: passed with `Local smoke passed.`
 - `pnpm build`: passed
+
+Before the full verification run, PostgreSQL connectivity was restored by starting Docker Desktop and reusing the existing `dev-postgres` container. The current `TEST_DATABASE_URL` points to `localhost:5432/devdb` with the `dev` user, matching that container.
 
 PostgreSQL migration output applied all seven PostgreSQL migrations:
 
