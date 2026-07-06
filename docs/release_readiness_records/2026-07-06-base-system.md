@@ -2,7 +2,7 @@
 
 ## Summary
 
-- Audited commit: `fddb2a3`
+- Audited commit: `9a6cbaa`
 - Record date: 2026-07-06
 - Environment used for verification: local development workstation
 - Operating system: Microsoft Windows NT 10.0.26200.0
@@ -10,11 +10,12 @@
 - pnpm: `10.13.1`
 - Database coverage: SQLite local/demo migrations and smoke path, PostgreSQL migrations/tests through `TEST_DATABASE_URL`
 - PostgreSQL verification service: Docker `dev-postgres` container using `postgres:16-alpine` on `localhost:5432/devdb`
+- Deployment simulation service: Docker `dev-postgres` container using PostgreSQL 16.14 on `localhost:5432/tripley_mis_acceptance`
 - Decision: Go for base-system foundation handoff and continued development. Production deployment still requires target-environment execution of `docs/deployment_acceptance.md`.
 
 ## Verification Results
 
-`pnpm verify` passed on 2026-07-06 for commit `fddb2a3`.
+`pnpm verify` passed on 2026-07-06 for commit `9a6cbaa`.
 
 Covered commands:
 
@@ -28,6 +29,8 @@ Covered commands:
 - `pnpm build`: passed
 
 Before the full verification run, PostgreSQL connectivity was restored by starting Docker Desktop and reusing the existing `dev-postgres` container. The current `TEST_DATABASE_URL` points to `localhost:5432/devdb` with the `dev` user, matching that container.
+
+The verification run also covered the production Node start path after API and worker build output was bundled for direct `node dist/main.js` execution.
 
 PostgreSQL migration output applied all seven PostgreSQL migrations:
 
@@ -82,16 +85,18 @@ Manual browser acceptance from `docs/local_run_acceptance.md` was not separately
 
 Target-environment deployment acceptance was not run for this record.
 
-Before production release, execute `docs/deployment_acceptance.md` against the target environment and record:
+Local PostgreSQL-backed deployment simulation was completed for this record:
 
-- PostgreSQL version,
-- migration result,
-- initialization method,
-- API health/OpenAPI checks,
-- SPA routing/proxy checks,
-- worker queue/scheduler/export checks,
-- file-storage path checks,
-- browser page checklist result.
+- Database: fresh `tripley_mis_acceptance` database in Docker `dev-postgres`.
+- PostgreSQL version: 16.14 on `postgres:16-alpine`.
+- Migration result: `pnpm db:migrate:postgresql` applied all seven PostgreSQL migrations.
+- Initialization method: seed CLI with `WEB_ADMIN_SEED_ADMIN_USERNAME=admin`.
+- Runtime shape: production-built API and worker started through `node dist/main.js`; static SPA served from `apps/web/dist` through a temporary local reverse proxy for `/api`.
+- API checks: health, metrics, OpenAPI, login, current user, users, organizations, roles, menus, system config, files, announcements, webhooks, scheduled tasks, import/export tasks, and login logs passed.
+- Worker check: asynchronous login-log CSV export task was created while the production-built worker was running.
+- Browser check: login and representative admin navigation passed for system configuration, task scheduler, API call logs, and personal settings.
+
+Before production release, execute `docs/deployment_acceptance.md` against the actual target environment and record target-specific process, storage, routing, and browser evidence.
 
 ## Go / No-Go Checklist
 
@@ -99,7 +104,7 @@ Before production release, execute `docs/deployment_acceptance.md` against the t
 - CI Verify passed: not observed in this local record; required when a hosted branch or pull request is available
 - Local automated smoke passed: yes
 - Local manual acceptance completed: partially, automated browser smoke only
-- Deployment acceptance completed: no, target-environment dependent
+- Deployment acceptance completed: local PostgreSQL-backed simulation only; target-environment acceptance remains required for production
 - Known gaps reviewed: yes
 - No example business module found in code scope: yes
 - No SQL Server implementation found in code scope: yes
@@ -111,5 +116,5 @@ Before production release, execute `docs/deployment_acceptance.md` against the t
 ## Follow-Up Items
 
 - Run and record GitHub Actions Verify when this commit is pushed to a hosted branch or pull request.
-- Run `docs/deployment_acceptance.md` in the first target staging/production-like environment.
+- Run `docs/deployment_acceptance.md` in the first target staging/production-like environment and replace the local simulation evidence with target-environment evidence.
 - Create a new readiness record for every release candidate that changes runtime behavior, migrations, authentication, authorization, worker execution, file handling, or deployment configuration.
