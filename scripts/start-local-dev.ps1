@@ -17,6 +17,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local-dev.ps1
 .EXAMPLE
 .\scripts\start-local-dev.ps1 -AdminPassword "ChangeMe1234" -WebPort 5174
 
+.EXAMPLE
+.\scripts\start-local-dev.ps1 -PrepareOnly
+
 .NOTES
 Open the printed Web URL in your browser after the dev servers are ready.
 Press Ctrl+C in this terminal to stop all local processes.
@@ -39,13 +42,16 @@ param(
   [int]$WebPort = 12345,
 
   # Positive value enables continuous worker polling for queue/scheduler tasks.
-  [int]$WorkerPollIntervalMs = 10000,
+  [int]$WorkerPollIntervalMs = 1000,
 
   # Skip dependency installation check. Useful after dependencies are already installed.
   [switch]$SkipInstall,
 
   # Skip seed initialization. Useful when reusing an existing local database.
-  [switch]$SkipSeed
+  [switch]$SkipSeed,
+
+  # Apply migrations and seed data, then exit before starting long-running dev servers.
+  [switch]$PrepareOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -63,7 +69,7 @@ function Invoke-Pnpm {
   )
 
   Write-Section $Label
-  & pnpm @Arguments
+  & $script:PnpmCommand @Arguments
   if ($LASTEXITCODE -ne 0) {
     throw "$Label failed with exit code $LASTEXITCODE."
   }
@@ -72,9 +78,14 @@ function Invoke-Pnpm {
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 Set-Location $repoRoot
 
-if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
+$pnpmCommandInfo = Get-Command pnpm.cmd -ErrorAction SilentlyContinue
+if (-not $pnpmCommandInfo) {
+  $pnpmCommandInfo = Get-Command pnpm -ErrorAction SilentlyContinue
+}
+if (-not $pnpmCommandInfo) {
   throw "pnpm was not found on PATH. Install pnpm first, then rerun this script."
 }
+$script:PnpmCommand = $pnpmCommandInfo.Source
 
 # These variables are scoped to this PowerShell process and child processes.
 # They do not modify your machine-level environment.
@@ -113,6 +124,12 @@ Invoke-Pnpm -Label "Applying SQLite migrations" -Arguments @("db:migrate:sqlite"
 
 if (-not $SkipSeed) {
   Invoke-Pnpm -Label "Seeding default administrator" -Arguments @("seed")
+}
+
+if ($PrepareOnly) {
+  Write-Section "Prepare only"
+  Write-Host "Local database preparation completed. Run without -PrepareOnly to start servers."
+  return
 }
 
 Write-Section "Starting API, Web, and Worker"
