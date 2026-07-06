@@ -115,6 +115,6 @@ Before production release, execute `docs/deployment_acceptance.md` against the a
 
 ## Follow-Up Items
 
-- Run and record GitHub Actions Verify when this commit is pushed to a hosted branch or pull request.
+- Create a pull request from `origin/codex/verify-release-readiness` and record GitHub Actions Verify after it runs. The branch was pushed to the remote, but this local environment cannot create the PR because GitHub CLI/token credentials are unavailable and the PR creation page requires sign-in.
 - Run `docs/deployment_acceptance.md` in the first target staging/production-like environment and replace the local simulation evidence with target-environment evidence.
 - Create a new readiness record for every release candidate that changes runtime behavior, migrations, authentication, authorization, worker execution, file handling, or deployment configuration.
