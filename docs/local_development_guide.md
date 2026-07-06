@@ -85,6 +85,10 @@ pnpm verify
 
 The CI path intentionally uses the same verification command as local development. Optional integrations such as Redis, RabbitMQ, S3-compatible storage, SMTP, SMS, and outbound webhook delivery stay disabled unless a future confirmed goal adds dedicated coverage for them.
 
+## Local Acceptance
+
+Use `docs/local_run_acceptance.md` when you need a reproducible local run walkthrough. It combines the automated `pnpm verify` / `pnpm smoke:local` checks with a manual browser checklist for the implemented admin pages.
+
 ## Local Smoke
 
 Run a repeatable SQLite DB-backed local smoke check:

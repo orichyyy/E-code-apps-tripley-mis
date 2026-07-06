@@ -804,3 +804,12 @@ The CI verification slice completed the following:
 - Runs PostgreSQL 16 as a CI service and provides `TEST_DATABASE_URL` for PostgreSQL tests and migrations.
 - Installs dependencies with pnpm 10.13.1 and Node.js 22, installs Playwright Chromium for the browser smoke check, and executes the same `pnpm verify` quality gate used locally.
 - Keeps optional Redis, RabbitMQ, S3-compatible storage, SMTP, SMS, and outbound webhook integrations disabled by default in CI.
+
+## Local Run Acceptance Progress
+
+The local run acceptance slice completed the following:
+
+- Added `docs/local_run_acceptance.md` as the reproducible local acceptance runbook.
+- Documented automated acceptance through `pnpm verify` and `pnpm smoke:local`.
+- Documented the persistent SQLite manual run path with seed credentials, worker startup, browser page checklist, API documentation check, evidence to record, and cleanup steps.
+- Kept optional Redis, RabbitMQ, S3-compatible storage, SMS, and real outbound webhook delivery outside the acceptance scope unless explicitly configured by a future goal.
