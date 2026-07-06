@@ -838,3 +838,11 @@ The first release readiness record slice completed the following:
 - Added `docs/release_readiness_records/2026-07-06-base-system.md`.
 - Recorded audited commit `708b6ee`, local OS, Node.js, pnpm, `pnpm verify` result, SQLite/PostgreSQL migration result, local smoke result, SQL Server scan, example business-module scan, known-gaps review, and Go/No-Go decision.
 - Marked target-environment deployment acceptance and hosted CI run observation as follow-up evidence to collect when a staging/production-like environment or hosted branch is available.
+
+## README Runbook Navigation Progress
+
+The README navigation slice completed the following:
+
+- Added a `Project Runbooks` section organized by role and task.
+- Linked new developers, local operators, CI maintainers, deployment operators, release owners, business-module developers, adapter extenders, permission extenders, and troubleshooters to the relevant command or runbook.
+- Kept the full guide index while adding `.github/workflows/verify.yml` and `docs/release_readiness_records/` as explicit navigation entries.
