@@ -862,3 +862,12 @@ The one-command local startup slice completed the following:
 - Added `scripts/start-local-dev.ps1` with detailed comments and configurable parameters for administrator password, SQLite database URL, file storage root, API port, Web port, worker polling, install skip, and seed skip.
 - Added root `pnpm dev:local` as a convenience wrapper for the PowerShell startup script.
 - Updated README, local development guide, and local run acceptance guide so users can start the local SQLite API/Web/Worker stack and open the printed browser URL without manually setting every environment variable.
+
+## Admin Sidebar Navigation Progress
+
+The admin sidebar navigation slice completed the following:
+
+- Changed first-level admin menu groups from always-expanded sections to collapsible groups.
+- Kept the current route's group automatically expanded so page context remains visible after navigation or refresh.
+- Preserved multiple expanded groups and stored the user's expanded group choices in browser local storage.
+- Updated frontend tests and local browser smoke checks so validation reflects the collapsible sidebar behavior.

@@ -10,6 +10,7 @@ describe("web admin frontend", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
+    window.localStorage.clear();
     queryClient.clear();
     act(() => {
       useAuthStore.getState().signOut();
@@ -50,6 +51,44 @@ describe("web admin frontend", () => {
     expect(await screen.findByText("Web Admin Base")).toBeInTheDocument();
     expect(await screen.findByText("User management")).toBeInTheDocument();
     expect(await screen.findByLabelText("Current organization")).toBeInTheDocument();
+  });
+
+  it("collapses sidebar groups while keeping the active route group expanded", async () => {
+    window.history.pushState(null, "", "/");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse({ data: [] }));
+    useAuthStore.getState().signIn({
+      accessToken: "test-token",
+      user: {
+        id: "1",
+        username: "admin",
+        displayName: "Super Administrator",
+        language: "en",
+        forcePasswordChange: false,
+      },
+      permissionCodes: ["*"],
+    });
+
+    render(<App />);
+
+    const primaryNavigation = await screen.findByRole("navigation", { name: "Primary" });
+    expect(within(primaryNavigation).getByRole("button", { name: "System" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(within(primaryNavigation).getByRole("button", { name: "Logs" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(within(primaryNavigation).queryByRole("link", { name: "API call logs" })).toBeNull();
+
+    fireEvent.click(within(primaryNavigation).getByRole("button", { name: "Logs" }));
+    fireEvent.click(within(primaryNavigation).getByRole("link", { name: "API call logs" }));
+
+    expect(await screen.findByRole("heading", { name: "API call logs" })).toBeInTheDocument();
+    expect(within(primaryNavigation).getByRole("button", { name: "Logs" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
   });
 
   it("only marks the exact current sidebar link active", async () => {
