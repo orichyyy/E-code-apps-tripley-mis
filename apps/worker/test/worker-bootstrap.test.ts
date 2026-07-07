@@ -44,11 +44,41 @@ describe("worker bootstrap", () => {
       nodeEnv: "test",
       workerName: "configured-worker",
       pollIntervalMs: 250,
+      adapters: {
+        queueDriver: "database",
+        rabbitMqUrl: null,
+      },
       database: {
         dialect: "sqlite",
         url: "file:./data/test-worker.sqlite",
       },
     });
+  });
+
+  it("loads optional RabbitMQ queue configuration", () => {
+    const config = loadWorkerConfig({
+      NODE_ENV: "test",
+      QUEUE_DRIVER: "rabbitmq",
+      RABBITMQ_URL: "amqp://guest:guest@127.0.0.1:5672",
+      DATABASE_DIALECT: "sqlite",
+      DATABASE_URL: "file:./data/test-worker.sqlite",
+    });
+
+    expect(config.adapters).toEqual({
+      queueDriver: "rabbitmq",
+      rabbitMqUrl: "amqp://guest:guest@127.0.0.1:5672",
+    });
+  });
+
+  it("rejects RabbitMQ worker queue configuration without a URL", () => {
+    expect(() =>
+      loadWorkerConfig({
+        NODE_ENV: "test",
+        QUEUE_DRIVER: "rabbitmq",
+        DATABASE_DIALECT: "sqlite",
+        DATABASE_URL: "file:./data/test-worker.sqlite",
+      }),
+    ).toThrow(/RABBITMQ_URL/);
   });
 
   it("processes durable in-app notification jobs into notification records", async () => {
@@ -61,6 +91,7 @@ describe("worker bootstrap", () => {
         nodeEnv: "test",
         workerName: "notification-worker",
         pollIntervalMs: 0,
+        adapters: { queueDriver: "database", rabbitMqUrl: null },
         database: { dialect: "sqlite", url },
       },
       {
@@ -124,6 +155,7 @@ describe("worker bootstrap", () => {
         nodeEnv: "test",
         workerName: "catalog-worker",
         pollIntervalMs: 0,
+        adapters: { queueDriver: "database", rabbitMqUrl: null },
         database: { dialect: "sqlite", url },
       },
       {

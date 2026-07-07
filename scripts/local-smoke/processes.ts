@@ -98,13 +98,34 @@ export async function serviceLogSummary(): Promise<string> {
 export async function cleanupDefaultSmokeArtifacts(): Promise<void> {
   if (process.env.SMOKE_DATABASE_URL || process.env.SMOKE_KEEP_DATA) return;
 
-  await rm(path.join(dataDir, "local-smoke.sqlite"), { force: true });
-  await rm(path.join(dataDir, "local-smoke.sqlite-shm"), { force: true });
-  await rm(path.join(dataDir, "local-smoke.sqlite-wal"), { force: true });
-  await rm(path.join(dataDir, "local-smoke-files"), { force: true, recursive: true });
-  await rm(path.join(tmpDir, "local-smoke-api.log"), { force: true });
-  await rm(path.join(tmpDir, "local-smoke-web.log"), { force: true });
-  await rm(path.join(tmpDir, "local-smoke-worker.log"), { force: true });
+  await rmWithRetry(path.join(dataDir, "local-smoke.sqlite"));
+  await rmWithRetry(path.join(dataDir, "local-smoke.sqlite-shm"));
+  await rmWithRetry(path.join(dataDir, "local-smoke.sqlite-wal"));
+  await rmWithRetry(path.join(dataDir, "local-smoke-files"), { recursive: true });
+  await rmWithRetry(path.join(tmpDir, "local-smoke-api.log"));
+  await rmWithRetry(path.join(tmpDir, "local-smoke-web.log"));
+  await rmWithRetry(path.join(tmpDir, "local-smoke-worker.log"));
+}
+
+async function rmWithRetry(
+  targetPath: string,
+  options: { recursive?: boolean } = {},
+): Promise<void> {
+  const attempts = process.platform === "win32" ? 10 : 1;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await rm(targetPath, { force: true, recursive: options.recursive ?? false });
+      return;
+    } catch (error) {
+      if (attempt === attempts || !isTransientWindowsFileLock(error)) throw error;
+      await sleep(250);
+    }
+  }
+}
+
+function isTransientWindowsFileLock(error: unknown): boolean {
+  if (typeof error !== "object" || error === null || !("code" in error)) return false;
+  return error.code === "EBUSY" || error.code === "EPERM";
 }
 
 async function stopProcessTree(child: ChildProcess): Promise<void> {

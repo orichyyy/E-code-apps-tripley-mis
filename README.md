@@ -94,7 +94,18 @@ $env:RABBITMQ_URL = "amqp://guest:guest@127.0.0.1:5672"
 pnpm test:optional-integrations
 ```
 
-These integrations stay disabled for default local startup, CI, and deployment acceptance unless explicitly configured by a future runtime-wiring goal.
+These integrations stay disabled for default local startup, CI, and deployment acceptance unless explicitly configured with runtime driver environment variables.
+
+Optional runtime driver selection:
+
+```powershell
+$env:CACHE_DRIVER = "redis"
+$env:QUEUE_DRIVER = "rabbitmq"
+$env:REDIS_URL = "redis://127.0.0.1:6379"
+$env:RABBITMQ_URL = "amqp://guest:guest@127.0.0.1:5672"
+```
+
+Worker runtime keeps the database durable queue and scheduler active even when `QUEUE_DRIVER=rabbitmq`, so existing scheduled tasks, import/export processing, and log export paths continue to work.
 
 Optional SMTP configuration:
 

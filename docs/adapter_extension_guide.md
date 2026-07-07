@@ -43,3 +43,14 @@ pnpm test:optional-integrations
 ```
 
 The helper script uses lightweight official Alpine images by default: `redis:8.8.0-alpine` and `rabbitmq:4.3.2-alpine`. RabbitMQ management UI is not started by default.
+
+Runtime opt-in is controlled by environment variables:
+
+- `CACHE_DRIVER=memory|database|redis`
+- `RATE_LIMIT_DRIVER=memory|database|redis`
+- `QUEUE_DRIVER=memory|database|rabbitmq`
+- `EVENT_BUS_DRIVER=in_process|database|rabbitmq`
+- `REDIS_URL`
+- `RABBITMQ_URL`
+
+The current worker keeps the database durable queue/scheduler active even when `QUEUE_DRIVER=rabbitmq`, because existing scheduled-task and import/export flows are database-backed.

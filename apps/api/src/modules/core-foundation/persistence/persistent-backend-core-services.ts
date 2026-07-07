@@ -1,6 +1,7 @@
 import {
   createInMemoryCacheAdapter,
   createInMemoryTokenStoreAdapter,
+  type CacheAdapter,
 } from "@web-admin-base/adapters";
 import type {
   AssignUserOrganizationRoleRequest,
@@ -60,6 +61,7 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
   static async create(
     repository: BackendCoreStoreRepository,
     config?: Partial<BackendCoreConfig>,
+    options: { permissionCacheAdapter?: CacheAdapter } = {},
   ): Promise<PersistentBackendCoreServices> {
     const store = await repository.load();
     const tokenStore = createInMemoryTokenStoreAdapter();
@@ -76,7 +78,9 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
     }
     return new PersistentBackendCoreServices(repository, {
       store,
-      permissionCache: new PermissionCache(createInMemoryCacheAdapter()),
+      permissionCache: new PermissionCache(
+        options.permissionCacheAdapter ?? createInMemoryCacheAdapter(),
+      ),
       tokenStore,
       config: {
         ...defaultBackendCoreConfig,
@@ -441,6 +445,7 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
 export async function createPersistentBackendCoreServices(
   config?: Partial<BackendCoreConfig>,
   repository = BackendCoreStoreRepository.fromEnvironment(),
+  options: { permissionCacheAdapter?: CacheAdapter } = {},
 ) {
-  return PersistentBackendCoreServices.create(repository, config);
+  return PersistentBackendCoreServices.create(repository, config, options);
 }

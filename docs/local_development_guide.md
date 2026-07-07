@@ -110,6 +110,17 @@ pnpm test:optional-integrations
 
 The script starts `tripley-redis-dev` with `redis:8.8.0-alpine` and `tripley-rabbitmq-dev` with `rabbitmq:4.3.2-alpine`. Both containers avoid persistent volumes by default and use small memory limits for development.
 
+To opt into the external drivers at runtime:
+
+```powershell
+$env:CACHE_DRIVER = "redis"
+$env:QUEUE_DRIVER = "rabbitmq"
+$env:REDIS_URL = "redis://127.0.0.1:6379"
+$env:RABBITMQ_URL = "amqp://guest:guest@127.0.0.1:5672"
+```
+
+`CACHE_DRIVER=database` uses the existing `cache_entries` table for backend permission-cache storage. `QUEUE_DRIVER=rabbitmq` routes adapter-enqueued jobs such as in-app notification dispatch through RabbitMQ, while the worker still processes database-backed scheduled and import/export tasks through the durable database queue.
+
 Stop them when not needed:
 
 ```powershell

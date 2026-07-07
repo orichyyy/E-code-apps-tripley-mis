@@ -62,6 +62,26 @@ function Start-ContainerIfNeeded {
   docker run @RunArgs | Out-Null
 }
 
+function Wait-ContainerCommand {
+  param(
+    [string]$Name,
+    [string[]]$Command,
+    [int]$TimeoutSeconds = 60
+  )
+
+  $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+  while ((Get-Date) -lt $deadline) {
+    docker exec $Name @Command *> $null
+    if ($LASTEXITCODE -eq 0) {
+      Write-Host "$Name is ready."
+      return
+    }
+    Start-Sleep -Seconds 2
+  }
+
+  throw "$Name did not become ready within $TimeoutSeconds seconds."
+}
+
 Test-DockerAvailable
 
 if (-not $RabbitMqOnly) {
@@ -81,6 +101,7 @@ if (-not $RabbitMqOnly) {
       "--maxmemory", "96mb",
       "--maxmemory-policy", "allkeys-lru"
     )
+  Wait-ContainerCommand -Name $RedisContainer -Command @("redis-cli", "ping")
 }
 
 if (-not $RedisOnly) {
@@ -96,6 +117,7 @@ if (-not $RedisOnly) {
       "--restart", "unless-stopped",
       $RabbitMqImage
     )
+  Wait-ContainerCommand -Name $RabbitMqContainer -Command @("rabbitmq-diagnostics", "-q", "ping")
 }
 
 Write-Host ""

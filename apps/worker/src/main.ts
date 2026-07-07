@@ -1,7 +1,7 @@
-import { createWorkerApplication } from "./bootstrap";
+import { createConfiguredWorkerApplication } from "./bootstrap";
 import { loadWorkerConfig } from "./config/load-config";
 
-const application = createWorkerApplication(loadWorkerConfig());
+const application = await createConfiguredWorkerApplication(loadWorkerConfig());
 
 await application.runtime.start();
 

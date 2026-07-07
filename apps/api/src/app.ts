@@ -1,7 +1,14 @@
 import {
+  createDatabaseCacheAdapter,
+  createDatabaseQueueAdapter,
+  createInMemoryQueueAdapter,
   createInMemoryNotificationChannelAdapter,
+  createRabbitMqQueueAdapter,
+  createRedisCacheAdapter,
   createSmtpNotificationChannelAdapter,
+  type CacheAdapter,
   type NotificationChannelAdapter,
+  type QueueAdapter,
 } from "@web-admin-base/adapters";
 import { createOpenApiDocument, healthResponseSchema } from "@web-admin-base/contracts";
 import { Hono } from "hono";
@@ -22,6 +29,7 @@ import {
 import { createPersistentBackendCoreServices } from "./modules/core-foundation/persistence/persistent-backend-core-services";
 import { createManifestRoutes } from "./modules/manifests/manifest.routes";
 import { createInfrastructureRoutes } from "./modules/infrastructure/infrastructure.routes";
+import { InfrastructureRepository } from "./modules/infrastructure/infrastructure.repository";
 import { InfrastructureServices } from "./modules/infrastructure/infrastructure.service";
 import { createSystemManagementRoutes } from "./modules/system-management/system-management.routes";
 import { SystemManagementServices } from "./modules/system-management/system-management.service";
@@ -131,15 +139,53 @@ export function createDefaultAppDependencies(config: ApiConfig = loadApiConfig()
 export async function createDatabaseBackedAppDependencies(
   config: ApiConfig = loadApiConfig(),
 ): Promise<AppDependencies> {
+  const infrastructureRepository = InfrastructureRepository.fromEnvironment();
+  const permissionCacheAdapter = await createPermissionCacheAdapter(
+    config,
+    infrastructureRepository,
+  );
   return {
-    backendCoreServices: await createPersistentBackendCoreServices(config.backendCore),
+    backendCoreServices: await createPersistentBackendCoreServices(config.backendCore, undefined, {
+      permissionCacheAdapter,
+    }),
     communicationsServices: CommunicationsServices.database(),
-    infrastructureServices: InfrastructureServices.database(undefined, {
+    infrastructureServices: InfrastructureServices.database(infrastructureRepository, {
       notificationChannel: createNotificationChannel(config),
+      queue: await createInfrastructureQueue(config, infrastructureRepository),
     }),
     systemManagementServices: SystemManagementServices.database(),
     structuredLogSink: noopStructuredLogSink,
   };
+}
+
+async function createPermissionCacheAdapter(
+  config: ApiConfig,
+  repository: InfrastructureRepository,
+): Promise<CacheAdapter | undefined> {
+  if (config.adapters.cacheDriver === "database") {
+    return createDatabaseCacheAdapter(repository.executor);
+  }
+  if (config.adapters.cacheDriver !== "redis") return undefined;
+  if (!config.adapters.redisUrl) {
+    throw new Error("REDIS_URL is required when CACHE_DRIVER=redis.");
+  }
+  return createRedisCacheAdapter({ url: config.adapters.redisUrl });
+}
+
+async function createInfrastructureQueue(
+  config: ApiConfig,
+  repository: InfrastructureRepository,
+): Promise<QueueAdapter | undefined> {
+  if (config.adapters.queueDriver === "rabbitmq") {
+    if (!config.adapters.rabbitMqUrl) {
+      throw new Error("RABBITMQ_URL is required when QUEUE_DRIVER=rabbitmq.");
+    }
+    return createRabbitMqQueueAdapter({ url: config.adapters.rabbitMqUrl });
+  }
+  if (config.adapters.queueDriver === "database") {
+    return createDatabaseQueueAdapter(repository.executor);
+  }
+  return createInMemoryQueueAdapter();
 }
 
 function createNotificationChannel(config: ApiConfig): NotificationChannelAdapter {

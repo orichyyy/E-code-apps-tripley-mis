@@ -14,9 +14,42 @@ const optionalNonEmptyStringSchema = z.preprocess(
   z.string().min(1).nullable().default(null),
 );
 
+const adapterConfigSchema = z
+  .object({
+    cacheDriver: z.enum(["memory", "database", "redis"]).default("memory"),
+    rateLimitDriver: z.enum(["memory", "database", "redis"]).default("memory"),
+    queueDriver: z.enum(["memory", "database", "rabbitmq"]).default("database"),
+    eventBusDriver: z.enum(["in_process", "database", "rabbitmq"]).default("in_process"),
+    redisUrl: optionalNonEmptyStringSchema.default(null),
+    rabbitMqUrl: optionalNonEmptyStringSchema.default(null),
+  })
+  .superRefine((adapters, context) => {
+    if (
+      (adapters.cacheDriver === "redis" || adapters.rateLimitDriver === "redis") &&
+      !adapters.redisUrl
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["redisUrl"],
+        message: "REDIS_URL is required when CACHE_DRIVER or RATE_LIMIT_DRIVER is redis.",
+      });
+    }
+    if (
+      (adapters.queueDriver === "rabbitmq" || adapters.eventBusDriver === "rabbitmq") &&
+      !adapters.rabbitMqUrl
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["rabbitMqUrl"],
+        message: "RABBITMQ_URL is required when QUEUE_DRIVER or EVENT_BUS_DRIVER is rabbitmq.",
+      });
+    }
+  });
+
 const apiConfigSchema = z.object({
   nodeEnv: z.enum(["development", "test", "demo", "production"]).default("development"),
   port: z.coerce.number().int().positive().default(3000),
+  adapters: adapterConfigSchema,
   smtp: z
     .object({
       enabled: booleanStringSchema.default("false"),
@@ -115,6 +148,14 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   return apiConfigSchema.parse({
     nodeEnv: env.NODE_ENV,
     port: env.API_PORT,
+    adapters: {
+      cacheDriver: env.CACHE_DRIVER,
+      rateLimitDriver: env.RATE_LIMIT_DRIVER,
+      queueDriver: env.QUEUE_DRIVER,
+      eventBusDriver: env.EVENT_BUS_DRIVER,
+      redisUrl: env.REDIS_URL,
+      rabbitMqUrl: env.RABBITMQ_URL,
+    },
     smtp: {
       enabled: env.SMTP_ENABLED,
       host: env.SMTP_HOST,

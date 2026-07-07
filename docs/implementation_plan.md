@@ -891,3 +891,13 @@ The optional external adapter slice completed the following:
 - Added `scripts/start-optional-integrations.ps1` to start lightweight Docker Desktop development containers using `redis:8.8.0-alpine` and `rabbitmq:4.3.2-alpine`.
 - Added `pnpm test:optional-integrations` with tests gated by `REDIS_URL` and `RABBITMQ_URL`, so normal `pnpm test` skips the external-driver coverage when the services are absent.
 - Verified the optional Redis and RabbitMQ adapter tests against local Docker containers.
+
+## Optional Adapter Runtime Wiring Progress
+
+The optional adapter runtime-wiring slice completed the following:
+
+- Added validated API runtime configuration for `CACHE_DRIVER`, `RATE_LIMIT_DRIVER`, `QUEUE_DRIVER`, `EVENT_BUS_DRIVER`, `REDIS_URL`, and `RABBITMQ_URL`.
+- Wired DB-backed API dependencies so `CACHE_DRIVER=database` uses the existing `cache_entries` table and `CACHE_DRIVER=redis` uses the optional Redis cache adapter for backend permission-cache storage.
+- Wired DB-backed API infrastructure so `QUEUE_DRIVER=rabbitmq` can enqueue adapter-backed jobs through RabbitMQ while default `QUEUE_DRIVER=database` preserves the existing durable database queue behavior.
+- Added worker runtime configuration for `QUEUE_DRIVER=rabbitmq`; the worker registers RabbitMQ consumers for adapter-backed jobs while still processing database durable queue and scheduler work for scheduled tasks, import/export, and log-export flows.
+- Added configuration tests proving external drivers require `REDIS_URL` or `RABBITMQ_URL` only when explicitly selected.

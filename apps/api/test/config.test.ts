@@ -28,6 +28,14 @@ describe("API configuration", () => {
     expect(config).toMatchObject({
       nodeEnv: "test",
       port: 4001,
+      adapters: {
+        cacheDriver: "memory",
+        rateLimitDriver: "memory",
+        queueDriver: "database",
+        eventBusDriver: "in_process",
+        redisUrl: null,
+        rabbitMqUrl: null,
+      },
       backendCore: {
         jwtSecret: "configured-secret",
         jwtIssuer: "configured-issuer",
@@ -48,6 +56,42 @@ describe("API configuration", () => {
         },
       },
     });
+  });
+
+  it("loads optional adapter runtime settings", () => {
+    const config = loadApiConfig({
+      NODE_ENV: "test",
+      CACHE_DRIVER: "redis",
+      RATE_LIMIT_DRIVER: "redis",
+      QUEUE_DRIVER: "rabbitmq",
+      EVENT_BUS_DRIVER: "rabbitmq",
+      REDIS_URL: "redis://127.0.0.1:6379",
+      RABBITMQ_URL: "amqp://guest:guest@127.0.0.1:5672",
+    });
+
+    expect(config.adapters).toEqual({
+      cacheDriver: "redis",
+      rateLimitDriver: "redis",
+      queueDriver: "rabbitmq",
+      eventBusDriver: "rabbitmq",
+      redisUrl: "redis://127.0.0.1:6379",
+      rabbitMqUrl: "amqp://guest:guest@127.0.0.1:5672",
+    });
+  });
+
+  it("rejects optional external adapter drivers without required URLs", () => {
+    expect(() =>
+      loadApiConfig({
+        NODE_ENV: "test",
+        CACHE_DRIVER: "redis",
+      }),
+    ).toThrow(/REDIS_URL/);
+    expect(() =>
+      loadApiConfig({
+        NODE_ENV: "test",
+        QUEUE_DRIVER: "rabbitmq",
+      }),
+    ).toThrow(/RABBITMQ_URL/);
   });
 
   it("uses loaded password policy in default backend core dependencies", async () => {
