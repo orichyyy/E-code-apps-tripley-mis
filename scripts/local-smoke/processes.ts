@@ -50,6 +50,7 @@ export function startService(name: string, args: string[]): ManagedProcess {
   const logPath = path.join(tmpDir, `local-smoke-${name}.log`);
   const child = spawn(pnpmCommand, [...pnpmPrefixArgs, ...args], {
     cwd: rootDir,
+    detached: process.platform !== "win32",
     env: serviceEnv,
     shell: false,
     stdio: ["ignore", "pipe", "pipe"],
@@ -77,6 +78,7 @@ export function startService(name: string, args: string[]): ManagedProcess {
 export async function stopServices(): Promise<void> {
   stoppingServices = true;
   await Promise.all(services.map((service) => stopProcessTree(service.process)));
+  services.length = 0;
 }
 
 export async function serviceLogSummary(): Promise<string> {
@@ -119,9 +121,28 @@ async function stopProcessTree(child: ChildProcess): Promise<void> {
     return;
   }
 
-  child.kill("SIGTERM");
-  await sleep(500);
-  if (child.exitCode === null) child.kill("SIGKILL");
+  killPosixProcessGroup(child, "SIGTERM");
+  await Promise.race([waitForExit(child), sleep(1_000)]);
+  if (child.exitCode === null) killPosixProcessGroup(child, "SIGKILL");
+  await Promise.race([waitForExit(child), sleep(1_000)]);
+}
+
+function killPosixProcessGroup(child: ChildProcess, signal: NodeJS.Signals): void {
+  if (!child.pid) return;
+
+  try {
+    process.kill(-child.pid, signal);
+  } catch {
+    child.kill(signal);
+  }
+}
+
+function waitForExit(child: ChildProcess): Promise<void> {
+  if (child.exitCode !== null) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    child.once("exit", () => resolve());
+  });
 }
 
 function sleep(ms: number): Promise<void> {

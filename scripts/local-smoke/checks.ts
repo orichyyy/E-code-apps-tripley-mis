@@ -50,6 +50,7 @@ export async function runBrowserSmoke(): Promise<void> {
     await page.getByRole("button", { name: "Sign in" }).click();
     await page.waitForURL(`http://localhost:${webPort}/`, { timeout: 15_000 });
     await page.getByRole("navigation", { name: "Primary" }).waitFor({ state: "visible" });
+    await ensureSidebarGroupsExpanded(["System", "Operations", "Logs", "Account"]);
 
     for (const label of [
       "System configuration",
@@ -79,6 +80,15 @@ export async function runBrowserSmoke(): Promise<void> {
       throw new Error(
         `Expected only System configuration active, got ${activeSidebarLinks.join(", ")}`,
       );
+    }
+  }
+
+  async function ensureSidebarGroupsExpanded(groupLabels: string[]): Promise<void> {
+    for (const groupLabel of groupLabels) {
+      const button = page.getByRole("button", { name: groupLabel });
+      if ((await button.getAttribute("aria-expanded")) !== "true") {
+        await button.click();
+      }
     }
   }
 }

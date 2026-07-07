@@ -2,6 +2,8 @@ import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   Bell,
   BookOpen,
+  ChevronDown,
+  ChevronRight,
   BriefcaseBusiness,
   ChevronsLeftRight,
   CircleUserRound,
@@ -15,7 +17,7 @@ import {
   Settings,
   Sun,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { translate } from "@/i18n/messages";
@@ -41,6 +43,39 @@ const groupIcons = {
   account: CircleUserRound,
 } satisfies Record<AdminRouteGroup, typeof Settings>;
 
+const sidebarGroupOrder: AdminRouteGroup[] = [
+  "system",
+  "notifications",
+  "operations",
+  "logs",
+  "account",
+];
+
+const sidebarStorageKey = "web-admin-base.sidebar.expandedGroups";
+
+function readStoredExpandedGroups(): AdminRouteGroup[] {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const rawValue = window.localStorage.getItem(sidebarStorageKey);
+    if (!rawValue) return [];
+    const parsedValue = JSON.parse(rawValue);
+    if (!Array.isArray(parsedValue)) return [];
+    return parsedValue.filter(isAdminRouteGroup);
+  } catch {
+    return [];
+  }
+}
+
+function persistExpandedGroups(groups: AdminRouteGroup[]): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(sidebarStorageKey, JSON.stringify(groups));
+}
+
+function isAdminRouteGroup(value: unknown): value is AdminRouteGroup {
+  return typeof value === "string" && sidebarGroupOrder.includes(value as AdminRouteGroup);
+}
+
 export function AdminShell() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -59,22 +94,55 @@ export function AdminShell() {
   const currentOrganizationId = useOrganizationStore((state) => state.currentOrganizationId);
   const switchOrganization = useOrganizationStore((state) => state.switchOrganization);
   const currentRoute = adminRouteMetadata.find((route) => route.path === location.pathname);
+  const activeGroup = currentRoute?.group ?? "system";
+  const [storedExpandedGroups, setStoredExpandedGroups] = useState<AdminRouteGroup[]>(() =>
+    readStoredExpandedGroups(),
+  );
 
   useEffect(() => {
     addTab(location.pathname);
   }, [addTab, location.pathname]);
 
+  useEffect(() => {
+    setStoredExpandedGroups((groups) =>
+      groups.includes(activeGroup) ? groups : [...groups, activeGroup],
+    );
+  }, [activeGroup]);
+
+  useEffect(() => {
+    persistExpandedGroups(storedExpandedGroups);
+  }, [storedExpandedGroups]);
+
   const visibleRoutes = adminRouteMetadata.filter(
     (route) => route.menuVisible && hasPermission(permissionCodes, route.requiredPermission),
   );
-  const groupedRoutes = visibleRoutes.reduce<Record<string, typeof visibleRoutes>>(
-    (groups, route) => {
-      const group = route.group ?? "system";
-      groups[group] = [...(groups[group] ?? []), route];
-      return groups;
-    },
-    {},
+  const groupedRoutes = visibleRoutes.reduce<
+    Partial<Record<AdminRouteGroup, typeof visibleRoutes>>
+  >((groups, route) => {
+    const group = route.group ?? "system";
+    groups[group] = [...(groups[group] ?? []), route];
+    return groups;
+  }, {});
+  const orderedGroups = useMemo(
+    () => sidebarGroupOrder.filter((group) => (groupedRoutes[group]?.length ?? 0) > 0),
+    [groupedRoutes],
   );
+  const expandedGroups = useMemo(() => {
+    const groups = new Set(storedExpandedGroups);
+    groups.add(activeGroup);
+    return groups;
+  }, [activeGroup, storedExpandedGroups]);
+
+  function toggleGroup(group: AdminRouteGroup): void {
+    setStoredExpandedGroups((groups) => {
+      if (group === activeGroup) {
+        return groups.includes(group) ? groups : [...groups, group];
+      }
+      return groups.includes(group)
+        ? groups.filter((expandedGroup) => expandedGroup !== group)
+        : [...groups, group];
+    });
+  }
 
   return (
     <main className="flex min-h-dvh bg-muted/35 text-foreground">
@@ -90,28 +158,45 @@ export function AdminShell() {
             </div>
           </div>
           <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Primary">
-            {Object.entries(groupedRoutes).map(([group, routes]) => {
-              const Icon = groupIcons[group as AdminRouteGroup] ?? Menu;
+            {orderedGroups.map((group) => {
+              const routes = groupedRoutes[group] ?? [];
+              const Icon = groupIcons[group] ?? Menu;
+              const isExpanded = expandedGroups.has(group);
+              const groupId = `sidebar-group-${group}`;
+              const groupLabel = translate(language, groupLabels[group]);
               return (
                 <section className="mb-5" key={group}>
-                  <div className="mb-2 flex items-center gap-2 px-2 text-xs font-medium text-muted-foreground">
+                  <button
+                    aria-controls={groupId}
+                    aria-expanded={isExpanded}
+                    className="mb-2 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    onClick={() => toggleGroup(group)}
+                    type="button"
+                  >
                     <Icon className="size-4" aria-hidden="true" />
-                    {translate(language, groupLabels[group as AdminRouteGroup] ?? "nav.system")}
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    {routes
-                      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-                      .map((route) => (
-                        <Link
-                          activeOptions={{ exact: true }}
-                          className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground [&.active]:bg-primary [&.active]:text-primary-foreground"
-                          key={route.routeCode}
-                          to={route.path}
-                        >
-                          {translate(language, route.titleI18nKey)}
-                        </Link>
-                      ))}
-                  </div>
+                    <span className="flex-1 text-left">{groupLabel}</span>
+                    {isExpanded ? (
+                      <ChevronDown className="size-4" aria-hidden="true" />
+                    ) : (
+                      <ChevronRight className="size-4" aria-hidden="true" />
+                    )}
+                  </button>
+                  {isExpanded ? (
+                    <div className="flex flex-col gap-1" id={groupId}>
+                      {routes
+                        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+                        .map((route) => (
+                          <Link
+                            activeOptions={{ exact: true }}
+                            className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground [&.active]:bg-primary [&.active]:text-primary-foreground"
+                            key={route.routeCode}
+                            to={route.path}
+                          >
+                            {translate(language, route.titleI18nKey)}
+                          </Link>
+                        ))}
+                    </div>
+                  ) : null}
                 </section>
               );
             })}
