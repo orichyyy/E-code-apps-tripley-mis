@@ -8,3 +8,4 @@ export type CacheAdapter = HealthCheckableAdapter & {
 
 export * from "./in-memory-cache";
 export * from "./database-cache";
+export * from "./redis-cache";

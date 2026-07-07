@@ -16,7 +16,12 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --passWithNoTests"
   },
+  "optionalDependencies": {
+    "amqplib": "^2.0.1",
+    "redis": "^6.1.0"
+  },
   "devDependencies": {
+    "@types/amqplib": "^0.10.8",
     "@web-admin-base/db": "workspace:*"
   }
 }

@@ -880,3 +880,14 @@ The production deployment acceptance slice completed the following:
 - Found and fixed the Node ESM production start path for API and worker services by bundling their built entrypoints with esbuild while keeping `start` as `node dist/main.js`.
 - Verified production-built API, worker, and static SPA serving with `/api` reverse proxy behavior.
 - Confirmed API health, metrics, OpenAPI, login, core API checks, asynchronous log export task creation, and browser navigation through representative admin pages.
+
+## Optional Redis and RabbitMQ Adapter Progress
+
+The optional external adapter slice completed the following:
+
+- Added optional Redis cache and rate-limit adapter drivers behind the existing `CacheAdapter` and `RateLimitAdapter` interfaces.
+- Added optional RabbitMQ queue and event-bus adapter drivers behind the existing `QueueAdapter` and `EventBusAdapter` interfaces.
+- Kept Redis and RabbitMQ disabled for default local startup, CI, deployment acceptance, API runtime, and worker runtime unless a future runtime-wiring goal explicitly opts in.
+- Added `scripts/start-optional-integrations.ps1` to start lightweight Docker Desktop development containers using `redis:8.8.0-alpine` and `rabbitmq:4.3.2-alpine`.
+- Added `pnpm test:optional-integrations` with tests gated by `REDIS_URL` and `RABBITMQ_URL`, so normal `pnpm test` skips the external-driver coverage when the services are absent.
+- Verified the optional Redis and RabbitMQ adapter tests against local Docker containers.

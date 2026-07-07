@@ -12,3 +12,4 @@ export type RateLimitAdapter = HealthCheckableAdapter & {
 
 export * from "./in-memory-rate-limit";
 export * from "./database-rate-limit";
+export * from "./redis-rate-limit";

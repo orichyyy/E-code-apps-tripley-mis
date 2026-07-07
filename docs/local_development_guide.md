@@ -95,6 +95,27 @@ pnpm verify
 
 The CI path intentionally uses the same verification command as local development. Optional integrations such as Redis, RabbitMQ, S3-compatible storage, SMTP, SMS, and outbound webhook delivery stay disabled unless a future confirmed goal adds dedicated coverage for them.
 
+## Optional Redis and RabbitMQ Adapter Tests
+
+Redis and RabbitMQ are optional adapter drivers. They are not required for `pnpm dev:local`, `pnpm smoke:local`, or `pnpm verify`.
+
+To run their Docker-backed development tests:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-optional-integrations.ps1
+$env:REDIS_URL = "redis://127.0.0.1:6379"
+$env:RABBITMQ_URL = "amqp://guest:guest@127.0.0.1:5672"
+pnpm test:optional-integrations
+```
+
+The script starts `tripley-redis-dev` with `redis:8.8.0-alpine` and `tripley-rabbitmq-dev` with `rabbitmq:4.3.2-alpine`. Both containers avoid persistent volumes by default and use small memory limits for development.
+
+Stop them when not needed:
+
+```powershell
+docker stop tripley-redis-dev tripley-rabbitmq-dev
+```
+
 ## Local Acceptance
 
 Use `docs/local_run_acceptance.md` when you need a reproducible local run walkthrough. It combines the automated `pnpm verify` / `pnpm smoke:local` checks with a manual browser checklist for the implemented admin pages.

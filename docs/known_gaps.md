@@ -20,8 +20,8 @@ This file records incomplete, reserved, or environment-dependent work that must 
 
 ## Reserved Optional Integrations
 
-- Redis cache/rate-limit drivers remain optional placeholders only.
-- RabbitMQ queue/event-bus drivers remain optional placeholders only.
+- Redis cache/rate-limit drivers are implemented as optional adapter drivers and covered by Docker-backed integration tests when `REDIS_URL` is provided. They are not required for default local, CI, or deployment validation.
+- RabbitMQ queue/event-bus drivers are implemented as optional adapter drivers and covered by Docker-backed integration tests when `RABBITMQ_URL` is provided. API/worker runtime selection remains on the existing in-memory/database defaults until a future runtime-wiring goal explicitly enables RabbitMQ for those processes.
 - S3-compatible file storage remains reserved until its concrete package and runtime configuration contract are confirmed.
 - SMS notification sending remains reserved; SMS templates/interfaces may exist, but no sender is implemented.
 - Real outbound webhook delivery and external webhook retry workers remain reserved. Webhook subscription persistence and management APIs/UI are implemented.
