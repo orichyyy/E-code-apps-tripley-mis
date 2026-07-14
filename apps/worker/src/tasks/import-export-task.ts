@@ -4,6 +4,7 @@ import type {
   DatabaseAdapterExecutor,
   FileStorageAdapter,
   QueueJob,
+  StoredFileObject,
 } from "@web-admin-base/adapters";
 
 import { bool, json, now, p } from "./db-utils";
@@ -127,7 +128,7 @@ async function processExportTask(
   const csv = toCsv(logs);
   const objectKey = createExportObjectKey(task.id, logType);
   const stored = await storage.put(objectKey, new TextEncoder().encode(csv), "text/csv");
-  const resultFileId = await insertResultFile(executor, stored, task.createdBy);
+  const resultFileId = await persistExportFile(executor, storage, stored, task.createdBy);
   const completedAt = now();
 
   await executor.run(
@@ -153,20 +154,50 @@ async function processExportTask(
   );
 }
 
+async function persistExportFile(
+  executor: DatabaseAdapterExecutor,
+  storage: FileStorageAdapter,
+  stored: StoredFileObject,
+  createdBy: string | null,
+): Promise<string> {
+  try {
+    return await insertResultFile(executor, stored, createdBy);
+  } catch (error) {
+    try {
+      await storage.delete(stored);
+    } catch (cleanupError) {
+      await writeWorkerTaskLog(executor, {
+        level: "error",
+        message: "Export upload compensation failed",
+        taskCode: importExportProcessTaskCode,
+        metadata: {
+          storageDriver: stored.storageDriver,
+          storageBucket: stored.storageBucket,
+          objectKey: stored.objectKey,
+          error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+        },
+      });
+    }
+    throw error;
+  }
+}
+
 async function insertResultFile(
   executor: DatabaseAdapterExecutor,
-  stored: { objectKey: string; contentType: string; sizeBytes: number },
+  stored: StoredFileObject,
   createdBy: string | null,
 ): Promise<string> {
   const createdAt = now();
   await executor.run(
-    `INSERT INTO file_objects (object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at, created_by, updated_by)
-     VALUES (${p(executor, 1)}, ${p(executor, 2)}, ${p(executor, 3)}, 'csv', ${p(executor, 4)}, 'local', 'active', ${bool(executor, false)}, ${bool(executor, false)}, ${p(executor, 5)}, ${p(executor, 6)}, ${p(executor, 7)}, ${p(executor, 8)})`,
+    `INSERT INTO file_objects (object_key, storage_bucket, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at, created_by, updated_by)
+     VALUES (${p(executor, 1)}, ${p(executor, 2)}, ${p(executor, 3)}, ${p(executor, 4)}, 'csv', ${p(executor, 5)}, ${p(executor, 6)}, 'active', ${bool(executor, false)}, ${bool(executor, false)}, ${p(executor, 7)}, ${p(executor, 8)}, ${p(executor, 9)}, ${p(executor, 10)})`,
     [
       stored.objectKey,
+      stored.storageBucket,
       stored.objectKey.split("/").at(-1) ?? "export.csv",
       stored.contentType,
       stored.sizeBytes,
+      stored.storageDriver,
       createdAt,
       createdAt,
       createdBy,

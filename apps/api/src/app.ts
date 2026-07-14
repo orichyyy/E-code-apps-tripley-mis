@@ -3,10 +3,12 @@ import {
   createDatabaseQueueAdapter,
   createInMemoryQueueAdapter,
   createInMemoryNotificationChannelAdapter,
+  createConfiguredFileStorageAdapter,
   createRabbitMqQueueAdapter,
   createRedisCacheAdapter,
   createSmtpNotificationChannelAdapter,
   type CacheAdapter,
+  type FileStorageAdapter,
   type NotificationChannelAdapter,
   type QueueAdapter,
 } from "@web-admin-base/adapters";
@@ -124,11 +126,16 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
 
 export type ApiApp = ReturnType<typeof createApp>;
 
-export function createDefaultAppDependencies(config: ApiConfig = loadApiConfig()): AppDependencies {
+export function createDefaultAppDependencies(
+  config: ApiConfig = loadApiConfig(),
+  storage?: FileStorageAdapter,
+): AppDependencies {
   return {
     backendCoreServices: createInMemoryBackendCoreServices(config.backendCore),
     communicationsServices: CommunicationsServices.inMemory(),
     infrastructureServices: InfrastructureServices.inMemory({
+      storage,
+      presignedUrlTtlSeconds: config.storage.presignedUrlTtlSeconds,
       notificationChannel: createNotificationChannel(config),
     }),
     systemManagementServices: SystemManagementServices.inMemory(),
@@ -138,24 +145,35 @@ export function createDefaultAppDependencies(config: ApiConfig = loadApiConfig()
 
 export async function createDatabaseBackedAppDependencies(
   config: ApiConfig = loadApiConfig(),
+  storage?: FileStorageAdapter,
 ): Promise<AppDependencies> {
   const infrastructureRepository = InfrastructureRepository.fromEnvironment();
   const permissionCacheAdapter = await createPermissionCacheAdapter(
     config,
     infrastructureRepository,
   );
+  const fileStorage = storage ?? (await createRuntimeFileStorage(config));
   return {
     backendCoreServices: await createPersistentBackendCoreServices(config.backendCore, undefined, {
       permissionCacheAdapter,
     }),
     communicationsServices: CommunicationsServices.database(),
     infrastructureServices: InfrastructureServices.database(infrastructureRepository, {
+      storage: fileStorage,
+      presignedUrlTtlSeconds: config.storage.presignedUrlTtlSeconds,
       notificationChannel: createNotificationChannel(config),
       queue: await createInfrastructureQueue(config, infrastructureRepository),
     }),
     systemManagementServices: SystemManagementServices.database(),
     structuredLogSink: noopStructuredLogSink,
   };
+}
+
+export async function createRuntimeFileStorage(config: ApiConfig): Promise<FileStorageAdapter> {
+  const storage = await createConfiguredFileStorageAdapter(config.storage);
+  const health = await storage.healthCheck();
+  if (!health.ok) throw new Error(`File storage is unavailable: ${health.message ?? "unknown"}`);
+  return storage;
 }
 
 async function createPermissionCacheAdapter(

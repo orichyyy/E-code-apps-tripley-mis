@@ -6,7 +6,6 @@ import { tmpdir } from "node:os";
 import {
   createDatabaseQueueAdapter,
   createLocalFileStorageAdapter,
-  type DatabaseAdapterExecutor,
   readJson,
 } from "@web-admin-base/adapters";
 import {
@@ -29,6 +28,15 @@ import {
 } from "../src/tasks/file-cleanup-task";
 import { logRetentionTaskCode } from "../src/tasks/log-retention-task";
 import { scheduledRunJobType } from "../src/tasks/scheduled-run-task";
+import {
+  clearWorkerTables,
+  localLocation,
+  scheduledTaskId,
+  seedExpiredExportResult,
+  seedInvalidFile,
+  seedLogExport,
+  seedOldLog,
+} from "./worker-test-helpers";
 
 describe("worker bootstrap", () => {
   it("loads database and polling configuration from environment", () => {
@@ -47,6 +55,12 @@ describe("worker bootstrap", () => {
       adapters: {
         queueDriver: "database",
         rabbitMqUrl: null,
+      },
+      storage: {
+        activeDriver: "local",
+        local: { rootDirectory: ".web-admin-storage" },
+        presignedUrlTtlSeconds: 60,
+        s3: null,
       },
       database: {
         dialect: "sqlite",
@@ -70,6 +84,26 @@ describe("worker bootstrap", () => {
     });
   });
 
+  it("loads the shared S3 file-storage configuration", () => {
+    const config = loadWorkerConfig({
+      NODE_ENV: "test",
+      FILE_STORAGE_DRIVER: "s3",
+      S3_ENDPOINT: "http://127.0.0.1:9000",
+      S3_REGION: "us-east-1",
+      S3_BUCKET: "admin-files",
+      S3_FORCE_PATH_STYLE: "true",
+      DATABASE_DIALECT: "sqlite",
+      DATABASE_URL: "file:./data/test-worker.sqlite",
+    });
+
+    expect(config.storage).toEqual(
+      expect.objectContaining({
+        activeDriver: "s3",
+        s3: expect.objectContaining({ bucket: "admin-files", forcePathStyle: true }),
+      }),
+    );
+  });
+
   it("rejects RabbitMQ worker queue configuration without a URL", () => {
     expect(() =>
       loadWorkerConfig({
@@ -87,13 +121,13 @@ describe("worker bootstrap", () => {
     runSqliteMigrations({ url });
     const executor = createWorkerDatabaseExecutor({ dialect: "sqlite", url });
     const application = createWorkerApplication(
-      {
-        nodeEnv: "test",
-        workerName: "notification-worker",
-        pollIntervalMs: 0,
-        adapters: { queueDriver: "database", rabbitMqUrl: null },
-        database: { dialect: "sqlite", url },
-      },
+      loadWorkerConfig({
+        NODE_ENV: "test",
+        WORKER_NAME: "notification-worker",
+        WORKER_POLL_INTERVAL_MS: "0",
+        DATABASE_DIALECT: "sqlite",
+        DATABASE_URL: url,
+      }),
       {
         executor,
         log: () => undefined,
@@ -102,7 +136,7 @@ describe("worker bootstrap", () => {
     const queue = createDatabaseQueueAdapter(executor, { workerId: "test-enqueuer" });
 
     try {
-      await clearTables(executor);
+      await clearWorkerTables(executor);
       await application.runtime.start();
       await queue.enqueue<InAppNotificationDispatchPayload>(inAppNotificationDispatchJobType, {
         recipientUserIds: ["200", "201"],
@@ -136,7 +170,7 @@ describe("worker bootstrap", () => {
       expect(readJson(rows[0]?.metadata_json)).toEqual({ source: "worker-test", createdBy: "1" });
       expect(queueRows).toEqual([expect.objectContaining({ status: "succeeded" })]);
     } finally {
-      await clearTables(executor);
+      await clearWorkerTables(executor);
       await application.close();
       await executor.close();
       if (existsSync(filename)) rmSync(filename, { force: true });
@@ -151,13 +185,13 @@ describe("worker bootstrap", () => {
     const executor = createWorkerDatabaseExecutor({ dialect: "sqlite", url });
     const storage = createLocalFileStorageAdapter({ rootDirectory: storageRoot });
     const application = createWorkerApplication(
-      {
-        nodeEnv: "test",
-        workerName: "catalog-worker",
-        pollIntervalMs: 0,
-        adapters: { queueDriver: "database", rabbitMqUrl: null },
-        database: { dialect: "sqlite", url },
-      },
+      loadWorkerConfig({
+        NODE_ENV: "test",
+        WORKER_NAME: "catalog-worker",
+        WORKER_POLL_INTERVAL_MS: "0",
+        DATABASE_DIALECT: "sqlite",
+        DATABASE_URL: url,
+      }),
       {
         executor,
         storage,
@@ -167,7 +201,7 @@ describe("worker bootstrap", () => {
     const queue = createDatabaseQueueAdapter(executor, { workerId: "catalog-enqueuer" });
 
     try {
-      await clearTables(executor);
+      await clearWorkerTables(executor);
       await application.runtime.start();
       await seedLogExport(executor);
       await queue.enqueue(importExportProcessJobType, {});
@@ -185,7 +219,7 @@ describe("worker bootstrap", () => {
         "SELECT object_key, content_type FROM file_objects WHERE id = ?",
         [resultFileId],
       );
-      const csv = await storage.get(String(fileRows[0]?.object_key));
+      const csv = await storage.get(localLocation(String(fileRows[0]?.object_key)));
 
       expect(
         exportRows.map((row) => ({
@@ -218,7 +252,11 @@ describe("worker bootstrap", () => {
         queueJobs: 1,
         scheduledJobs: 0,
       });
-      await expect(storage.get("uploads/invalid.txt")).resolves.toBeNull();
+      await expect(storage.get(localLocation("uploads/invalid.txt"))).resolves.toBeNull();
+      const cleanedFiles = await executor.all(
+        "SELECT content_deleted_at FROM file_objects WHERE object_key = 'uploads/invalid.txt'",
+      );
+      expect(cleanedFiles[0]?.content_deleted_at).toBeTruthy();
 
       const expiredResultFileId = await seedExpiredExportResult(executor, storage);
       await queue.enqueue(scheduledRunJobType, {
@@ -229,18 +267,24 @@ describe("worker bootstrap", () => {
         scheduledJobs: 0,
       });
       const expiredFileRows = await executor.all(
-        "SELECT status, is_deleted FROM file_objects WHERE id = ?",
+        "SELECT status, is_deleted, content_deleted_at FROM file_objects WHERE id = ?",
         [expiredResultFileId],
       );
       expect(
         expiredFileRows.map((row) => ({ ...row, is_deleted: Number(row.is_deleted) })),
-      ).toEqual([expect.objectContaining({ status: "invalid", is_deleted: 1 })]);
-      await expect(storage.get("exports/expired.csv")).resolves.toBeNull();
+      ).toEqual([
+        expect.objectContaining({
+          status: "invalid",
+          is_deleted: 1,
+          content_deleted_at: expect.any(String),
+        }),
+      ]);
+      await expect(storage.get(localLocation("exports/expired.csv"))).resolves.toBeNull();
 
       const catalogTask = await scheduledTaskId(executor, importExportProcessTaskCode);
       expect(catalogTask).toMatch(/^\d+$/);
     } finally {
-      await clearTables(executor);
+      await clearWorkerTables(executor);
       await application.close();
       await executor.close();
       if (existsSync(filename)) rmSync(filename, { force: true });
@@ -248,77 +292,3 @@ describe("worker bootstrap", () => {
     }
   });
 });
-
-async function clearTables(executor: DatabaseAdapterExecutor): Promise<void> {
-  for (const table of [
-    "file_references",
-    "import_export_tasks",
-    "file_objects",
-    "notifications",
-    "queue_jobs",
-    "scheduled_jobs",
-    "log_entries",
-  ]) {
-    await executor.run(`DELETE FROM ${table}`);
-  }
-}
-
-async function seedLogExport(executor: DatabaseAdapterExecutor): Promise<void> {
-  const now = new Date().toISOString();
-  await executor.run(
-    "INSERT INTO log_entries (log_type, level, message, metadata_json, occurred_at, created_at) VALUES ('access', 'info', 'access exported', ?, ?, ?)",
-    [JSON.stringify({ path: "/api/health" }), now, now],
-  );
-  await executor.run(
-    "INSERT INTO import_export_tasks (task_type, resource_type, status, error_preview_json, result_expires_at, created_at, updated_at, created_by) VALUES ('export', 'logs:access', 'pending', ?, ?, ?, ? , '1')",
-    [JSON.stringify([]), new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), now, now],
-  );
-}
-
-async function seedOldLog(executor: DatabaseAdapterExecutor): Promise<void> {
-  const old = new Date(Date.now() - 91 * 24 * 60 * 60 * 1000).toISOString();
-  await executor.run(
-    "INSERT INTO log_entries (log_type, level, message, metadata_json, occurred_at, created_at) VALUES ('access', 'info', 'old access log', ?, ?, ?)",
-    [JSON.stringify({}), old, old],
-  );
-}
-
-async function seedInvalidFile(
-  executor: DatabaseAdapterExecutor,
-  storage: ReturnType<typeof createLocalFileStorageAdapter>,
-): Promise<void> {
-  const now = new Date().toISOString();
-  await storage.put("uploads/invalid.txt", new TextEncoder().encode("invalid"), "text/plain");
-  await executor.run(
-    "INSERT INTO file_objects (object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, deleted_at, created_at, updated_at) VALUES ('uploads/invalid.txt', 'invalid.txt', 'text/plain', 'txt', 7, 'local', 'invalid', 0, 1, ?, ?, ?)",
-    [now, now, now],
-  );
-}
-
-async function seedExpiredExportResult(
-  executor: DatabaseAdapterExecutor,
-  storage: ReturnType<typeof createLocalFileStorageAdapter>,
-): Promise<string> {
-  const now = new Date().toISOString();
-  const expired = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  await storage.put("exports/expired.csv", new TextEncoder().encode("expired"), "text/csv");
-  await executor.run(
-    "INSERT INTO file_objects (object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at) VALUES ('exports/expired.csv', 'expired.csv', 'text/csv', 'csv', 7, 'local', 'active', 0, 0, ?, ?)",
-    [now, now],
-  );
-  const fileRows = await executor.all(
-    "SELECT id FROM file_objects WHERE object_key = 'exports/expired.csv'",
-  );
-  const fileId = String(fileRows[0]?.id);
-  await executor.run(
-    "INSERT INTO import_export_tasks (task_type, resource_type, status, result_file_object_id, error_preview_json, result_expires_at, created_at, updated_at, created_by) VALUES ('export', 'logs:access', 'succeeded', ?, ?, ?, ?, ?, '1')",
-    [fileId, JSON.stringify([]), expired, now, now],
-  );
-  return fileId;
-}
-
-async function scheduledTaskId(executor: DatabaseAdapterExecutor, code: string): Promise<string> {
-  const rows = await executor.all("SELECT id FROM scheduled_jobs WHERE code = ? LIMIT 1", [code]);
-  if (!rows[0]) throw new Error(`Scheduled task was not registered: ${code}`);
-  return String(rows[0].id);
-}

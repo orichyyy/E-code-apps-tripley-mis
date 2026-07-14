@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { loadFileStorageConfig, type FileStorageConfig } from "@web-admin-base/adapters";
 import { loadDatabaseConfig } from "@web-admin-base/db";
 
 const optionalNonEmptyStringSchema = z.preprocess(
@@ -29,6 +30,7 @@ const workerConfigSchema = z.object({
 
 export type WorkerConfig = z.infer<typeof workerConfigSchema> & {
   database: ReturnType<typeof loadDatabaseConfig>;
+  storage: FileStorageConfig;
 };
 
 export function loadWorkerConfig(env: NodeJS.ProcessEnv = process.env): WorkerConfig {
@@ -43,5 +45,6 @@ export function loadWorkerConfig(env: NodeJS.ProcessEnv = process.env): WorkerCo
       },
     }),
     database: loadDatabaseConfig(env),
+    storage: loadFileStorageConfig(env),
   };
 }

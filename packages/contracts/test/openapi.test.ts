@@ -213,6 +213,23 @@ describe("OpenAPI document generation", () => {
       expect(schema.additionalProperties, `${schemaName} should not be a broad object`).toBe(false);
     }
   });
+
+  it("documents local file content and private S3 redirect responses", () => {
+    const document = createOpenApiDocument();
+    const download = document.paths["/files/{id}/download"]?.get;
+    const preview = document.paths["/files/{id}/preview"]?.get;
+
+    for (const operation of [download, preview]) {
+      expect(operation?.responses["200"]).toMatchObject({
+        content: {
+          "application/octet-stream": { schema: { type: "string", format: "binary" } },
+        },
+      });
+      expect(operation?.responses["302"]).toMatchObject({
+        headers: { Location: { schema: { type: "string", format: "uri" } } },
+      });
+    }
+  });
 });
 
 function toOpenApiTestPath(path: string) {

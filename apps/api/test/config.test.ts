@@ -77,6 +77,35 @@ describe("API configuration", () => {
       redisUrl: "redis://127.0.0.1:6379",
       rabbitMqUrl: "amqp://guest:guest@127.0.0.1:5672",
     });
+    expect(config.storage).toEqual({
+      activeDriver: "local",
+      local: { rootDirectory: ".web-admin-storage" },
+      presignedUrlTtlSeconds: 60,
+      s3: null,
+    });
+  });
+
+  it("loads the shared S3 file-storage configuration", () => {
+    const config = loadApiConfig({
+      NODE_ENV: "test",
+      FILE_STORAGE_DRIVER: "s3",
+      S3_ENDPOINT: "http://127.0.0.1:9000",
+      S3_REGION: "us-east-1",
+      S3_BUCKET: "admin-files",
+      S3_FORCE_PATH_STYLE: "true",
+    });
+
+    expect(config.storage).toEqual(
+      expect.objectContaining({
+        activeDriver: "s3",
+        s3: expect.objectContaining({
+          endpoint: "http://127.0.0.1:9000",
+          region: "us-east-1",
+          bucket: "admin-files",
+          forcePathStyle: true,
+        }),
+      }),
+    );
   });
 
   it("rejects optional external adapter drivers without required URLs", () => {

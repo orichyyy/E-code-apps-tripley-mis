@@ -715,6 +715,8 @@ export const fileObjects = pgTable(
     extension: text("extension").notNull(),
     sizeBytes: integer("size_bytes").notNull(),
     storageDriver: text("storage_driver").notNull(),
+    storageBucket: text("storage_bucket"),
+    contentDeletedAt: timestamp("content_deleted_at", { withTimezone: true }),
     status: text("status").notNull().default("active"),
     referenced: boolean("referenced").notNull().default(false),
     ...softDelete,
@@ -724,6 +726,11 @@ export const fileObjects = pgTable(
   },
   (table) => ({
     objectKeyUnique: uniqueIndex("file_objects_object_key_unique").on(table.objectKey),
+    contentCleanupIndex: index("file_objects_content_cleanup_idx").on(
+      table.status,
+      table.isDeleted,
+      table.contentDeletedAt,
+    ),
     statusCheck: check("file_objects_status_check", sql`${table.status} IN ('active', 'invalid')`),
   }),
 );

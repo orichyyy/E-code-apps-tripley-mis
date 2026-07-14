@@ -1,0 +1,53 @@
+name: S3 Compatibility
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rustfs:
+    name: RustFS compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start pinned RustFS test backend
+        run: |
+          docker volume create web-admin-base-rustfs-data
+          docker run --detach \
+            --name web-admin-base-rustfs \
+            --memory 256m --memory-swap 256m \
+            --publish 127.0.0.1:9000:9000 \
+            --volume web-admin-base-rustfs-data:/data \
+            --env RUSTFS_ACCESS_KEY=webadmin \
+            --env RUSTFS_SECRET_KEY=webadmin-development-secret \
+            --env RUSTFS_CONSOLE_ENABLE=false \
+            --env RUSTFS_OBS_LOGGER_LEVEL=warn \
+            rustfs/rustfs:1.0.0-beta.8
+          for attempt in $(seq 1 60); do
+            if curl --silent --output /dev/null http://127.0.0.1:9000; then exit 0; fi
+            sleep 1
+          done
+          docker logs web-admin-base-rustfs
+          exit 1
+
+      - name: Run AWS SDK v3 compatibility test
+        run: pnpm test:s3-integration
+
+      - name: Show RustFS diagnostics on failure
+        if: failure()
+        run: docker logs web-admin-base-rustfs

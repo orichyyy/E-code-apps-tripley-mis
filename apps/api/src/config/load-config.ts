@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { loadFileStorageConfig, type FileStorageConfig } from "@web-admin-base/adapters";
+
 import {
   defaultBackendCoreConfig,
   type BackendCoreConfig,
@@ -142,10 +144,11 @@ const apiConfigSchema = z.object({
 
 export type ApiConfig = Omit<z.infer<typeof apiConfigSchema>, "backendCore"> & {
   backendCore: BackendCoreConfig;
+  storage: FileStorageConfig;
 };
 
 export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
-  return apiConfigSchema.parse({
+  const config = apiConfigSchema.parse({
     nodeEnv: env.NODE_ENV,
     port: env.API_PORT,
     adapters: {
@@ -184,5 +187,9 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
         periodicChangeDays: env.PASSWORD_PERIODIC_CHANGE_DAYS,
       },
     },
-  }) as ApiConfig;
+  });
+  return {
+    ...config,
+    storage: loadFileStorageConfig(env),
+  } as ApiConfig;
 }

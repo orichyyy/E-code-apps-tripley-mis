@@ -19,6 +19,7 @@
     "test:api": "pnpm --filter @web-admin-base/api test",
     "test:web": "pnpm --filter @web-admin-base/web test",
     "test:optional-integrations": "pnpm --filter @web-admin-base/adapters exec vitest run test/redis-integration.test.ts test/rabbitmq-integration.test.ts",
+    "test:s3-integration": "tsx scripts/run-s3-integration.ts",
     "smoke:local": "tsx scripts/local-smoke/index.ts",
     "seed": "pnpm --filter @web-admin-base/api seed",
     "db:generate": "pnpm --filter @web-admin-base/db db:generate",

@@ -9,7 +9,7 @@ Reusable multi-organization admin-system foundation built as a pnpm monorepo.
 - `apps/worker`: Node.js worker runtime wired to database queue/scheduler adapters, default in-app notification dispatch task registration, durable `runOnce`, and optional polling.
 - `packages/contracts`: Zod contracts, Hono RPC boundary types, permission/route/menu/API manifests, and OpenAPI generation.
 - `packages/db`: Drizzle schemas, SQLite/PostgreSQL migration files, and executable migration runners.
-- `packages/adapters`: adapter interfaces plus in-memory defaults, database-backed cache/lock/queue/event-bus/rate-limit/scheduler drivers, optional Redis cache/rate-limit drivers, optional RabbitMQ queue/event-bus drivers, token store, in-memory/SMTP notification channels, and local filesystem storage.
+- `packages/adapters`: adapter interfaces plus in-memory defaults, database-backed infrastructure drivers, optional Redis/RabbitMQ drivers, token store, notification channels, atomic local file storage, and optional AWS SDK v3 S3-compatible storage.
 - `packages/shared`: shared constants, result types, i18n keys, and utilities.
 
 ## Commands
@@ -44,13 +44,13 @@ Start here based on the job you are doing:
 - Deployment operator: use `docs/deployment_guide.md` for deployment shape and `docs/deployment_acceptance.md` for the PostgreSQL-backed rollout checklist.
 - Release owner: use `docs/release_readiness.md`, review `docs/known_gaps.md`, and file a record under `docs/release_readiness_records/`.
 - Business module developer: use `docs/business_module_extension_guide.md` and do not add example business modules to the base system.
-- Adapter extender: use `docs/adapter_extension_guide.md`; Redis and RabbitMQ adapter drivers are optional and Docker-testable, while S3-compatible storage, SMS, and real outbound webhook delivery remain reserved unless a dedicated goal implements them.
+- Adapter extender: use `docs/adapter_extension_guide.md`; Redis, RabbitMQ, and S3-compatible drivers are optional and Docker-testable. SMS and real outbound webhook delivery remain reserved.
 - Permission extender: use `docs/permission_extension_guide.md` and keep route, menu, API permission, OpenAPI, and frontend metadata aligned.
 - Troubleshooter: start with `docs/troubleshooting_guide.md`, then check `docs/known_gaps.md` before treating a reserved boundary as a bug.
 
 ## CI Verification
 
-GitHub Actions runs the same `pnpm verify` command on pushes to `main` and pull requests. The workflow starts a PostgreSQL 16 service, sets `TEST_DATABASE_URL`, installs Playwright Chromium for the browser smoke check, and keeps Redis, RabbitMQ, S3-compatible storage, SMTP, SMS, and outbound webhook delivery disabled.
+GitHub Actions runs the same `pnpm verify` command on pushes to `main` and pull requests. Normal verification keeps external adapters disabled. The manually triggered `S3 Compatibility` workflow tests the generic AWS SDK v3 driver against pinned RustFS without adding RustFS to push CI.
 
 For a persistent local SQLite run, use `.env.example` as the variable checklist and set the variables in the shell that starts the processes:
 
@@ -82,6 +82,8 @@ Set `BACKEND_CORE_STORE=database` with `DATABASE_URL` to run DB-backed backend-c
 The worker uses the same `DATABASE_DIALECT` and `DATABASE_URL` settings for durable queue and scheduler processing. Set `WORKER_POLL_INTERVAL_MS` to a positive value to poll continuously; the default `0` keeps polling disabled for explicit `runOnce()` execution and tests. Database queue jobs use stored attempts, delayed retry, stale-running recovery, and the existing `dead_letter` status when attempts are exhausted. Scheduled jobs use standard five-field cron expressions, compute `next_run_at`, and write scheduler execution logs. The default worker catalog registers in-app notification dispatch, manual `scheduled.run`, log retention cleanup, local invalid-file cleanup, CSV log export processing, and import/export result cleanup.
 
 Local file storage uses `FILE_STORAGE_ROOT` when provided and falls back to `.web-admin-storage`. Uploads enforce the default 50 MB single-file limit, configurable with `FILE_MAX_SIZE_BYTES`, and the confirmed base whitelist.
+
+S3-compatible storage is opt-in with `FILE_STORAGE_DRIVER=s3`. API and worker share the validated `S3_*` settings, while existing records continue to use their persisted local or S3 object location. S3 downloads remain private: the API authorizes the request and returns a short-lived presigned redirect. See `docs/local_development_guide.md` for the disposable RustFS compatibility test. RustFS is not the selected production provider.
 
 Notification templates and webhook subscriptions are persisted for management. In-app notification creation/fan-out is available through the internal queue-backed dispatch service and worker task boundary. SMTP email sending is available as an optional configuration-driven notification channel; SMS sending, real outbound webhook delivery, and delivery retries remain reserved integrations.
 

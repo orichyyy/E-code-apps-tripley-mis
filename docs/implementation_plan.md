@@ -901,3 +901,30 @@ The optional adapter runtime-wiring slice completed the following:
 - Wired DB-backed API infrastructure so `QUEUE_DRIVER=rabbitmq` can enqueue adapter-backed jobs through RabbitMQ while default `QUEUE_DRIVER=database` preserves the existing durable database queue behavior.
 - Added worker runtime configuration for `QUEUE_DRIVER=rabbitmq`; the worker registers RabbitMQ consumers for adapter-backed jobs while still processing database durable queue and scheduler work for scheduled tasks, import/export, and log-export flows.
 - Added configuration tests proving external drivers require `REDIS_URL` or `RABBITMQ_URL` only when explicitly selected.
+
+## S3-Compatible File Storage Design Progress
+
+The next file-storage goal has a confirmed implementation contract:
+
+- Use AWS SDK v3 behind the existing `FileStorageAdapter`; keep local filesystem storage as the default.
+- Keep buckets private and authorize downloads through the backend before redirecting S3-backed requests to a 60-second presigned URL.
+- Persist each file's storage driver, optional bucket, and complete object key so local and S3 historical files remain accessible after the active upload driver changes.
+- Provision production buckets outside the application; permit automatic bucket creation only through explicit development/test configuration.
+- Invalidate file metadata and references before asynchronous physical content deletion, record content-deletion completion, and compensate storage writes when metadata persistence fails.
+- Share validated `FILE_STORAGE_DRIVER` and `S3_*` configuration between API and worker runtimes, with either explicit credentials or the AWS SDK default credential chain.
+- Use pinned `rustfs/rustfs:1.0.0-beta.8` only as the optional Docker-backed S3 compatibility-test backend. Do not use RustFS-specific APIs or select it as the production provider.
+- Keep ordinary tests and push CI independent of external object storage; expose a local integration command and manually triggered workflow for the real RustFS compatibility suite.
+
+## S3-Compatible File Storage Implementation Progress
+
+The confirmed ADR contract is now implemented:
+
+- Added an AWS SDK v3 S3-compatible adapter with custom endpoint, path-style, explicit/default-chain credentials, bucket health validation, explicit development/test bucket creation, put/get/delete, and private presigned GET support.
+- Added shared API/worker configuration and mixed local/S3 routing based on each persisted Object Location. `FILE_STORAGE_DRIVER` controls new writes only.
+- Added `storage_bucket` and `content_deleted_at` to SQLite/PostgreSQL schemas and migrations, with idempotent migration tracking.
+- Added authenticated S3 download/preview redirects, 15-900 second TTL validation with a 60-second default, metadata-failure upload compensation, and asynchronous physical deletion with later retry after failures.
+- Updated import/export result storage and worker cleanup to route through recorded driver, bucket, and complete key.
+- Added unit, API, worker, SQLite, PostgreSQL persistence, and real RustFS compatibility coverage.
+- Added `scripts/rustfs-dev.ps1`, `pnpm test:s3-integration`, and a manually triggered `S3 Compatibility` workflow using `rustfs/rustfs:1.0.0-beta.8` at a verified 256 MB limit.
+
+Production object-storage provider selection and target-environment deployment acceptance remain pending until that environment is ready. Direct browser uploads, multipart upload, automatic historical migration, and an S3 configuration UI remain outside this goal.

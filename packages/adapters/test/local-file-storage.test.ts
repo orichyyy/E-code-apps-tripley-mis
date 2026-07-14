@@ -21,9 +21,11 @@ describe("createLocalFileStorageAdapter", () => {
     const body = new TextEncoder().encode("file content");
 
     const stored = await storage.put("exports/result.csv", body, "text/csv");
-    const read = await storage.get("exports/result.csv");
+    const read = await storage.get(stored);
 
     expect(stored).toEqual({
+      storageDriver: "local",
+      storageBucket: null,
       objectKey: "exports/result.csv",
       contentType: "text/csv",
       sizeBytes: body.byteLength,

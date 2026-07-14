@@ -13,7 +13,7 @@ This checklist covers the supported v1 deployment shape:
 - Worker service from `apps/worker`.
 - Database-backed backend-core, infrastructure, system-management, file, notification, scheduler, and import/export persistence.
 
-It does not require Redis, RabbitMQ, S3-compatible storage, SMS sending, or real outbound webhook delivery. Those integrations remain optional or reserved unless explicitly implemented and configured by a future goal.
+It does not require Redis, RabbitMQ, S3-compatible storage, SMS sending, or real outbound webhook delivery. S3-compatible support is implemented but remains optional, and production-provider acceptance is pending until a target environment is ready.
 
 ## Pre-Deployment Gate
 
@@ -86,7 +86,22 @@ SMTP_FROM=no-reply@example.com
 
 For local filesystem storage, `FILE_STORAGE_ROOT` must point to a writable path.
 
-In multi-server deployments, this path must be a shared mounted directory for every API and worker instance. Local storage writes use a temp-file-then-rename flow for atomic compatibility. S3-compatible storage remains the recommended production direction once its concrete client and runtime configuration contract are implemented.
+In multi-server deployments, this path must be a shared mounted directory for every API and worker instance. Local storage writes use a temp-file-then-rename flow for atomic compatibility.
+
+When a target environment explicitly selects S3-compatible storage, record the provider and configure a private, externally provisioned bucket. API and worker must share endpoint, region, bucket, prefix, path-style, and credential-chain settings. Keep `S3_AUTO_CREATE_BUCKET=false` in production. This checklist does not claim that any production provider has been selected or accepted.
+
+```bash
+FILE_STORAGE_DRIVER=s3
+S3_ENDPOINT=https://provider-endpoint.example
+S3_REGION=<provider-region>
+S3_BUCKET=<private-preprovisioned-bucket>
+S3_OBJECT_PREFIX=web-admin-base/
+S3_FORCE_PATH_STYLE=false
+S3_AUTO_CREATE_BUCKET=false
+S3_PRESIGNED_URL_TTL_SECONDS=60
+```
+
+Use `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, and optional `S3_SESSION_TOKEN` only when the deployment does not use the AWS SDK default credential chain.
 
 Acceptance checks:
 
@@ -193,7 +208,7 @@ Account:
 
 ## Worker Acceptance
 
-Confirm the worker is running with the same `DATABASE_DIALECT`, `DATABASE_URL`, and `FILE_STORAGE_ROOT` as the API service.
+Confirm the worker is running with the same database and file-storage configuration as the API service. For local storage this includes `FILE_STORAGE_ROOT`; for S3 it includes all `S3_*` location settings.
 
 Acceptance checks:
 
@@ -214,6 +229,7 @@ If a job does not move, inspect `queue_jobs.status`, `attempt`, `max_attempts`, 
 - API permission manifest entries exist for implemented private endpoints.
 - Hono RPC internal frontend typing remains the frontend API boundary; OpenAPI is documentation.
 - Redis, RabbitMQ, S3-compatible storage, SMS sending, and real outbound webhook delivery are not required for base deployment acceptance.
+- If S3 is selected, verify private bucket access and authenticated redirect behavior in the target environment before recording provider acceptance.
 
 ## Rollback And Troubleshooting Entry Points
 

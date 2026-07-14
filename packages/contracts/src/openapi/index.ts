@@ -72,7 +72,7 @@ function createOperation(entry: BaseApiPermissionManifestEntry): OpenApiOperatio
     ...(entry.public ? {} : { security: [{ bearerAuth: [] }] }),
     ...(parameters.length === 0 ? {} : { parameters }),
     ...(requestSchemaName ? { requestBody: createRequestBody(requestSchemaName) } : {}),
-    responses: createStandardResponses(responseSchemaName),
+    responses: createResponses(entry.code, responseSchemaName),
     "x-permission-code": entry.code,
     ...(entry.requiredPermission ? { "x-required-permission": entry.requiredPermission } : {}),
     "x-log-level": entry.logLevel,
@@ -129,6 +129,34 @@ function createStandardResponses(responseSchemaName?: string): OpenApiOperation[
     "500": {
       description: "System error",
       content: { "application/json": { schema: errorSchema } },
+    },
+  };
+}
+
+function createResponses(
+  operationCode: string,
+  responseSchemaName?: string,
+): OpenApiOperation["responses"] {
+  const standard = createStandardResponses(responseSchemaName);
+  if (operationCode !== "api.files.download" && operationCode !== "api.files.preview") {
+    return standard;
+  }
+  return {
+    ...standard,
+    "200": {
+      description: "Authenticated local file content",
+      content: {
+        "application/octet-stream": { schema: { type: "string", format: "binary" } },
+      },
+    },
+    "302": {
+      description: "Short-lived private S3 download URL",
+      headers: {
+        Location: {
+          description: "Presigned S3-compatible URL; never persisted in file metadata.",
+          schema: { type: "string", format: "uri" },
+        },
+      },
     },
   };
 }

@@ -62,23 +62,25 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
     context.json({ data: await services.getFile(context.req.param("id")) }),
   );
   routes.get("/files/:id/download", async (context) => {
-    const { body, file } = await services.getFileContent(context.req.param("id"), "download");
-    return new Response(toArrayBuffer(body), {
+    const result = await services.getFileContent(context.req.param("id"), "download");
+    if (result.kind === "redirect") return privateRedirect(result.url);
+    return new Response(toArrayBuffer(result.body), {
       status: 200,
       headers: {
-        "content-type": String(file.contentType),
-        "content-length": String(body.byteLength),
-        "content-disposition": toContentDisposition(String(file.originalName)),
+        "content-type": String(result.file.contentType),
+        "content-length": String(result.body.byteLength),
+        "content-disposition": toContentDisposition(String(result.file.originalName)),
       },
     });
   });
   routes.get("/files/:id/preview", async (context) => {
-    const { body, file } = await services.getFileContent(context.req.param("id"), "preview");
-    return new Response(toArrayBuffer(body), {
+    const result = await services.getFileContent(context.req.param("id"), "preview");
+    if (result.kind === "redirect") return privateRedirect(result.url);
+    return new Response(toArrayBuffer(result.body), {
       status: 200,
       headers: {
-        "content-type": String(file.contentType),
-        "content-length": String(body.byteLength),
+        "content-type": String(result.file.contentType),
+        "content-length": String(result.body.byteLength),
       },
     });
   });
@@ -188,6 +190,13 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
   });
 
   return routes;
+}
+
+function privateRedirect(url: string): Response {
+  return new Response(null, {
+    status: 302,
+    headers: { location: url, "cache-control": "private, no-store" },
+  });
 }
 
 function actorId(context: {

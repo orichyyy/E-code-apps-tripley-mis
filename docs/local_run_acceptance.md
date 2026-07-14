@@ -6,7 +6,7 @@ This runbook verifies that a developer can run the Web Admin Base System locally
 
 This checklist covers the local SQLite demo path, the repeatable smoke script, and a manual browser walkthrough of implemented base pages.
 
-It does not validate Redis, RabbitMQ, S3-compatible storage, SMS sending, or real outbound webhook delivery. Those integrations remain optional or reserved unless explicitly configured by a future goal.
+The default checklist does not require Redis, RabbitMQ, S3-compatible storage, SMS sending, or real outbound webhook delivery. Optional S3 compatibility can be verified separately below.
 
 ## Prerequisites
 
@@ -129,6 +129,13 @@ Files and notifications:
 - Open In-app notifications and confirm unread/read/archive/delete behavior is reachable for current-user notifications.
 - Open Notification templates and confirm template list/create/edit behavior is reachable.
 - Open Webhooks and confirm list/create/edit/enable/disable behavior is reachable. Persisted webhook secrets must not be displayed as raw values.
+
+Optional S3 compatibility:
+
+- Start `scripts/rustfs-dev.ps1` and run `pnpm test:s3-integration`.
+- Confirm the container binds only `127.0.0.1:9000`, has no Console port, and uses the 256 MB memory limit.
+- Confirm the test creates its bucket explicitly, persists a prefixed object key, reads through AWS SDK v3, follows a 60-second presigned GET, and deletes the object.
+- Stop the disposable backend with `scripts/rustfs-dev.ps1 -Action Stop`.
 
 Account:
 

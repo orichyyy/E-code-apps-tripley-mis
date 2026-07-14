@@ -93,7 +93,7 @@ The repository includes `.github/workflows/verify.yml` for GitHub Actions. It st
 pnpm verify
 ```
 
-The CI path intentionally uses the same verification command as local development. Optional integrations such as Redis, RabbitMQ, S3-compatible storage, SMTP, SMS, and outbound webhook delivery stay disabled unless a future confirmed goal adds dedicated coverage for them.
+The CI path intentionally uses the same verification command as local development. Optional external integrations stay disabled in normal verification. S3 compatibility has a separate manually triggered workflow.
 
 ## Optional Redis and RabbitMQ Adapter Tests
 
@@ -125,6 +125,32 @@ Stop them when not needed:
 
 ```powershell
 docker stop tripley-redis-dev tripley-rabbitmq-dev
+```
+
+## Optional S3-Compatible Storage Test
+
+Start the pinned, disposable RustFS compatibility backend and run the AWS SDK v3 suite:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/rustfs-dev.ps1
+pnpm test:s3-integration
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/rustfs-dev.ps1 -Action Stop
+```
+
+The container binds only `127.0.0.1:9000`, disables the Console, uses disposable development credentials and an isolated volume, and starts with a 256 MB memory limit. The script removes the volume on stop unless `-PreserveData` is supplied for diagnosis.
+
+To run API and worker with S3 as the active driver, set `FILE_STORAGE_DRIVER=s3`, `S3_REGION`, `S3_BUCKET`, and any required endpoint/credentials. `S3_AUTO_CREATE_BUCKET=true` is allowed only for explicit development/test use. Local remains the default, and existing files continue to use their recorded driver after switching.
+
+```powershell
+$env:FILE_STORAGE_DRIVER = "s3"
+$env:S3_ENDPOINT = "http://127.0.0.1:9000"
+$env:S3_REGION = "us-east-1"
+$env:S3_BUCKET = "web-admin-base-dev"
+$env:S3_OBJECT_PREFIX = "development/"
+$env:S3_FORCE_PATH_STYLE = "true"
+$env:S3_AUTO_CREATE_BUCKET = "true"
+$env:S3_ACCESS_KEY_ID = "webadmin"
+$env:S3_SECRET_ACCESS_KEY = "webadmin-development-secret"
 ```
 
 ## Local Acceptance

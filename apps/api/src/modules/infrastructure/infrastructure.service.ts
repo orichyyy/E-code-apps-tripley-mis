@@ -18,13 +18,9 @@ import type {
 
 import { createKnownError } from "../../core/errors/error-codes";
 import type { NotificationTemplateRecord } from "./email-notification-sender";
-import {
-  createObjectKey,
-  isPreviewableImage,
-  validateUploadInput,
-  type FileUploadInput,
-} from "./file-management";
+import type { FileUploadInput } from "./file-management";
 import type { EnqueueInAppNotificationInput } from "./in-app-notification-dispatcher";
+import { InfrastructureFileService } from "./infrastructure-file.service";
 import { InfrastructureNotificationService } from "./infrastructure-notification.service";
 import { InfrastructureRepository } from "./infrastructure.repository";
 import {
@@ -32,6 +28,7 @@ import {
   createDefaultNotificationChannel,
   createDefaultQueue,
   readMaxFileSizeBytes,
+  readPresignedUrlTtlSeconds,
   resolveInfrastructureServiceOptions,
   type InfrastructureServiceOptions,
 } from "./infrastructure-service-options";
@@ -39,7 +36,6 @@ import type { LogType, ScheduledTaskInput } from "./infrastructure.types";
 
 export class InfrastructureServices {
   private readonly memory = {
-    files: [] as Array<Record<string, unknown> & { id: string }>,
     importExportTasks: [] as Array<
       Record<string, unknown> & { id: string; resourceType: string; taskType: string }
     >,
@@ -54,15 +50,24 @@ export class InfrastructureServices {
   };
   private sequence = 1;
   private readonly notificationService: InfrastructureNotificationService;
+  private readonly fileService: InfrastructureFileService;
 
   constructor(
     private readonly repository?: InfrastructureRepository,
-    private readonly storage: FileStorageAdapter = createDefaultFileStorage(),
-    private readonly maxFileSizeBytes = readMaxFileSizeBytes(),
+    storage: FileStorageAdapter = createDefaultFileStorage(),
+    maxFileSizeBytes = readMaxFileSizeBytes(),
+    presignedUrlTtlSeconds = readPresignedUrlTtlSeconds(),
     notificationChannel: NotificationChannelAdapter = createDefaultNotificationChannel(),
     queue: QueueAdapter = createDefaultQueue(),
     organizationUserResolver?: (organizationId: string) => Promise<string[]>,
   ) {
+    this.fileService = new InfrastructureFileService({
+      repository,
+      storage,
+      maxFileSizeBytes,
+      presignedUrlTtlSeconds,
+      nextId: () => this.nextId(),
+    });
     this.notificationService = new InfrastructureNotificationService({
       repository,
       memory: {
@@ -84,6 +89,7 @@ export class InfrastructureServices {
       undefined,
       resolved.storage,
       resolved.maxFileSizeBytes,
+      resolved.presignedUrlTtlSeconds,
       resolved.notificationChannel,
       resolved.queue,
       resolved.organizationUserResolver,
@@ -100,6 +106,7 @@ export class InfrastructureServices {
       repository,
       resolved.storage,
       resolved.maxFileSizeBytes,
+      resolved.presignedUrlTtlSeconds,
       resolved.notificationChannel,
       queue,
       resolved.organizationUserResolver,
@@ -125,71 +132,27 @@ export class InfrastructureServices {
   }
 
   listFiles() {
-    return this.repository?.listFiles() ?? Promise.resolve(this.memory.files);
+    return this.fileService.listFiles();
   }
 
   getFile(id: string) {
-    return (
-      this.repository?.getFile(id) ??
-      Promise.resolve(this.memory.files.find((file) => file.id === id) ?? null)
-    );
+    return this.fileService.getFile(id);
   }
 
-  async uploadFile(input: FileUploadInput) {
-    const normalized = validateUploadInput(input, this.maxFileSizeBytes);
-    const objectKey = createObjectKey(normalized.extension);
-    const stored = await this.storage.put(objectKey, input.body, normalized.contentType);
-    const metadata = {
-      objectKey: stored.objectKey,
-      originalName: normalized.originalName,
-      contentType: stored.contentType,
-      extension: normalized.extension,
-      sizeBytes: stored.sizeBytes,
-      storageDriver: "local",
-      actorId: input.actorId,
-    };
-    if (this.repository) return this.repository.createFile(metadata);
-    const now = new Date().toISOString();
-    const file = {
-      id: this.nextId(),
-      ...metadata,
-      status: "active",
-      referenced: false,
-      isDeleted: false,
-      createdAt: now,
-      updatedAt: now,
-    };
-    this.memory.files.unshift(file);
-    return file;
+  uploadFile(input: FileUploadInput) {
+    return this.fileService.uploadFile(input);
   }
 
-  async getFileContent(id: string, mode: "download" | "preview") {
-    const file = await this.getFile(id);
-    if (!file || file.isDeleted || file.status === "invalid")
-      throw createKnownError("FILE_NOT_FOUND");
-    if (mode === "preview" && !isPreviewableImage(String(file.contentType))) {
-      throw createKnownError("FILE_PREVIEW_NOT_SUPPORTED");
-    }
-    const body = await this.storage.get(String(file.objectKey));
-    if (!body) throw createKnownError("FILE_NOT_FOUND");
-    return { file, body };
+  getFileContent(id: string, mode: "download" | "preview") {
+    return this.fileService.getFileContent(id, mode);
   }
 
   deleteFile(id: string, actorId: string | null) {
-    if (this.repository) return this.repository.deleteFile(id, actorId);
-    const file = this.memory.files.find((item) => item.id === id);
-    if (!file) return Promise.resolve(null);
-    Object.assign(file, {
-      status: "invalid",
-      isDeleted: true,
-      deletedBy: actorId,
-      deletedAt: new Date().toISOString(),
-    });
-    return Promise.resolve(file);
+    return this.fileService.deleteFile(id, actorId);
   }
 
   listFileReferences(id: string) {
-    return this.repository?.listFileReferences(id) ?? Promise.resolve([]);
+    return this.fileService.listFileReferences(id);
   }
 
   listNotifications(userId: string) {

@@ -1,6 +1,7 @@
 import {
   createDatabaseJobSchedulerAdapter,
   createDatabaseQueueAdapter,
+  createConfiguredFileStorageAdapter,
   type DatabaseQueueAdapter,
   createRabbitMqQueueAdapter,
   type DatabaseAdapterExecutor,
@@ -45,6 +46,11 @@ export async function createConfiguredWorkerApplication(
   const executor = options.executor ?? createWorkerDatabaseExecutor(config.database);
   const ownsExecutor = !options.executor;
   const durableQueue = createDatabaseQueueAdapter(executor, { workerId: config.workerName });
+  const storage = options.storage ?? (await createConfiguredFileStorageAdapter(config.storage));
+  const storageHealth = await storage.healthCheck();
+  if (!storageHealth.ok) {
+    throw new Error(`File storage is unavailable: ${storageHealth.message ?? "unknown"}`);
+  }
   const queue =
     config.adapters.queueDriver === "rabbitmq"
       ? await createRabbitMqQueueAdapter({
@@ -52,14 +58,10 @@ export async function createConfiguredWorkerApplication(
           queuePrefix: "web-admin-base.queue",
         })
       : durableQueue;
-  return createWorkerApplicationWithQueue(
-    config,
-    executor,
-    ownsExecutor,
-    queue,
-    durableQueue,
-    options,
-  );
+  return createWorkerApplicationWithQueue(config, executor, ownsExecutor, queue, durableQueue, {
+    ...options,
+    storage,
+  });
 }
 
 function createWorkerApplicationWithQueue(

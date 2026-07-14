@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { extname } from "node:path";
 
+import type { FileObjectLocation, FileStorageDriver } from "@web-admin-base/adapters";
+
 import { createKnownError } from "../../core/errors/error-codes";
 
 export const defaultMaxFileSizeBytes = 50 * 1024 * 1024;
@@ -30,14 +32,34 @@ export type FileUploadInput = {
 };
 
 export type StoredFileMetadataInput = {
+  storageDriver: "local" | "s3";
+  storageBucket: string | null;
   objectKey: string;
   originalName: string;
   contentType: string;
   extension: string;
   sizeBytes: number;
-  storageDriver: string;
   actorId: string | null;
 };
+
+export type ManagedFileRecord = FileObjectLocation & {
+  id: string;
+  originalName: string;
+  contentType: string;
+  extension: string;
+  sizeBytes: number;
+  status: string;
+  referenced: boolean;
+  isDeleted: boolean;
+  contentDeletedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function parseStorageDriver(value: string): FileStorageDriver {
+  if (value === "local" || value === "s3") return value;
+  throw new Error(`Unsupported file storage driver: ${value}.`);
+}
 
 export function validateUploadInput(
   input: FileUploadInput,

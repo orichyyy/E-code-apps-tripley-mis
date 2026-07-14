@@ -337,7 +337,7 @@ describe("backend core schema", () => {
       ["queueJobs", ["queue_jobs_status_available_idx"]],
       ["eventOutbox", ["event_outbox_status_next_run_idx"]],
       ["scheduledJobs", ["scheduled_jobs_code_unique", "scheduled_jobs_next_run_idx"]],
-      ["fileObjects", ["file_objects_object_key_unique"]],
+      ["fileObjects", ["file_objects_content_cleanup_idx", "file_objects_object_key_unique"]],
       ["fileReferences", ["file_references_file_idx", "file_references_resource_idx"]],
       ["notifications", ["notifications_user_status_idx"]],
       ["notificationTemplates", ["notification_templates_code_locale_unique"]],

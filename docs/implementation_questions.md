@@ -68,7 +68,7 @@ No unresolved backend-core blockers remain from the previously listed questions.
 
 15. **S3-compatible storage client and configuration contract**
 
-    Confirmed: v1 provides local filesystem storage as the runnable default and keeps S3-compatible storage behind an interface/configuration placeholder until concrete client package and configuration keys are confirmed.
+    Confirmed: v1 keeps local filesystem storage as the runnable default and implements optional S3-compatible storage with AWS SDK v3. Production buckets must be provisioned outside the application; explicit development/test configuration may enable automatic bucket creation. Buckets remain private, and authenticated S3-backed downloads use a 60-second presigned URL. The API and worker share validated `FILE_STORAGE_DRIVER` and `S3_*` configuration, support either complete explicit credentials or the AWS SDK default credential chain, and constrain the configurable presigned URL lifetime to 15-900 seconds with a 60-second default. The pinned official `rustfs/rustfs:1.0.0-beta.8` image is the optional Docker-backed S3 compatibility test environment; RustFS-specific APIs are prohibited, and no production object-storage provider is selected by this decision.
 
 16. **SMTP and webhook delivery semantics**
 

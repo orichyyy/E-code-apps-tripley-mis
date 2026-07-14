@@ -21,11 +21,12 @@ Implemented v1 drivers include:
 - optional Redis cache and rate-limit drivers
 - optional RabbitMQ queue and event-bus drivers
 - local filesystem storage with temp-file-then-rename writes
+- optional AWS SDK v3 S3-compatible storage with custom endpoints, path-style requests, private presigned downloads, and mixed local/S3 object routing
 - optional SMTP notification channel over Node.js built-ins, enabled only through explicit SMTP configuration
 
 ## Rules
 
-- Keep Redis, RabbitMQ, S3, webhook delivery, SMS, and other external drivers optional unless explicitly confirmed.
+- Keep Redis, RabbitMQ, S3, webhook delivery, SMS, and other external drivers optional unless explicitly configured.
 - Do not bypass adapter interfaces from API or worker modules.
 - Keep driver configuration explicit and validated.
 - Add contract tests for each new driver.
@@ -54,3 +55,19 @@ Runtime opt-in is controlled by environment variables:
 - `RABBITMQ_URL`
 
 The current worker keeps the database durable queue/scheduler active even when `QUEUE_DRIVER=rabbitmq`, because existing scheduled-task and import/export flows are database-backed.
+
+## Optional S3-Compatible Storage
+
+`FileStorageAdapter` stores and consumes a complete Object Location: `storageDriver`, nullable `storageBucket`, and complete `objectKey`. New writes use the configured active driver; reads, previews, deletes, cleanup, and import/export access route through each persisted location. A new driver must preserve this behavior and must not infer a location from the current active driver.
+
+The S3 implementation uses `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner`. It supports explicit credentials or the AWS SDK default credential chain, custom endpoints, path-style requests, an optional normalized key prefix, `HeadBucket` validation, and explicit development/test bucket creation. Production buckets must be provisioned externally.
+
+Run the generic compatibility suite against the pinned RustFS test backend:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/rustfs-dev.ps1
+pnpm test:s3-integration
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/rustfs-dev.ps1 -Action Stop
+```
+
+Application code uses only the generic S3 protocol. RustFS is a compatibility-test backend, not a production provider selection.

@@ -52,6 +52,14 @@ If a scheduled task runs too often or not at all, inspect `scheduled_jobs.cron_e
 
 If CSV log exports remain pending, confirm the worker is running with the same `DATABASE_URL` and `FILE_STORAGE_ROOT` as the API process. The base worker catalog processes `import_export_tasks` whose `resource_type` is `logs:<logType>` and writes the generated file metadata to `file_objects`.
 
+## S3-Compatible File Access
+
+- Startup `HeadBucket` failures: verify endpoint, region, bucket, path-style setting, network access, and credentials. Production startup does not create missing buckets.
+- Existing S3 files fail after switching uploads back to local: keep the S3 configuration available so the router can resolve recorded S3 locations; changing `FILE_STORAGE_DRIVER` affects new uploads only.
+- A download returns 401/403/404 without a presigned redirect: authentication, authorization, and file-state checks intentionally run before signing.
+- Cleanup repeatedly reports a file: inspect `file_objects.storage_driver`, `storage_bucket`, `object_key`, and `content_deleted_at`. Failed physical deletions remain null and retry on a later cleanup run.
+- RustFS compatibility failure: run `scripts/rustfs-dev.ps1 -Action Status`, inspect `docker logs web-admin-base-rustfs`, and rerun `pnpm test:s3-integration`. Do not expose or log presigned query strings while diagnosing.
+
 ## Infrastructure API Returns Placeholder Data In The Frontend
 
 The frontend calls real APIs for modules whose backend routes are implemented. It falls back to typed placeholder data when:

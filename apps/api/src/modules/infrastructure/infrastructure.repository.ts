@@ -13,7 +13,11 @@ import {
   createPostgresqlInfrastructureExecutor,
   createSqliteInfrastructureExecutor,
 } from "./infrastructure.executor";
-import type { StoredFileMetadataInput } from "./file-management";
+import {
+  parseStorageDriver,
+  type ManagedFileRecord,
+  type StoredFileMetadataInput,
+} from "./file-management";
 import type { InAppNotificationRecordInput } from "./in-app-notification-dispatcher";
 import type { LogType, ScheduledTaskInput } from "./infrastructure.types";
 
@@ -59,7 +63,7 @@ export class InfrastructureRepository {
 
   async listFiles() {
     const rows = await this.executor.all(
-      `SELECT id, object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at
+      `SELECT id, object_key, storage_bucket, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, content_deleted_at, created_at, updated_at
        FROM file_objects ORDER BY id DESC LIMIT 100`,
     );
     return rows.map(toFileRecord);
@@ -67,7 +71,7 @@ export class InfrastructureRepository {
 
   async getFile(id: string) {
     const rows = await this.executor.all(
-      `SELECT id, object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at
+      `SELECT id, object_key, storage_bucket, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, content_deleted_at, created_at, updated_at
        FROM file_objects WHERE id = ${this.p(1)} LIMIT 1`,
       [id],
     );
@@ -77,10 +81,11 @@ export class InfrastructureRepository {
   async createFile(input: StoredFileMetadataInput) {
     const now = nowIso();
     await this.executor.run(
-      `INSERT INTO file_objects (object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at, created_by, updated_by)
-       VALUES (${this.p(1)}, ${this.p(2)}, ${this.p(3)}, ${this.p(4)}, ${this.p(5)}, ${this.p(6)}, 'active', ${this.bool(false)}, ${this.bool(false)}, ${this.p(7)}, ${this.p(8)}, ${this.p(9)}, ${this.p(10)})`,
+      `INSERT INTO file_objects (object_key, storage_bucket, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at, created_by, updated_by)
+       VALUES (${this.p(1)}, ${this.p(2)}, ${this.p(3)}, ${this.p(4)}, ${this.p(5)}, ${this.p(6)}, ${this.p(7)}, 'active', ${this.bool(false)}, ${this.bool(false)}, ${this.p(8)}, ${this.p(9)}, ${this.p(10)}, ${this.p(11)})`,
       [
         input.objectKey,
+        input.storageBucket,
         input.originalName,
         input.contentType,
         input.extension,
@@ -93,7 +98,7 @@ export class InfrastructureRepository {
       ],
     );
     const rows = await this.executor.all(
-      `SELECT id, object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at
+      `SELECT id, object_key, storage_bucket, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, content_deleted_at, created_at, updated_at
        FROM file_objects WHERE object_key = ${this.p(1)} LIMIT 1`,
       [input.objectKey],
     );
@@ -455,7 +460,7 @@ function toScheduledTask(row: DatabaseRow) {
   };
 }
 
-function toFileRecord(row: DatabaseRow) {
+function toFileRecord(row: DatabaseRow): ManagedFileRecord {
   return {
     id: String(row.id),
     objectKey: String(row.object_key),
@@ -463,10 +468,12 @@ function toFileRecord(row: DatabaseRow) {
     contentType: String(row.content_type),
     extension: String(row.extension),
     sizeBytes: Number(row.size_bytes),
-    storageDriver: String(row.storage_driver),
+    storageDriver: parseStorageDriver(String(row.storage_driver)),
+    storageBucket: nullableString(row.storage_bucket),
     status: String(row.status),
     referenced: Boolean(row.referenced),
     isDeleted: Boolean(row.is_deleted),
+    contentDeletedAt: nullableIso(row.content_deleted_at),
     createdAt: iso(row.created_at),
     updatedAt: iso(row.updated_at),
   };

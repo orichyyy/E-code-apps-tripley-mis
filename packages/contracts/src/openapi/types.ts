@@ -34,11 +34,8 @@ export type OpenApiOperation = {
     string,
     {
       description: string;
-      content?: {
-        "application/json": {
-          schema: OpenApiSchema;
-        };
-      };
+      headers?: Record<string, { description: string; schema: OpenApiSchema }>;
+      content?: Record<string, { schema: OpenApiSchema }>;
     }
   >;
   "x-permission-code": string;

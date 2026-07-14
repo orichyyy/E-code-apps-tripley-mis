@@ -749,6 +749,8 @@ export const fileObjects = sqliteTable(
     extension: text("extension").notNull(),
     sizeBytes: integer("size_bytes").notNull(),
     storageDriver: text("storage_driver").notNull(),
+    storageBucket: text("storage_bucket"),
+    contentDeletedAt: text("content_deleted_at"),
     status: text("status", { enum: ["active", "invalid"] })
       .notNull()
       .default("active"),
@@ -760,6 +762,11 @@ export const fileObjects = sqliteTable(
   },
   (table) => ({
     objectKeyUnique: uniqueIndex("file_objects_object_key_unique").on(table.objectKey),
+    contentCleanupIndex: index("file_objects_content_cleanup_idx").on(
+      table.status,
+      table.isDeleted,
+      table.contentDeletedAt,
+    ),
     statusCheck: check("file_objects_status_check", sql`${table.status} IN ('active', 'invalid')`),
   }),
 );

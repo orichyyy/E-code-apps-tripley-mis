@@ -30,9 +30,11 @@ Serve the built SPA from `apps/web/dist` with the deployment platform or a stati
 
 Required production environment variables include `BACKEND_CORE_STORE=database`, `DATABASE_DIALECT=postgresql`, `DATABASE_URL`, `JWT_SECRET`, and a positive `WORKER_POLL_INTERVAL_MS` for continuous worker polling.
 
-File upload/download works with local filesystem storage through `FILE_STORAGE_ROOT`. In multi-server deployments this path must be a shared mounted directory if local storage is used; S3-compatible storage remains the recommended production direction once its concrete client/configuration contract is implemented.
+Local filesystem storage remains the default through `FILE_STORAGE_ROOT`; multi-server local deployments require a shared mounted directory. Optional S3-compatible storage is selected with `FILE_STORAGE_DRIVER=s3` and uses private buckets, backend authorization, and short-lived presigned redirects. API and worker must receive identical S3 location settings. Production buckets are provisioned externally, so `S3_AUTO_CREATE_BUCKET` must remain false in production.
 
-SMTP email sending is optional and disabled by default. To enable it, configure `SMTP_ENABLED=true`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, optional `SMTP_USERNAME`/`SMTP_PASSWORD`, and `SMTP_FROM`. Redis, RabbitMQ, S3-compatible storage, and real outbound webhook delivery integrations remain optional placeholders unless explicitly configured in a future slice.
+SMTP email sending is optional and disabled by default. Redis, RabbitMQ, and S3-compatible storage are also optional runtime integrations. Real outbound webhook delivery remains reserved.
+
+S3 runtime variables are `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_OBJECT_PREFIX`, `S3_FORCE_PATH_STYLE`, `S3_PRESIGNED_URL_TTL_SECONDS`, and optional explicit credential variables. The TTL is restricted to 15-900 seconds. The AWS SDK default credential chain is used when explicit credentials are omitted. A production object-storage provider has not been selected or accepted by this repository.
 
 Use `docs/deployment_acceptance.md` for the deployment pre-checks, production environment checklist, post-deployment browser walkthrough, worker acceptance checks, and rollback/troubleshooting entry points.
 

@@ -21,10 +21,33 @@ export async function runPostgresqlMigrations(
 
 export async function runPostgresqlMigrationsWithPool(pool: Pool): Promise<string[]> {
   const applied: string[] = [];
+  await pool.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
+    name TEXT PRIMARY KEY,
+    applied_at TIMESTAMPTZ NOT NULL
+  )`);
 
   for (const migration of readMigrationFiles("postgresql")) {
-    await pool.query(migration.sql);
-    applied.push(migration.name);
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const existing = await client.query("SELECT name FROM schema_migrations WHERE name = $1", [
+        migration.name,
+      ]);
+      if (existing.rowCount === 0) {
+        await client.query(migration.sql);
+        await client.query("INSERT INTO schema_migrations (name, applied_at) VALUES ($1, $2)", [
+          migration.name,
+          new Date().toISOString(),
+        ]);
+        applied.push(migration.name);
+      }
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   return applied;

@@ -1,7 +1,8 @@
-import type { DatabaseAdapterExecutor } from "@web-admin-base/adapters";
+import type { DatabaseAdapterExecutor, FileStorageAdapter } from "@web-admin-base/adapters";
 import {
   createInMemoryNotificationChannelAdapter,
   createLocalFileStorageAdapter,
+  createRoutedFileStorageAdapter,
 } from "@web-admin-base/adapters";
 import { runPostgresqlMigrations } from "@web-admin-base/db";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -24,16 +25,22 @@ describe("database-backed infrastructure routes", () => {
     const executor = createPostgresqlInfrastructureExecutor(url);
     const root = await mkdtemp(join(tmpdir(), "web-admin-files-db-"));
     const notificationChannel = createInMemoryNotificationChannelAdapter();
+    const localStorage = createLocalFileStorageAdapter({ rootDirectory: root });
+    const s3Storage = createTestS3Storage();
     const infrastructureServices = InfrastructureServices.database(
       new InfrastructureRepository(executor),
       {
-        storage: createLocalFileStorageAdapter({ rootDirectory: root }),
+        storage: createRoutedFileStorageAdapter({
+          activeDriver: "local",
+          adapters: [localStorage, s3Storage],
+        }),
         notificationChannel,
       },
     );
+    const backendCoreServices = createInMemoryBackendCoreServices();
     const app = createApp({
       infrastructureServices,
-      backendCoreServices: createInMemoryBackendCoreServices(),
+      backendCoreServices,
     });
 
     try {
@@ -108,7 +115,7 @@ describe("database-backed infrastructure routes", () => {
       });
       const uploadBody = await uploadResponse.json();
       const storedFiles = await executor.all(
-        "SELECT original_name, content_type FROM file_objects WHERE id = $1",
+        "SELECT original_name, content_type, storage_driver, storage_bucket, content_deleted_at FROM file_objects WHERE id = $1",
         [uploadBody.data.id],
       );
       const downloadResponse = await app.request(`/api/files/${uploadBody.data.id}/download`, {
@@ -117,9 +124,45 @@ describe("database-backed infrastructure routes", () => {
 
       expect(uploadResponse.status).toBe(201);
       expect(storedFiles).toEqual([
-        expect.objectContaining({ original_name: "db-file.csv", content_type: "text/csv" }),
+        expect.objectContaining({
+          original_name: "db-file.csv",
+          content_type: "text/csv",
+          storage_driver: "local",
+          storage_bucket: null,
+          content_deleted_at: null,
+        }),
       ]);
       await expect(downloadResponse.text()).resolves.toBe("db-file");
+
+      const s3Services = InfrastructureServices.database(new InfrastructureRepository(executor), {
+        storage: createRoutedFileStorageAdapter({
+          activeDriver: "s3",
+          adapters: [localStorage, s3Storage],
+        }),
+      });
+      const s3App = createApp({ infrastructureServices: s3Services, backendCoreServices });
+      const s3Form = new FormData();
+      s3Form.set("file", new File(["s3-file"], "s3-file.csv", { type: "text/csv" }));
+      const s3Upload = await s3App.request("/api/files/upload", {
+        method: "POST",
+        headers,
+        body: s3Form,
+      });
+      const s3Body = await s3Upload.json();
+      const persistedS3 = await executor.all(
+        "SELECT storage_driver, storage_bucket, object_key FROM file_objects WHERE id = $1",
+        [s3Body.data.id],
+      );
+      const historicalDownload = await app.request(`/api/files/${s3Body.data.id}/download`, {
+        headers,
+      });
+
+      expect(s3Upload.status).toBe(201);
+      expect(persistedS3).toEqual([
+        expect.objectContaining({ storage_driver: "s3", storage_bucket: "admin-files" }),
+      ]);
+      expect(historicalDownload.status).toBe(302);
+      expect(historicalDownload.headers.get("location")).toContain("storage.test/admin-files/");
     } finally {
       await clearInfrastructureTables(executor);
       await infrastructureServices.close();
@@ -142,6 +185,32 @@ async function initialize(app: ReturnType<typeof createApp>): Promise<void> {
     }),
   });
   expect(response.status).toBe(201);
+}
+
+function createTestS3Storage(): FileStorageAdapter {
+  const objects = new Map<string, Uint8Array>();
+  return {
+    storageDriver: "s3",
+    healthCheck: async () => ({ ok: true }),
+    put: async (objectKey, body, contentType) => {
+      objects.set(objectKey, body.slice());
+      return {
+        storageDriver: "s3",
+        storageBucket: "admin-files",
+        objectKey,
+        contentType,
+        sizeBytes: body.byteLength,
+      };
+    },
+    get: async (location) => objects.get(location.objectKey)?.slice() ?? null,
+    delete: async (location) => {
+      objects.delete(location.objectKey);
+    },
+    createDownloadUrl: async (location) => ({
+      url: `http://storage.test/${location.storageBucket}/${location.objectKey}`,
+      expiresAt: new Date(Date.now() + 60_000),
+    }),
+  };
 }
 
 async function loginHeaders(app: ReturnType<typeof createApp>) {
