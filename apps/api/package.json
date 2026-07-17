@@ -8,6 +8,8 @@
     "start": "node dist/main.js",
     "seed": "tsx src/seed.ts",
     "webhook:secrets:migrate": "tsx src/webhook-secret-migration.ts",
+    "email:delivery:request": "tsx src/email-delivery-request.ts",
+    "email:content-keys:migrate": "tsx src/email-content-key-migration.ts",
     "build": "tsc -p tsconfig.build.json && esbuild src/main.ts --bundle --platform=node --format=esm --target=node22 --conditions=development --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --outfile=dist/main.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --passWithNoTests --no-file-parallelism"

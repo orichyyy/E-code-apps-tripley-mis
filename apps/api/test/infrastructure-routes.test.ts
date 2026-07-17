@@ -58,6 +58,7 @@ describe("infrastructure routes", () => {
       app.request("/api/logs/access", { headers }),
       app.request("/api/files", { headers }),
       app.request("/api/notifications", { headers }),
+      app.request("/api/email-deliveries", { headers }),
     ]);
 
     expect(createTemplateResponse.status).toBe(201);

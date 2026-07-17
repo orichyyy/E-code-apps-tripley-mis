@@ -4,6 +4,7 @@ export * from "./api-schemas/health";
 export * from "./api-schemas/infrastructure";
 export * from "./api-schemas/system-management";
 export * from "./hono-rpc";
+export * from "./email-delivery";
 export * from "./manifests";
 export * from "./notification-jobs";
 export * from "./openapi";

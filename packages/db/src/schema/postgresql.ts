@@ -799,7 +799,8 @@ export const notificationTemplates = pgTable(
     ...timestamps,
   },
   (table) => ({
-    codeLocaleUnique: uniqueIndex("notification_templates_code_locale_unique").on(
+    codeLocaleUnique: uniqueIndex("notification_templates_channel_code_locale_unique").on(
+      table.channel,
       table.code,
       table.locale,
     ),
@@ -810,6 +811,85 @@ export const notificationTemplates = pgTable(
     statusCheck: check(
       "notification_templates_status_check",
       sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
+);
+
+export const emailDeliveries = pgTable(
+  "email_deliveries",
+  {
+    id: serial("id").primaryKey(),
+    requestKey: text("request_key").notNull(),
+    requestFingerprint: text("request_fingerprint").notNull(),
+    userId: integer("user_id").notNull(),
+    templateId: integer("template_id").notNull(),
+    templateCode: text("template_code").notNull(),
+    locale: text("locale").notNull(),
+    templateUpdatedAt: timestamp("template_updated_at", { withTimezone: true }).notNull(),
+    maskedRecipient: text("masked_recipient").notNull(),
+    messageId: text("message_id").notNull(),
+    contentKeyId: text("content_key_id"),
+    contentEnvelope: text("content_envelope"),
+    referenceType: text("reference_type"),
+    referenceId: text("reference_id"),
+    status: text("status").notNull().default("pending"),
+    attempt: integer("attempt").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull(),
+    nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).notNull(),
+    lockedBy: text("locked_by"),
+    lockedAt: timestamp("locked_at", { withTimezone: true }),
+    lastSmtpCode: integer("last_smtp_code"),
+    lastErrorCode: text("last_error_code"),
+    lastErrorMessage: text("last_error_message"),
+    succeededAt: timestamp("succeeded_at", { withTimezone: true }),
+    failedAt: timestamp("failed_at", { withTimezone: true }),
+    canceledAt: timestamp("canceled_at", { withTimezone: true }),
+    contentPurgedAt: timestamp("content_purged_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => ({
+    requestUserUnique: uniqueIndex("email_deliveries_request_user_unique").on(
+      table.requestKey,
+      table.userId,
+    ),
+    claimIndex: index("email_deliveries_claim_idx").on(table.status, table.nextAttemptAt),
+    userIndex: index("email_deliveries_user_idx").on(table.userId, table.createdAt),
+    templateIndex: index("email_deliveries_template_idx").on(
+      table.templateCode,
+      table.locale,
+      table.createdAt,
+    ),
+    statusCheck: check(
+      "email_deliveries_status_check",
+      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed', 'canceled')`,
+    ),
+  }),
+);
+
+export const emailDeliveryAttempts = pgTable(
+  "email_delivery_attempts",
+  {
+    id: serial("id").primaryKey(),
+    deliveryId: integer("delivery_id").notNull(),
+    attemptNumber: integer("attempt_number").notNull(),
+    status: text("status").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }).notNull(),
+    durationMs: integer("duration_ms").notNull(),
+    smtpCode: integer("smtp_code"),
+    errorCode: text("error_code"),
+    errorMessage: text("error_message"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  },
+  (table) => ({
+    deliveryAttemptUnique: uniqueIndex("email_delivery_attempts_delivery_number_unique").on(
+      table.deliveryId,
+      table.attemptNumber,
+    ),
+    deliveryIndex: index("email_delivery_attempts_delivery_idx").on(table.deliveryId),
+    statusCheck: check(
+      "email_delivery_attempts_status_check",
+      sql`${table.status} IN ('succeeded', 'failed')`,
     ),
   }),
 );
@@ -1002,6 +1082,8 @@ export const postgresqlSchema = {
   cacheEntries,
   dictionaryItems,
   dictionaryTypes,
+  emailDeliveries,
+  emailDeliveryAttempts,
   eventOutbox,
   fileObjects,
   fileReferences,

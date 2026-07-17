@@ -6,6 +6,7 @@ import {
   sendTestEmailNotificationRequestSchema,
   updateNotificationTemplateRequestSchema,
   updateScheduledTaskRequestSchema,
+  emailDeliveryListQuerySchema,
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
@@ -132,6 +133,14 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
   routes.post("/notifications/email/test", async (context) => {
     const input = sendTestEmailNotificationRequestSchema.parse(await context.req.json());
     return context.json({ data: await services.sendTestEmail(input) });
+  });
+
+  routes.get("/email-deliveries", async (context) => {
+    const query = emailDeliveryListQuerySchema.parse(context.req.query());
+    return context.json({ data: await services.listEmailDeliveries(query) });
+  });
+  routes.get("/email-deliveries/:id", async (context) => {
+    return context.json({ data: await services.getEmailDelivery(context.req.param("id")) });
   });
 
   routes.get("/notification-templates", async (context) =>

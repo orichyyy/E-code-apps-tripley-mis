@@ -77,3 +77,7 @@ Application code uses only the generic S3 protocol. RustFS is a compatibility-te
 The Webhook notification channel publishes a directed `notification.requested` record to the database Outbox. System events also enter the Outbox transactionally with their domain mutation. The Worker remains responsible for subscription fan-out, secure HTTP delivery, retry classification, and immutable attempt history.
 
 Do not bypass the destination policy or log complete URLs, bodies, headers, signatures, secrets, or ciphertext. A replacement HTTP transport must preserve DNS validation and address pinning, reject redirects, enforce response limits, and return only status/duration/`Retry-After` metadata. The database Outbox remains authoritative even when RabbitMQ is enabled.
+
+## Reliable Email Boundary
+
+`NotificationChannelAdapter` transports one already-rendered email snapshot. The Email Delivery aggregate, not the generic Queue, owns claims, retries, attempts, and history. SMTP adapters must preserve the supplied stable Message ID, return typed sanitized failures, require implicit TLS or STARTTLS remotely, and never log recipient/content/credentials/server response text. Local plaintext is allowed only through the explicit loopback development/test option.

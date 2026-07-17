@@ -20,6 +20,7 @@ import { AnnouncementsPage } from "@/features/notifications/announcements-page";
 import { InAppNotificationsPage } from "@/features/notifications/in-app-notifications-page";
 import { NotificationTemplatesPage } from "@/features/notifications/notification-templates-page";
 import { WebhookSubscriptionsPage } from "@/features/notifications/webhook-management-page";
+import { EmailDeliveriesPage } from "@/features/notifications/email-deliveries-page";
 import { LogsPage } from "@/features/logs/logs-page";
 import { ImportExportPage } from "@/features/operations/import-export-page";
 import { OnlineUsersPage } from "@/features/operations/online-users-page";
@@ -126,6 +127,8 @@ const managementRoutes = adminRouteMetadata
             <NotificationTemplatesPage route={route} />
           ) : route.routeCode === "notifications.webhooks" ? (
             <WebhookSubscriptionsPage route={route} />
+          ) : route.routeCode === "notifications.email-deliveries" ? (
+            <EmailDeliveriesPage route={route} />
           ) : route.routeCode === "operations.online-users" ? (
             <OnlineUsersPage route={route} />
           ) : route.routeCode === "operations.scheduler" ? (

@@ -5,6 +5,8 @@ import {
   createConfiguredFileStorageAdapter,
   type DatabaseQueueAdapter,
   createRabbitMqQueueAdapter,
+  createInMemoryNotificationChannelAdapter,
+  createSmtpNotificationChannelAdapter,
   type DatabaseAdapterExecutor,
   type FileStorageAdapter,
   type AlertIntegration,
@@ -14,6 +16,8 @@ import {
 import type { WorkerConfig } from "./config/load-config";
 import { createWorkerDatabaseExecutor } from "./infra/worker-database-executor";
 import { createWorkerRuntime, type WorkerRuntime } from "./runners/worker-runtime";
+import { createEmailDeliveryProcessor } from "./email/email-delivery.processor";
+import { WorkerEmailDeliveryRepository } from "./email/email-delivery.repository";
 import { createInAppNotificationDispatchTask } from "./tasks/in-app-notification-dispatch";
 import { createDatabaseInAppNotificationDispatchHandler } from "./tasks/in-app-notification-writer";
 import { createBaseWorkerTaskCatalog } from "./tasks/task-catalog";
@@ -94,9 +98,32 @@ function createWorkerApplicationWithQueue(
       (options.log ?? console.log)(JSON.stringify({ type: "webhook.delivery", ...entry })),
     alert: options.alert ?? createAlertIntegrationPlaceholder(),
   });
+  const emailChannel =
+    config.smtp.enabled && config.smtp.host && config.smtp.from
+      ? createSmtpNotificationChannelAdapter({
+          host: config.smtp.host,
+          port: config.smtp.port,
+          secure: config.smtp.secure,
+          allowInsecureLocalhost: config.smtp.allowInsecureLocalhost,
+          username: config.smtp.username,
+          password: config.smtp.password,
+          from: config.smtp.from,
+          timeoutMs: config.smtp.timeoutMs,
+        })
+      : createInMemoryNotificationChannelAdapter();
+  const emailDelivery = createEmailDeliveryProcessor({
+    repository: new WorkerEmailDeliveryRepository(executor),
+    config: config.emailDelivery,
+    smtp: config.smtp,
+    channel: emailChannel,
+    workerId: config.workerName,
+    log: (entry) => (options.log ?? console.log)(JSON.stringify(entry)),
+    alert: options.alert ?? createAlertIntegrationPlaceholder(),
+  });
   const catalog = createBaseWorkerTaskCatalog(executor, {
     storage: options.storage,
     webhookConfig: config.webhook,
+    emailDeliveryConfig: config.emailDelivery,
   });
   const runtime = createWorkerRuntime(config, {
     queue,
@@ -104,6 +131,7 @@ function createWorkerApplicationWithQueue(
     scheduler,
     durableScheduler: scheduler,
     durableWebhook: webhookDelivery,
+    durableEmail: emailDelivery,
     pollIntervalMs: config.pollIntervalMs,
     log: options.log,
     queueTasks: [

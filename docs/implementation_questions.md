@@ -107,3 +107,11 @@ No unresolved backend-core blockers remain from the previously listed questions.
 24. **Permission manifest sync Webhook event target**
 
     Confirmed: add `targetType = 'system'` and `changeType = 'manifestSync'`. A permission manifest synchronization that changes persisted state emits one summary event with `targetId = 'permission-manifest'` and `organizationId = null`.
+
+25. **Reliable SMTP email delivery semantics**
+
+    Confirmed: internal email requests target one enabled User, require a caller-provided idempotency key, use an exact-language immutable Email Template identity, validate a strict primitive variable contract, and snapshot rendered content before persistence. Email Delivery is the sole durable claim/retry authority and remains separate from the generic queue, event Outbox, and in-app Notification lifecycle.
+
+    Confirmed security and lifecycle handling: content snapshots use a dedicated versioned AES-256-GCM keyring, terminal states purge content immediately, remote SMTP requires implicit TLS or STARTTLS, attempts are at least once with a stable Message ID, retryable failures are bounded, and safe metadata remains for configurable retention. Reliable delivery and SMTP transport use separate optional switches. The complete contract is recorded in `docs/email_delivery_design.md` and ADR 0003.
+
+    Confirmed key-failure handling: missing historical content keys leave affected work pending without consuming attempts and degrade Worker health; authenticated decryption failure with a configured key is a final corruption failure. Old keys may be removed only after rotation proves no unfinished Delivery references them.

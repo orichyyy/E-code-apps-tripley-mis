@@ -12,6 +12,10 @@ export type OpenApiSchema = {
   nullable?: boolean;
   description?: string;
   anyOf?: OpenApiSchema[];
+  allOf?: OpenApiSchema[];
+  minimum?: number;
+  maximum?: number;
+  pattern?: string;
 };
 
 export type OpenApiOperation = {

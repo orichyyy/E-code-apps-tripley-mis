@@ -203,6 +203,10 @@ describe("backend core schema", () => {
     expect(postgresql.notifications.metadataJson.name).toBe("metadata_json");
     expect(sqlite.notificationTemplates.variablesJson.name).toBe("variables_json");
     expect(postgresql.notificationTemplates.variablesJson.name).toBe("variables_json");
+    expect(sqlite.emailDeliveries.contentEnvelope.name).toBe("content_envelope");
+    expect(postgresql.emailDeliveries.contentEnvelope.name).toBe("content_envelope");
+    expect(sqlite.emailDeliveryAttempts.smtpCode.name).toBe("smtp_code");
+    expect(postgresql.emailDeliveryAttempts.smtpCode.name).toBe("smtp_code");
     expect(sqlite.logEntries.logType.name).toBe("log_type");
     expect(postgresql.logEntries.logType.name).toBe("log_type");
     expect(sqlite.importExportTasks.resultExpiresAt.name).toBe("result_expires_at");
@@ -292,6 +296,8 @@ describe("backend core schema", () => {
         "notificationTemplates",
         ["notification_templates_channel_check", "notification_templates_status_check"],
       ],
+      ["emailDeliveries", ["email_deliveries_status_check"]],
+      ["emailDeliveryAttempts", ["email_delivery_attempts_status_check"]],
       ["logEntries", ["log_entries_level_check", "log_entries_type_check"]],
       ["importExportTasks", ["import_export_tasks_status_check", "import_export_tasks_type_check"]],
       ["systemConfigs", ["system_configs_status_check", "system_configs_value_type_check"]],
@@ -340,7 +346,20 @@ describe("backend core schema", () => {
       ["fileObjects", ["file_objects_content_cleanup_idx", "file_objects_object_key_unique"]],
       ["fileReferences", ["file_references_file_idx", "file_references_resource_idx"]],
       ["notifications", ["notifications_user_status_idx"]],
-      ["notificationTemplates", ["notification_templates_code_locale_unique"]],
+      ["notificationTemplates", ["notification_templates_channel_code_locale_unique"]],
+      [
+        "emailDeliveries",
+        [
+          "email_deliveries_claim_idx",
+          "email_deliveries_request_user_unique",
+          "email_deliveries_template_idx",
+          "email_deliveries_user_idx",
+        ],
+      ],
+      [
+        "emailDeliveryAttempts",
+        ["email_delivery_attempts_delivery_idx", "email_delivery_attempts_delivery_number_unique"],
+      ],
       ["logEntries", ["log_entries_type_occurred_idx"]],
       ["importExportTasks", ["import_export_tasks_status_idx"]],
       ["systemConfigs", ["system_configs_group_idx", "system_configs_key_unique"]],

@@ -113,6 +113,14 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     sortOrder: 220,
   },
   {
+    routeCode: "notifications.email-deliveries",
+    path: "/notifications/email-deliveries",
+    titleI18nKey: "routes.notifications.emailDeliveries",
+    requiredPermission: "notification:email-delivery:view",
+    menuVisible: true,
+    sortOrder: 225,
+  },
+  {
     routeCode: "operations.online-users",
     path: "/operations/online-users",
     titleI18nKey: "routes.operations.onlineUsers",

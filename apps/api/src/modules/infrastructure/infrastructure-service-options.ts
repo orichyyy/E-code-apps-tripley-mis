@@ -3,6 +3,7 @@ import {
   createInMemoryQueueAdapter,
   createLocalFileStorageAdapter,
   type FileStorageAdapter,
+  type EmailDeliveryConfig,
   type NotificationChannelAdapter,
   type QueueAdapter,
 } from "@web-admin-base/adapters";
@@ -12,6 +13,8 @@ export type InfrastructureServiceOptions = {
   notificationChannel?: NotificationChannelAdapter;
   queue?: QueueAdapter;
   organizationUserResolver?: (organizationId: string) => Promise<string[]>;
+  emailDeliveryConfig?: EmailDeliveryConfig;
+  smtpEnabled?: boolean;
   maxFileSizeBytes?: number;
   presignedUrlTtlSeconds?: number;
 };

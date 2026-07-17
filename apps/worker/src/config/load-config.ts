@@ -2,8 +2,12 @@ import { z } from "zod";
 
 import {
   loadFileStorageConfig,
+  loadEmailDeliveryConfig,
+  loadSmtpRuntimeConfig,
   loadWebhookDeliveryConfig,
+  type EmailDeliveryConfig,
   type FileStorageConfig,
+  type SmtpRuntimeConfig,
   type WebhookDeliveryConfig,
 } from "@web-admin-base/adapters";
 import { loadDatabaseConfig } from "@web-admin-base/db";
@@ -35,6 +39,8 @@ const workerConfigSchema = z.object({
 
 export type WorkerConfig = z.infer<typeof workerConfigSchema> & {
   database: ReturnType<typeof loadDatabaseConfig>;
+  emailDelivery: EmailDeliveryConfig;
+  smtp: SmtpRuntimeConfig;
   storage: FileStorageConfig;
   webhook: WebhookDeliveryConfig;
 };
@@ -51,6 +57,8 @@ export function loadWorkerConfig(env: NodeJS.ProcessEnv = process.env): WorkerCo
       },
     }),
     database: loadDatabaseConfig(env),
+    emailDelivery: loadEmailDeliveryConfig(env),
+    smtp: loadSmtpRuntimeConfig(env),
     storage: loadFileStorageConfig(env),
     webhook: loadWebhookDeliveryConfig(env),
   };

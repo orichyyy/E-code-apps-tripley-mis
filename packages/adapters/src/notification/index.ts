@@ -5,6 +5,7 @@ export type NotificationMessage = {
   recipient: string;
   subject?: string;
   body: string;
+  messageId?: string;
   metadata?: Record<string, unknown>;
 };
 
@@ -13,6 +14,8 @@ export type NotificationChannelAdapter = HealthCheckableAdapter & {
 };
 
 export * from "./in-memory-notification";
+export * from "./email-content-crypto";
+export * from "./email-delivery-config";
 export * from "./smtp-notification";
 export * from "./webhook-config";
 export * from "./webhook-http";

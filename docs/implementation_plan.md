@@ -942,3 +942,29 @@ The confirmed design in `docs/webhook_delivery_design.md` and ADR 0002 is implem
 - Added SQLite migrations and smoke tests plus PostgreSQL, adapter, Worker, API, frontend, key migration, local HTTP receiver, retry, concurrency, revision cancellation, directed notification, and retention coverage.
 
 Delivery remains disabled by default and requires matching API/Worker `WEBHOOK_*` configuration. Manual replay/cancel/export, custom headers, a separate Webhook dead-letter queue, a public arbitrary-notification API, and automatic subscription disabling are outside the confirmed v1 contract. Target-environment destination acceptance remains pending until that environment is ready.
+
+## Reliable Email Delivery Design Progress
+
+The next recommended implementation goal has a confirmed contract in `docs/email_delivery_design.md` and ADR 0003:
+
+- Accept one internal, idempotent Email Notification Request per enabled User without exposing a public arbitrary-email API.
+- Resolve the User's Effective Language, require an exact enabled Email Template, validate its strict variable contract, and persist an encrypted rendered snapshot.
+- Use dedicated Email Delivery and Attempt records as the only durable Worker claim, retry, recovery, and history authority.
+- Provide bounded at-least-once SMTP retries with a stable Message ID, stale-running recovery, safe final alerts, immediate terminal content purge, and database-locked retention cleanup.
+- Require implicit TLS or STARTTLS for remote SMTP and permit insecure plaintext only for explicitly configured development/test loopback servers.
+- Add safe read-only management APIs/UI, OpenAPI and Hono RPC coverage, PostgreSQL tests, SQLite migration smoke, a development-only request CLI, and optional pinned Mailpit compatibility tooling.
+- Keep reliable delivery and SMTP transport disabled independently by default. Production SMTP provider selection and target-environment acceptance remain pending.
+
+Do not add business-module triggers, default email templates, a public create API, HTML/attachments, manual retry/cancel/export, bounce tracking, SMS sending, or a separate email DLQ in this goal.
+
+## Reliable Email Delivery Implementation Progress
+
+The confirmed ADR 0003 contract is implemented:
+
+- Added dedicated SQLite/PostgreSQL Email Delivery and Attempt persistence, exact channel/code/locale template identity, strict template variables, idempotent internal requests, Effective Language resolution, encrypted rendered snapshots, and stable Message IDs.
+- Added Worker concurrent claims, SMTP Acceptance outcomes, bounded retry, stale recovery, deleted-User cancellation, missing-key health checks, corruption final failure, safe alerts/logs, immediate terminal content purge, and distributed-lock retention cleanup.
+- Hardened SMTP with implicit TLS or mandatory STARTTLS for remote hosts. Plaintext is limited to an explicit loopback development/test exception.
+- Added read-only permissioned list/detail APIs, explicit OpenAPI schemas, route/menu metadata, and a bilingual safe-history frontend page.
+- Added development-only request tooling, scan/apply content-key rotation tooling, a pinned 128 MB Mailpit environment, `pnpm test:smtp-integration`, and a manual compatibility workflow.
+
+Reliable email and SMTP remain independently disabled by default. Production provider selection, key custody, and target-environment acceptance remain pending.

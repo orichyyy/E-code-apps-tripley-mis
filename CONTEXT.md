@@ -41,3 +41,45 @@ _Avoid_: Webhook job, request
 **Delivery Attempt**:
 One authenticated HTTP request made as part of a Webhook Delivery.
 _Avoid_: Retry, delivery
+
+## Email Notifications
+
+**Email Notification Request**:
+An internal request to notify one User by email using a named Email Template and template variables.
+_Avoid_: Email blast, arbitrary email
+
+**Email Request Key**:
+A caller-assigned identifier that makes repeated submission of the same Email Notification Request return the same Email Delivery for the same User.
+_Avoid_: Database ID, business reference
+
+**Email Delivery**:
+The durable outcome of sending one rendered email to the address and language selected for one User when the Email Notification Request was accepted.
+_Avoid_: Email job, SMTP request
+
+**Email Delivery Attempt**:
+One SMTP send operation made as part of an Email Delivery.
+_Avoid_: Retry, email delivery
+
+**SMTP Acceptance**:
+The SMTP server's successful acknowledgement after receiving the complete message; it does not prove delivery to the recipient's inbox.
+_Avoid_: Inbox delivery, message read
+
+**Email Message ID**:
+A stable identifier assigned to one Email Delivery and reused by every Email Delivery Attempt to support downstream duplicate detection.
+_Avoid_: Attempt ID, request key
+
+**Email Content Snapshot**:
+The recipient address, language, subject, and body fixed when an Email Delivery is created so later profile or template changes do not alter that delivery.
+_Avoid_: Current template, live user email
+
+**Effective Language**:
+The User's personal language override when present, otherwise the administrator-selected system default language.
+_Avoid_: Email fallback language, browser language
+
+**Email Template**:
+A language-specific notification template whose subject, body, and declared variables form one rendering contract.
+_Avoid_: Email draft, arbitrary HTML
+
+**Template Variable Contract**:
+The exact set of primitive values required to render an Email Template without undeclared, missing, or unused variables.
+_Avoid_: Free-form metadata, template context

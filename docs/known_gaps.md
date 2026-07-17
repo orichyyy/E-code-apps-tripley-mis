@@ -15,7 +15,7 @@ This file records incomplete, reserved, or environment-dependent work that must 
 - In-app notification dispatch exists through queue-backed internal services and worker execution. A public administrator create-notification API and frontend create flow are not exposed because no base API contract confirms them.
 - i18n message management supports editing existing persisted messages. New i18n key creation remains manifest/module-driven rather than an ad hoc frontend create flow.
 - File management supports coexisting local/S3 object locations, authenticated local responses, private S3 presigned redirects, upload compensation, and asynchronous physical Content Deletion. Local remains the default.
-- SMTP email has an optional configuration-driven driver and test-send API. Production delivery retry workflows remain reserved.
+- Reliable email delivery is implemented as an optional encrypted Email Delivery aggregate with internal idempotent requests, Worker claims/retries, terminal content purge, read-only APIs/UI, STARTTLS enforcement, key rotation tooling, and Mailpit compatibility coverage. It remains disabled by default. Production SMTP provider selection, key custody, and target-environment acceptance remain pending.
 - Worker task registration includes the confirmed base-system task catalog. Future business-module task catalogs are outside the base system.
 - Outbound Webhook delivery is implemented with a controlled event catalog, transactional Outbox, durable attempts, bounded retries, secret encryption, HMAC signing, SSRF controls, retention cleanup, management APIs, and frontend history. It remains disabled unless `WEBHOOK_DELIVERY_ENABLED=true` is configured for both API and Worker.
 
@@ -25,6 +25,7 @@ This file records incomplete, reserved, or environment-dependent work that must 
 - RabbitMQ queue/event-bus drivers are implemented as optional adapter drivers and covered by Docker-backed integration tests when `RABBITMQ_URL` is provided. API and worker queue runtime selection can opt in with `QUEUE_DRIVER=rabbitmq`; worker execution still keeps the database durable queue/scheduler active for existing database-backed scheduled and import/export tasks.
 - The generic S3-compatible driver is implemented and covered by the optional pinned RustFS compatibility suite. RustFS is test-only; production object-storage provider selection and target-environment deployment acceptance remain pending.
 - SMS notification sending remains reserved; SMS templates/interfaces may exist, but no sender is implemented.
+- Reliable email intentionally has no public create API, manual retry/cancel/export, HTML/attachments, bounce tracking, inbox-delivery claim, separate DLQ, or default business templates. These remain outside the confirmed v1 contract.
 - Webhook manual replay/cancellation/export, custom request headers, a public arbitrary-notification API, and automatic subscription disabling after failures remain outside the confirmed v1 contract.
 - A separate dead-letter queue implementation remains reserved. Database queue jobs currently use the existing `dead_letter` status when attempts are exhausted.
 

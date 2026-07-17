@@ -28,6 +28,7 @@ import {
 } from "../src/tasks/file-cleanup-task";
 import { logRetentionTaskCode } from "../src/tasks/log-retention-task";
 import { scheduledRunJobType } from "../src/tasks/scheduled-run-task";
+import { disabledEmailRuntimeConfig } from "./worker-config-expectations";
 import {
   clearWorkerTables,
   localLocation,
@@ -66,6 +67,7 @@ describe("worker bootstrap", () => {
         dialect: "sqlite",
         url: "file:./data/test-worker.sqlite",
       },
+      ...disabledEmailRuntimeConfig,
       webhook: {
         enabled: false,
         eventSource: "web-admin-base-system",

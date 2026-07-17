@@ -34,6 +34,8 @@ Local filesystem storage remains the default through `FILE_STORAGE_ROOT`; multi-
 
 SMTP email sending and outbound Webhook delivery are optional and disabled by default. Redis, RabbitMQ, and S3-compatible storage are also optional runtime integrations.
 
+Reliable email requires identical `EMAIL_DELIVERY_*`, `EMAIL_CONTENT_KEYS`, and active-key configuration in API and Worker. Remote SMTP must use implicit TLS or advertise STARTTLS; the loopback plaintext exception is forbidden in production. Scan content-key references before rotation. Production SMTP provider selection, credential/key custody, alert routing, and target-environment acceptance remain deployment decisions.
+
 Outbound Webhook delivery requires identical `WEBHOOK_*` configuration in API and Worker. Production destinations require HTTPS. Keep `WEBHOOK_ALLOW_INSECURE_LOCALHOST=false`; allow private destinations only by exact hostname through `WEBHOOK_ALLOWED_HOSTS`. Provide a versioned AES-256-GCM keyring through `WEBHOOK_SECRET_KEYS` and an active key ID. Run the secret migration in scan mode before `--apply`, then start API before Worker. Pending work pauses when delivery is disabled.
 
 S3 runtime variables are `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_OBJECT_PREFIX`, `S3_FORCE_PATH_STYLE`, `S3_PRESIGNED_URL_TTL_SECONDS`, and optional explicit credential variables. The TTL is restricted to 15-900 seconds. The AWS SDK default credential chain is used when explicit credentials are omitted. A production object-storage provider has not been selected or accepted by this repository.

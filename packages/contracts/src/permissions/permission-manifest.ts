@@ -97,6 +97,11 @@ export const basePermissionManifest: PermissionManifestEntry[] = [
     description: "Update notification templates",
     module: "notifications",
   },
+  {
+    code: "notification:email-delivery:view",
+    description: "View reliable email delivery history",
+    module: "notifications",
+  },
   { code: "webhook:view", description: "View webhook subscriptions", module: "webhooks" },
   { code: "webhook:create", description: "Create webhook subscriptions", module: "webhooks" },
   { code: "webhook:update", description: "Update webhook subscriptions", module: "webhooks" },

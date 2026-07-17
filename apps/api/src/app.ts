@@ -138,6 +138,8 @@ export function createDefaultAppDependencies(
       storage,
       presignedUrlTtlSeconds: config.storage.presignedUrlTtlSeconds,
       notificationChannel: createNotificationChannel(config),
+      emailDeliveryConfig: config.emailDelivery,
+      smtpEnabled: config.smtp.enabled,
     }),
     systemManagementServices: SystemManagementServices.inMemory(),
     structuredLogSink: noopStructuredLogSink,
@@ -167,6 +169,8 @@ export async function createDatabaseBackedAppDependencies(
       storage: fileStorage,
       presignedUrlTtlSeconds: config.storage.presignedUrlTtlSeconds,
       notificationChannel: createNotificationChannel(config),
+      emailDeliveryConfig: config.emailDelivery,
+      smtpEnabled: config.smtp.enabled,
       queue: await createInfrastructureQueue(config, infrastructureRepository),
     }),
     systemManagementServices: SystemManagementServices.database(),
@@ -223,5 +227,7 @@ function createNotificationChannel(config: ApiConfig): NotificationChannelAdapte
     username: config.smtp.username,
     password: config.smtp.password,
     from: config.smtp.from,
+    timeoutMs: config.smtp.timeoutMs,
+    allowInsecureLocalhost: config.smtp.allowInsecureLocalhost,
   });
 }

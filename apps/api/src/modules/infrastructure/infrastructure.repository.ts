@@ -237,7 +237,7 @@ export class InfrastructureRepository {
       locale: String(row.locale),
       subject: nullableString(row.subject),
       body: String(row.body),
-      variables: readJson(row.variables_json),
+      variables: readJson<string[]>(row.variables_json),
       status: String(row.status),
       createdAt: iso(row.created_at),
       updatedAt: iso(row.updated_at),
@@ -276,14 +276,12 @@ export class InfrastructureRepository {
     if (!current) return null;
     const next = { ...current, ...input };
     await this.executor.run(
-      `UPDATE notification_templates SET code = ${this.p(1)}, channel = ${this.p(2)}, locale = ${this.p(3)}, subject = ${this.p(4)}, body = ${this.p(5)}, variables_json = ${this.p(6)}, updated_at = ${this.p(7)} WHERE id = ${this.p(8)}`,
+      `UPDATE notification_templates SET subject = ${this.p(1)}, body = ${this.p(2)}, variables_json = ${this.p(3)}, status = ${this.p(4)}, updated_at = ${this.p(5)} WHERE id = ${this.p(6)}`,
       [
-        next.code,
-        next.channel,
-        next.locale,
         next.subject ?? null,
         next.body,
         jsonParam(next.variables, this.executor.dialect),
+        next.status,
         nowIso(),
         id,
       ],

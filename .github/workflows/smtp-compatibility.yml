@@ -1,0 +1,61 @@
+name: SMTP Compatibility
+
+on:
+  workflow_dispatch:
+
+jobs:
+  mailpit:
+    name: Mailpit compatibility
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: web_admin_base_smtp
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d web_admin_base_smtp"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/web_admin_base_smtp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Start pinned Mailpit
+        run: |
+          docker run --detach --name web-admin-base-mailpit \
+            --memory 128m --memory-swap 128m \
+            --publish 127.0.0.1:1025:1025 \
+            --publish 127.0.0.1:8025:8025 \
+            --volume "$PWD/scripts/mailpit:/certs:ro" \
+            --env MP_SMTP_TLS_CERT=/certs/cert.pem \
+            --env MP_SMTP_TLS_KEY=/certs/key.pem \
+            --env MP_SMTP_REQUIRE_STARTTLS=true \
+            axllent/mailpit:v1.30.0
+          for attempt in $(seq 1 45); do
+            if curl --fail --silent http://127.0.0.1:8025/livez; then exit 0; fi
+            sleep 1
+          done
+          docker logs web-admin-base-mailpit
+          exit 1
+      - name: Run SMTP compatibility test
+        run: pnpm test:smtp-integration
+      - name: Show Mailpit diagnostics on failure
+        if: failure()
+        run: docker logs web-admin-base-mailpit

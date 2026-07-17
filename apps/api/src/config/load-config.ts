@@ -2,8 +2,12 @@ import { z } from "zod";
 
 import {
   loadFileStorageConfig,
+  loadEmailDeliveryConfig,
+  loadSmtpRuntimeConfig,
   loadWebhookDeliveryConfig,
+  type EmailDeliveryConfig,
   type FileStorageConfig,
+  type SmtpRuntimeConfig,
   type WebhookDeliveryConfig,
 } from "@web-admin-base/adapters";
 
@@ -57,33 +61,6 @@ const apiConfigSchema = z.object({
   nodeEnv: z.enum(["development", "test", "demo", "production"]).default("development"),
   port: z.coerce.number().int().positive().default(3000),
   adapters: adapterConfigSchema,
-  smtp: z
-    .object({
-      enabled: booleanStringSchema.default("false"),
-      host: optionalNonEmptyStringSchema.default(null),
-      port: z.coerce.number().int().positive().default(587),
-      secure: booleanStringSchema.default("false"),
-      username: optionalNonEmptyStringSchema.default(null),
-      password: optionalNonEmptyStringSchema.default(null),
-      from: optionalNonEmptyStringSchema.default(null),
-    })
-    .superRefine((smtp, context) => {
-      if (!smtp.enabled) return;
-      if (!smtp.host) {
-        context.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["host"],
-          message: "SMTP_HOST is required when SMTP_ENABLED is true.",
-        });
-      }
-      if (!smtp.from) {
-        context.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["from"],
-          message: "SMTP_FROM is required when SMTP_ENABLED is true.",
-        });
-      }
-    }),
   backendCore: z.object({
     jwtSecret: z.string().min(1).default(defaultBackendCoreConfig.jwtSecret),
     jwtIssuer: z.string().min(1).default(defaultBackendCoreConfig.jwtIssuer),
@@ -149,6 +126,8 @@ const apiConfigSchema = z.object({
 
 export type ApiConfig = Omit<z.infer<typeof apiConfigSchema>, "backendCore"> & {
   backendCore: BackendCoreConfig;
+  emailDelivery: EmailDeliveryConfig;
+  smtp: SmtpRuntimeConfig;
   storage: FileStorageConfig;
   webhook: WebhookDeliveryConfig;
 };
@@ -164,15 +143,6 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       eventBusDriver: env.EVENT_BUS_DRIVER,
       redisUrl: env.REDIS_URL,
       rabbitMqUrl: env.RABBITMQ_URL,
-    },
-    smtp: {
-      enabled: env.SMTP_ENABLED,
-      host: env.SMTP_HOST,
-      port: env.SMTP_PORT,
-      secure: env.SMTP_SECURE,
-      username: env.SMTP_USERNAME,
-      password: env.SMTP_PASSWORD,
-      from: env.SMTP_FROM,
     },
     backendCore: {
       jwtSecret: env.JWT_SECRET,
@@ -196,6 +166,8 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   });
   return {
     ...config,
+    emailDelivery: loadEmailDeliveryConfig(env),
+    smtp: loadSmtpRuntimeConfig(env),
     storage: loadFileStorageConfig(env),
     webhook: loadWebhookDeliveryConfig(env),
   } as ApiConfig;

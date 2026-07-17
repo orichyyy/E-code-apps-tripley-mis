@@ -220,6 +220,15 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     ],
   },
   {
+    routeCode: "notifications.email-deliveries",
+    path: "/notifications/email-deliveries",
+    titleI18nKey: "routes.notifications.emailDeliveries",
+    requiredPermission: "notification:email-delivery:view",
+    menuVisible: true,
+    group: "notifications",
+    sortOrder: 225,
+  },
+  {
     routeCode: "operations.online-users",
     path: "/operations/online-users",
     titleI18nKey: "routes.operations.onlineUsers",

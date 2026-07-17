@@ -4,6 +4,7 @@ import {
   type FileStorageAdapter,
   type NotificationChannelAdapter,
   type QueueAdapter,
+  type EmailDeliveryConfig,
 } from "@web-admin-base/adapters";
 import type { InAppNotificationDispatchPayload } from "@web-admin-base/contracts";
 import type {
@@ -18,7 +19,11 @@ import type {
 
 import { createKnownError } from "../../core/errors/error-codes";
 import type { NotificationTemplateRecord } from "./email-notification-sender";
+import type { EmailDeliveryListQuery, EmailNotificationRequest } from "@web-admin-base/contracts";
+import { EmailDeliveryRepository } from "./email-delivery.repository";
+import { EmailDeliveryService } from "./email-delivery.service";
 import type { FileUploadInput } from "./file-management";
+import { createInMemoryExportTask } from "./in-memory-export-task";
 import type { EnqueueInAppNotificationInput } from "./in-app-notification-dispatcher";
 import { InfrastructureFileService } from "./infrastructure-file.service";
 import { InfrastructureNotificationService } from "./infrastructure-notification.service";
@@ -51,6 +56,7 @@ export class InfrastructureServices {
   private sequence = 1;
   private readonly notificationService: InfrastructureNotificationService;
   private readonly fileService: InfrastructureFileService;
+  private readonly emailDeliveryService?: EmailDeliveryService;
 
   constructor(
     private readonly repository?: InfrastructureRepository,
@@ -60,6 +66,8 @@ export class InfrastructureServices {
     notificationChannel: NotificationChannelAdapter = createDefaultNotificationChannel(),
     queue: QueueAdapter = createDefaultQueue(),
     organizationUserResolver?: (organizationId: string) => Promise<string[]>,
+    emailDeliveryConfig?: EmailDeliveryConfig,
+    smtpEnabled = true,
   ) {
     this.fileService = new InfrastructureFileService({
       repository,
@@ -78,7 +86,14 @@ export class InfrastructureServices {
       queue,
       nextId: () => this.nextId(),
       organizationUserResolver,
+      smtpEnabled,
     });
+    if (repository && emailDeliveryConfig) {
+      this.emailDeliveryService = new EmailDeliveryService(
+        new EmailDeliveryRepository(repository.executor),
+        emailDeliveryConfig,
+      );
+    }
   }
 
   static inMemory(
@@ -93,6 +108,8 @@ export class InfrastructureServices {
       resolved.notificationChannel,
       resolved.queue,
       resolved.organizationUserResolver,
+      resolved.emailDeliveryConfig,
+      resolved.smtpEnabled ?? true,
     );
   }
 
@@ -110,6 +127,8 @@ export class InfrastructureServices {
       resolved.notificationChannel,
       queue,
       resolved.organizationUserResolver,
+      resolved.emailDeliveryConfig,
+      resolved.smtpEnabled ?? true,
     );
   }
 
@@ -189,6 +208,22 @@ export class InfrastructureServices {
 
   async sendTestEmail(input: SendTestEmailNotificationRequest) {
     return this.notificationService.sendTestEmail(input);
+  }
+
+  requestEmailDelivery(input: EmailNotificationRequest) {
+    if (!this.emailDeliveryService) throw createKnownError("BUSINESS_EMAIL_DELIVERY_DISABLED");
+    return this.emailDeliveryService.request(input);
+  }
+
+  listEmailDeliveries(query: EmailDeliveryListQuery) {
+    return (
+      this.emailDeliveryService?.list(query) ??
+      Promise.resolve({ items: [], total: 0, page: query.page, pageSize: query.pageSize })
+    );
+  }
+
+  getEmailDelivery(id: string) {
+    return this.emailDeliveryService?.get(id) ?? Promise.resolve(null);
   }
 
   listScheduledTasks() {
@@ -271,21 +306,7 @@ export class InfrastructureServices {
   }
 
   private createMemoryExportTask(resourceType: string, actorId: string | null) {
-    const now = new Date().toISOString();
-    const task = {
-      id: this.nextId(),
-      taskType: "export",
-      resourceType,
-      status: "pending",
-      totalRows: 0,
-      successRows: 0,
-      failedRows: 0,
-      errorPreview: [],
-      resultExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      createdAt: now,
-      updatedAt: now,
-      createdBy: actorId,
-    };
+    const task = createInMemoryExportTask(resourceType, actorId, () => this.nextId());
     this.memory.importExportTasks.unshift(task);
     return Promise.resolve(task);
   }

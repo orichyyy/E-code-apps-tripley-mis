@@ -40,7 +40,9 @@ pnpm --filter @web-admin-base/contracts test
 
 ## SMTP Test Send Fails
 
-SMTP sending is disabled unless `SMTP_ENABLED=true`. When enabled, `SMTP_HOST` and `SMTP_FROM` are required. Use `SMTP_SECURE=true` only for implicit TLS SMTP endpoints; plaintext local capture tools usually use `SMTP_SECURE=false`.
+SMTP sending is disabled unless `SMTP_ENABLED=true`. When enabled, `SMTP_HOST` and `SMTP_FROM` are required. Use `SMTP_SECURE=true` for implicit TLS; remote non-secure connections must advertise STARTTLS. Plaintext local capture requires loopback plus `SMTP_ALLOW_INSECURE_LOCALHOST=true` outside production.
+
+If Email Deliveries stay pending, confirm both `EMAIL_DELIVERY_ENABLED` and `SMTP_ENABLED` in the Worker. Missing `EMAIL_CONTENT_KEYS` entries intentionally pause affected work without consuming attempts; run `pnpm email:content-keys:migrate` to scan references. Use `scripts/mailpit-dev.ps1` and `pnpm test:smtp-integration` to isolate local transport failures.
 
 ## Worker Does Not Process Queue Jobs
 
@@ -72,6 +74,7 @@ The frontend calls real APIs for modules whose backend routes are implemented. I
 ## Request ID Issues
 
 The API accepts valid incoming `x-request-id`, generates one when absent, returns it in response headers, and includes it in structured access-log entries.
+
 ## Webhook Delivery
 
 - No new deliveries: confirm `WEBHOOK_DELIVERY_ENABLED=true` is set for both API and Worker, the Worker polling interval is nonzero, and the subscription is enabled for the event type.

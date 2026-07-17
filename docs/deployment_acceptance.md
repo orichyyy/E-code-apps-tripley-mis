@@ -80,6 +80,10 @@ SMTP_SECURE=false
 SMTP_USERNAME=optional-user
 SMTP_PASSWORD=optional-password
 SMTP_FROM=no-reply@example.com
+SMTP_TIMEOUT_MS=10000
+EMAIL_DELIVERY_ENABLED=true
+EMAIL_CONTENT_KEYS={"primary":"<managed-canonical-base64-key>"}
+EMAIL_CONTENT_ACTIVE_KEY_ID=primary
 ```
 
 ## Storage Check
@@ -199,6 +203,7 @@ Files and notifications:
 - In-app notifications support unread/read/archive/delete for current-user notifications.
 - Notification templates support list/create/edit.
 - Webhooks support subscription list/create/edit/enable/disable/delete and safe delivery history. Persisted secrets, full target URLs, payloads, signatures, and response bodies are not displayed.
+- Email deliveries expose read-only safe history. Verify remote STARTTLS/implicit TLS, stable Message IDs, retries, final alerts, terminal content purge, and absence of full recipient/content/ciphertext in API, UI, and logs.
 
 Account:
 

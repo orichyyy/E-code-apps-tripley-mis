@@ -6,7 +6,7 @@ This runbook verifies that a developer can run the Web Admin Base System locally
 
 This checklist covers the local SQLite demo path, the repeatable smoke script, and a manual browser walkthrough of implemented base pages.
 
-The default checklist does not require Redis, RabbitMQ, S3-compatible storage, SMS sending, or enabling outbound Webhook delivery. Optional S3 and Webhook compatibility can be verified separately below.
+The default checklist does not require Redis, RabbitMQ, S3-compatible storage, SMS sending, reliable email, or outbound Webhook delivery. Optional S3, SMTP, and Webhook compatibility can be verified separately below.
 
 ## Prerequisites
 
@@ -129,6 +129,13 @@ Files and notifications:
 - Open In-app notifications and confirm unread/read/archive/delete behavior is reachable for current-user notifications.
 - Open Notification templates and confirm template list/create/edit behavior is reachable.
 - Open Webhooks and confirm subscription list/create/edit/enable/disable/delete behavior is reachable. Confirm the Deliveries tab has subscription/event/status/time filters. Persisted secrets, full target URLs, event payloads, signatures, and response bodies must not be displayed.
+- Open Email deliveries and confirm the read-only list/detail view exposes only masked recipients, safe status, attempts, SMTP code, and safe error codes. It must not expose full recipients, subject, body, variables, ciphertext, credentials, or full SMTP responses.
+
+Optional SMTP compatibility:
+
+1. Start `scripts/mailpit-dev.ps1` and run `pnpm test:smtp-integration`.
+2. Confirm the inbox is reachable only at `http://127.0.0.1:8025` and the test message traverses required STARTTLS with certificate validation while preserving its Message ID and UTF-8 plain-text content.
+3. Stop the disposable backend with `scripts/mailpit-dev.ps1 -Action Stop`.
 
 Optional S3 compatibility:
 

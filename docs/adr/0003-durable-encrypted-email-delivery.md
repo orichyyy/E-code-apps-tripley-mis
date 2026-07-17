@@ -1,0 +1,7 @@
+# Use durable encrypted deliveries for reliable email notifications
+
+Reliable email notifications use a dedicated Email Delivery aggregate as the only persistence, claim, retry, and recovery authority. Each internal request targets one enabled User, is idempotent through a caller-provided Email Request Key and request fingerprint, resolves one exact-language Email Template, and stores a stable Message ID plus an encrypted Email Content Snapshot. The generic queue, event Outbox, and in-app `notifications` table are not used because parallel retry state machines and incompatible lifecycle fields would make delivery behavior ambiguous.
+
+Email delivery is at least once and succeeds at SMTP Acceptance rather than inbox delivery. Network failures and SMTP `4xx` responses retry with bounded delays; SMTP `5xx` and security/configuration failures are final. Terminal deliveries immediately purge encrypted content while retaining safe metadata and attempts for bounded operational history. Remote SMTP requires implicit TLS or STARTTLS, while explicit insecure loopback SMTP is development/test only.
+
+Reliable delivery and SMTP transport have separate optional switches. `EMAIL_DELIVERY_ENABLED` controls request acceptance and durable Worker processing and requires a dedicated AES-256-GCM keyring; `SMTP_ENABLED` controls real SMTP transport and diagnostic test sending. This allows maintenance-time pausing without making SMTP, encryption keys, Docker, or a production mail provider mandatory for default local development or CI.

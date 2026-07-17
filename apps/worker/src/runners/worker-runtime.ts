@@ -34,6 +34,7 @@ export type WorkerRuntimeDependencies = {
   scheduler?: JobSchedulerAdapter;
   durableScheduler?: Pick<DatabaseJobSchedulerAdapter, "processDue">;
   durableWebhook?: { fanOutPending: () => Promise<number>; processReady: () => Promise<number> };
+  durableEmail?: { processReady: () => Promise<number> };
   queueTasks?: QueueWorkerTask[];
   scheduledTasks?: ScheduledWorkerTask[];
   log?: (message: string) => void;
@@ -79,6 +80,7 @@ export function createWorkerRuntime(
         await dependencies.durableWebhook.fanOutPending();
         await dependencies.durableWebhook.processReady();
       }
+      if (dependencies.durableEmail) await dependencies.durableEmail.processReady();
       const queueJobs = dependencies.durableQueue
         ? await dependencies.durableQueue.processReady()
         : 0;

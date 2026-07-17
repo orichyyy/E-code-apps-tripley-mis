@@ -196,7 +196,20 @@ $env:SMTP_HOST = "127.0.0.1"
 $env:SMTP_PORT = "1025"
 $env:SMTP_SECURE = "false"
 $env:SMTP_FROM = "no-reply@example.com"
+$env:SMTP_ALLOW_INSECURE_LOCALHOST = "true"
 ```
+
+Use the pinned disposable Mailpit environment for compatibility testing:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/mailpit-dev.ps1
+pnpm test:smtp-integration
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/mailpit-dev.ps1 -Action Stop
+```
+
+The certificate and private key under `scripts/mailpit/` are committed, self-signed test fixtures for loopback Mailpit only. Never reuse them for a shared or production SMTP endpoint.
+
+Reliable delivery additionally requires `EMAIL_DELIVERY_ENABLED=true`, a JSON `EMAIL_CONTENT_KEYS` keyring containing canonical Base64 32-byte AES keys, and `EMAIL_CONTENT_ACTIVE_KEY_ID`. Set the same values for API and Worker. `SMTP_ENABLED=false` may intentionally leave encrypted work pending without consuming attempts. Use `pnpm email:content-keys:migrate` before removing an old key and add `--apply` only after reviewing scan output.
 
 ## API Docs
 

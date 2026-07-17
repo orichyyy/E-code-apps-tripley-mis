@@ -2,7 +2,7 @@ import type { NotificationChannelAdapter } from "@web-admin-base/adapters";
 import type { SendTestEmailNotificationRequest } from "@web-admin-base/contracts";
 
 import { createKnownError } from "../../core/errors/error-codes";
-import { renderNotificationTemplate } from "./notification-template-renderer";
+import { renderStrictEmailTemplate } from "./email-delivery-domain";
 
 export type NotificationTemplateRecord = Record<string, unknown> & {
   id: string;
@@ -11,7 +11,8 @@ export type NotificationTemplateRecord = Record<string, unknown> & {
   locale: string;
   subject?: string | null;
   body: string;
-  status?: string;
+  variables: string[];
+  status: string;
 };
 
 export async function sendTestEmailNotification(
@@ -26,8 +27,20 @@ export async function sendTestEmailNotification(
     input.templateCode,
     input.locale,
   );
-  const subject = renderNotificationTemplate(template.subject ?? "", input.variables);
-  const body = renderNotificationTemplate(template.body, input.variables);
+  let rendered: { subject: string; body: string };
+  try {
+    rendered = renderStrictEmailTemplate(
+      template.subject ?? "",
+      template.body,
+      template.variables,
+      input.variables,
+    );
+  } catch (error) {
+    throw createKnownError("VALIDATION_TEMPLATE_VARIABLE_MISMATCH", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+  const { subject, body } = rendered;
   const sentAt = new Date().toISOString();
 
   await dependencies.notificationChannel.send({
