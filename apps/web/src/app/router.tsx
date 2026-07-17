@@ -19,7 +19,7 @@ import { CoreManagementPage } from "@/features/core-management/core-management-p
 import { AnnouncementsPage } from "@/features/notifications/announcements-page";
 import { InAppNotificationsPage } from "@/features/notifications/in-app-notifications-page";
 import { NotificationTemplatesPage } from "@/features/notifications/notification-templates-page";
-import { WebhookSubscriptionsPage } from "@/features/notifications/webhook-subscriptions-page";
+import { WebhookSubscriptionsPage } from "@/features/notifications/webhook-management-page";
 import { LogsPage } from "@/features/logs/logs-page";
 import { ImportExportPage } from "@/features/operations/import-export-page";
 import { OnlineUsersPage } from "@/features/operations/online-users-page";

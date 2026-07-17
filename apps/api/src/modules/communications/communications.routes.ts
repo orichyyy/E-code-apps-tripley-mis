@@ -1,6 +1,7 @@
 import {
   createAnnouncementRequestSchema,
   createWebhookSubscriptionRequestSchema,
+  listWebhookDeliveriesQuerySchema,
   updateAnnouncementRequestSchema,
   updateWebhookSubscriptionRequestSchema,
 } from "@web-admin-base/contracts";
@@ -64,6 +65,21 @@ export function createCommunicationsRoutes(services: CommunicationsServices) {
       return context.json({
         data: await services.updateWebhook(context.req.param("id"), input, actorId(context)),
       });
+    })
+    .delete("/webhooks/:id", async (context) => {
+      return context.json({
+        data: await services.deleteWebhook(context.req.param("id"), actorId(context)),
+      });
+    })
+    .get("/webhook-event-types", async (context) => {
+      return context.json({ data: await services.listWebhookEventTypes() });
+    })
+    .get("/webhook-deliveries", async (context) => {
+      const query = listWebhookDeliveriesQuerySchema.parse(context.req.query());
+      return context.json({ data: await services.listWebhookDeliveries(query) });
+    })
+    .get("/webhook-deliveries/:id", async (context) => {
+      return context.json({ data: await services.getWebhookDelivery(context.req.param("id")) });
     });
 }
 

@@ -207,3 +207,19 @@ Start the API and open:
 ```
 
 The OpenAPI document covers implemented APIs only.
+
+## Optional Outbound Webhook Delivery
+
+Outbound delivery is disabled by default. Generate a disposable development key and set the same values for API and Worker:
+
+```powershell
+$key = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
+$env:WEBHOOK_SECRET_KEYS = '{"dev":"' + $key + '"}'
+$env:WEBHOOK_SECRET_ACTIVE_KEY_ID = 'dev'
+$env:WEBHOOK_DELIVERY_ENABLED = 'true'
+$env:WORKER_POLL_INTERVAL_MS = '1000'
+```
+
+Production-style destinations require HTTPS. A local loopback receiver may be used only in development/test with `WEBHOOK_ALLOW_INSECURE_LOCALHOST=true`. Run `pnpm test:webhook-integration` for the repeatable local receiver, retry, cleanup, and optional PostgreSQL claim checks.
+
+Before enabling delivery for legacy subscription data, run `pnpm webhook:secrets:migrate` and review the counts. Apply encryption/rotation with `pnpm webhook:secrets:migrate -- --apply`. The command reports record IDs and states only; it does not print secrets or ciphertext.

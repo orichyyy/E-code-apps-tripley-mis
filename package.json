@@ -22,6 +22,8 @@
     "test:s3-integration": "tsx scripts/run-s3-integration.ts",
     "smoke:local": "tsx scripts/local-smoke/index.ts",
     "seed": "pnpm --filter @web-admin-base/api seed",
+    "webhook:secrets:migrate": "pnpm --filter @web-admin-base/api webhook:secrets:migrate",
+    "test:webhook-integration": "pnpm --filter @web-admin-base/worker exec vitest run test/webhook-delivery.test.ts test/webhook-lifecycle.test.ts test/webhook-postgresql.test.ts",
     "db:generate": "pnpm --filter @web-admin-base/db db:generate",
     "db:migrate": "pnpm --filter @web-admin-base/db db:migrate",
     "db:migrate:sqlite": "pnpm --filter @web-admin-base/db db:migrate:sqlite",

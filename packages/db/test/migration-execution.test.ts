@@ -43,6 +43,7 @@ describe("database migration execution", () => {
         "0006_file_references.sql",
         "0007_user_preferences.sql",
         "0008_file_object_locations.sql",
+        "0009_webhook_delivery.sql",
       ]);
       expect(reapplied).toEqual([]);
       expect(tables).toContainEqual({ name: "users" });
@@ -57,6 +58,8 @@ describe("database migration execution", () => {
       expect(tables).toContainEqual({ name: "i18n_messages" });
       expect(tables).toContainEqual({ name: "announcements" });
       expect(tables).toContainEqual({ name: "webhook_subscriptions" });
+      expect(tables).toContainEqual({ name: "webhook_deliveries" });
+      expect(tables).toContainEqual({ name: "webhook_delivery_attempts" });
       expect(tables).toContainEqual({ name: "file_references" });
       expect(tables).toContainEqual({ name: "user_preferences" });
       const fileColumns = client.prepare("PRAGMA table_info(file_objects)").all() as Array<{
@@ -65,6 +68,10 @@ describe("database migration execution", () => {
       expect(fileColumns.map((column) => column.name)).toEqual(
         expect.arrayContaining(["storage_bucket", "content_deleted_at"]),
       );
+      const subscriptionColumns = client
+        .prepare("PRAGMA table_info(webhook_subscriptions)")
+        .all() as Array<{ name: string }>;
+      expect(subscriptionColumns.map((column) => column.name)).toContain("revision");
     } finally {
       client.close();
     }
@@ -107,6 +114,7 @@ describe("database migration execution", () => {
       "0006_file_references.sql",
       "0007_user_preferences.sql",
       "0008_file_object_locations.sql",
+      "0009_webhook_delivery.sql",
     ];
     const applied = await runPostgresqlMigrations({ url });
     const reapplied = await runPostgresqlMigrations({ url });
@@ -131,7 +139,9 @@ describe("database migration execution", () => {
              'announcements',
              'file_references',
              'user_preferences',
-             'webhook_subscriptions'
+             'webhook_subscriptions',
+             'webhook_deliveries',
+             'webhook_delivery_attempts'
            )
          ORDER BY table_name`,
       );
@@ -159,6 +169,8 @@ describe("database migration execution", () => {
         "system_initialization_state",
         "user_preferences",
         "users",
+        "webhook_deliveries",
+        "webhook_delivery_attempts",
         "webhook_subscriptions",
       ]);
     } finally {

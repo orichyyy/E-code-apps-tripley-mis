@@ -74,7 +74,7 @@ No unresolved backend-core blockers remain from the previously listed questions.
 
     Confirmed: v1 implements notification channel interfaces and durable notification records. SMTP email sending uses an optional configuration-driven driver over Node.js built-ins and remains disabled unless `SMTP_ENABLED=true` with host/from configuration. Webhook/in-memory behavior may be represented as placeholders.
 
-    Implemented handling: webhook subscription persistence and management APIs are implemented without adding real external delivery, retry workers, or mandatory webhook sender dependencies. SMTP template test sending is implemented without adding a mandatory external package.
+    Implemented handling: SMTP template test sending remains optional. Webhook subscription management and reliable outbound delivery are now implemented under the later, more specific decision in item 22; delivery remains disabled unless explicitly configured and adds no mandatory external broker dependency.
 
 17. **Infrastructure table scope for adapter persistence**
 
@@ -95,3 +95,15 @@ No unresolved backend-core blockers remain from the previously listed questions.
 21. **Announcement organization scope reference**
 
     Confirmed implementation boundary: announcements persist the confirmed `scope_type` values `system` and `organization`. A concrete organization target/reference field is not added in v1 until the API contract and multi-organization audience semantics are explicitly confirmed.
+
+22. **Reliable outbound Webhook delivery semantics**
+
+    Confirmed: outbound Webhooks use a controlled initial event catalog, CloudEvents-compatible structured JSON, transactional database Outbox fan-out, durable delivery and attempt records, bounded at-least-once retries, HMAC-SHA256 request signatures, encrypted subscription secrets, strict SSRF controls, and a deployment-level feature switch that is disabled by default. Database state remains authoritative when RabbitMQ is enabled. The complete confirmed contract is recorded in `docs/webhook_delivery_design.md` and ADR 0002.
+
+23. **Webhook subscription deletion API conflict**
+
+    Confirmed: the PRD includes `DELETE /api/webhooks/:id` while the design specification omits it. The implementation will follow the PRD and add soft deletion with a dedicated `webhook:delete` permission, cancel pending deliveries for the deleted subscription revision, and retain historical delivery records through their normal retention period.
+
+24. **Permission manifest sync Webhook event target**
+
+    Confirmed: add `targetType = 'system'` and `changeType = 'manifestSync'`. A permission manifest synchronization that changes persisted state emits one summary event with `targetId = 'permission-manifest'` and `organizationId = null`.

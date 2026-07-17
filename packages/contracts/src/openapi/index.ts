@@ -1,5 +1,6 @@
 import { baseApiPermissionManifest, type BaseApiPermissionManifestEntry } from "../manifests";
 import { requestSchemaByOperationCode } from "./request-schema-map";
+import { queryParametersByOperationCode } from "./parameter-map";
 import { responseSchemaByOperationCode } from "./response-schema-map";
 import { componentSchemas, errorSchema, idStringSchema } from "./schemas";
 import type { OpenApiDocument, OpenApiOperation } from "./types";
@@ -60,7 +61,10 @@ function createOpenApiPaths(): OpenApiDocument["paths"] {
 function createOperation(entry: BaseApiPermissionManifestEntry): OpenApiOperation {
   const requestSchemaName = requestSchemaByOperationCode[entry.code];
   const responseSchemaName = responseSchemaByOperationCode[entry.code];
-  const parameters = createPathParameters(entry.path);
+  const parameters = [
+    ...createPathParameters(entry.path),
+    ...(queryParametersByOperationCode[entry.code] ?? []),
+  ];
 
   return {
     operationId: toOperationId(entry),

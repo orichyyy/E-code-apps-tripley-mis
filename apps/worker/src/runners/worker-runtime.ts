@@ -33,6 +33,7 @@ export type WorkerRuntimeDependencies = {
   durableQueue?: Pick<DatabaseQueueAdapter, "processReady">;
   scheduler?: JobSchedulerAdapter;
   durableScheduler?: Pick<DatabaseJobSchedulerAdapter, "processDue">;
+  durableWebhook?: { fanOutPending: () => Promise<number>; processReady: () => Promise<number> };
   queueTasks?: QueueWorkerTask[];
   scheduledTasks?: ScheduledWorkerTask[];
   log?: (message: string) => void;
@@ -74,6 +75,10 @@ export function createWorkerRuntime(
       log(`${config.workerName} started`);
     },
     async runOnce() {
+      if (dependencies.durableWebhook) {
+        await dependencies.durableWebhook.fanOutPending();
+        await dependencies.durableWebhook.processReady();
+      }
       const queueJobs = dependencies.durableQueue
         ? await dependencies.durableQueue.processReady()
         : 0;

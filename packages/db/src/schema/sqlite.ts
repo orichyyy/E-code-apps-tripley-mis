@@ -895,6 +895,7 @@ export const webhookSubscriptions = sqliteTable(
     url: text("url").notNull(),
     eventTypes: text("event_types", { mode: "json" }).notNull(),
     secret: text("secret"),
+    revision: integer("revision").notNull().default(1),
     status: text("status", { enum: ["enabled", "disabled"] })
       .notNull()
       .default("enabled"),
@@ -908,6 +909,80 @@ export const webhookSubscriptions = sqliteTable(
     statusCheck: check(
       "webhook_subscriptions_status_check",
       sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
+);
+
+export const webhookDeliveries = sqliteTable(
+  "webhook_deliveries",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    eventOutboxId: integer("event_outbox_id").notNull(),
+    subscriptionId: integer("subscription_id").notNull(),
+    subscriptionRevision: integer("subscription_revision").notNull(),
+    eventType: text("event_type").notNull(),
+    eventSource: text("event_source").notNull(),
+    eventPayloadJson: text("event_payload_json", { mode: "json" }).notNull(),
+    targetUrl: text("target_url").notNull(),
+    status: text("status", {
+      enum: ["pending", "running", "succeeded", "failed", "canceled"],
+    })
+      .notNull()
+      .default("pending"),
+    attempt: integer("attempt").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull(),
+    nextAttemptAt: text("next_attempt_at").notNull(),
+    lockedBy: text("locked_by"),
+    lockedAt: text("locked_at"),
+    lastHttpStatus: integer("last_http_status"),
+    lastErrorCode: text("last_error_code"),
+    lastErrorMessage: text("last_error_message"),
+    succeededAt: text("succeeded_at"),
+    failedAt: text("failed_at"),
+    canceledAt: text("canceled_at"),
+    ...timestamps,
+  },
+  (table) => ({
+    eventSubscriptionUnique: uniqueIndex("webhook_deliveries_event_subscription_unique").on(
+      table.eventOutboxId,
+      table.subscriptionId,
+    ),
+    claimIndex: index("webhook_deliveries_claim_idx").on(table.status, table.nextAttemptAt),
+    subscriptionIndex: index("webhook_deliveries_subscription_idx").on(
+      table.subscriptionId,
+      table.createdAt,
+    ),
+    statusCheck: check(
+      "webhook_deliveries_status_check",
+      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed', 'canceled')`,
+    ),
+  }),
+);
+
+export const webhookDeliveryAttempts = sqliteTable(
+  "webhook_delivery_attempts",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    deliveryId: integer("delivery_id").notNull(),
+    attemptNumber: integer("attempt_number").notNull(),
+    status: text("status", { enum: ["succeeded", "failed"] }).notNull(),
+    startedAt: text("started_at").notNull(),
+    finishedAt: text("finished_at").notNull(),
+    durationMs: integer("duration_ms").notNull(),
+    httpStatus: integer("http_status"),
+    errorCode: text("error_code"),
+    errorMessage: text("error_message"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => ({
+    deliveryAttemptUnique: uniqueIndex("webhook_delivery_attempts_delivery_number_unique").on(
+      table.deliveryId,
+      table.attemptNumber,
+    ),
+    deliveryIndex: index("webhook_delivery_attempts_delivery_idx").on(table.deliveryId),
+    statusCheck: check(
+      "webhook_delivery_attempts_status_check",
+      sql`${table.status} IN ('succeeded', 'failed')`,
     ),
   }),
 );
@@ -1008,5 +1083,7 @@ export const sqliteSchema = {
   userPreferences,
   userOrganizationRoles,
   webhookSubscriptions,
+  webhookDeliveries,
+  webhookDeliveryAttempts,
   users,
 };

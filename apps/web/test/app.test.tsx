@@ -191,7 +191,7 @@ describe("web admin frontend", () => {
               id: "31",
               name: "Audit webhook",
               url: "https://example.com/audit",
-              eventTypes: ["security.event"],
+              eventTypes: ["user.created"],
               secret: "raw-secret",
               secretConfigured: true,
               status: "enabled",

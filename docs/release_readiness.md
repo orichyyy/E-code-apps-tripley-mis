@@ -44,7 +44,7 @@ Expected CI behavior:
 - Installs dependencies with `pnpm install --frozen-lockfile`.
 - Installs Playwright Chromium.
 - Runs `pnpm verify`.
-- Does not require Redis, RabbitMQ, S3-compatible storage, SMTP, SMS, or real outbound webhook delivery.
+- Does not require Redis, RabbitMQ, S3-compatible storage, SMTP, SMS, or enabling outbound Webhook delivery.
 
 ## Acceptance Gates
 
@@ -89,7 +89,7 @@ These are not required for base-system release readiness:
 - RabbitMQ queue/event-bus drivers.
 - S3-compatible file storage concrete driver and configuration UI.
 - SMS notification sending.
-- Real outbound webhook delivery and retry workers.
+- Target-environment Webhook destination acceptance and out-of-scope replay/custom-header features.
 - Dedicated dead-letter queue beyond the existing `dead_letter` job status.
 
 If any of these are required by the target environment, create a separate goal and do not mark the release candidate ready until that goal has code, tests where applicable, documentation, and updated acceptance criteria.

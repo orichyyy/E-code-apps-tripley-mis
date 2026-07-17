@@ -1,7 +1,9 @@
 import {
   createLocalFileStorageAdapter,
+  createDatabaseLockAdapter,
   type DatabaseAdapterExecutor,
   type FileStorageAdapter,
+  type WebhookDeliveryConfig,
 } from "@web-admin-base/adapters";
 
 import type { QueueWorkerTask, ScheduledWorkerTask } from "../runners/worker-runtime";
@@ -21,6 +23,10 @@ import {
   createScheduledRunQueueTask,
   type ScheduledTaskHandlerRegistry,
 } from "./scheduled-run-task";
+import {
+  createWebhookDeliveryCleanupTaskHandler,
+  webhookDeliveryCleanupTaskCode,
+} from "./webhook-cleanup-task";
 
 export type WorkerTaskCatalog = {
   queueTasks: QueueWorkerTask[];
@@ -31,6 +37,7 @@ export type WorkerTaskCatalog = {
 export type WorkerTaskCatalogOptions = {
   storage?: FileStorageAdapter;
   fileStorageRoot?: string;
+  webhookConfig?: WebhookDeliveryConfig;
 };
 
 export function createBaseWorkerTaskCatalog(
@@ -43,7 +50,7 @@ export function createBaseWorkerTaskCatalog(
       rootDirectory:
         options.fileStorageRoot ?? process.env.FILE_STORAGE_ROOT ?? ".web-admin-storage",
     });
-  const handlers = createHandlerRegistry(executor, storage);
+  const handlers = createHandlerRegistry(executor, storage, options.webhookConfig);
 
   return {
     storage,
@@ -56,6 +63,7 @@ export function createBaseWorkerTaskCatalog(
       scheduledTask(fileCleanupTaskCode, "30 2 * * *", handlers),
       scheduledTask(importExportProcessTaskCode, "* * * * *", handlers),
       scheduledTask(importExportResultCleanupTaskCode, "0 3 * * *", handlers),
+      scheduledTask(webhookDeliveryCleanupTaskCode, "30 3 * * *", handlers),
     ],
   };
 }
@@ -63,11 +71,32 @@ export function createBaseWorkerTaskCatalog(
 function createHandlerRegistry(
   executor: DatabaseAdapterExecutor,
   storage: FileStorageAdapter,
+  webhookConfig?: WebhookDeliveryConfig,
 ): ScheduledTaskHandlerRegistry {
+  const lock = createDatabaseLockAdapter(executor);
   return new Map([
     [logRetentionTaskCode, createLogRetentionTaskHandler(executor)],
     [fileCleanupTaskCode, createFileCleanupTaskHandler(executor, storage)],
     [importExportProcessTaskCode, createImportExportScheduledHandler(executor, storage)],
+    [
+      webhookDeliveryCleanupTaskCode,
+      createWebhookDeliveryCleanupTaskHandler(
+        executor,
+        webhookConfig ?? {
+          enabled: false,
+          eventSource: "web-admin-base-system",
+          requestTimeoutMs: 10_000,
+          maxAttempts: 5,
+          concurrency: 4,
+          retentionDays: 90,
+          allowedHosts: new Set(),
+          allowInsecureLocalhost: false,
+          secretKeys: new Map(),
+          activeKeyId: null,
+        },
+        lock,
+      ),
+    ],
     [
       importExportResultCleanupTaskCode,
       createImportExportResultCleanupTaskHandler(executor, storage),

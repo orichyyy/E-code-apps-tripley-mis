@@ -14,3 +14,9 @@ export type NotificationChannelAdapter = HealthCheckableAdapter & {
 
 export * from "./in-memory-notification";
 export * from "./smtp-notification";
+export * from "./webhook-config";
+export * from "./webhook-http";
+export * from "./webhook-notification";
+export * from "./webhook-secret-crypto";
+export * from "./webhook-signature";
+export * from "./webhook-url-policy";

@@ -230,6 +230,32 @@ describe("OpenAPI document generation", () => {
       });
     }
   });
+
+  it("documents webhook delivery filters and safe response schemas", () => {
+    const document = createOpenApiDocument();
+    const list = document.paths["/webhook-deliveries"]?.get;
+    const detail = document.paths["/webhook-deliveries/{id}"]?.get;
+
+    expect(list?.parameters?.map((parameter) => parameter.name)).toEqual([
+      "subscriptionId",
+      "eventType",
+      "status",
+      "from",
+      "to",
+      "page",
+      "pageSize",
+    ]);
+    expect(list?.responses["200"]?.content?.["application/json"]?.schema).toEqual({
+      $ref: "#/components/schemas/WebhookDeliveryListResponse",
+    });
+    expect(detail?.responses["200"]?.content?.["application/json"]?.schema).toEqual({
+      $ref: "#/components/schemas/WebhookDeliveryDetailResponse",
+    });
+    expect(document.components.schemas.WebhookSubscription.properties).not.toHaveProperty("secret");
+    expect(document.components.schemas.WebhookDelivery.properties).not.toHaveProperty(
+      "eventPayload",
+    );
+  });
 });
 
 function toOpenApiTestPath(path: string) {

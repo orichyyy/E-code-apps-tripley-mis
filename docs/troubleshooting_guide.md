@@ -72,3 +72,12 @@ The frontend calls real APIs for modules whose backend routes are implemented. I
 ## Request ID Issues
 
 The API accepts valid incoming `x-request-id`, generates one when absent, returns it in response headers, and includes it in structured access-log entries.
+## Webhook Delivery
+
+- No new deliveries: confirm `WEBHOOK_DELIVERY_ENABLED=true` is set for both API and Worker, the Worker polling interval is nonzero, and the subscription is enabled for the event type.
+- Secret creation fails: configure a valid JSON `WEBHOOK_SECRET_KEYS` keyring and matching `WEBHOOK_SECRET_ACTIVE_KEY_ID`. Each value must be canonical Base64 for exactly 32 bytes.
+- Existing secrets fail decryption: run `pnpm webhook:secrets:migrate` in scan mode and restore every referenced old key before applying rotation. Delivery fails closed when a key is unavailable.
+- Destination is rejected: production requires HTTPS. Private/link-local/loopback/metadata destinations are denied unless an exact private hostname is allowlisted; insecure localhost is development/test only.
+- Delivery remains pending: check that the Worker is running. A global disable pauses pending records. Subscription edits increment the revision and cancel old pending records.
+- Repeated failures: inspect the Deliveries tab or API attempt detail. `408`, `425`, `429`, `5xx`, network failures, and timeouts retry; other `4xx` and all `3xx` are final.
+- Cleanup does not run: verify the scheduled task and `locks` table. The retention handler is a database singleton and skips execution when another Worker owns its lease.

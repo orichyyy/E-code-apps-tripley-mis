@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { WebhookSubscription } from "./webhook-subscription-api";
+import type { WebhookEventTypeOption } from "./webhook-subscription-api";
 import {
   defaultWebhookFormValues,
   toWebhookApiInput,
@@ -20,6 +21,7 @@ type WebhookFormProps = {
   mode: WebhookFormMode;
   onCancel: () => void;
   onSubmit: (input: CreateWebhookSubscriptionRequest | UpdateWebhookSubscriptionRequest) => void;
+  eventCatalog: WebhookEventTypeOption[];
 };
 
 export function WebhookSubscriptionForm({
@@ -28,12 +30,13 @@ export function WebhookSubscriptionForm({
   mode,
   onCancel,
   onSubmit,
+  eventCatalog,
 }: WebhookFormProps) {
   const initialValues = initialRecord
     ? {
         name: initialRecord.name,
         url: initialRecord.url,
-        eventTypesText: initialRecord.eventTypes.join(", "),
+        eventTypes: initialRecord.eventTypes,
         secret: "",
         status: initialRecord.status,
       }
@@ -85,18 +88,35 @@ export function WebhookSubscriptionForm({
           )}
         />
         <form.Field
-          name="eventTypesText"
+          name="eventTypes"
           children={(field) => (
-            <label className="block text-sm font-medium">
-              Event types
-              <input
-                className="mt-2 h-10 w-full rounded-md border bg-background px-3"
-                onBlur={field.handleBlur}
-                onChange={(event) => field.handleChange(event.target.value)}
-                placeholder="announcement.published, security.event"
-                value={field.state.value}
-              />
-            </label>
+            <fieldset className="space-y-2">
+              <legend className="text-sm font-medium">Event types</legend>
+              {eventCatalog.map((eventType) => (
+                <label
+                  className="flex items-start gap-2 rounded-md border p-2 text-sm"
+                  key={eventType.type}
+                >
+                  <input
+                    checked={field.state.value.includes(eventType.type)}
+                    className="mt-0.5 size-4"
+                    onChange={(event) =>
+                      field.handleChange(
+                        event.target.checked
+                          ? [...field.state.value, eventType.type]
+                          : field.state.value.filter((value) => value !== eventType.type),
+                      )
+                    }
+                    type="checkbox"
+                  />
+                  <span>
+                    <strong className="font-medium">{eventType.type}</strong>
+                    <br />
+                    <span className="text-xs text-muted-foreground">{eventType.description}</span>
+                  </span>
+                </label>
+              ))}
+            </fieldset>
           )}
         />
         <form.Field

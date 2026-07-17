@@ -66,6 +66,18 @@ describe("worker bootstrap", () => {
         dialect: "sqlite",
         url: "file:./data/test-worker.sqlite",
       },
+      webhook: {
+        enabled: false,
+        eventSource: "web-admin-base-system",
+        requestTimeoutMs: 10_000,
+        maxAttempts: 5,
+        concurrency: 4,
+        retentionDays: 90,
+        allowedHosts: new Set(),
+        allowInsecureLocalhost: false,
+        secretKeys: new Map(),
+        activeKeyId: null,
+      },
     });
   });
 

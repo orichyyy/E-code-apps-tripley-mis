@@ -23,3 +23,21 @@ _Avoid_: File path, download URL
 **Content Deletion**:
 The completed removal of a Managed File's stored content after the Managed File and its references have already become invalid.
 _Avoid_: Logical deletion, reference deletion
+
+## Webhooks
+
+**Webhook Subscription**:
+A managed external endpoint authorized to receive selected Webhook Event types.
+_Avoid_: Callback, webhook URL
+
+**Webhook Event**:
+An immutable, externally visible fact or directed notification represented by a stable event type and event identifier.
+_Avoid_: Queue job, internal event, callback payload
+
+**Webhook Delivery**:
+The durable relationship between one Webhook Event and one revision of its target Webhook Subscription, including its overall outcome.
+_Avoid_: Webhook job, request
+
+**Delivery Attempt**:
+One authenticated HTTP request made as part of a Webhook Delivery.
+_Avoid_: Retry, delivery

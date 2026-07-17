@@ -1,4 +1,5 @@
-import type { DatabaseAdapterExecutor } from "@web-admin-base/adapters";
+import { loadWebhookDeliveryConfig, type DatabaseAdapterExecutor } from "@web-admin-base/adapters";
+import { randomBytes } from "node:crypto";
 import { runPostgresqlMigrations } from "@web-admin-base/db";
 import { describe, expect, it } from "vitest";
 
@@ -19,6 +20,11 @@ describe("database-backed communications routes", () => {
       const executor = createPostgresqlInfrastructureExecutor(url);
       const communicationsServices = CommunicationsServices.database(
         new CommunicationsRepository(executor),
+        loadWebhookDeliveryConfig({
+          NODE_ENV: "test",
+          WEBHOOK_SECRET_KEYS: JSON.stringify({ test: randomBytes(32).toString("base64") }),
+          WEBHOOK_SECRET_ACTIVE_KEY_ID: "test",
+        }),
       );
       const app = createApp({
         communicationsServices,
@@ -53,18 +59,45 @@ describe("database-backed communications routes", () => {
           body: JSON.stringify({
             name: "DB Webhook",
             url: "https://example.com/db-webhook",
-            eventTypes: ["announcement.published"],
+            eventTypes: ["user.created"],
             secret: "db-secret",
             status: "enabled",
           }),
         });
         const webhookBody = await webhookResponse.json();
+        const now = new Date().toISOString();
+        const outboxRows = await executor.all(
+          `INSERT INTO event_outbox
+           (event_type, payload_json, status, attempt, max_attempts, occurred_at, created_at, updated_at)
+           VALUES ('user.created', $1, 'published', 0, 1, $2, $3, $4) RETURNING id`,
+          [{ type: "user.created", secret: "must-not-leak" }, now, now, now],
+        );
+        const deliveryRows = await executor.all(
+          `INSERT INTO webhook_deliveries
+           (event_outbox_id, subscription_id, subscription_revision, event_type, event_source,
+            event_payload_json, target_url, status, attempt, max_attempts, next_attempt_at,
+            created_at, updated_at)
+           VALUES ($1, $2, 1, 'user.created', 'test', $3,
+            'https://example.com/private/path?token=must-not-leak', 'pending', 0, 5, $4, $5, $6)
+           RETURNING id`,
+          [outboxRows[0]?.id, webhookBody.data.id, { secret: "must-not-leak" }, now, now, now],
+        );
+        const listDeliveryResponse = await app.request("/api/webhook-deliveries", { headers });
+        const detailDeliveryResponse = await app.request(
+          `/api/webhook-deliveries/${deliveryRows[0]?.id}`,
+          { headers },
+        );
+        const updateWebhookResponse = await app.request(`/api/webhooks/${webhookBody.data.id}`, {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({ status: "disabled" }),
+        });
         const persistedAnnouncements = await executor.all(
           "SELECT id, title, scope_type, status, published_at FROM announcements WHERE id = $1",
           [announcementBody.data.id],
         );
         const persistedWebhooks = await executor.all(
-          "SELECT id, name, event_types, secret, status FROM webhook_subscriptions WHERE id = $1",
+          "SELECT id, name, event_types, secret, revision, status FROM webhook_subscriptions WHERE id = $1",
           [webhookBody.data.id],
         );
 
@@ -75,6 +108,16 @@ describe("database-backed communications routes", () => {
           expect.objectContaining({ id: webhookBody.data.id, secretConfigured: true }),
         );
         expect(webhookBody.data).not.toHaveProperty("secret");
+        expect(listDeliveryResponse.status).toBe(200);
+        expect(detailDeliveryResponse.status).toBe(200);
+        const safeDeliveryJson = JSON.stringify([
+          await listDeliveryResponse.json(),
+          await detailDeliveryResponse.json(),
+        ]);
+        expect(safeDeliveryJson).toContain('"targetHost":"example.com"');
+        expect(safeDeliveryJson).not.toContain("must-not-leak");
+        expect(safeDeliveryJson).not.toContain("/private/path");
+        expect(updateWebhookResponse.status).toBe(200);
         expect(persistedAnnouncements).toEqual([
           expect.objectContaining({
             title: "DB Announcement",
@@ -86,11 +129,17 @@ describe("database-backed communications routes", () => {
         expect(persistedWebhooks).toEqual([
           expect.objectContaining({
             name: "DB Webhook",
-            event_types: ["announcement.published"],
-            secret: "db-secret",
-            status: "enabled",
+            event_types: ["user.created"],
+            secret: expect.stringMatching(/^enc:v1:test:/),
+            revision: 2,
+            status: "disabled",
           }),
         ]);
+        await expect(
+          executor.all("SELECT status FROM webhook_deliveries WHERE id = $1", [
+            deliveryRows[0]?.id,
+          ]),
+        ).resolves.toEqual([expect.objectContaining({ status: "canceled" })]);
       } finally {
         await clearCommunicationsTables(executor);
         await communicationsServices.close();
@@ -126,7 +175,13 @@ async function loginHeaders(app: ReturnType<typeof createApp>) {
 }
 
 async function clearCommunicationsTables(executor: DatabaseAdapterExecutor): Promise<void> {
-  for (const table of ["webhook_subscriptions", "announcements"]) {
+  for (const table of [
+    "webhook_delivery_attempts",
+    "webhook_deliveries",
+    "webhook_subscriptions",
+    "announcements",
+    "event_outbox",
+  ]) {
     await executor.run(`DELETE FROM ${table}`);
   }
 }

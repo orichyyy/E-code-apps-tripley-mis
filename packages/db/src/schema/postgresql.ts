@@ -851,6 +851,7 @@ export const webhookSubscriptions = pgTable(
     url: text("url").notNull(),
     eventTypes: jsonb("event_types").notNull(),
     secret: text("secret"),
+    revision: integer("revision").notNull().default(1),
     status: text("status").notNull().default("enabled"),
     ...softDelete,
     ...timestamps,
@@ -862,6 +863,76 @@ export const webhookSubscriptions = pgTable(
     statusCheck: check(
       "webhook_subscriptions_status_check",
       sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
+);
+
+export const webhookDeliveries = pgTable(
+  "webhook_deliveries",
+  {
+    id: serial("id").primaryKey(),
+    eventOutboxId: integer("event_outbox_id").notNull(),
+    subscriptionId: integer("subscription_id").notNull(),
+    subscriptionRevision: integer("subscription_revision").notNull(),
+    eventType: text("event_type").notNull(),
+    eventSource: text("event_source").notNull(),
+    eventPayloadJson: jsonb("event_payload_json").notNull(),
+    targetUrl: text("target_url").notNull(),
+    status: text("status").notNull().default("pending"),
+    attempt: integer("attempt").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull(),
+    nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).notNull(),
+    lockedBy: text("locked_by"),
+    lockedAt: timestamp("locked_at", { withTimezone: true }),
+    lastHttpStatus: integer("last_http_status"),
+    lastErrorCode: text("last_error_code"),
+    lastErrorMessage: text("last_error_message"),
+    succeededAt: timestamp("succeeded_at", { withTimezone: true }),
+    failedAt: timestamp("failed_at", { withTimezone: true }),
+    canceledAt: timestamp("canceled_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => ({
+    eventSubscriptionUnique: uniqueIndex("webhook_deliveries_event_subscription_unique").on(
+      table.eventOutboxId,
+      table.subscriptionId,
+    ),
+    claimIndex: index("webhook_deliveries_claim_idx").on(table.status, table.nextAttemptAt),
+    subscriptionIndex: index("webhook_deliveries_subscription_idx").on(
+      table.subscriptionId,
+      table.createdAt,
+    ),
+    statusCheck: check(
+      "webhook_deliveries_status_check",
+      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed', 'canceled')`,
+    ),
+  }),
+);
+
+export const webhookDeliveryAttempts = pgTable(
+  "webhook_delivery_attempts",
+  {
+    id: serial("id").primaryKey(),
+    deliveryId: integer("delivery_id").notNull(),
+    attemptNumber: integer("attempt_number").notNull(),
+    status: text("status").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }).notNull(),
+    durationMs: integer("duration_ms").notNull(),
+    httpStatus: integer("http_status"),
+    errorCode: text("error_code"),
+    errorMessage: text("error_message"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  },
+  (table) => ({
+    deliveryAttemptUnique: uniqueIndex("webhook_delivery_attempts_delivery_number_unique").on(
+      table.deliveryId,
+      table.attemptNumber,
+    ),
+    deliveryIndex: index("webhook_delivery_attempts_delivery_idx").on(table.deliveryId),
+    statusCheck: check(
+      "webhook_delivery_attempts_status_check",
+      sql`${table.status} IN ('succeeded', 'failed')`,
     ),
   }),
 );
@@ -960,5 +1031,7 @@ export const postgresqlSchema = {
   userPreferences,
   userOrganizationRoles,
   webhookSubscriptions,
+  webhookDeliveries,
+  webhookDeliveryAttempts,
   users,
 };

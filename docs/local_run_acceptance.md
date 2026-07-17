@@ -6,7 +6,7 @@ This runbook verifies that a developer can run the Web Admin Base System locally
 
 This checklist covers the local SQLite demo path, the repeatable smoke script, and a manual browser walkthrough of implemented base pages.
 
-The default checklist does not require Redis, RabbitMQ, S3-compatible storage, SMS sending, or real outbound webhook delivery. Optional S3 compatibility can be verified separately below.
+The default checklist does not require Redis, RabbitMQ, S3-compatible storage, SMS sending, or enabling outbound Webhook delivery. Optional S3 and Webhook compatibility can be verified separately below.
 
 ## Prerequisites
 
@@ -128,7 +128,7 @@ Files and notifications:
 - Open Announcements and confirm list/create/edit/publish/unpublish behavior is reachable.
 - Open In-app notifications and confirm unread/read/archive/delete behavior is reachable for current-user notifications.
 - Open Notification templates and confirm template list/create/edit behavior is reachable.
-- Open Webhooks and confirm list/create/edit/enable/disable behavior is reachable. Persisted webhook secrets must not be displayed as raw values.
+- Open Webhooks and confirm subscription list/create/edit/enable/disable/delete behavior is reachable. Confirm the Deliveries tab has subscription/event/status/time filters. Persisted secrets, full target URLs, event payloads, signatures, and response bodies must not be displayed.
 
 Optional S3 compatibility:
 
@@ -136,6 +136,15 @@ Optional S3 compatibility:
 - Confirm the container binds only `127.0.0.1:9000`, has no Console port, and uses the 256 MB memory limit.
 - Confirm the test creates its bucket explicitly, persists a prefixed object key, reads through AWS SDK v3, follows a 60-second presigned GET, and deletes the object.
 - Stop the disposable backend with `scripts/rustfs-dev.ps1 -Action Stop`.
+
+Optional Webhook delivery:
+
+1. Configure a disposable keyring, `WEBHOOK_DELIVERY_ENABLED=true`, `WEBHOOK_ALLOW_INSECURE_LOCALHOST=true`, and a nonzero Worker polling interval for API and Worker.
+2. Start a loopback-only receiver or run `pnpm test:webhook-integration`.
+3. Create an enabled subscription for a controlled event and trigger that event.
+4. Confirm one durable delivery and attempt appear, the event ID remains stable across retries, and a configured signature is present at the receiver.
+5. Confirm the UI/API exposes only the target hostname and safe error summary.
+6. Disable delivery after acceptance; pending work must pause rather than be canceled.
 
 Account:
 

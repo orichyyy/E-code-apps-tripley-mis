@@ -1,5 +1,6 @@
 import { loadDatabaseConfig } from "@web-admin-base/db";
 import type { DatabaseConfig } from "@web-admin-base/db";
+import { webhookOutboxEventSchema, type WebhookOutboxEvent } from "@web-admin-base/contracts";
 
 import { InMemoryBackendStore } from "../in-memory-store";
 import { BackendCoreAggregateRepositories } from "./backend-core-aggregate-repositories";
@@ -61,6 +62,23 @@ export class BackendCoreStoreRepository {
 
   transaction<T>(operation: () => Promise<T>): Promise<T> {
     return this.executor.transaction(operation);
+  }
+
+  async appendWebhookEvent(event: WebhookOutboxEvent): Promise<void> {
+    const value = webhookOutboxEventSchema.parse(event);
+    const marker = (index: number) => (this.executor.dialect === "postgresql" ? `$${index}` : "?");
+    await this.executor.run(
+      `INSERT INTO event_outbox
+       (event_type, payload_json, status, attempt, max_attempts, occurred_at, created_at, updated_at)
+       VALUES (${marker(1)}, ${marker(2)}, 'pending', 0, 1, ${marker(3)}, ${marker(4)}, ${marker(5)})`,
+      [
+        value.type,
+        this.executor.dialect === "sqlite" ? JSON.stringify(value) : value,
+        value.occurredAt,
+        value.occurredAt,
+        value.occurredAt,
+      ],
+    );
   }
 
   async load(): Promise<InMemoryBackendStore> {

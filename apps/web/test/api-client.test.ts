@@ -630,7 +630,7 @@ describe("frontend API client", () => {
               id: "31",
               name: "Audit webhook",
               url: "https://example.com/audit",
-              eventTypes: ["security.event"],
+              eventTypes: ["user.created"],
               secret: "raw-secret",
               secretConfigured: true,
               status: "enabled",
@@ -653,7 +653,8 @@ describe("frontend API client", () => {
         id: "31",
         name: "Audit webhook",
         url: "https://example.com/audit",
-        eventTypes: ["security.event"],
+        eventTypes: ["user.created"],
+        revision: 1,
         secretConfigured: true,
         status: "enabled",
         createdAt: "2026-07-03T00:00:00.000Z",
@@ -967,7 +968,7 @@ describe("frontend API client", () => {
     await createWebhookSubscription({
       name: "Audit webhook",
       url: "https://example.com/audit",
-      eventTypes: ["security.event"],
+      eventTypes: ["user.created"],
       secret: "new-secret",
       status: "enabled",
     });
@@ -978,7 +979,7 @@ describe("frontend API client", () => {
       body: JSON.stringify({
         name: "Audit webhook",
         url: "https://example.com/audit",
-        eventTypes: ["security.event"],
+        eventTypes: ["user.created"],
         secret: "new-secret",
         status: "enabled",
       }),

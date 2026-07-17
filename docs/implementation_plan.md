@@ -481,7 +481,7 @@ The webhook subscription frontend slice completed the following:
 - Preserved the sensitive-field boundary: persisted raw secrets are never rendered; the UI only displays whether a secret is configured and allows setting/replacing a secret.
 - Added frontend API/client and component coverage for listing, create/update requests, route rendering, and raw-secret non-display.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. Real outbound webhook delivery, retry workers, S3-compatible storage, Redis, and RabbitMQ remain optional/reserved until concrete package and runtime contracts are confirmed; SMTP is available only when explicitly configured.
+At this historical slice, outbound Webhook delivery and the listed optional drivers were still reserved. Later sections record their implementation status.
 
 ## Announcement Frontend Progress
 
@@ -530,7 +530,7 @@ The notification template frontend slice completed the following:
 - Added list, filter, create, and edit behavior for persisted in-app, email, and reserved SMS template records.
 - Added frontend API/client and component coverage for listing, create/update requests, route rendering, and template variable display.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. SMTP delivery is available through the optional configured driver and test-send API. SMS delivery, real outbound webhook delivery, retry workers, S3-compatible storage, Redis, and RabbitMQ remain optional/reserved until concrete package and runtime contracts are confirmed.
+At this historical slice, outbound Webhook delivery and the listed optional drivers were still reserved. Later sections record their implementation status; SMS sending remains reserved.
 
 ## i18n Message Frontend Progress
 
@@ -613,7 +613,7 @@ The SMTP email notification slice completed the following:
 - Added OpenAPI request/response schema coverage for the test-send endpoint.
 - Added in-memory route tests, PostgreSQL route tests for DB-backed template lookup, and SMTP adapter protocol tests against a local fake SMTP server.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. SMTP remains optional and disabled unless configured. SMS sending, real outbound webhook delivery, notification fan-out/retry workers, and production delivery retry catalogs remain reserved.
+At this historical slice, outbound Webhook delivery remained reserved. It is implemented in the later Webhook section; SMTP remains optional and SMS sending remains reserved.
 
 ## In-App Notification Dispatch Progress
 
@@ -627,7 +627,7 @@ The in-app notification dispatch slice completed the following:
 - Kept public administrator notification creation APIs and frontend create flows out of scope because no base API contract confirms them.
 - Added in-memory service coverage, worker task coverage, and PostgreSQL durable queue/notification persistence coverage.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. Production notification retry catalogs, external webhook delivery, SMS sending, S3-compatible storage, Redis, and RabbitMQ remain reserved or optional until their concrete contracts are confirmed.
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. Reliable outbound webhook delivery now follows ADR 0002; production destination acceptance remains pending. SMS sending and optional external integrations remain bounded by their documented contracts and deployment decisions.
 
 ## Worker Runtime Wiring Progress
 
@@ -664,7 +664,7 @@ The base worker task catalog slice completed the following:
 - Kept unknown import/export resource types from silently succeeding; unsupported resources are marked failed with an error preview instead of inventing business-module handlers.
 - Added worker integration coverage for CSV log export, manual scheduled runs, log retention cleanup, invalid file cleanup, result cleanup, and default task registration.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. Future business-module task catalogs, real outbound webhook delivery, SMS sending, S3-compatible storage, Redis, and RabbitMQ remain reserved or optional until their concrete contracts are confirmed.
+At this historical slice, outbound Webhook delivery and the listed optional drivers remained reserved. Later sections record their implementation status; future business-module catalogs and SMS remain outside scope.
 
 ## Final Consistency Hardening Progress
 
@@ -812,7 +812,7 @@ The local run acceptance slice completed the following:
 - Added `docs/local_run_acceptance.md` as the reproducible local acceptance runbook.
 - Documented automated acceptance through `pnpm verify` and `pnpm smoke:local`.
 - Documented the persistent SQLite manual run path with seed credentials, worker startup, browser page checklist, API documentation check, evidence to record, and cleanup steps.
-- Kept optional Redis, RabbitMQ, S3-compatible storage, SMS, and real outbound webhook delivery outside the acceptance scope unless explicitly configured by a future goal.
+- At that time, kept optional integrations outside acceptance; current Webhook acceptance remains optional and is documented separately.
 
 ## Deployment Acceptance Progress
 
@@ -821,7 +821,7 @@ The deployment acceptance slice completed the following:
 - Added `docs/deployment_acceptance.md` as the PostgreSQL-backed deployment acceptance runbook.
 - Documented required production variables, deployment order, initialization choices, static SPA serving requirements, API checks, browser checks, worker checks, security/consistency checks, and acceptance evidence.
 - Added rollback and troubleshooting entry points for migration, login, worker, file access, OpenAPI, and permission consistency failures.
-- Kept Redis, RabbitMQ, S3-compatible storage, SMS, and real outbound webhook delivery outside the required deployment acceptance path unless explicitly configured by a future goal.
+- Kept optional integrations outside required deployment acceptance; current S3 and Webhook acceptance sections remain opt-in.
 
 ## Release Readiness Progress
 
@@ -928,3 +928,17 @@ The confirmed ADR contract is now implemented:
 - Added `scripts/rustfs-dev.ps1`, `pnpm test:s3-integration`, and a manually triggered `S3 Compatibility` workflow using `rustfs/rustfs:1.0.0-beta.8` at a verified 256 MB limit.
 
 Production object-storage provider selection and target-environment deployment acceptance remain pending until that environment is ready. Direct browser uploads, multipart upload, automatic historical migration, and an S3 configuration UI remain outside this goal.
+
+## Reliable Outbound Webhook Delivery Progress
+
+The confirmed design in `docs/webhook_delivery_design.md` and ADR 0002 is implemented:
+
+- Added the controlled event catalog and strict CloudEvents-compatible payload contracts for user creation, exhausted jobs, permission changes, and directed notification requests.
+- Added transactional backend-core/queue/scheduler Outbox production with no-op mutation suppression and recursion exclusion for Webhook pipeline jobs.
+- Added durable subscription revisions, delivery records, immutable attempts, idempotent fan-out, PostgreSQL concurrent claims, stale-running recovery, bounded retries, and database-locked retention cleanup.
+- Added AES-256-GCM secret storage/rotation tooling, HMAC-SHA256 signatures, HTTPS/SSRF/DNS-pinning controls, redirect rejection, response limits, safe structured logs, and a no-op-by-default alert boundary.
+- Added subscription deletion, controlled event catalog, delivery list/detail APIs, explicit OpenAPI schemas/query parameters, Hono RPC inference checks, and API permission metadata.
+- Added Subscriptions/Deliveries frontend tabs, controlled event selection, delivery filters/details, bilingual labels, mutation states, and sensitive-data non-disclosure.
+- Added SQLite migrations and smoke tests plus PostgreSQL, adapter, Worker, API, frontend, key migration, local HTTP receiver, retry, concurrency, revision cancellation, directed notification, and retention coverage.
+
+Delivery remains disabled by default and requires matching API/Worker `WEBHOOK_*` configuration. Manual replay/cancel/export, custom headers, a separate Webhook dead-letter queue, a public arbitrary-notification API, and automatic subscription disabling are outside the confirmed v1 contract. Target-environment destination acceptance remains pending until that environment is ready.

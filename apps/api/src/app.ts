@@ -22,6 +22,7 @@ import { createErrorResponse, normalizeError } from "./core/errors/error-respons
 import { createApiAuthorizationMiddleware } from "./middleware/api-authorization";
 import { requestIdMiddleware, type RequestIdVariables } from "./middleware/request-id";
 import { createCommunicationsRoutes } from "./modules/communications/communications.routes";
+import { CommunicationsRepository } from "./modules/communications/communications.repository";
 import { CommunicationsServices } from "./modules/communications/communications.service";
 import { createCoreFoundationRoutes } from "./modules/core-foundation/core-foundation.routes";
 import {
@@ -156,8 +157,12 @@ export async function createDatabaseBackedAppDependencies(
   return {
     backendCoreServices: await createPersistentBackendCoreServices(config.backendCore, undefined, {
       permissionCacheAdapter,
+      webhookEventsEnabled: config.webhook.enabled,
     }),
-    communicationsServices: CommunicationsServices.database(),
+    communicationsServices: CommunicationsServices.database(
+      CommunicationsRepository.fromEnvironment(),
+      config.webhook,
+    ),
     infrastructureServices: InfrastructureServices.database(infrastructureRepository, {
       storage: fileStorage,
       presignedUrlTtlSeconds: config.storage.presignedUrlTtlSeconds,

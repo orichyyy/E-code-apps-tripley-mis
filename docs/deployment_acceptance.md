@@ -13,7 +13,7 @@ This checklist covers the supported v1 deployment shape:
 - Worker service from `apps/worker`.
 - Database-backed backend-core, infrastructure, system-management, file, notification, scheduler, and import/export persistence.
 
-It does not require Redis, RabbitMQ, S3-compatible storage, SMS sending, or real outbound webhook delivery. S3-compatible support is implemented but remains optional, and production-provider acceptance is pending until a target environment is ready.
+It does not require Redis, RabbitMQ, S3-compatible storage, SMS sending, or enabling outbound Webhook delivery. S3-compatible storage and Webhook delivery are implemented but remain optional; production-provider and destination acceptance require the target environment.
 
 ## Pre-Deployment Gate
 
@@ -198,7 +198,7 @@ Files and notifications:
 - Announcements support list/create/edit/publish/unpublish.
 - In-app notifications support unread/read/archive/delete for current-user notifications.
 - Notification templates support list/create/edit.
-- Webhooks support list/create/edit/enable/disable, and persisted secrets are not displayed as raw values.
+- Webhooks support subscription list/create/edit/enable/disable/delete and safe delivery history. Persisted secrets, full target URLs, payloads, signatures, and response bodies are not displayed.
 
 Account:
 
@@ -228,7 +228,7 @@ If a job does not move, inspect `queue_jobs.status`, `attempt`, `max_attempts`, 
 - Organization paths still follow the confirmed BIGINT materialized-path design and organization nodes cannot be moved in v1.
 - API permission manifest entries exist for implemented private endpoints.
 - Hono RPC internal frontend typing remains the frontend API boundary; OpenAPI is documentation.
-- Redis, RabbitMQ, S3-compatible storage, SMS sending, and real outbound webhook delivery are not required for base deployment acceptance.
+- Redis, RabbitMQ, S3-compatible storage, SMS sending, and enabled outbound Webhook delivery are not required for base deployment acceptance.
 - If S3 is selected, verify private bucket access and authenticated redirect behavior in the target environment before recording provider acceptance.
 
 ## Rollback And Troubleshooting Entry Points
@@ -263,6 +263,18 @@ OpenAPI or permission inconsistency:
 - Run the contracts and API tests.
 - Confirm route/API permission manifests were generated from the current build.
 - Confirm permission sync was run where needed.
+
+## Optional Webhook Acceptance
+
+Perform this section only when outbound delivery is selected for the target environment:
+
+1. Confirm API and Worker use identical `WEBHOOK_*` configuration and `WEBHOOK_ALLOW_INSECURE_LOCALHOST=false`.
+2. Run the secret migration in scan mode, restore required old keys, then apply and rescan.
+3. Verify the selected HTTPS destination is authorized and does not require redirects.
+4. Trigger one controlled event and confirm the receiver validates the HMAC signature and deduplicates by CloudEvent ID.
+5. Exercise a retryable response and a final `4xx`; confirm durable attempts, bounded retry timing, and final alert-boundary invocation.
+6. Confirm logs and APIs do not expose full URLs, query strings, bodies, signatures, secrets, or ciphertext.
+7. Record the destination owner, allowlisted private hostnames, key IDs, and rollback procedure without recording key material.
 
 ## Acceptance Evidence
 

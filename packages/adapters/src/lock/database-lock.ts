@@ -31,29 +31,64 @@ async function acquireLock(
 ): Promise<LockHandle | null> {
   const now = nowIso();
   const expiresAt = addSecondsIso(ttlSeconds);
-  const rows = await executor.all(
-    `SELECT id, owner, fencing_token, expires_at FROM locks WHERE key = ${p(executor, 1)}`,
-    [key],
-  );
-
-  if (!rows[0]) {
-    await executor.run(
-      `INSERT INTO locks (key, owner, fencing_token, expires_at, heartbeat_at, created_at, updated_at)
-       VALUES (${p(executor, 1)}, ${p(executor, 2)}, ${p(executor, 3)}, ${p(executor, 4)}, ${p(executor, 5)}, ${p(executor, 6)}, ${p(executor, 7)})`,
-      [key, owner, 1, expiresAt, now, now, now],
-    );
+  if (await insertIfAbsent(executor, key, owner, expiresAt, now)) {
     return handle(executor, key, owner);
   }
-
-  if (String(rows[0].owner) !== owner && String(rows[0].expires_at) > now) {
-    return null;
+  if (await takeExpiredOrOwned(executor, key, owner, expiresAt, now)) {
+    return handle(executor, key, owner);
   }
+  return null;
+}
 
+async function insertIfAbsent(
+  executor: DatabaseAdapterExecutor,
+  key: string,
+  owner: string,
+  expiresAt: string,
+  now: string,
+): Promise<boolean> {
+  const values = [key, owner, 1, expiresAt, now, now, now];
+  if (executor.dialect === "postgresql") {
+    const rows = await executor.all(
+      `INSERT INTO locks (key, owner, fencing_token, expires_at, heartbeat_at, created_at, updated_at)
+       VALUES ($1, $2, $3, $4::timestamptz, $5::timestamptz, $6::timestamptz, $7::timestamptz)
+       ON CONFLICT (key) DO NOTHING RETURNING key`,
+      values,
+    );
+    return rows.length === 1;
+  }
   await executor.run(
-    `UPDATE locks SET owner = ${p(executor, 1)}, fencing_token = ${p(executor, 2)}, expires_at = ${p(executor, 3)}, heartbeat_at = ${p(executor, 4)}, updated_at = ${p(executor, 5)} WHERE key = ${p(executor, 6)}`,
-    [owner, Number(rows[0].fencing_token) + 1, expiresAt, now, now, key],
+    `INSERT OR IGNORE INTO locks
+     (key, owner, fencing_token, expires_at, heartbeat_at, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    values,
   );
-  return handle(executor, key, owner);
+  return Number((await executor.all("SELECT changes() AS count"))[0]?.count ?? 0) === 1;
+}
+
+async function takeExpiredOrOwned(
+  executor: DatabaseAdapterExecutor,
+  key: string,
+  owner: string,
+  expiresAt: string,
+  now: string,
+): Promise<boolean> {
+  if (executor.dialect === "postgresql") {
+    const rows = await executor.all(
+      `UPDATE locks SET owner = $1, fencing_token = fencing_token + 1,
+       expires_at = $2::timestamptz, heartbeat_at = $3::timestamptz, updated_at = $4::timestamptz
+       WHERE key = $5 AND (owner = $1 OR expires_at <= $3::timestamptz) RETURNING key`,
+      [owner, expiresAt, now, now, key],
+    );
+    return rows.length === 1;
+  }
+  await executor.run(
+    `UPDATE locks SET owner = ?, fencing_token = fencing_token + 1,
+     expires_at = ?, heartbeat_at = ?, updated_at = ?
+     WHERE key = ? AND (owner = ? OR expires_at <= ?)`,
+    [owner, expiresAt, now, now, key, owner, now],
+  );
+  return Number((await executor.all("SELECT changes() AS count"))[0]?.count ?? 0) === 1;
 }
 
 function handle(executor: DatabaseAdapterExecutor, key: string, owner: string): LockHandle {

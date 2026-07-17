@@ -32,7 +32,9 @@ Required production environment variables include `BACKEND_CORE_STORE=database`,
 
 Local filesystem storage remains the default through `FILE_STORAGE_ROOT`; multi-server local deployments require a shared mounted directory. Optional S3-compatible storage is selected with `FILE_STORAGE_DRIVER=s3` and uses private buckets, backend authorization, and short-lived presigned redirects. API and worker must receive identical S3 location settings. Production buckets are provisioned externally, so `S3_AUTO_CREATE_BUCKET` must remain false in production.
 
-SMTP email sending is optional and disabled by default. Redis, RabbitMQ, and S3-compatible storage are also optional runtime integrations. Real outbound webhook delivery remains reserved.
+SMTP email sending and outbound Webhook delivery are optional and disabled by default. Redis, RabbitMQ, and S3-compatible storage are also optional runtime integrations.
+
+Outbound Webhook delivery requires identical `WEBHOOK_*` configuration in API and Worker. Production destinations require HTTPS. Keep `WEBHOOK_ALLOW_INSECURE_LOCALHOST=false`; allow private destinations only by exact hostname through `WEBHOOK_ALLOWED_HOSTS`. Provide a versioned AES-256-GCM keyring through `WEBHOOK_SECRET_KEYS` and an active key ID. Run the secret migration in scan mode before `--apply`, then start API before Worker. Pending work pauses when delivery is disabled.
 
 S3 runtime variables are `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_OBJECT_PREFIX`, `S3_FORCE_PATH_STYLE`, `S3_PRESIGNED_URL_TTL_SECONDS`, and optional explicit credential variables. The TTL is restricted to 15-900 seconds. The AWS SDK default credential chain is used when explicit credentials are omitted. A production object-storage provider has not been selected or accepted by this repository.
 

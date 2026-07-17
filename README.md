@@ -4,9 +4,9 @@ Reusable multi-organization admin-system foundation built as a pnpm monorepo.
 
 ## Applications and Packages
 
-- `apps/api`: Node.js Hono API with request IDs, auth/session/user/organization/role/permission/menu foundations, personal profile/preferences APIs, system configuration, dictionaries, i18n messages, file upload/download/preview metadata APIs, announcements, webhook subscription APIs, OpenAPI JSON, and manifest-based API authorization.
-- `apps/web`: React Vite SPA admin shell using TanStack Router, TanStack Query, TanStack Form, Zod, Zustand, Tailwind CSS, and shadcn/ui, including personal center/settings, base file management, announcement, in-app notification, i18n message, notification template, and webhook subscription management pages.
-- `apps/worker`: Node.js worker runtime wired to database queue/scheduler adapters, default in-app notification dispatch task registration, durable `runOnce`, and optional polling.
+- `apps/api`: Node.js Hono API with request IDs, auth/session/user/organization/role/permission/menu foundations, personal profile/preferences APIs, system configuration, dictionaries, i18n messages, file APIs, announcements, Webhook subscription/delivery-history APIs, OpenAPI JSON, and manifest-based authorization.
+- `apps/web`: React Vite SPA admin shell using TanStack Router, TanStack Query, TanStack Form, Zod, Zustand, Tailwind CSS, and shadcn/ui, including Webhook subscription and delivery-history management.
+- `apps/worker`: Node.js worker runtime wired to database queue/scheduler adapters, durable Webhook Outbox fan-out/delivery, cleanup tasks, durable `runOnce`, and optional polling.
 - `packages/contracts`: Zod contracts, Hono RPC boundary types, permission/route/menu/API manifests, and OpenAPI generation.
 - `packages/db`: Drizzle schemas, SQLite/PostgreSQL migration files, and executable migration runners.
 - `packages/adapters`: adapter interfaces plus in-memory defaults, database-backed infrastructure drivers, optional Redis/RabbitMQ drivers, token store, notification channels, atomic local file storage, and optional AWS SDK v3 S3-compatible storage.
@@ -44,7 +44,7 @@ Start here based on the job you are doing:
 - Deployment operator: use `docs/deployment_guide.md` for deployment shape and `docs/deployment_acceptance.md` for the PostgreSQL-backed rollout checklist.
 - Release owner: use `docs/release_readiness.md`, review `docs/known_gaps.md`, and file a record under `docs/release_readiness_records/`.
 - Business module developer: use `docs/business_module_extension_guide.md` and do not add example business modules to the base system.
-- Adapter extender: use `docs/adapter_extension_guide.md`; Redis, RabbitMQ, and S3-compatible drivers are optional and Docker-testable. SMS and real outbound webhook delivery remain reserved.
+- Adapter extender: use `docs/adapter_extension_guide.md`; Redis, RabbitMQ, S3-compatible storage, SMTP, and outbound Webhook delivery are optional and disabled unless configured. SMS remains reserved.
 - Permission extender: use `docs/permission_extension_guide.md` and keep route, menu, API permission, OpenAPI, and frontend metadata aligned.
 - Troubleshooter: start with `docs/troubleshooting_guide.md`, then check `docs/known_gaps.md` before treating a reserved boundary as a bug.
 
@@ -85,7 +85,17 @@ Local file storage uses `FILE_STORAGE_ROOT` when provided and falls back to `.we
 
 S3-compatible storage is opt-in with `FILE_STORAGE_DRIVER=s3`. API and worker share the validated `S3_*` settings, while existing records continue to use their persisted local or S3 object location. S3 downloads remain private: the API authorizes the request and returns a short-lived presigned redirect. See `docs/local_development_guide.md` for the disposable RustFS compatibility test. RustFS is not the selected production provider.
 
-Notification templates and webhook subscriptions are persisted for management. In-app notification creation/fan-out is available through the internal queue-backed dispatch service and worker task boundary. SMTP email sending is available as an optional configuration-driven notification channel; SMS sending, real outbound webhook delivery, and delivery retries remain reserved integrations.
+Notification templates and Webhook subscriptions are persisted for management. Outbound Webhook delivery uses a transactional database Outbox, durable delivery/attempt records, bounded retries, encrypted secrets, HMAC signatures, and SSRF-safe HTTP delivery. It is disabled by default. SMTP email sending is optional; SMS sending remains reserved.
+
+Webhook verification commands:
+
+```powershell
+pnpm webhook:secrets:migrate
+pnpm webhook:secrets:migrate -- --apply
+pnpm test:webhook-integration
+```
+
+Configure both API and Worker with the same `WEBHOOK_*` values. `WEBHOOK_SECRET_KEYS` is a JSON object of Base64-encoded 32-byte keys; `WEBHOOK_SECRET_ACTIVE_KEY_ID` selects the write key. See `docs/local_development_guide.md` and `docs/webhook_delivery_design.md`.
 
 Optional Redis and RabbitMQ adapter tests:
 

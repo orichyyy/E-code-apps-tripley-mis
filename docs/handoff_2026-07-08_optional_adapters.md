@@ -115,7 +115,7 @@ No secrets are included in this document. The GitHub token used on the original 
 3. Keep target-environment deployment acceptance pending until the target staging/production-like environment is ready.
 4. The next optional integration slice can be one of:
    - S3-compatible file storage driver and configuration contract.
-   - Real outbound webhook delivery worker and retry semantics.
+   - Outbound Webhook delivery was pending at handoff time; it is implemented in later commits and documented in `docs/webhook_delivery_design.md`.
    - SMS sender integration, if a provider and contract are confirmed.
    - Further RabbitMQ production semantics, if queue retry/dead-letter behavior should move beyond the current adapter boundary.
 

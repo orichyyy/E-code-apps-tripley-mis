@@ -100,6 +100,7 @@ export const basePermissionManifest: PermissionManifestEntry[] = [
   { code: "webhook:view", description: "View webhook subscriptions", module: "webhooks" },
   { code: "webhook:create", description: "Create webhook subscriptions", module: "webhooks" },
   { code: "webhook:update", description: "Update webhook subscriptions", module: "webhooks" },
+  { code: "webhook:delete", description: "Delete webhook subscriptions", module: "webhooks" },
   { code: "job:view", description: "View scheduled tasks", module: "jobs" },
   { code: "job:create", description: "Create scheduled tasks", module: "jobs" },
   { code: "job:update", description: "Update scheduled tasks", module: "jobs" },

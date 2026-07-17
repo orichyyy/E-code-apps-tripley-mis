@@ -62,6 +62,7 @@ const webhookSubscriptionSchema: OpenApiSchema = {
     "url",
     "eventTypes",
     "secretConfigured",
+    "revision",
     "status",
     "isDeleted",
     "deletedAt",
@@ -78,8 +79,86 @@ const webhookSubscriptionSchema: OpenApiSchema = {
     url: { type: "string", format: "uri" },
     eventTypes: { type: "array", items: { type: "string" } },
     secretConfigured: { type: "boolean" },
+    revision: { type: "integer" },
     status: { type: "string", enum: ["enabled", "disabled"] },
     ...auditProperties,
+  },
+  additionalProperties: false,
+};
+
+const webhookDeliverySchema: OpenApiSchema = {
+  type: "object",
+  required: [
+    "id",
+    "eventId",
+    "subscriptionId",
+    "subscriptionRevision",
+    "eventType",
+    "eventSource",
+    "targetHost",
+    "status",
+    "attempt",
+    "maxAttempts",
+    "nextAttemptAt",
+    "lastHttpStatus",
+    "lastErrorCode",
+    "lastErrorMessage",
+    "succeededAt",
+    "failedAt",
+    "canceledAt",
+    "createdAt",
+    "updatedAt",
+  ],
+  properties: {
+    id: idStringSchema,
+    eventId: idStringSchema,
+    subscriptionId: idStringSchema,
+    subscriptionRevision: { type: "integer" },
+    eventType: {
+      type: "string",
+      enum: ["user.created", "job.failed", "permission.changed", "notification.requested"],
+    },
+    eventSource: { type: "string" },
+    targetHost: { type: "string" },
+    status: { type: "string", enum: ["pending", "running", "succeeded", "failed", "canceled"] },
+    attempt: { type: "integer" },
+    maxAttempts: { type: "integer" },
+    nextAttemptAt: { type: "string", format: "date-time" },
+    lastHttpStatus: { type: "integer", nullable: true },
+    lastErrorCode: { type: "string", nullable: true },
+    lastErrorMessage: { type: "string", nullable: true },
+    succeededAt: { type: "string", format: "date-time", nullable: true },
+    failedAt: { type: "string", format: "date-time", nullable: true },
+    canceledAt: { type: "string", format: "date-time", nullable: true },
+    createdAt: { type: "string", format: "date-time" },
+    updatedAt: { type: "string", format: "date-time" },
+  },
+  additionalProperties: false,
+};
+
+const webhookAttemptSchema: OpenApiSchema = {
+  type: "object",
+  required: [
+    "id",
+    "attemptNumber",
+    "status",
+    "startedAt",
+    "finishedAt",
+    "durationMs",
+    "httpStatus",
+    "errorCode",
+    "errorMessage",
+  ],
+  properties: {
+    id: idStringSchema,
+    attemptNumber: { type: "integer" },
+    status: { type: "string", enum: ["succeeded", "failed"] },
+    startedAt: { type: "string", format: "date-time" },
+    finishedAt: { type: "string", format: "date-time" },
+    durationMs: { type: "integer" },
+    httpStatus: { type: "integer", nullable: true },
+    errorCode: { type: "string", nullable: true },
+    errorMessage: { type: "string", nullable: true },
   },
   additionalProperties: false,
 };
@@ -106,11 +185,17 @@ export const communicationsComponentSchemas: OpenApiDocument["components"]["sche
   },
   CreateWebhookSubscriptionRequest: {
     type: "object",
-    required: ["name", "url"],
+    required: ["name", "url", "eventTypes"],
     properties: {
       name: { type: "string" },
       url: { type: "string", format: "uri" },
-      eventTypes: { type: "array", items: { type: "string" } },
+      eventTypes: {
+        type: "array",
+        items: {
+          type: "string",
+          enum: ["user.created", "job.failed", "permission.changed", "notification.requested"],
+        },
+      },
       secret: { type: "string", nullable: true },
       status: { type: "string", enum: ["enabled", "disabled"] },
     },
@@ -121,7 +206,13 @@ export const communicationsComponentSchemas: OpenApiDocument["components"]["sche
     properties: {
       name: { type: "string" },
       url: { type: "string", format: "uri" },
-      eventTypes: { type: "array", items: { type: "string" } },
+      eventTypes: {
+        type: "array",
+        items: {
+          type: "string",
+          enum: ["user.created", "job.failed", "permission.changed", "notification.requested"],
+        },
+      },
       secret: { type: "string", nullable: true },
       status: { type: "string", enum: ["enabled", "disabled"] },
     },
@@ -129,6 +220,8 @@ export const communicationsComponentSchemas: OpenApiDocument["components"]["sche
   },
   Announcement: announcementSchema,
   WebhookSubscription: webhookSubscriptionSchema,
+  WebhookDelivery: webhookDeliverySchema,
+  WebhookDeliveryAttempt: webhookAttemptSchema,
   AnnouncementListResponse: envelopeSchema({
     type: "array",
     items: { $ref: "#/components/schemas/Announcement" },
@@ -142,5 +235,42 @@ export const communicationsComponentSchemas: OpenApiDocument["components"]["sche
   }),
   WebhookSubscriptionResponse: envelopeSchema({
     anyOf: [{ $ref: "#/components/schemas/WebhookSubscription" }, { type: "null" }],
+  }),
+  WebhookEventTypeListResponse: envelopeSchema({
+    type: "array",
+    items: {
+      type: "object",
+      required: ["type", "description"],
+      properties: { type: { type: "string" }, description: { type: "string" } },
+      additionalProperties: false,
+    },
+  }),
+  WebhookDeliveryListResponse: envelopeSchema({
+    type: "object",
+    required: ["items", "page", "pageSize", "total"],
+    properties: {
+      items: { type: "array", items: { $ref: "#/components/schemas/WebhookDelivery" } },
+      page: { type: "integer" },
+      pageSize: { type: "integer" },
+      total: { type: "integer" },
+    },
+    additionalProperties: false,
+  }),
+  WebhookDeliveryDetailResponse: envelopeSchema({
+    anyOf: [
+      {
+        type: "object",
+        required: [...(webhookDeliverySchema.required ?? []), "attempts"],
+        properties: {
+          ...(webhookDeliverySchema.properties ?? {}),
+          attempts: {
+            type: "array",
+            items: { $ref: "#/components/schemas/WebhookDeliveryAttempt" },
+          },
+        },
+        additionalProperties: false,
+      },
+      { type: "null" },
+    ],
   }),
 };

@@ -1,26 +1,23 @@
-import {
-  jsonParam,
-  nowIso,
-  readJson,
-  type DatabaseAdapterExecutor,
-  type DatabaseRow,
-} from "@web-admin-base/adapters";
+import { nowIso, type DatabaseAdapterExecutor, type DatabaseRow } from "@web-admin-base/adapters";
 import { loadDatabaseConfig } from "@web-admin-base/db";
 import type {
   CreateAnnouncementRequest,
-  CreateWebhookSubscriptionRequest,
   UpdateAnnouncementRequest,
-  UpdateWebhookSubscriptionRequest,
 } from "@web-admin-base/contracts";
 
 import {
   createPostgresqlInfrastructureExecutor,
   createSqliteInfrastructureExecutor,
 } from "../infrastructure/infrastructure.executor";
-import type { AnnouncementRecord, WebhookSubscriptionRecord } from "./communications.types";
+import type { AnnouncementRecord } from "./communications.types";
+import { WebhookRepository } from "./webhook.repository";
 
 export class CommunicationsRepository {
-  constructor(private readonly executor: DatabaseAdapterExecutor) {}
+  readonly webhooks: WebhookRepository;
+
+  constructor(private readonly executor: DatabaseAdapterExecutor) {
+    this.webhooks = new WebhookRepository(executor);
+  }
 
   static fromEnvironment(env: NodeJS.ProcessEnv = process.env): CommunicationsRepository {
     const config = loadDatabaseConfig(env);
@@ -80,76 +77,6 @@ export class CommunicationsRepository {
     return (await this.listAnnouncements()).find((item) => item.id === id) ?? null;
   }
 
-  async listWebhooks(): Promise<WebhookSubscriptionRecord[]> {
-    const rows = await this.executor.all(
-      `SELECT id, tenant_id, name, url, event_types, secret, status, is_deleted, deleted_at, deleted_by,
-        created_at, updated_at, created_by, updated_by
-       FROM webhook_subscriptions
-       WHERE is_deleted = ${this.bool(false)}
-       ORDER BY updated_at DESC, id DESC LIMIT 200`,
-    );
-    return rows.map(toWebhookSubscription);
-  }
-
-  async createWebhook(input: CreateWebhookSubscriptionRequest, actorId: string | null) {
-    const now = nowIso();
-    const id = await this.insertAndGetId(
-      `INSERT INTO webhook_subscriptions (name, url, event_types, secret, status, created_at, updated_at, created_by, updated_by)
-       VALUES (${this.p(1)}, ${this.p(2)}, ${this.p(3)}, ${this.p(4)}, ${this.p(5)}, ${this.p(6)}, ${this.p(7)}, ${this.p(8)}, ${this.p(9)})`,
-      [
-        input.name,
-        input.url,
-        jsonParam(input.eventTypes, this.executor.dialect),
-        input.secret ?? null,
-        input.status,
-        now,
-        now,
-        actorId,
-        actorId,
-      ],
-    );
-    return this.getWebhook(id);
-  }
-
-  async updateWebhook(id: string, input: UpdateWebhookSubscriptionRequest, actorId: string | null) {
-    const current = await this.getWebhookWithSecret(id);
-    if (!current) return null;
-    const next = { ...current, ...input };
-    await this.executor.run(
-      `UPDATE webhook_subscriptions
-       SET name = ${this.p(1)}, url = ${this.p(2)}, event_types = ${this.p(3)}, secret = ${this.p(4)}, status = ${this.p(5)}, updated_at = ${this.p(6)}, updated_by = ${this.p(7)}
-       WHERE id = ${this.p(8)} AND is_deleted = ${this.bool(false)}`,
-      [
-        next.name,
-        next.url,
-        jsonParam(next.eventTypes, this.executor.dialect),
-        next.secret ?? null,
-        next.status,
-        nowIso(),
-        actorId,
-        id,
-      ],
-    );
-    return (await this.listWebhooks()).find((item) => item.id === id) ?? null;
-  }
-
-  private async getWebhookWithSecret(id: string) {
-    const rows = await this.executor.all(
-      `SELECT id, name, url, event_types, secret, status
-       FROM webhook_subscriptions WHERE id = ${this.p(1)} AND is_deleted = ${this.bool(false)} LIMIT 1`,
-      [id],
-    );
-    const row = rows[0];
-    if (!row) return null;
-    return {
-      name: String(row.name),
-      url: String(row.url),
-      eventTypes: readJson<string[]>(row.event_types),
-      secret: nullableString(row.secret),
-      status: String(row.status) as WebhookSubscriptionRecord["status"],
-    };
-  }
-
   private async getAnnouncement(id: string): Promise<AnnouncementRecord | null> {
     const rows = await this.executor.all(
       `SELECT id, tenant_id, title, content, scope_type, status, published_at, is_deleted, deleted_at,
@@ -159,17 +86,6 @@ export class CommunicationsRepository {
       [id],
     );
     return rows[0] ? toAnnouncement(rows[0]) : null;
-  }
-
-  private async getWebhook(id: string): Promise<WebhookSubscriptionRecord | null> {
-    const rows = await this.executor.all(
-      `SELECT id, tenant_id, name, url, event_types, secret, status, is_deleted, deleted_at, deleted_by,
-        created_at, updated_at, created_by, updated_by
-       FROM webhook_subscriptions
-       WHERE id = ${this.p(1)} AND is_deleted = ${this.bool(false)} LIMIT 1`,
-      [id],
-    );
-    return rows[0] ? toWebhookSubscription(rows[0]) : null;
   }
 
   private async insertAndGetId(sql: string, params: unknown[]): Promise<string> {
@@ -210,35 +126,12 @@ function toAnnouncement(row: DatabaseRow): AnnouncementRecord {
   };
 }
 
-function toWebhookSubscription(row: DatabaseRow): WebhookSubscriptionRecord {
-  return {
-    id: String(row.id),
-    tenantId: nullableId(row.tenant_id),
-    name: String(row.name),
-    url: String(row.url),
-    eventTypes: readJson<string[]>(row.event_types),
-    secretConfigured: Boolean(row.secret),
-    status: String(row.status) as WebhookSubscriptionRecord["status"],
-    isDeleted: Boolean(row.is_deleted),
-    deletedAt: nullableIso(row.deleted_at),
-    deletedBy: nullableId(row.deleted_by),
-    createdAt: iso(row.created_at),
-    updatedAt: iso(row.updated_at),
-    createdBy: nullableId(row.created_by),
-    updatedBy: nullableId(row.updated_by),
-  };
-}
-
 function iso(value: unknown): string {
   return new Date(String(value)).toISOString();
 }
 
 function nullableIso(value: unknown): string | null {
   return value === null || value === undefined ? null : iso(value);
-}
-
-function nullableString(value: unknown): string | null {
-  return value === null || value === undefined ? null : String(value);
 }
 
 function nullableId(value: unknown): string | null {

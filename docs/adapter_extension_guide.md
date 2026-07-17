@@ -26,7 +26,7 @@ Implemented v1 drivers include:
 
 ## Rules
 
-- Keep Redis, RabbitMQ, S3, webhook delivery, SMS, and other external drivers optional unless explicitly configured.
+- Keep Redis, RabbitMQ, S3, outbound Webhook delivery, SMS, and other external drivers optional unless explicitly configured.
 - Do not bypass adapter interfaces from API or worker modules.
 - Keep driver configuration explicit and validated.
 - Add contract tests for each new driver.
@@ -71,3 +71,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/rustfs-dev.ps1 -Acti
 ```
 
 Application code uses only the generic S3 protocol. RustFS is a compatibility-test backend, not a production provider selection.
+
+## Outbound Webhook Boundary
+
+The Webhook notification channel publishes a directed `notification.requested` record to the database Outbox. System events also enter the Outbox transactionally with their domain mutation. The Worker remains responsible for subscription fan-out, secure HTTP delivery, retry classification, and immutable attempt history.
+
+Do not bypass the destination policy or log complete URLs, bodies, headers, signatures, secrets, or ciphertext. A replacement HTTP transport must preserve DNS validation and address pinning, reject redirects, enforce response limits, and return only status/duration/`Retry-After` metadata. The database Outbox remains authoritative even when RabbitMQ is enabled.

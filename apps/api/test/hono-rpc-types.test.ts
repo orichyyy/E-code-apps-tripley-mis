@@ -33,6 +33,10 @@ it("keeps Hono RPC type inference available for communications routes", () => {
   const listWebhooks = client.api.webhooks.$get;
   const createWebhook = client.api.webhooks.$post;
   const updateWebhook = client.api.webhooks[":id"].$patch;
+  const deleteWebhook = client.api.webhooks[":id"].$delete;
+  const listWebhookEventTypes = client.api["webhook-event-types"].$get;
+  const listWebhookDeliveries = client.api["webhook-deliveries"].$get;
+  const getWebhookDelivery = client.api["webhook-deliveries"][":id"].$get;
 
   expect(listAnnouncements).toBeDefined();
   expect(createAnnouncement).toBeDefined();
@@ -42,4 +46,8 @@ it("keeps Hono RPC type inference available for communications routes", () => {
   expect(listWebhooks).toBeDefined();
   expect(createWebhook).toBeDefined();
   expect(updateWebhook).toBeDefined();
+  expect(deleteWebhook).toBeDefined();
+  expect(listWebhookEventTypes).toBeDefined();
+  expect(listWebhookDeliveries).toBeDefined();
+  expect(getWebhookDelivery).toBeDefined();
 });

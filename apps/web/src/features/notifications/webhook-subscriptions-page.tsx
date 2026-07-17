@@ -10,6 +10,8 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   createWebhookSubscription,
+  deleteWebhookSubscription,
+  fetchWebhookEventTypes,
   fetchWebhookSubscriptions,
   updateWebhookSubscription,
   type WebhookSubscription,
@@ -27,12 +29,13 @@ type WebhookSubscriptionsPageProps = {
   route: WebAdminRouteMetadata;
 };
 
-export function WebhookSubscriptionsPage({ route }: WebhookSubscriptionsPageProps) {
+export function WebhookSubscriptionsPanel({ route }: WebhookSubscriptionsPageProps) {
   const language = useLayoutStore((state) => state.language);
   const permissionCodes = useAuthStore((state) => state.permissionCodes);
   const canView = hasPermission(permissionCodes, route.requiredPermission);
   const canCreate = hasPermission(permissionCodes, "webhook:create");
   const canUpdate = hasPermission(permissionCodes, "webhook:update");
+  const canDelete = hasPermission(permissionCodes, "webhook:delete");
   const [keyword, setKeyword] = useState("");
   const [editing, setEditing] = useState<WebhookSubscription | null>(null);
   const [creating, setCreating] = useState(false);
@@ -41,6 +44,11 @@ export function WebhookSubscriptionsPage({ route }: WebhookSubscriptionsPageProp
     enabled: canView,
     queryKey: ["webhook-subscriptions"],
     queryFn: fetchWebhookSubscriptions,
+  });
+  const eventCatalogQuery = useQuery({
+    enabled: canView,
+    queryKey: ["webhook-event-types"],
+    queryFn: fetchWebhookEventTypes,
   });
   const createMutation = useMutation({
     mutationFn: createWebhookSubscription,
@@ -52,6 +60,13 @@ export function WebhookSubscriptionsPage({ route }: WebhookSubscriptionsPageProp
   const updateMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: UpdateWebhookSubscriptionRequest }) =>
       updateWebhookSubscription(id, input),
+    onSuccess: async () => {
+      setEditing(null);
+      await queryClient.invalidateQueries({ queryKey: ["webhook-subscriptions"] });
+    },
+  });
+  const deleteMutation = useMutation({
+    mutationFn: deleteWebhookSubscription,
     onSuccess: async () => {
       setEditing(null);
       await queryClient.invalidateQueries({ queryKey: ["webhook-subscriptions"] });
@@ -92,10 +107,17 @@ export function WebhookSubscriptionsPage({ route }: WebhookSubscriptionsPageProp
         <div className="rounded-lg border bg-card shadow-sm">
           <WebhookFilter keyword={keyword} language={language} onChange={setKeyword} />
           <WebhookSubscriptionTable
+            busy={updateMutation.isPending || deleteMutation.isPending}
+            canDelete={canDelete}
             canUpdate={canUpdate}
             isError={query.isError}
             isLoading={query.isLoading}
             onEdit={setEditing}
+            onDelete={(record) => {
+              if (window.confirm(`Delete webhook subscription “${record.name}”?`)) {
+                deleteMutation.mutate(record.id);
+              }
+            }}
             onToggle={(record) =>
               updateMutation.mutate({
                 id: record.id,
@@ -110,7 +132,8 @@ export function WebhookSubscriptionsPage({ route }: WebhookSubscriptionsPageProp
         creating={creating}
         createPending={createMutation.isPending}
         editing={editing}
-        error={createMutation.isError || updateMutation.isError}
+        error={createMutation.isError || updateMutation.isError || eventCatalogQuery.isError}
+        eventCatalog={eventCatalogQuery.data ?? []}
         onCancelCreate={() => setCreating(false)}
         onCancelEdit={() => setEditing(null)}
         onCreate={(input) =>
@@ -146,7 +169,7 @@ function WebhookToolbar({
       <div>
         <h2 className="text-base font-semibold">{translate(language, route.titleI18nKey)}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Manage persisted event subscriptions. Delivery execution remains an optional integration.
+          Manage durable subscriptions and encrypted request-signing secrets.
         </p>
       </div>
       <div className="flex gap-2">
@@ -197,6 +220,7 @@ function WebhookEditorPanel({
   creating,
   createPending,
   editing,
+  eventCatalog,
   error,
   onCancelCreate,
   onCancelEdit,
@@ -207,6 +231,7 @@ function WebhookEditorPanel({
   creating: boolean;
   createPending: boolean;
   editing: WebhookSubscription | null;
+  eventCatalog: Parameters<typeof WebhookSubscriptionForm>[0]["eventCatalog"];
   error: boolean;
   onCancelCreate: () => void;
   onCancelEdit: () => void;
@@ -226,6 +251,7 @@ function WebhookEditorPanel({
       {creating ? (
         <WebhookSubscriptionForm
           busy={createPending}
+          eventCatalog={eventCatalog}
           mode="create"
           onCancel={onCancelCreate}
           onSubmit={onCreate}
@@ -234,6 +260,7 @@ function WebhookEditorPanel({
       {editing ? (
         <WebhookSubscriptionForm
           busy={updatePending}
+          eventCatalog={eventCatalog}
           initialRecord={editing}
           key={editing.id}
           mode="edit"

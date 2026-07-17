@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-import { loadFileStorageConfig, type FileStorageConfig } from "@web-admin-base/adapters";
+import {
+  loadFileStorageConfig,
+  loadWebhookDeliveryConfig,
+  type FileStorageConfig,
+  type WebhookDeliveryConfig,
+} from "@web-admin-base/adapters";
 
 import {
   defaultBackendCoreConfig,
@@ -145,6 +150,7 @@ const apiConfigSchema = z.object({
 export type ApiConfig = Omit<z.infer<typeof apiConfigSchema>, "backendCore"> & {
   backendCore: BackendCoreConfig;
   storage: FileStorageConfig;
+  webhook: WebhookDeliveryConfig;
 };
 
 export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
@@ -191,5 +197,6 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   return {
     ...config,
     storage: loadFileStorageConfig(env),
+    webhook: loadWebhookDeliveryConfig(env),
   } as ApiConfig;
 }
