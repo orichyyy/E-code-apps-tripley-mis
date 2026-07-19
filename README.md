@@ -4,8 +4,8 @@ Reusable multi-organization admin-system foundation built as a pnpm monorepo.
 
 ## Applications and Packages
 
-- `apps/api`: Node.js Hono API with request IDs, auth/session/user/organization/role/permission/menu foundations, personal profile/preferences APIs, system configuration, dictionaries, i18n messages, file APIs, announcements, Webhook subscription/delivery-history APIs, OpenAPI JSON, and manifest-based authorization.
-- `apps/web`: React Vite SPA admin shell using TanStack Router, TanStack Query, TanStack Form, Zod, Zustand, Tailwind CSS, and shadcn/ui, including safe Webhook and email delivery-history management.
+- `apps/api`: Node.js Hono API with request IDs, auth/session/user/organization/role/permission/menu foundations, personal profile/preferences APIs, system configuration, dictionaries, i18n messages, file APIs, organization-targeted announcements, Webhook subscription/delivery-history APIs, OpenAPI JSON, and manifest-based authorization.
+- `apps/web`: React Vite SPA admin shell using TanStack Router, TanStack Query, TanStack Form, Zod, Zustand, Tailwind CSS, and shadcn/ui, including target-aware announcement management, Current Announcements, and safe Webhook/email delivery history.
 - `apps/worker`: Node.js worker runtime wired to database queue/scheduler adapters, durable Webhook Outbox fan-out/delivery, cleanup tasks, durable `runOnce`, and optional polling.
 - `packages/contracts`: Zod contracts, Hono RPC boundary types, permission/route/menu/API manifests, and OpenAPI generation.
 - `packages/db`: Drizzle schemas, SQLite/PostgreSQL migration files, and executable migration runners.
@@ -86,6 +86,8 @@ Local file storage uses `FILE_STORAGE_ROOT` when provided and falls back to `.we
 S3-compatible storage is opt-in with `FILE_STORAGE_DRIVER=s3`. API and worker share the validated `S3_*` settings, while existing records continue to use their persisted local or S3 object location. S3 downloads remain private: the API authorizes the request and returns a short-lived presigned redirect. See `docs/local_development_guide.md` for the disposable RustFS compatibility test. RustFS is not the selected production provider.
 
 Notification templates and Webhook subscriptions are persisted for management. Reliable email uses encrypted delivery snapshots, durable attempts, bounded retries, stable Message IDs, terminal content purge, and read-only safe history. Outbound Webhook delivery uses a transactional database Outbox, durable attempts, encrypted secrets, HMAC signatures, and SSRF-safe HTTP delivery. Both are disabled by default. SMS sending remains reserved.
+
+Announcements support system or minimal multi-Organization subtree targets, draft-only lifecycle changes, immediate publication, optional UTC expiration, and dynamic visibility through the authenticated current Organization. The management Catalog and top-bar Current Announcements view are separate. Publishing does not fan out recipient rows or trigger in-app, email, SMS, or Webhook delivery.
 
 Webhook verification commands:
 

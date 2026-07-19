@@ -968,3 +968,17 @@ The confirmed ADR 0003 contract is implemented:
 - Added development-only request tooling, scan/apply content-key rotation tooling, a pinned 128 MB Mailpit environment, `pnpm test:smtp-integration`, and a manual compatibility workflow.
 
 Reliable email and SMTP remain independently disabled by default. Production provider selection, key custody, and target-environment acceptance remain pending.
+
+## Organization-Scoped Announcement Implementation Progress
+
+The contract in `docs/announcement_targeting_design.md` and ADR 0004 is implemented:
+
+- Added SQLite/PostgreSQL expiration and durable multi-Organization target persistence with auto-increment IDs, uniqueness, target-type enforcement, and transactional replacement.
+- Added strict scope/target validation, minimal ancestor/descendant target sets, draft-only edit/delete, publish-time revalidation, immediate publish/unpublish, UTC publication time, and read-time expiration.
+- Added the permissioned paginated Announcement Catalog and authenticated Current Announcements endpoint with dynamic current-Organization subtree visibility and no recipient snapshots.
+- Added `announcement:delete`, API/permission/route metadata, explicit OpenAPI request/query/response coverage, and Hono RPC inference checks.
+- Added the bilingual management UI with Organization target tree, expiration, filters, pagination, lifecycle-aware actions, deletion, and the top-bar Current Announcements panel.
+- Wired frontend Organization switching to the backend context API and invalidated server queries so menus, permissions, data, and Current Announcements reload together.
+- Added contract, in-memory API, PostgreSQL persistence/reload, migration, manifest/OpenAPI, Hono RPC, API-client, and frontend component coverage.
+
+Publication remains independent from in-app Notification, email, SMS, and Webhook delivery. Scheduled publication, approval, role/user targets, title search, and per-user Announcement state remain outside the confirmed scope.

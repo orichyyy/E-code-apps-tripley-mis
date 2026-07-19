@@ -199,7 +199,9 @@ Logs:
 Files and notifications:
 
 - File management supports upload, metadata, detail, download, image preview, references, and delete-invalidate behavior.
-- Announcements support list/create/edit/publish/unpublish.
+- Announcements support a paginated management Catalog, system and minimal multi-Organization targets, draft-only edit/delete, publish/unpublish, UTC expiration, and dynamic current-Organization visibility.
+- The top-bar Current Announcements panel reloads after Organization switching and never exposes drafts, deleted, expired, or unrelated Announcements.
+- Publishing an Announcement creates no recipient snapshots, in-app Notification, email, SMS, or Webhook delivery.
 - In-app notifications support unread/read/archive/delete for current-user notifications.
 - Notification templates support list/create/edit.
 - Webhooks support subscription list/create/edit/enable/disable/delete and safe delivery history. Persisted secrets, full target URLs, payloads, signatures, and response bodies are not displayed.

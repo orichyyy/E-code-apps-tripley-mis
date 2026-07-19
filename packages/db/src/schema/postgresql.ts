@@ -904,6 +904,7 @@ export const announcements = pgTable(
     scopeType: text("scope_type").notNull(),
     status: text("status").notNull().default("draft"),
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    expiresAt: timestamp("expire_at", { withTimezone: true }),
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
@@ -918,6 +919,29 @@ export const announcements = pgTable(
     statusCheck: check(
       "announcements_status_check",
       sql`${table.status} IN ('draft', 'published', 'deleted')`,
+    ),
+  }),
+);
+
+export const announcementTargets = pgTable(
+  "announcement_targets",
+  {
+    id: serial("id").primaryKey(),
+    announcementId: integer("announcement_id").notNull(),
+    targetType: text("target_type").notNull(),
+    targetId: integer("target_id").notNull(),
+  },
+  (table) => ({
+    announcementTargetUnique: uniqueIndex("announcement_targets_binding_unique").on(
+      table.announcementId,
+      table.targetType,
+      table.targetId,
+    ),
+    announcementIndex: index("announcement_targets_announcement_idx").on(table.announcementId),
+    targetIndex: index("announcement_targets_target_idx").on(table.targetType, table.targetId),
+    targetTypeCheck: check(
+      "announcement_targets_target_type_check",
+      sql`${table.targetType} = 'organization'`,
     ),
   }),
 );

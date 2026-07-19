@@ -8,12 +8,12 @@ Implement reliable outbound Webhook delivery for the existing subscription manag
 
 The initial controlled event catalog is:
 
-| Event type | Trigger |
-| --- | --- |
-| `user.created` | A user creation transaction commits. Initialization of the first super administrator is excluded. |
-| `job.failed` | A queue or scheduled job exhausts its configured attempts. Webhook pipeline jobs are excluded. |
-| `permission.changed` | A supported permission mutation commits and changes persisted state. |
-| `notification.requested` | An internal caller requests a directed notification to one Webhook Subscription. |
+| Event type               | Trigger                                                                                           |
+| ------------------------ | ------------------------------------------------------------------------------------------------- |
+| `user.created`           | A user creation transaction commits. Initialization of the first super administrator is excluded. |
+| `job.failed`             | A queue or scheduled job exhausts its configured attempts. Webhook pipeline jobs are excluded.    |
+| `permission.changed`     | A supported permission mutation commits and changes persisted state.                              |
+| `notification.requested` | An internal caller requests a directed notification to one Webhook Subscription.                  |
 
 Unknown event types are rejected when a subscription is created or updated. Frontend subscription forms use the event catalog rather than free-form strings.
 

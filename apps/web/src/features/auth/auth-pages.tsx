@@ -9,6 +9,7 @@ import { changeOwnPassword, loginWithPassword } from "@/lib/api-client";
 import { translate } from "@/i18n/messages";
 import { useAuthStore } from "@/stores/auth.store";
 import { useLayoutStore } from "@/stores/layout.store";
+import { useOrganizationStore } from "@/stores/organization.store";
 
 const loginSchema = z.object({
   username: z.string().min(1),
@@ -24,6 +25,8 @@ export function LoginPage() {
   const navigate = useNavigate();
   const language = useLayoutStore((state) => state.language);
   const signIn = useAuthStore((state) => state.signIn);
+  const setOrganizations = useOrganizationStore((state) => state.setOrganizations);
+  const setCurrentOrganizationId = useOrganizationStore((state) => state.setCurrentOrganizationId);
   const [showPassword, setShowPassword] = useState(false);
   const form = useForm({
     defaultValues: { username: "admin", password: "" },
@@ -31,6 +34,8 @@ export function LoginPage() {
     onSubmit: async ({ value }) => {
       const result = await loginWithPassword(value);
       signIn(result);
+      setOrganizations(result.organizations);
+      setCurrentOrganizationId(result.currentOrganizationId || result.organizations[0]?.id || null);
       await navigate({ to: result.user.forcePasswordChange ? "/forced-password-change" : "/" });
     },
   });

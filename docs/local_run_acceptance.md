@@ -125,7 +125,10 @@ Operations and logs:
 Files and notifications:
 
 - Open File management and confirm file metadata list, upload, detail, download, image preview, reference display, and delete-invalidate behavior are reachable.
-- Open Announcements and confirm list/create/edit/publish/unpublish behavior is reachable.
+- Open Announcements and create a system draft and an organization-scoped draft. Confirm the Organization target tree prevents redundant child selection after a parent is selected.
+- Confirm Announcement status/scope/publication-time filters and pagination load from the server. Publish a valid draft, verify edit/delete disappear until it is unpublished, then unpublish and soft delete it.
+- Set an expiration and confirm a past expiration cannot be published. Confirm an expired published Announcement remains in the management Catalog but is absent from Current Announcements.
+- Open the top-bar Current Announcements panel. Switch current Organization and confirm the panel reloads: system Announcements remain visible, while organization Announcements follow the selected target subtree.
 - Open In-app notifications and confirm unread/read/archive/delete behavior is reachable for current-user notifications.
 - Open Notification templates and confirm template list/create/edit behavior is reachable.
 - Open Webhooks and confirm subscription list/create/edit/enable/disable/delete behavior is reachable. Confirm the Deliveries tab has subscription/event/status/time filters. Persisted secrets, full target URLs, event payloads, signatures, and response bodies must not be displayed.

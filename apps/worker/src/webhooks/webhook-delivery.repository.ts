@@ -116,20 +116,38 @@ export class WebhookDeliveryRepository {
          VALUES (${this.p(1)}, ${this.p(2)}, ${this.p(3)}, ${this.p(4)}, ${this.p(5)},
           ${this.p(6)}, ${this.p(7)}, ${this.p(8)}, ${this.p(9)}, ${this.p(10)})
          ON CONFLICT (delivery_id, attempt_number) DO NOTHING`,
-        [result.delivery.id, result.delivery.attempt, result.status, result.startedAt,
-          result.finishedAt, result.durationMs, result.httpStatus, result.errorCode,
-          result.errorMessage, result.finishedAt],
+        [
+          result.delivery.id,
+          result.delivery.attempt,
+          result.status,
+          result.startedAt,
+          result.finishedAt,
+          result.durationMs,
+          result.httpStatus,
+          result.errorCode,
+          result.errorMessage,
+          result.finishedAt,
+        ],
       );
       const terminalFailure = result.status === "failed" && !result.retry;
-      const status = result.status === "succeeded" ? "succeeded" : result.retry ? "pending" : "failed";
+      const status =
+        result.status === "succeeded" ? "succeeded" : result.retry ? "pending" : "failed";
       await this.executor.run(
         `UPDATE webhook_deliveries SET status = ${this.p(1)}, next_attempt_at = ${this.p(2)},
          last_http_status = ${this.p(3)}, last_error_code = ${this.p(4)},
          last_error_message = ${this.p(5)}, succeeded_at = ${this.p(6)}, failed_at = ${this.p(7)},
          locked_by = NULL, locked_at = NULL, updated_at = ${this.p(8)} WHERE id = ${this.p(9)}`,
-        [status, result.nextAttemptAt ?? result.finishedAt, result.httpStatus, result.errorCode,
-          result.errorMessage, result.status === "succeeded" ? result.finishedAt : null,
-          terminalFailure ? result.finishedAt : null, result.finishedAt, result.delivery.id],
+        [
+          status,
+          result.nextAttemptAt ?? result.finishedAt,
+          result.httpStatus,
+          result.errorCode,
+          result.errorMessage,
+          result.status === "succeeded" ? result.finishedAt : null,
+          terminalFailure ? result.finishedAt : null,
+          result.finishedAt,
+          result.delivery.id,
+        ],
       );
     });
   }
@@ -142,14 +160,21 @@ export class WebhookDeliveryRepository {
     const cutoff = new Date(Date.now() - retentionDays * 86_400_000).toISOString();
     const rows = await this.executor.all(
       `SELECT id FROM webhook_deliveries WHERE status IN ('succeeded', 'failed', 'canceled')
-       AND updated_at < ${this.t(1)} LIMIT 1000`, [cutoff],
+       AND updated_at < ${this.t(1)} LIMIT 1000`,
+      [cutoff],
     );
-    if (rows.length > 0) await this.executor.transaction(async () => {
-      for (const row of rows) {
-        await this.executor.run(`DELETE FROM webhook_delivery_attempts WHERE delivery_id = ${this.p(1)}`, [row.id]);
-        await this.executor.run(`DELETE FROM webhook_deliveries WHERE id = ${this.p(1)}`, [row.id]);
-      }
-    });
+    if (rows.length > 0)
+      await this.executor.transaction(async () => {
+        for (const row of rows) {
+          await this.executor.run(
+            `DELETE FROM webhook_delivery_attempts WHERE delivery_id = ${this.p(1)}`,
+            [row.id],
+          );
+          await this.executor.run(`DELETE FROM webhook_deliveries WHERE id = ${this.p(1)}`, [
+            row.id,
+          ]);
+        }
+      });
     const publishedOutbox = await this.deleteOutboxBefore("published", 7);
     const failedOutbox = await this.deleteOutboxBefore("failed", 90);
     return { deliveries: rows.length, publishedOutbox, failedOutbox };
@@ -171,10 +196,18 @@ export class WebhookDeliveryRepository {
     return rows.length;
   }
 
-  private async fanOutEvent(row: DatabaseRow, eventSource: string, maxAttempts: number): Promise<void> {
+  private async fanOutEvent(
+    row: DatabaseRow,
+    eventSource: string,
+    maxAttempts: number,
+  ): Promise<void> {
     const type = webhookEventTypeSchema.parse(row.event_type);
     const raw = readJson<Record<string, unknown>>(row.payload_json);
-    const event = webhookOutboxEventSchema.parse({ ...raw, type, occurredAt: raw.occurredAt ?? iso(row.occurred_at) });
+    const event = webhookOutboxEventSchema.parse({
+      ...raw,
+      type,
+      occurredAt: raw.occurredAt ?? iso(row.occurred_at),
+    });
     const subscriptions = await this.matchingSubscriptions(event);
     const now = nowIso();
     for (const subscription of subscriptions) {
@@ -185,13 +218,25 @@ export class WebhookDeliveryRepository {
          VALUES (${this.p(1)}, ${this.p(2)}, ${this.p(3)}, ${this.p(4)}, ${this.p(5)}, ${this.p(6)},
           ${this.p(7)}, 'pending', 0, ${this.p(8)}, ${this.p(9)}, ${this.p(10)}, ${this.p(11)})
          ON CONFLICT (event_outbox_id, subscription_id) DO NOTHING`,
-        [row.id, subscription.id, subscription.revision, type, eventSource,
-          jsonParam(event, this.executor.dialect), subscription.url, maxAttempts, now, now, now],
+        [
+          row.id,
+          subscription.id,
+          subscription.revision,
+          type,
+          eventSource,
+          jsonParam(event, this.executor.dialect),
+          subscription.url,
+          maxAttempts,
+          now,
+          now,
+          now,
+        ],
       );
     }
     await this.executor.run(
       `UPDATE event_outbox SET status = 'published', processed_at = ${this.p(1)}, updated_at = ${this.p(2)}
-       WHERE id = ${this.p(3)}`, [now, now, row.id],
+       WHERE id = ${this.p(3)}`,
+      [now, now, row.id],
     );
   }
 
@@ -207,41 +252,59 @@ export class WebhookDeliveryRepository {
        WHERE status = 'enabled' AND is_deleted = ${this.bool(false)}${target}`,
       params,
     );
-    return rows.filter((row) => readJson<string[]>(row.event_types).includes(event.type))
+    return rows
+      .filter((row) => readJson<string[]>(row.event_types).includes(event.type))
       .map((row) => ({ id: String(row.id), url: String(row.url), revision: Number(row.revision) }));
   }
 
   private isStaleSubscription(row: DatabaseRow): boolean {
-    return Boolean(row.subscription_deleted) || row.subscription_status !== "enabled" ||
-      Number(row.current_revision) !== Number(row.subscription_revision);
+    return (
+      Boolean(row.subscription_deleted) ||
+      row.subscription_status !== "enabled" ||
+      Number(row.current_revision) !== Number(row.subscription_revision)
+    );
   }
 
   private cancel(id: string, now: string, reason: string): Promise<void> {
     return this.executor.run(
       `UPDATE webhook_deliveries SET status = 'canceled', canceled_at = ${this.p(1)},
        last_error_code = ${this.p(2)}, locked_by = NULL, locked_at = NULL, updated_at = ${this.p(3)}
-       WHERE id = ${this.p(4)} AND status = 'pending'`, [now, reason, now, id],
+       WHERE id = ${this.p(4)} AND status = 'pending'`,
+      [now, reason, now, id],
     );
   }
 
   private eventTypePlaceholders(): string {
     return webhookEventTypeSchema.options.map((_, index) => this.p(index + 1)).join(", ");
   }
-  private forUpdateSkipLocked(): string { return this.executor.dialect === "postgresql" ? " FOR UPDATE SKIP LOCKED" : ""; }
-  private p(index: number): string { return this.executor.dialect === "postgresql" ? `$${index}` : "?"; }
+  private forUpdateSkipLocked(): string {
+    return this.executor.dialect === "postgresql" ? " FOR UPDATE SKIP LOCKED" : "";
+  }
+  private p(index: number): string {
+    return this.executor.dialect === "postgresql" ? `$${index}` : "?";
+  }
   private t(index: number): string {
     return this.executor.dialect === "postgresql" ? `$${index}::timestamptz` : "?";
   }
-  private bool(value: boolean): string { return this.executor.dialect === "postgresql" ? String(value).toUpperCase() : value ? "1" : "0"; }
+  private bool(value: boolean): string {
+    return this.executor.dialect === "postgresql" ? String(value).toUpperCase() : value ? "1" : "0";
+  }
 }
 
 function toClaimed(row: DatabaseRow): ClaimedWebhookDelivery {
   return {
-    id: String(row.id), eventId: String(row.event_outbox_id), subscriptionId: String(row.subscription_id),
-    eventSource: String(row.event_source), event: webhookOutboxEventSchema.parse(readJson(row.event_payload_json)),
-    targetUrl: String(row.target_url), encryptedSecret: row.secret == null ? null : String(row.secret),
-    attempt: Number(row.attempt) + 1, maxAttempts: Number(row.max_attempts),
+    id: String(row.id),
+    eventId: String(row.event_outbox_id),
+    subscriptionId: String(row.subscription_id),
+    eventSource: String(row.event_source),
+    event: webhookOutboxEventSchema.parse(readJson(row.event_payload_json)),
+    targetUrl: String(row.target_url),
+    encryptedSecret: row.secret == null ? null : String(row.secret),
+    attempt: Number(row.attempt) + 1,
+    maxAttempts: Number(row.max_attempts),
   };
 }
 
-function iso(value: unknown): string { return new Date(String(value)).toISOString(); }
+function iso(value: unknown): string {
+  return new Date(String(value)).toISOString();
+}

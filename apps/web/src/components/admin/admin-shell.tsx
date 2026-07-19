@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
   BookOpen,
@@ -23,6 +24,8 @@ import { Button } from "@/components/ui/button";
 import { translate } from "@/i18n/messages";
 import { adminRouteMetadata, type AdminRouteGroup } from "@/route-metadata";
 import { hasPermission } from "@/features/permissions/permission-utils";
+import { CurrentAnnouncementsPanel } from "@/features/notifications/current-announcements-panel";
+import { switchCurrentOrganization } from "@/lib/api-client";
 import { useAuthStore } from "@/stores/auth.store";
 import { useLayoutStore } from "@/stores/layout.store";
 import { useOrganizationStore } from "@/stores/organization.store";
@@ -89,10 +92,16 @@ export function AdminShell() {
   const setDarkModeEnabled = useLayoutStore((state) => state.setDarkModeEnabled);
   const setFullscreenEnabled = useLayoutStore((state) => state.setFullscreenEnabled);
   const signOut = useAuthStore((state) => state.signOut);
+  const setAccessToken = useAuthStore((state) => state.setAccessToken);
+  const setPermissionContext = useAuthStore((state) => state.setPermissionContext);
   const permissionCodes = useAuthStore((state) => state.permissionCodes);
   const organizations = useOrganizationStore((state) => state.organizations);
   const currentOrganizationId = useOrganizationStore((state) => state.currentOrganizationId);
   const switchOrganization = useOrganizationStore((state) => state.switchOrganization);
+  const resetOrganization = useOrganizationStore((state) => state.reset);
+  const queryClient = useQueryClient();
+  const [switchingOrganization, setSwitchingOrganization] = useState(false);
+  const [organizationSwitchError, setOrganizationSwitchError] = useState(false);
   const currentRoute = adminRouteMetadata.find((route) => route.path === location.pathname);
   const activeGroup = currentRoute?.group ?? "system";
   const [storedExpandedGroups, setStoredExpandedGroups] = useState<AdminRouteGroup[]>(() =>
@@ -142,6 +151,23 @@ export function AdminShell() {
         ? groups.filter((expandedGroup) => expandedGroup !== group)
         : [...groups, group];
     });
+  }
+
+  async function handleOrganizationSwitch(organizationId: string): Promise<void> {
+    if (organizationId === currentOrganizationId) return;
+    setSwitchingOrganization(true);
+    setOrganizationSwitchError(false);
+    try {
+      const result = await switchCurrentOrganization(organizationId);
+      setAccessToken(result.accessToken);
+      setPermissionContext({ permissionCodes: result.permissionCodes });
+      switchOrganization(result.currentOrganizationId);
+      await queryClient.invalidateQueries();
+    } catch {
+      setOrganizationSwitchError(true);
+    } finally {
+      setSwitchingOrganization(false);
+    }
   }
 
   return (
@@ -224,10 +250,12 @@ export function AdminShell() {
               {translate(language, "layout.currentOrganization")}
             </label>
             <select
+              aria-invalid={organizationSwitchError}
               className="h-9 rounded-md border bg-background px-3 text-sm"
+              disabled={switchingOrganization}
               id="organization-selector"
               value={currentOrganizationId ?? ""}
-              onChange={(event) => switchOrganization(event.target.value)}
+              onChange={(event) => void handleOrganizationSwitch(event.target.value)}
             >
               {organizations
                 .filter((organization) => organization.status === "enabled")
@@ -237,6 +265,7 @@ export function AdminShell() {
                   </option>
                 ))}
             </select>
+            <CurrentAnnouncementsPanel />
             <Button
               aria-label={darkModeEnabled ? "Use light mode" : "Use dark mode"}
               onClick={() => setDarkModeEnabled(!darkModeEnabled)}
@@ -256,6 +285,7 @@ export function AdminShell() {
             <Button
               onClick={() => {
                 signOut();
+                resetOrganization();
                 void navigate({ to: "/login" });
               }}
               variant="outline"

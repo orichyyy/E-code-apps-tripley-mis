@@ -1,6 +1,7 @@
 import { appError, type AppError } from "./app-error";
 
 const errorDefinitions = {
+  ANNOUNCEMENT_NOT_FOUND: ["Announcement was not found", 404, "business"],
   AUTH_ACCOUNT_DISABLED: ["Account is disabled", 403, "authentication"],
   AUTH_ACCOUNT_LOCKED: ["Account is locked", 423, "authentication"],
   AUTH_CSRF_TOKEN_INVALID: ["CSRF token is invalid", 403, "authentication"],
@@ -19,6 +20,8 @@ const errorDefinitions = {
   ],
   BUSINESS_ROLE_DISABLED: ["Role is disabled", 409, "business"],
   BUSINESS_SYSTEM_ALREADY_INITIALIZED: ["System is already initialized", 409, "business"],
+  BUSINESS_ANNOUNCEMENT_NOT_DRAFT: ["Announcement must be a draft", 409, "business"],
+  BUSINESS_ANNOUNCEMENT_NOT_PUBLISHED: ["Announcement must be published", 409, "business"],
   BUSINESS_EMAIL_DELIVERY_DISABLED: ["Email delivery is disabled", 409, "business"],
   BUSINESS_EMAIL_IDEMPOTENCY_CONFLICT: [
     "Email request key conflicts with an existing delivery",
@@ -55,6 +58,12 @@ const errorDefinitions = {
   VALIDATION_DUPLICATE_PHONE: ["Phone number already exists", 409, "validation"],
   VALIDATION_DUPLICATE_ROLE_CODE: ["Role code already exists", 409, "validation"],
   VALIDATION_DUPLICATE_USERNAME: ["Username already exists", 409, "validation"],
+  VALIDATION_ANNOUNCEMENT_EXPIRATION: [
+    "Announcement expiration must be in the future",
+    400,
+    "validation",
+  ],
+  VALIDATION_ANNOUNCEMENT_TARGETS: ["Announcement targets are invalid", 400, "validation"],
   VALIDATION_INVALID_REQUEST: ["Request validation failed", 400, "validation"],
   VALIDATION_EMAIL_TEMPLATE_UNAVAILABLE: [
     "An enabled email template is unavailable for the effective language",

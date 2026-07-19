@@ -83,6 +83,11 @@ export const basePermissionManifest: PermissionManifestEntry[] = [
     module: "announcements",
   },
   {
+    code: "announcement:delete",
+    description: "Delete draft announcements",
+    module: "announcements",
+  },
+  {
     code: "notification-template:view",
     description: "View notification templates",
     module: "notifications",

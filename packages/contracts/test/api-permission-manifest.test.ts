@@ -35,6 +35,7 @@ describe("baseApiPermissionManifest", () => {
       "api.auth.current-organization.switch",
       "api.context.organizations.list",
       "api.context.permissions",
+      "api.announcements.current",
       "api.permissions.effective",
       "api.profile.avatar.update",
       "api.profile.preferences.update",

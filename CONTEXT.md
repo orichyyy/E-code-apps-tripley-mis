@@ -24,6 +24,24 @@ _Avoid_: File path, download URL
 The completed removal of a Managed File's stored content after the Managed File and its references have already become invalid.
 _Avoid_: Logical deletion, reference deletion
 
+## Announcements
+
+**Announcement Target**:
+One Organization explicitly selected as an audience for an organization-scoped Announcement. A target includes that Organization and its entire descendant subtree, and one Announcement may have multiple distinct Announcement Targets.
+_Avoid_: Announcement recipient, scope value
+
+**Announcement Visibility**:
+The eligibility of an Announcement in a User's current Organization context. System-wide Announcements are context-independent; organization-scoped Announcements require the current Organization to fall within an Announcement Target subtree.
+_Avoid_: Notification assignment, inbox delivery
+
+**Announcement Catalog**:
+The administrative collection of Announcements across lifecycle states and target scopes. It supports management and audit work and is not filtered by a User's Announcement Visibility.
+_Avoid_: Current announcements, announcement feed
+
+**Current Announcements**:
+The distinct set of published Announcements visible in a User's current Organization context. It excludes drafts and deleted Announcements and collapses overlapping Announcement Targets.
+_Avoid_: Announcement catalog, notification inbox
+
 ## Webhooks
 
 **Webhook Subscription**:

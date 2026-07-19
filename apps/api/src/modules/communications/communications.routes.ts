@@ -1,6 +1,8 @@
 import {
   createAnnouncementRequestSchema,
   createWebhookSubscriptionRequestSchema,
+  listAnnouncementsQuerySchema,
+  listCurrentAnnouncementsQuerySchema,
   listWebhookDeliveriesQuerySchema,
   updateAnnouncementRequestSchema,
   updateWebhookSubscriptionRequestSchema,
@@ -8,6 +10,7 @@ import {
 import { Hono } from "hono";
 
 import type { AuthContextVariables } from "../../core/auth-context/auth-context";
+import { createKnownError } from "../../core/errors/error-codes";
 import { assertEmptyJsonBody } from "../core-foundation/request-body";
 import type { CommunicationsServices } from "./communications.service";
 
@@ -18,7 +21,16 @@ type CommunicationsRouteBindings = {
 export function createCommunicationsRoutes(services: CommunicationsServices) {
   return new Hono<CommunicationsRouteBindings>()
     .get("/announcements", async (context) => {
-      return context.json({ data: await services.listAnnouncements() });
+      const query = listAnnouncementsQuerySchema.parse(context.req.query());
+      return context.json({ data: await services.listAnnouncements(query) });
+    })
+    .get("/announcements/current", async (context) => {
+      const authContext = context.get("authContext");
+      if (!authContext) throw createKnownError("AUTH_TOKEN_EXPIRED");
+      const query = listCurrentAnnouncementsQuerySchema.parse(context.req.query());
+      return context.json({
+        data: await services.listCurrentAnnouncements(query, authContext.currentOrganizationId),
+      });
     })
     .post("/announcements", async (context) => {
       const input = createAnnouncementRequestSchema.parse(await context.req.json());
@@ -51,6 +63,11 @@ export function createCommunicationsRoutes(services: CommunicationsServices) {
           false,
           actorId(context),
         ),
+      });
+    })
+    .delete("/announcements/:id", async (context) => {
+      return context.json({
+        data: await services.deleteAnnouncement(context.req.param("id"), actorId(context)),
       });
     })
     .get("/webhooks", async (context) => {

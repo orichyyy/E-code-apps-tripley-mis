@@ -45,6 +45,7 @@ describe("database migration execution", () => {
         "0008_file_object_locations.sql",
         "0009_webhook_delivery.sql",
         "0010_email_delivery.sql",
+        "0011_announcement_targeting.sql",
       ]);
       expect(reapplied).toEqual([]);
       expect(tables).toContainEqual({ name: "users" });
@@ -58,6 +59,7 @@ describe("database migration execution", () => {
       expect(tables).toContainEqual({ name: "dictionary_items" });
       expect(tables).toContainEqual({ name: "i18n_messages" });
       expect(tables).toContainEqual({ name: "announcements" });
+      expect(tables).toContainEqual({ name: "announcement_targets" });
       expect(tables).toContainEqual({ name: "webhook_subscriptions" });
       expect(tables).toContainEqual({ name: "webhook_deliveries" });
       expect(tables).toContainEqual({ name: "webhook_delivery_attempts" });
@@ -75,6 +77,12 @@ describe("database migration execution", () => {
         .prepare("PRAGMA table_info(webhook_subscriptions)")
         .all() as Array<{ name: string }>;
       expect(subscriptionColumns.map((column) => column.name)).toContain("revision");
+      const announcementColumns = client
+        .prepare("PRAGMA table_info(announcements)")
+        .all() as Array<{
+        name: string;
+      }>;
+      expect(announcementColumns.map((column) => column.name)).toContain("expire_at");
     } finally {
       client.close();
     }

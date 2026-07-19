@@ -1,6 +1,8 @@
 import type {
   CreateAnnouncementRequest,
   CreateWebhookSubscriptionRequest,
+  ListAnnouncementsQuery,
+  ListCurrentAnnouncementsQuery,
   UpdateAnnouncementRequest,
   UpdateWebhookSubscriptionRequest,
 } from "@web-admin-base/contracts";
@@ -13,22 +15,31 @@ import { webhookEventCatalog, type ListWebhookDeliveriesQuery } from "@web-admin
 
 import { createKnownError } from "../../core/errors/error-codes";
 import { CommunicationsRepository } from "./communications.repository";
-import type { AnnouncementRecord, WebhookSubscriptionRecord } from "./communications.types";
+import type { WebhookSubscriptionRecord } from "./communications.types";
+import type { AnnouncementOperations } from "./announcement.types";
+import {
+  InMemoryAnnouncementRepository,
+  type AnnouncementOrganizationSource,
+} from "./in-memory-announcement.repository";
 
 export class CommunicationsServices {
   private readonly memory = {
-    announcements: [] as AnnouncementRecord[],
     webhooks: [] as Array<WebhookSubscriptionRecord & { secret: string | null }>,
   };
   private sequence = 1;
+  private readonly announcements: AnnouncementOperations;
 
   constructor(
     private readonly repository?: CommunicationsRepository,
     private readonly webhookConfig?: WebhookDeliveryConfig,
-  ) {}
+    organizationSource?: AnnouncementOrganizationSource,
+  ) {
+    this.announcements =
+      repository?.announcements ?? new InMemoryAnnouncementRepository(organizationSource);
+  }
 
-  static inMemory(): CommunicationsServices {
-    return new CommunicationsServices();
+  static inMemory(organizationSource?: AnnouncementOrganizationSource): CommunicationsServices {
+    return new CommunicationsServices(undefined, undefined, organizationSource);
   }
 
   static database(
@@ -42,51 +53,30 @@ export class CommunicationsServices {
     return this.repository?.close() ?? Promise.resolve();
   }
 
-  listAnnouncements() {
-    return this.repository?.listAnnouncements() ?? Promise.resolve(this.memory.announcements);
+  listAnnouncements(query: ListAnnouncementsQuery) {
+    return this.announcements.listCatalog(query);
+  }
+
+  listCurrentAnnouncements(query: ListCurrentAnnouncementsQuery, currentOrganizationId: string) {
+    return this.announcements.listCurrent(query, currentOrganizationId);
   }
 
   createAnnouncement(input: CreateAnnouncementRequest, actorId: string | null) {
-    if (this.repository) return this.repository.createAnnouncement(input, actorId);
-    const now = new Date().toISOString();
-    const record: AnnouncementRecord = {
-      id: this.nextId(),
-      tenantId: null,
-      title: input.title,
-      content: input.content,
-      scopeType: input.scopeType,
-      status: "draft",
-      publishedAt: null,
-      isDeleted: false,
-      deletedAt: null,
-      deletedBy: null,
-      createdAt: now,
-      updatedAt: now,
-      createdBy: actorId,
-      updatedBy: actorId,
-    };
-    this.memory.announcements.unshift(record);
-    return Promise.resolve(record);
+    return this.announcements.create(input, actorId);
   }
 
   updateAnnouncement(id: string, input: UpdateAnnouncementRequest, actorId: string | null) {
-    if (this.repository) return this.repository.updateAnnouncement(id, input, actorId);
-    const record = this.memory.announcements.find((item) => item.id === id && !item.isDeleted);
-    if (!record) return Promise.resolve(null);
-    Object.assign(record, input, { updatedAt: new Date().toISOString(), updatedBy: actorId });
-    return Promise.resolve(record);
+    return this.announcements.update(id, input, actorId);
   }
 
   setAnnouncementPublished(id: string, published: boolean, actorId: string | null) {
-    if (this.repository) return this.repository.setAnnouncementPublished(id, published, actorId);
-    const record = this.memory.announcements.find((item) => item.id === id && !item.isDeleted);
-    if (!record) return Promise.resolve(null);
-    const now = new Date().toISOString();
-    record.status = published ? "published" : "draft";
-    record.publishedAt = published ? now : null;
-    record.updatedAt = now;
-    record.updatedBy = actorId;
-    return Promise.resolve(record);
+    return published
+      ? this.announcements.publish(id, actorId)
+      : this.announcements.unpublish(id, actorId);
+  }
+
+  deleteAnnouncement(id: string, actorId: string | null) {
+    return this.announcements.delete(id, actorId);
   }
 
   listWebhooks() {

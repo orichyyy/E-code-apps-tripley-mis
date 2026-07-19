@@ -268,6 +268,8 @@ describe("frontend API client", () => {
         forcePasswordChange: true,
       },
       permissionCodes: ["user:view", "role:view"],
+      currentOrganizationId: "",
+      organizations: [],
     });
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/auth/login", {
       method: "POST",
@@ -495,24 +497,31 @@ describe("frontend API client", () => {
       Promise.resolve(
         new Response(
           JSON.stringify({
-            data: [
-              {
-                id: "21",
-                tenantId: null,
-                title: "Maintenance",
-                content: "Window",
-                scopeType: "system",
-                status: "draft",
-                publishedAt: null,
-                isDeleted: false,
-                deletedAt: null,
-                deletedBy: null,
-                createdAt: "2026-07-03T00:00:00.000Z",
-                updatedAt: "2026-07-03T00:00:00.000Z",
-                createdBy: "1",
-                updatedBy: "1",
-              },
-            ],
+            data: {
+              items: [
+                {
+                  id: "21",
+                  tenantId: null,
+                  title: "Maintenance",
+                  content: "Window",
+                  scopeType: "system",
+                  targetOrganizationIds: [],
+                  status: "draft",
+                  publishedAt: null,
+                  expiresAt: null,
+                  isDeleted: false,
+                  deletedAt: null,
+                  deletedBy: null,
+                  createdAt: "2026-07-03T00:00:00.000Z",
+                  updatedAt: "2026-07-03T00:00:00.000Z",
+                  createdBy: "1",
+                  updatedBy: "1",
+                },
+              ],
+              page: 1,
+              pageSize: 20,
+              total: 1,
+            },
           }),
           { status: 200, headers: { "content-type": "application/json" } },
         ),
@@ -520,26 +529,41 @@ describe("frontend API client", () => {
     );
 
     const records = await fetchAnnouncements();
-    await createAnnouncement({ title: "Maintenance", content: "Window", scopeType: "system" });
+    await createAnnouncement({
+      title: "Maintenance",
+      content: "Window",
+      scopeType: "system",
+      targetOrganizationIds: [],
+    });
     await updateAnnouncement("21", { title: "Maintenance updated" });
     await publishAnnouncement("21");
     await unpublishAnnouncement("21");
 
-    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/announcements", {
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/announcements?page=1&pageSize=20", {
       headers: { authorization: "Bearer token" },
     });
-    expect(records).toEqual([
-      expect.objectContaining({
-        id: "21",
+    expect(records).toEqual({
+      items: [
+        expect.objectContaining({
+          id: "21",
+          title: "Maintenance",
+          content: "Window",
+          scopeType: "system",
+          status: "draft",
+        }),
+      ],
+      page: 1,
+      pageSize: 20,
+      total: 1,
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/announcements", {
+      method: "POST",
+      body: JSON.stringify({
         title: "Maintenance",
         content: "Window",
         scopeType: "system",
-        status: "draft",
+        targetOrganizationIds: [],
       }),
-    ]);
-    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/announcements", {
-      method: "POST",
-      body: JSON.stringify({ title: "Maintenance", content: "Window", scopeType: "system" }),
       headers: {
         authorization: "Bearer token",
         "content-type": "application/json",

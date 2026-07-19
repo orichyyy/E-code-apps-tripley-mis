@@ -94,7 +94,7 @@ No unresolved backend-core blockers remain from the previously listed questions.
 
 21. **Announcement organization scope reference**
 
-    Confirmed implementation boundary: announcements persist the confirmed `scope_type` values `system` and `organization`. A concrete organization target/reference field is not added in v1 until the API contract and multi-organization audience semantics are explicitly confirmed.
+    Confirmed: organization-scoped Announcements use one or more explicit Organization targets. Each target includes its Organization subtree, targets must form a distinct minimal set, and visibility is calculated dynamically against the User's current Organization. System Announcements have no targets. The complete contract is recorded in `docs/announcement_targeting_design.md` and ADR 0004.
 
 22. **Reliable outbound Webhook delivery semantics**
 
@@ -115,3 +115,7 @@ No unresolved backend-core blockers remain from the previously listed questions.
     Confirmed security and lifecycle handling: content snapshots use a dedicated versioned AES-256-GCM keyring, terminal states purge content immediately, remote SMTP requires implicit TLS or STARTTLS, attempts are at least once with a stable Message ID, retryable failures are bounded, and safe metadata remains for configurable retention. Reliable delivery and SMTP transport use separate optional switches. The complete contract is recorded in `docs/email_delivery_design.md` and ADR 0003.
 
     Confirmed key-failure handling: missing historical content keys leave affected work pending without consuming attempts and degrade Worker health; authenticated decryption failure with a configured key is a final corruption failure. Old keys may be removed only after rotation proves no unfinished Delivery references them.
+
+26. **Announcement lifecycle and API boundary**
+
+    Confirmed: only drafts may be edited or soft deleted; publication is immediate; published Announcements must be withdrawn before edit/delete; optional UTC expiration is evaluated at read time without a scheduler. The management Catalog remains separate from authenticated Current Announcements, and publication does not trigger Notification, email, SMS, or Webhook delivery. Add the PRD-confirmed delete endpoint and `announcement:delete` permission despite its omission from the design route table.

@@ -11,7 +11,7 @@ This file records incomplete, reserved, or environment-dependent work that must 
 ## Implemented With Explicit Boundaries
 
 - DB-backed backend-core persistence is implemented behind `BACKEND_CORE_STORE=database`; a whole-store snapshot helper remains only for test reset and full-store support utilities.
-- Announcement organization scoping stores the confirmed `scope_type` value. A concrete organization target/reference field is not implemented because the base contract has not confirmed it.
+- Announcement organization targeting, lifecycle enforcement, and dynamic current-Organization visibility are implemented. Announcement publication intentionally does not create recipient snapshots, read state, in-app Notifications, email, SMS, or Webhook delivery.
 - In-app notification dispatch exists through queue-backed internal services and worker execution. A public administrator create-notification API and frontend create flow are not exposed because no base API contract confirms them.
 - i18n message management supports editing existing persisted messages. New i18n key creation remains manifest/module-driven rather than an ad hoc frontend create flow.
 - File management supports coexisting local/S3 object locations, authenticated local responses, private S3 presigned redirects, upload compensation, and asynchronous physical Content Deletion. Local remains the default.

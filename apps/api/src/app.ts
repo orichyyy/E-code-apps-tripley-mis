@@ -131,9 +131,18 @@ export function createDefaultAppDependencies(
   config: ApiConfig = loadApiConfig(),
   storage?: FileStorageAdapter,
 ): AppDependencies {
+  const backendCoreServices = createInMemoryBackendCoreServices(config.backendCore);
   return {
-    backendCoreServices: createInMemoryBackendCoreServices(config.backendCore),
-    communicationsServices: CommunicationsServices.inMemory(),
+    backendCoreServices,
+    communicationsServices: CommunicationsServices.inMemory(() =>
+      backendCoreServices.listOrganizations().map((organization) => ({
+        id: organization.id,
+        path: organization.path,
+        level: organization.level,
+        status: organization.status,
+        isDeleted: organization.isDeleted,
+      })),
+    ),
     infrastructureServices: InfrastructureServices.inMemory({
       storage,
       presignedUrlTtlSeconds: config.storage.presignedUrlTtlSeconds,

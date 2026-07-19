@@ -159,6 +159,11 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
         labelI18nKey: "actions.publish",
         requiredPermission: "announcement:publish",
       },
+      {
+        code: "announcement:delete",
+        labelI18nKey: "actions.delete",
+        requiredPermission: "announcement:delete",
+      },
     ],
   },
   {

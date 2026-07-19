@@ -256,6 +256,31 @@ describe("OpenAPI document generation", () => {
       "eventPayload",
     );
   });
+
+  it("documents scoped announcement contracts and current-user visibility", () => {
+    const document = createOpenApiDocument();
+    const catalog = document.paths["/announcements"]?.get;
+    const current = document.paths["/announcements/current"]?.get;
+    const remove = document.paths["/announcements/{id}"]?.delete;
+
+    expect(catalog?.parameters?.map((parameter) => parameter.name)).toEqual([
+      "status",
+      "scopeType",
+      "publishedFrom",
+      "publishedTo",
+      "page",
+      "pageSize",
+    ]);
+    expect(current?.security).toEqual([{ bearerAuth: [] }]);
+    expect(current?.["x-required-permission"]).toBeUndefined();
+    expect(current?.responses["200"]?.content?.["application/json"]?.schema).toEqual({
+      $ref: "#/components/schemas/CurrentAnnouncementListResponse",
+    });
+    expect(remove?.["x-required-permission"]).toBe("announcement:delete");
+    expect(document.components.schemas.Announcement.required).toEqual(
+      expect.arrayContaining(["targetOrganizationIds", "expiresAt"]),
+    );
+  });
 });
 
 function toOpenApiTestPath(path: string) {

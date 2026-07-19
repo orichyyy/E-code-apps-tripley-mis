@@ -3,6 +3,18 @@ import type { OpenApiOperation } from "./types";
 type OperationParameters = NonNullable<OpenApiOperation["parameters"]>;
 
 export const queryParametersByOperationCode: Record<string, OperationParameters> = {
+  "api.announcements.list": [
+    query("status", { type: "string", enum: ["draft", "published", "deleted"] }),
+    query("scopeType", { type: "string", enum: ["system", "organization"] }),
+    query("publishedFrom", { type: "string", format: "date-time" }),
+    query("publishedTo", { type: "string", format: "date-time" }),
+    query("page", { type: "integer", minimum: 1 }),
+    query("pageSize", { type: "integer", minimum: 1, maximum: 100 }),
+  ],
+  "api.announcements.current": [
+    query("page", { type: "integer", minimum: 1 }),
+    query("pageSize", { type: "integer", minimum: 1, maximum: 100 }),
+  ],
   "api.webhook-deliveries.list": [
     query("subscriptionId", { type: "string" }),
     query("eventType", {

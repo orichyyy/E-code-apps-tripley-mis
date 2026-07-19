@@ -42,7 +42,8 @@ describe("database-backed communications routes", () => {
           body: JSON.stringify({
             title: "DB Announcement",
             content: "Persisted content",
-            scopeType: "organization",
+            scopeType: "system",
+            targetOrganizationIds: [],
           }),
         });
         const announcementBody = await announcementResponse.json();
@@ -121,7 +122,7 @@ describe("database-backed communications routes", () => {
         expect(persistedAnnouncements).toEqual([
           expect.objectContaining({
             title: "DB Announcement",
-            scope_type: "organization",
+            scope_type: "system",
             status: "published",
             published_at: expect.any(Date),
           }),
@@ -179,6 +180,7 @@ async function clearCommunicationsTables(executor: DatabaseAdapterExecutor): Pro
     "webhook_delivery_attempts",
     "webhook_deliveries",
     "webhook_subscriptions",
+    "announcement_targets",
     "announcements",
     "event_outbox",
   ]) {

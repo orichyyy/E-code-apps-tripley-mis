@@ -952,6 +952,7 @@ export const announcements = sqliteTable(
       .notNull()
       .default("draft"),
     publishedAt: text("published_at"),
+    expiresAt: text("expire_at"),
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
@@ -966,6 +967,29 @@ export const announcements = sqliteTable(
     statusCheck: check(
       "announcements_status_check",
       sql`${table.status} IN ('draft', 'published', 'deleted')`,
+    ),
+  }),
+);
+
+export const announcementTargets = sqliteTable(
+  "announcement_targets",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    announcementId: integer("announcement_id").notNull(),
+    targetType: text("target_type", { enum: ["organization"] }).notNull(),
+    targetId: integer("target_id").notNull(),
+  },
+  (table) => ({
+    announcementTargetUnique: uniqueIndex("announcement_targets_binding_unique").on(
+      table.announcementId,
+      table.targetType,
+      table.targetId,
+    ),
+    announcementIndex: index("announcement_targets_announcement_idx").on(table.announcementId),
+    targetIndex: index("announcement_targets_target_idx").on(table.targetType, table.targetId),
+    targetTypeCheck: check(
+      "announcement_targets_target_type_check",
+      sql`${table.targetType} = 'organization'`,
     ),
   }),
 );
