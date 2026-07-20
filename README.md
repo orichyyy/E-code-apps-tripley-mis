@@ -4,8 +4,8 @@ Reusable multi-organization admin-system foundation built as a pnpm monorepo.
 
 ## Applications and Packages
 
-- `apps/api`: Node.js Hono API with request IDs, auth/session/user/organization/role/permission/menu foundations, personal profile/preferences APIs, system configuration, dictionaries, i18n messages, file APIs, organization-targeted announcements, Webhook subscription/delivery-history APIs, OpenAPI JSON, and manifest-based authorization.
-- `apps/web`: React Vite SPA admin shell using TanStack Router, TanStack Query, TanStack Form, Zod, Zustand, Tailwind CSS, and shadcn/ui, including target-aware announcement management, Current Announcements, and safe Webhook/email delivery history.
+- `apps/api`: Node.js Hono API with request IDs, auth/session/user/organization/role/permission/menu foundations, Business Module Registry lifecycle/Admin Sync, personal profile/preferences APIs, system configuration, dictionaries, i18n messages, file APIs, organization-targeted announcements, Webhook subscription/delivery-history APIs, OpenAPI JSON, and manifest-based authorization.
+- `apps/web`: React Vite SPA admin shell using TanStack Router, TanStack Query, TanStack Form, Zod, Zustand, Tailwind CSS, and shadcn/ui, including Business Module Registry sync, target-aware announcement management, Current Announcements, and safe Webhook/email delivery history.
 - `apps/worker`: Node.js worker runtime wired to database queue/scheduler adapters, durable Webhook Outbox fan-out/delivery, cleanup tasks, durable `runOnce`, and optional polling.
 - `packages/contracts`: Zod contracts, Hono RPC boundary types, permission/route/menu/API manifests, serializable Business Module definitions, and OpenAPI generation.
 - `packages/module-sdk`: static Business Module registry composition, deterministic hashes, ownership/reference validation, and conformance test helpers.
@@ -37,6 +37,8 @@ pnpm build
 Set `TEST_DATABASE_URL` or `DATABASE_URL` before running `pnpm verify`; the PostgreSQL migration step requires one of those variables.
 
 `pnpm modules:check` validates the explicit API/Web/Worker/database registries without a database or external service. It writes machine-readable diagnostics to `.tmp/business-module-conformance.json`. The production Business Module registries are intentionally empty until a real module is added in a later repository goal; synthetic modules are test fixtures only.
+
+`pnpm modules:sync` prints the read-only Module Sync Plan for the configured database. Apply a reviewed plan with `pnpm modules:sync --apply --expected-registry-hash=<sha256> --confirmed`, or use the permissioned `/system/modules` page. Ordinary API/Worker startup never applies release metadata automatically.
 
 ## Project Runbooks
 

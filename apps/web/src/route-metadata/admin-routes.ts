@@ -112,6 +112,22 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     ],
   },
   {
+    routeCode: "system.modules",
+    path: "/system/modules",
+    titleI18nKey: "routes.system.modules",
+    requiredPermission: "module-registry:view",
+    menuVisible: true,
+    group: "system",
+    sortOrder: 167,
+    actions: [
+      {
+        code: "module-registry:sync",
+        labelI18nKey: "actions.sync",
+        requiredPermission: "module-registry:sync",
+      },
+    ],
+  },
+  {
     routeCode: "system.files",
     path: "/system/files",
     titleI18nKey: "routes.system.files",

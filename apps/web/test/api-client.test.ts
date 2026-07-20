@@ -746,7 +746,11 @@ describe("frontend API client", () => {
                 messageKey: "routes.dashboard",
                 language: "en",
                 messageValue: "Dashboard",
+                defaultMessage: "Dashboard",
+                overrideValue: null,
                 module: "routes",
+                status: "enabled",
+                manifestHash: null,
                 updatedAt: "2026-07-03T00:00:00.000Z",
               },
             ],
@@ -757,7 +761,7 @@ describe("frontend API client", () => {
     );
 
     const records = await fetchI18nMessages();
-    await updateI18nMessage("51", { messageValue: "Control center" });
+    await updateI18nMessage("51", { overrideValue: "Control center" });
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/i18n/messages", {
       headers: { authorization: "Bearer token" },
@@ -769,13 +773,17 @@ describe("frontend API client", () => {
         messageKey: "routes.dashboard",
         language: "en",
         messageValue: "Dashboard",
+        defaultMessage: "Dashboard",
+        overrideValue: null,
         module: "routes",
+        status: "enabled",
+        manifestHash: null,
         updatedAt: "2026-07-03T00:00:00.000Z",
       },
     ]);
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/i18n/messages/51", {
       method: "PATCH",
-      body: JSON.stringify({ messageValue: "Control center" }),
+      body: JSON.stringify({ overrideValue: "Control center" }),
       headers: {
         authorization: "Bearer token",
         "content-type": "application/json",

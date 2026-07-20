@@ -73,6 +73,14 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     sortOrder: 165,
   },
   {
+    routeCode: "system.modules",
+    path: "/system/modules",
+    titleI18nKey: "routes.system.modules",
+    requiredPermission: "module-registry:view",
+    menuVisible: true,
+    sortOrder: 167,
+  },
+  {
     routeCode: "system.files",
     path: "/system/files",
     titleI18nKey: "routes.system.files",

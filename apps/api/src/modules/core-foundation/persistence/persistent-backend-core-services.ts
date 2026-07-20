@@ -4,6 +4,7 @@ import {
   type CacheAdapter,
 } from "@web-admin-base/adapters";
 import type {
+  BusinessModuleDefinition,
   ChangePasswordRequest,
   CreateMenuRequest,
   CreateOrganizationRequest,
@@ -91,6 +92,59 @@ export class PersistentBackendCoreServices extends WebhookAwareBackendCoreServic
 
   override async seedInitialization(input: InitializationSetupRequest) {
     return this.persistAfter(() => super.seedInitialization(input), ["all"]);
+  }
+
+  override async refreshBusinessModuleMetadata(
+    _definitions: BusinessModuleDefinition[],
+  ): Promise<void> {
+    const reloaded = await this.repository.load();
+    replaceMap(this.context.store.permissions, reloaded.permissions);
+    replaceMap(this.context.store.apiPermissions, reloaded.apiPermissions);
+    replaceMap(this.context.store.routeMetadata, reloaded.routeMetadata);
+    replaceMap(this.context.store.menus, reloaded.menus);
+    replaceMap(this.context.store.menuApiBindings, reloaded.menuApiBindings);
+    replaceMap(this.context.store.roleDataPermissions, reloaded.roleDataPermissions);
+    replaceMap(this.context.store.userPermissionOverrides, reloaded.userPermissionOverrides);
+    this.context.store.rolePermissions.splice(
+      0,
+      this.context.store.rolePermissions.length,
+      ...reloaded.rolePermissions,
+    );
+    const activeModuleCodes = new Set(_definitions.map((definition) => definition.moduleCode));
+    for (const permission of this.context.store.permissions.values()) {
+      if (permission.source === "business_module" && !activeModuleCodes.has(permission.module)) {
+        permission.status = "disabled";
+      }
+    }
+    for (const api of this.context.store.apiPermissions.values()) {
+      if (api.source === "business_module" && !activeModuleCodes.has(api.module)) {
+        api.status = "disabled";
+      }
+    }
+    for (const route of this.context.store.routeMetadata.values()) {
+      if (route.source === "business_module" && !activeModuleCodes.has(route.ownerModule ?? "")) {
+        route.status = "disabled";
+      }
+    }
+    for (const menu of this.context.store.menus.values()) {
+      if (menu.source === "business_module" && !activeModuleCodes.has(menu.ownerModule ?? "")) {
+        menu.status = "disabled";
+      }
+    }
+    const enabledCodes = new Set(
+      [...this.context.store.permissions.values()]
+        .filter((permission) => permission.status === "enabled")
+        .map((permission) => permission.code),
+    );
+    const retained = this.context.store.rolePermissions.filter((binding) =>
+      enabledCodes.has(binding.permissionCode),
+    );
+    this.context.store.rolePermissions.splice(
+      0,
+      this.context.store.rolePermissions.length,
+      ...retained,
+    );
+    await this.permissions.invalidateAllPermissionContexts();
   }
 
   override async login(
@@ -285,6 +339,11 @@ export class PersistentBackendCoreServices extends WebhookAwareBackendCoreServic
   private persistSync<T>(operation: () => T, scopes: PersistenceScope[]): T {
     return this.persistence.persistSync(operation, scopes);
   }
+}
+
+function replaceMap<K, V>(target: Map<K, V>, source: Map<K, V>): void {
+  target.clear();
+  for (const [key, value] of source) target.set(key, value);
 }
 
 export async function createPersistentBackendCoreServices(

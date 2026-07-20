@@ -7,6 +7,7 @@
     "dev": "tsx watch src/main.ts",
     "start": "node dist/main.js",
     "seed": "tsx src/seed.ts",
+    "modules:sync": "tsx src/module-sync.ts",
     "webhook:secrets:migrate": "tsx src/webhook-secret-migration.ts",
     "email:delivery:request": "tsx src/email-delivery-request.ts",
     "email:content-keys:migrate": "tsx src/email-content-key-migration.ts",
@@ -19,6 +20,7 @@
     "@web-admin-base/adapters": "workspace:*",
     "@web-admin-base/contracts": "workspace:*",
     "@web-admin-base/db": "workspace:*",
+    "@web-admin-base/module-sdk": "workspace:*",
     "@web-admin-base/shared": "workspace:*",
     "hono": "^4.8.4",
     "zod": "^3.25.67"

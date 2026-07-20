@@ -285,7 +285,10 @@ export class PermissionService {
     const now = toUtcIso(nowUtc());
     const currentCodes = new Set(baseApiPermissionManifest.map((entry) => entry.code));
     for (const apiPermission of this.context.store.apiPermissions.values()) {
-      if (!currentCodes.has(apiPermission.code)) {
+      if (
+        (apiPermission.source ?? "base_manifest") === "base_manifest" &&
+        !currentCodes.has(apiPermission.code)
+      ) {
         apiPermission.status = "disabled";
         apiPermission.updatedAt = now;
       }
@@ -302,6 +305,8 @@ export class PermissionService {
         existing.logLevel = entry.logLevel;
         existing.public = entry.public;
         existing.status = "enabled";
+        existing.source = "base_manifest";
+        existing.manifestHash = null;
         existing.updatedAt = now;
         return existing;
       }
@@ -318,6 +323,8 @@ export class PermissionService {
         logLevel: entry.logLevel,
         public: entry.public,
         status: "enabled",
+        source: "base_manifest",
+        manifestHash: null,
         createdAt: now,
         updatedAt: now,
       };

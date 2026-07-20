@@ -52,6 +52,16 @@ export const basePermissionManifest: PermissionManifestEntry[] = [
   { code: "dictionary:update", description: "Update dictionary records", module: "dictionaries" },
   { code: "i18n:view", description: "View i18n messages", module: "i18n" },
   { code: "i18n:update", description: "Update i18n messages", module: "i18n" },
+  {
+    code: "module-registry:view",
+    description: "View Business Module registry and sync plans",
+    module: "module-registry",
+  },
+  {
+    code: "module-registry:sync",
+    description: "Confirm and apply Business Module registry sync",
+    module: "module-registry",
+  },
   { code: "online-user:view", description: "View online users", module: "auth" },
   { code: "login-log:view", description: "View login logs", module: "logs" },
   { code: "operation-log:view", description: "View operation logs", module: "logs" },

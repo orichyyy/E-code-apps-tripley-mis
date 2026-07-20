@@ -2,7 +2,7 @@
 
 No example Business Module is implemented in the Base System. The production registries intentionally contain zero modules.
 
-The authoritative architecture is recorded in `docs/adr/0005-static-business-module-registry.md` and `docs/business_module_extension_design.md`. Phase 1 registry and conformance facilities are implemented; lifecycle/Admin Sync, executable data/field permissions, and capability ports remain later phases.
+The authoritative architecture is recorded in `docs/adr/0005-static-business-module-registry.md` and `docs/business_module_extension_design.md`. Phase 1 registry/conformance and Phase 2 lifecycle/Admin Sync are implemented. Executable data/field permissions and capability ports remain later phases.
 
 ## Static Composition
 
@@ -86,6 +86,23 @@ pnpm build
 
 The generated artifact at `packages/contracts/generated/base-system-manifests.json` contains the trusted Base System compatibility catalog, normalized module declarations, ownership, definition/activation hashes, and migration metadata. The directory is generated and ignored by Git.
 
+## Registry Lifecycle And Admin Sync
+
+Normal API and Worker startup read accepted state but never accept a changed release. A new, reintroduced, or activation-changed module remains pending. Presentation-only drift remains active while still appearing in the review plan.
+
+Administrators with `module-registry:view` review the release catalog and immutable plan at `/system/modules`. Users with `module-registry:sync` may apply that plan after confirmation. Apply submits the reviewed `registryHash`, rejects stale releases, validates enabled dictionary dependencies, synchronizes metadata transactionally, removes obsolete authorization bindings, invalidates permission contexts, and writes Operation and Security Logs.
+
+The database-backed CLI is read-only by default:
+
+```bash
+pnpm modules:sync
+pnpm modules:sync --apply --expected-registry-hash=<sha256> --confirmed
+```
+
+Fresh initialization and `pnpm seed` validate dependencies and accept the complete compiled registry because no prior administrator decision exists. Existing manifest sync endpoints delegate through the same complete metadata transaction. Removing a module disables its metadata and authorization bindings while retaining its registry history, migrations, tables, and data.
+
+Manifest Localized Messages persist `default_message` separately from `override_value`. A release can update the default without replacing an administrator override; setting the override to `null` restores the current manifest default. Removed module messages remain stored with disabled status.
+
 ## Test Isolation
 
 Synthetic modules must live under a `test/fixtures` directory. They may be used to test valid definitions, invalid namespaces, broken references, runtime mismatch, Hono RPC inference, migration parity, and checksum enforcement.
@@ -94,4 +111,4 @@ Fixture module codes must never appear in production definitions, API/Web/Worker
 
 ## Current Phase Boundary
 
-Phase 1 does not provide Module Sync APIs/UI, accepted registry persistence, activation gates, executable data/field permission enforcement, or Base capability ports. Do not bypass those missing contracts inside a module. Their status is tracked in `docs/known_gaps.md`.
+Phases 1 and 2 do not provide executable data/field permission enforcement or Base capability ports. Do not bypass those missing contracts inside a module. Their status is tracked in `docs/known_gaps.md`.

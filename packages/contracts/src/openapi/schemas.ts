@@ -1,5 +1,6 @@
 import type { OpenApiDocument, OpenApiSchema } from "./types";
 import { backendCoreComponentSchemas } from "./backend-core-schemas";
+import { businessModuleLifecycleComponentSchemas } from "./business-module-lifecycle-schemas";
 import { communicationsComponentSchemas } from "./communications-schemas";
 import { infrastructureComponentSchemas } from "./infrastructure-schemas";
 import { systemManagementComponentSchemas } from "./system-management-schemas";
@@ -627,6 +628,7 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
     $ref: "#/components/schemas/UserPreferences",
   }),
   ...communicationsComponentSchemas,
+  ...businessModuleLifecycleComponentSchemas,
   ...infrastructureComponentSchemas,
   ...systemManagementComponentSchemas,
   PermissionContextResponse: envelopeSchema({

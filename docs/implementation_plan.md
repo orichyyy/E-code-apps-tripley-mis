@@ -991,7 +991,7 @@ ADR 0005 and `docs/business_module_extension_design.md` now define the confirmed
 - Serializable definitions separated from typed Hono, TanStack file-route, Worker, and database runtime registrations.
 - Build-time bidirectional conformance, an empty production Business Module Registry, isolated test fixtures, and retained Hono RPC inference.
 - Append-only, checksummed SQLite/PostgreSQL module migration sources with module-owned table namespaces.
-- Administrator-reviewed Module Sync Plans, dual definition/activation hashes, fail-closed per-module activation, retained data on removal, and a future Module Registry management page.
+- Administrator-reviewed Module Sync Plans, dual definition/activation hashes, fail-closed per-module activation, retained data on removal, and a Module Registry management page.
 - Executable fail-closed data/field permissions and narrow capability ports for logs, files, CSV, events, notifications, jobs, errors, i18n, and observability.
 
 ## Business Module Registry And Conformance Foundation
@@ -1007,4 +1007,20 @@ Phase 1 of the confirmed ADR 0005 design is implemented:
 - Rebuilt the internal development SQLite/PostgreSQL databases for the new migration history shape without adding an automatic destructive reset to normal migration commands.
 - Added isolated valid/invalid synthetic fixtures and tests for contracts, hashes, namespace/ownership/reference diagnostics, API/Web/Worker mismatch, Hono RPC inference, fixture leakage, migration ordering/parity/checksums, SQLite execution, and PostgreSQL persistence.
 
-Production Business Module registries remain empty. Phase 2 Registry Lifecycle/Admin Sync, Phase 3 executable data/field permissions, and Phase 4 capability ports remain explicitly tracked in `docs/known_gaps.md`.
+Production Business Module registries remain empty. Phase 3 executable data/field permissions and Phase 4 capability ports remain explicitly tracked in `docs/known_gaps.md`.
+
+## Business Module Registry Lifecycle And Admin Sync
+
+Phase 2 of the confirmed ADR 0005 design is implemented:
+
+- Added SQLite/PostgreSQL accepted registry state and entries with immutable definition snapshots, definition/activation hashes, accepted actor/time, and retained disabled history.
+- Added deterministic read-only catalog/plan services and confirmed transactional Apply with stale-hash rejection, dictionary dependency validation, authorization-binding removal reporting, idempotency, audit logs, and permission-cache invalidation.
+- Added owned metadata synchronization for permissions, API permissions, routes, menus, and Localized Messages. Default messages and administrator overrides persist separately, and removed module metadata is disabled rather than deleted.
+- Added first-start and seed dependency preflight/bootstrap while keeping normal startup read-only. Existing permission/route manifest sync endpoints delegate to the complete registry metadata transaction.
+- Added fail-closed API activation before authorization, active metadata/menu filtering, and shared active-registration selection for Web/Worker composition.
+- Added `GET /api/modules/registry`, `POST /api/modules/sync/plan`, and `POST /api/modules/sync/apply` with permission manifests, explicit OpenAPI schemas, stable errors, and Hono RPC inference.
+- Added read-only-by-default `pnpm modules:sync` CLI with explicit reviewed-hash and confirmation flags for Apply.
+- Added the bilingual `/system/modules` catalog and plan UI with contribution/dependency/drift visibility, permission-denied/loading/empty/error/mutation states, and confirmed Apply.
+- Added contract, plan/service, rollback, initialization, activation, Hono RPC, OpenAPI, SQLite migration, PostgreSQL persistence/reload, fixture isolation, CLI, API-client, and frontend component coverage.
+
+The next Business Module goal is Phase 3 executable data and field permissions. Phase 4 capability ports follows it; neither is implemented by this phase.

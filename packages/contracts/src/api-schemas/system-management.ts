@@ -45,7 +45,7 @@ export const updateDictionaryItemRequestSchema = strictObject({
 });
 
 export const updateI18nMessageRequestSchema = strictObject({
-  messageValue: z.string(),
+  overrideValue: z.string().min(1).nullable(),
 });
 
 export type UpdateSystemConfigRequest = z.infer<typeof updateSystemConfigRequestSchema>;

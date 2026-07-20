@@ -1,4 +1,5 @@
 export * from "./api-schemas/backend-core";
+export * from "./api-schemas/business-module-lifecycle";
 export * from "./api-schemas/communications";
 export * from "./api-schemas/health";
 export * from "./api-schemas/infrastructure";

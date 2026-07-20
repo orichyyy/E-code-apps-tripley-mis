@@ -113,6 +113,8 @@ export type MenuRecord = AuditFields &
     sortOrder: number;
     visible: boolean;
     status: EntityStatus;
+    source?: string;
+    ownerModule?: string | null;
   };
 
 export type RouteMetadataRecord = AuditFields & {
@@ -128,6 +130,8 @@ export type RouteMetadataRecord = AuditFields & {
   icon: string | null;
   sortOrder: number;
   status: EntityStatus;
+  source?: string;
+  ownerModule?: string | null;
 };
 
 export type PermissionRecord = AuditFields & {
@@ -157,6 +161,8 @@ export type ApiPermissionRecord = AuditFields & {
   logLevel: "none" | "basic" | "request" | "request_response";
   status: EntityStatus;
   public: boolean;
+  source?: string;
+  manifestHash?: string | null;
 };
 
 export type MenuApiBindingRecord = {

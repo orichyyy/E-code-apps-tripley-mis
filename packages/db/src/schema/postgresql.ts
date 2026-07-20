@@ -333,6 +333,8 @@ export const menus = pgTable(
     sortOrder: integer("sort_order").notNull().default(0),
     visible: boolean("visible").notNull().default(true),
     status: text("status").notNull().default("enabled"),
+    source: text("source").notNull().default("manual"),
+    ownerModule: text("owner_module"),
     ...softDelete,
     ...timestamps,
   },
@@ -358,6 +360,8 @@ export const routeMetadata = pgTable(
     icon: text("icon"),
     sortOrder: integer("sort_order").notNull().default(0),
     status: text("status").notNull().default("enabled"),
+    source: text("source").notNull().default("base_manifest"),
+    ownerModule: text("owner_module"),
     ...timestamps,
   },
   (table) => ({
@@ -382,6 +386,8 @@ export const apiPermissions = pgTable(
     requiredPermission: text("required_permission"),
     logLevel: text("log_level").notNull().default("basic"),
     public: boolean("public").notNull().default(false),
+    source: text("source").notNull().default("base_manifest"),
+    manifestHash: text("manifest_hash"),
     status: text("status").notNull().default("enabled"),
     ...timestamps,
   },
@@ -562,7 +568,11 @@ export const i18nMessages = pgTable(
     messageKey: text("message_key").notNull(),
     language: text("language").notNull(),
     messageValue: text("message_value").notNull(),
+    defaultMessage: text("default_message").notNull().default(""),
+    overrideValue: text("override_value"),
     module: text("module").notNull(),
+    status: text("status").notNull().default("enabled"),
+    manifestHash: text("manifest_hash"),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
@@ -571,6 +581,46 @@ export const i18nMessages = pgTable(
       table.language,
     ),
     moduleIndex: index("i18n_messages_module_idx").on(table.module),
+  }),
+);
+
+export const businessModuleRegistryState = pgTable(
+  "business_module_registry_state",
+  {
+    id: serial("id").primaryKey(),
+    singletonKey: text("singleton_key").notNull().default("current"),
+    registryHash: text("registry_hash").notNull(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }).notNull(),
+    acceptedBy: integer("accepted_by"),
+    ...timestamps,
+  },
+  (table) => ({
+    singletonUnique: uniqueIndex("business_module_registry_state_singleton_unique").on(
+      table.singletonKey,
+    ),
+  }),
+);
+
+export const businessModuleRegistryEntries = pgTable(
+  "business_module_registry_entries",
+  {
+    id: serial("id").primaryKey(),
+    moduleCode: text("module_code").notNull(),
+    definitionJson: jsonb("definition_json").notNull(),
+    definitionHash: text("definition_hash").notNull(),
+    activationHash: text("activation_hash").notNull(),
+    status: text("status").notNull().default("active"),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }).notNull(),
+    acceptedBy: integer("accepted_by"),
+    disabledAt: timestamp("disabled_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => ({
+    codeUnique: uniqueIndex("business_module_registry_entries_code_unique").on(table.moduleCode),
+    statusCheck: check(
+      "business_module_registry_entries_status_check",
+      sql`${table.status} IN ('active', 'disabled')`,
+    ),
   }),
 );
 
@@ -1103,6 +1153,8 @@ export const postgresqlSchema = {
   announcements,
   apiPermissions,
   authSessions,
+  businessModuleRegistryEntries,
+  businessModuleRegistryState,
   cacheEntries,
   dictionaryItems,
   dictionaryTypes,

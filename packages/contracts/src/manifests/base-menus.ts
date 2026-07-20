@@ -96,6 +96,15 @@ export const baseMenuManifest: BaseMenuManifestEntry[] = [
     sortOrder: 165,
   },
   {
+    code: "system.modules",
+    titleI18nKey: "routes.system.modules",
+    path: "/system/modules",
+    parentCode: "system",
+    requiredPermission: "module-registry:view",
+    routeCode: "system.modules",
+    sortOrder: 167,
+  },
+  {
     code: "system.files",
     titleI18nKey: "routes.system.files",
     path: "/system/files",

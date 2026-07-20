@@ -8,7 +8,11 @@ export type I18nMessage = {
   messageKey: string;
   language: string;
   messageValue: string;
+  defaultMessage: string;
+  overrideValue: string | null;
   module: string;
+  status: "enabled" | "disabled";
+  manifestHash: string | null;
   updatedAt: string;
 };
 
@@ -31,7 +35,11 @@ function toI18nMessage(record: Record<string, unknown>): I18nMessage {
     messageKey: stringField(record.messageKey, ""),
     language: stringField(record.language, ""),
     messageValue: stringField(record.messageValue, ""),
+    defaultMessage: stringField(record.defaultMessage, ""),
+    overrideValue: typeof record.overrideValue === "string" ? record.overrideValue : null,
     module: stringField(record.module, ""),
+    status: record.status === "disabled" ? "disabled" : "enabled",
+    manifestHash: typeof record.manifestHash === "string" ? record.manifestHash : null,
     updatedAt: stringField(record.updatedAt, ""),
   };
 }

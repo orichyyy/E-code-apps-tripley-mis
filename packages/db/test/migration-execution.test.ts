@@ -46,6 +46,7 @@ describe("database migration execution", () => {
         "0009_webhook_delivery.sql",
         "0010_email_delivery.sql",
         "0011_announcement_targeting.sql",
+        "0012_business_module_lifecycle.sql",
       ]);
       expect(reapplied).toEqual([]);
       expect(tables).toContainEqual({ name: "users" });
@@ -58,6 +59,8 @@ describe("database migration execution", () => {
       expect(tables).toContainEqual({ name: "dictionary_types" });
       expect(tables).toContainEqual({ name: "dictionary_items" });
       expect(tables).toContainEqual({ name: "i18n_messages" });
+      expect(tables).toContainEqual({ name: "business_module_registry_state" });
+      expect(tables).toContainEqual({ name: "business_module_registry_entries" });
       expect(tables).toContainEqual({ name: "announcements" });
       expect(tables).toContainEqual({ name: "announcement_targets" });
       expect(tables).toContainEqual({ name: "webhook_subscriptions" });
@@ -83,6 +86,12 @@ describe("database migration execution", () => {
         name: string;
       }>;
       expect(announcementColumns.map((column) => column.name)).toContain("expire_at");
+      const i18nColumns = client.prepare("PRAGMA table_info(i18n_messages)").all() as Array<{
+        name: string;
+      }>;
+      expect(i18nColumns.map((column) => column.name)).toEqual(
+        expect.arrayContaining(["default_message", "override_value", "status", "manifest_hash"]),
+      );
     } finally {
       client.close();
     }
@@ -128,6 +137,7 @@ describe("database migration execution", () => {
       "0009_webhook_delivery.sql",
       "0010_email_delivery.sql",
       "0011_announcement_targeting.sql",
+      "0012_business_module_lifecycle.sql",
     ];
     const applied = await runPostgresqlMigrations({ url });
     const reapplied = await runPostgresqlMigrations({ url });
@@ -149,6 +159,8 @@ describe("database migration execution", () => {
              'dictionary_types',
              'dictionary_items',
              'i18n_messages',
+             'business_module_registry_state',
+             'business_module_registry_entries',
              'announcements',
              'file_references',
              'user_preferences',
@@ -172,6 +184,8 @@ describe("database migration execution", () => {
       );
       expect(result.rows.map((row) => row.table_name)).toEqual([
         "announcements",
+        "business_module_registry_entries",
+        "business_module_registry_state",
         "dictionary_items",
         "dictionary_types",
         "email_deliveries",

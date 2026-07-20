@@ -224,6 +224,19 @@ describe("backend core schema", () => {
     expect(postgresql.dictionaryItems.labelI18nKey.name).toBe("label_i18n_key");
     expect(sqlite.i18nMessages.messageKey.name).toBe("message_key");
     expect(postgresql.i18nMessages.messageKey.name).toBe("message_key");
+    expect(sqlite.i18nMessages.defaultMessage.name).toBe("default_message");
+    expect(postgresql.i18nMessages.defaultMessage.name).toBe("default_message");
+    expect(sqlite.i18nMessages.overrideValue.name).toBe("override_value");
+    expect(postgresql.i18nMessages.overrideValue.name).toBe("override_value");
+  });
+
+  it("keeps accepted Business Module registry tables aligned across dialects", () => {
+    expect(sqlite.businessModuleRegistryState.registryHash.name).toBe("registry_hash");
+    expect(postgresql.businessModuleRegistryState.registryHash.name).toBe("registry_hash");
+    expect(sqlite.businessModuleRegistryEntries.moduleCode.name).toBe("module_code");
+    expect(postgresql.businessModuleRegistryEntries.moduleCode.name).toBe("module_code");
+    expect(sqlite.businessModuleRegistryEntries.definitionJson.name).toBe("definition_json");
+    expect(postgresql.businessModuleRegistryEntries.definitionJson.name).toBe("definition_json");
   });
 
   it("keeps announcement and webhook subscription tables aligned across dialects", () => {
@@ -303,6 +316,7 @@ describe("backend core schema", () => {
       ["systemConfigs", ["system_configs_status_check", "system_configs_value_type_check"]],
       ["dictionaryTypes", ["dictionary_types_status_check"]],
       ["dictionaryItems", ["dictionary_items_status_check"]],
+      ["businessModuleRegistryEntries", ["business_module_registry_entries_status_check"]],
       ["announcements", ["announcements_scope_type_check", "announcements_status_check"]],
       ["webhookSubscriptions", ["webhook_subscriptions_status_check"]],
     ]);
@@ -366,6 +380,8 @@ describe("backend core schema", () => {
       ["dictionaryTypes", ["dictionary_types_code_unique"]],
       ["dictionaryItems", ["dictionary_items_type_idx", "dictionary_items_type_value_unique"]],
       ["i18nMessages", ["i18n_messages_key_language_unique", "i18n_messages_module_idx"]],
+      ["businessModuleRegistryState", ["business_module_registry_state_singleton_unique"]],
+      ["businessModuleRegistryEntries", ["business_module_registry_entries_code_unique"]],
       ["announcements", ["announcements_status_idx"]],
       ["webhookSubscriptions", ["webhook_subscriptions_status_idx"]],
     ]);

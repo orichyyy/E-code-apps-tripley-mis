@@ -20,6 +20,12 @@ Read the human-readable diagnostic and `.tmp/business-module-conformance.json`. 
 
 Do not fix a mismatch by adding runtime discovery or moving a synthetic fixture into a production registry. Production definitions and API/Web/Worker/database registrations are explicit, and fixture modules belong only under test fixture directories.
 
+## Module Sync Is Pending Or Apply Fails
+
+Run `pnpm modules:sync` against the same database as the API and review `registryHash`, changes, dependency failures, and authorization bindings that will be removed. Missing or disabled dictionary dependencies intentionally block Apply.
+
+Use the exact reviewed hash through `/system/modules` or `pnpm modules:sync --apply --expected-registry-hash=<sha256> --confirmed`. `BUSINESS_MODULE_REGISTRY_STALE` means the compiled release changed after the plan was reviewed; generate a new plan. `MODULE_NOT_SYNCHRONIZED` means the requested module's current activation hash has not been accepted. API startup intentionally does not auto-apply it.
+
 ## `better-sqlite3` Binding Is Missing
 
 The workspace allows the `better-sqlite3` build script through `pnpm-workspace.yaml`. If a local install still reports a missing native binding, run:

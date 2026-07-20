@@ -11,6 +11,16 @@ const errorDefinitions = {
   AUTH_TOKEN_EXPIRED: ["Authentication token is expired", 401, "authentication"],
   AUTH_TOKEN_INVALIDATED: ["Authentication token has been invalidated", 401, "authentication"],
   BUSINESS_MAX_ORG_DEPTH_EXCEEDED: ["Organization maximum depth exceeded", 409, "business"],
+  BUSINESS_MODULE_DEPENDENCY_UNSATISFIED: [
+    "Business Module dependencies are missing or disabled",
+    409,
+    "business",
+  ],
+  BUSINESS_MODULE_REGISTRY_STALE: [
+    "Business Module registry changed after the sync plan was created",
+    409,
+    "business",
+  ],
   BUSINESS_NO_ENABLED_ORGANIZATION: ["User has no enabled organization", 403, "business"],
   BUSINESS_ORG_DISABLED: ["Organization is disabled", 409, "business"],
   BUSINESS_ORG_SEGMENT_RANGE_EXHAUSTED: [
@@ -42,6 +52,7 @@ const errorDefinitions = {
   PERMISSION_API_DENIED: ["API permission denied", 403, "authorization"],
   PERMISSION_DENIED: ["Permission denied", 403, "authorization"],
   PERMISSION_UNKNOWN_CODE: ["Permission code is unknown", 400, "validation"],
+  MODULE_NOT_SYNCHRONIZED: ["Business Module is not synchronized for this release", 503, "system"],
   ROLE_NOT_FOUND: ["Role was not found", 404, "business"],
   SYSTEM_INTERNAL_ERROR: ["Unexpected internal error", 500, "system"],
   SYSTEM_EMAIL_CONTENT_KEY_UNAVAILABLE: [

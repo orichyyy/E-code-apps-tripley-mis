@@ -5,15 +5,15 @@ import {
 import { z } from "zod";
 
 export type I18nMessageFormValues = {
-  messageValue: string;
+  overrideValue: string;
 };
 
 export const i18nMessageFormSchema = z.object({
-  messageValue: z.string(),
+  overrideValue: z.string(),
 });
 
 export function toI18nMessageApiInput(value: I18nMessageFormValues): UpdateI18nMessageRequest {
   return updateI18nMessageRequestSchema.parse({
-    messageValue: value.messageValue,
+    overrideValue: value.overrideValue.trim() || null,
   });
 }

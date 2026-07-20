@@ -72,14 +72,30 @@ const dictionaryItemSchema: OpenApiSchema = {
 
 const i18nMessageSchema: OpenApiSchema = {
   type: "object",
-  required: ["id", "tenantId", "messageKey", "language", "messageValue", "module", "updatedAt"],
+  required: [
+    "id",
+    "tenantId",
+    "messageKey",
+    "language",
+    "messageValue",
+    "defaultMessage",
+    "overrideValue",
+    "module",
+    "status",
+    "manifestHash",
+    "updatedAt",
+  ],
   properties: {
     id: idStringSchema,
     tenantId: { ...idStringSchema, nullable: true },
     messageKey: { type: "string" },
     language: { type: "string" },
     messageValue: { type: "string" },
+    defaultMessage: { type: "string" },
+    overrideValue: { type: "string", nullable: true },
     module: { type: "string" },
+    status: { type: "string", enum: ["enabled", "disabled"] },
+    manifestHash: { type: "string", nullable: true },
     updatedAt: { type: "string", format: "date-time" },
   },
   additionalProperties: false,
@@ -138,9 +154,9 @@ export const systemManagementComponentSchemas: OpenApiDocument["components"]["sc
   },
   UpdateI18nMessageRequest: {
     type: "object",
-    required: ["messageValue"],
+    required: ["overrideValue"],
     properties: {
-      messageValue: { type: "string" },
+      overrideValue: { type: "string", nullable: true },
     },
     additionalProperties: false,
   },

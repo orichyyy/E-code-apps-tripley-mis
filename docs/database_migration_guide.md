@@ -15,6 +15,8 @@ Both migration directories currently contain matching ordered Base System slices
 
 Business Module migration sources are registered explicitly through `packages/db/src/business-modules/registry.ts`. Base migrations always run first. Module sources then sort by permanent `moduleCode`, followed by each source's `NNNN_lower_snake_name.sql` sequence. SQLite and PostgreSQL directories for a module must expose matching logical IDs.
 
+Migration execution and Module Sync are separate operations. Migrations establish append-only physical schema history; `pnpm modules:sync` reviews and accepts release metadata in `business_module_registry_state` and `business_module_registry_entries`. Module removal never reverses migrations or drops retained module tables/data.
+
 No SQL Server v1 schema or migration code is present.
 
 ## Commands

@@ -55,3 +55,11 @@ it("keeps Hono RPC type inference available for communications routes", () => {
   expect(listWebhookDeliveries).toBeDefined();
   expect(getWebhookDelivery).toBeDefined();
 });
+
+it("keeps Hono RPC type inference available for Module Registry lifecycle routes", () => {
+  const client = hc<ApiApp>("/");
+
+  expect(client.api.modules.registry.$get).toBeDefined();
+  expect(client.api.modules.sync.plan.$post).toBeDefined();
+  expect(client.api.modules.sync.apply.$post).toBeDefined();
+});

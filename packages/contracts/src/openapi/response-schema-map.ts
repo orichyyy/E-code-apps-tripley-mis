@@ -126,4 +126,7 @@ export const responseSchemaByOperationCode: Record<string, string> = {
   "api.import-export.tasks.list": "ImportExportTaskListResponse",
   "api.import-export.export.create": "ImportExportTaskResponse",
   "api.import-export.tasks.detail": "ImportExportTaskResponse",
+  "api.modules.registry.view": "BusinessModuleRegistryResponse",
+  "api.modules.sync.plan": "ModuleSyncPlanResponse",
+  "api.modules.sync.apply": "ModuleSyncApplyResponse",
 };

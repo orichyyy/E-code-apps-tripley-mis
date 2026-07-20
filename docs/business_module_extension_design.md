@@ -186,3 +186,10 @@ The confirmed design is implemented through four reviewable goals:
 4. Capability Ports: Operation Events, typed errors, file attachment authorization, CSV resources, Domain/Notification Events, scheduled jobs, async context propagation, and their conformance tests.
 
 The complete PRD extension acceptance criteria remain incomplete until all four goals are implemented. No phase may introduce an example business module.
+
+## Implementation Status
+
+- Phase 1 Registry and Conformance Foundation: implemented.
+- Phase 2 Registry Lifecycle and Admin Sync: implemented.
+- Phase 3 Executable Data and Field Permissions: not implemented.
+- Phase 4 Capability Ports: not implemented.

@@ -347,6 +347,8 @@ export const menus = sqliteTable(
     status: text("status", { enum: ["enabled", "disabled"] })
       .notNull()
       .default("enabled"),
+    source: text("source").notNull().default("manual"),
+    ownerModule: text("owner_module"),
     ...softDelete,
     ...timestamps,
   },
@@ -374,6 +376,8 @@ export const routeMetadata = sqliteTable(
     status: text("status", { enum: ["enabled", "disabled"] })
       .notNull()
       .default("enabled"),
+    source: text("source").notNull().default("base_manifest"),
+    ownerModule: text("owner_module"),
     ...timestamps,
   },
   (table) => ({
@@ -400,6 +404,8 @@ export const apiPermissions = sqliteTable(
       .notNull()
       .default("basic"),
     public: integer("public", { mode: "boolean" }).notNull().default(false),
+    source: text("source").notNull().default("base_manifest"),
+    manifestHash: text("manifest_hash"),
     status: text("status", { enum: ["enabled", "disabled"] })
       .notNull()
       .default("enabled"),
@@ -590,7 +596,13 @@ export const i18nMessages = sqliteTable(
     messageKey: text("message_key").notNull(),
     language: text("language").notNull(),
     messageValue: text("message_value").notNull(),
+    defaultMessage: text("default_message").notNull().default(""),
+    overrideValue: text("override_value"),
     module: text("module").notNull(),
+    status: text("status", { enum: ["enabled", "disabled"] })
+      .notNull()
+      .default("enabled"),
+    manifestHash: text("manifest_hash"),
     updatedAt: text("updated_at").notNull(),
   },
   (table) => ({
@@ -599,6 +611,48 @@ export const i18nMessages = sqliteTable(
       table.language,
     ),
     moduleIndex: index("i18n_messages_module_idx").on(table.module),
+  }),
+);
+
+export const businessModuleRegistryState = sqliteTable(
+  "business_module_registry_state",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    singletonKey: text("singleton_key").notNull().default("current"),
+    registryHash: text("registry_hash").notNull(),
+    acceptedAt: text("accepted_at").notNull(),
+    acceptedBy: integer("accepted_by"),
+    ...timestamps,
+  },
+  (table) => ({
+    singletonUnique: uniqueIndex("business_module_registry_state_singleton_unique").on(
+      table.singletonKey,
+    ),
+  }),
+);
+
+export const businessModuleRegistryEntries = sqliteTable(
+  "business_module_registry_entries",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    moduleCode: text("module_code").notNull(),
+    definitionJson: text("definition_json", { mode: "json" }).notNull(),
+    definitionHash: text("definition_hash").notNull(),
+    activationHash: text("activation_hash").notNull(),
+    status: text("status", { enum: ["active", "disabled"] })
+      .notNull()
+      .default("active"),
+    acceptedAt: text("accepted_at").notNull(),
+    acceptedBy: integer("accepted_by"),
+    disabledAt: text("disabled_at"),
+    ...timestamps,
+  },
+  (table) => ({
+    codeUnique: uniqueIndex("business_module_registry_entries_code_unique").on(table.moduleCode),
+    statusCheck: check(
+      "business_module_registry_entries_status_check",
+      sql`${table.status} IN ('active', 'disabled')`,
+    ),
   }),
 );
 
@@ -1159,6 +1213,8 @@ export const sqliteSchema = {
   announcements,
   apiPermissions,
   authSessions,
+  businessModuleRegistryEntries,
+  businessModuleRegistryState,
   cacheEntries,
   dictionaryItems,
   dictionaryTypes,

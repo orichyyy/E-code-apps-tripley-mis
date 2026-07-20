@@ -1,4 +1,5 @@
 import {
+  baseApiPermissionManifest,
   baseMenuManifest,
   businessModuleDefinitions,
   type ApiMethod,
@@ -13,9 +14,17 @@ import { businessWorkerModuleRegistry } from "../apps/worker/src/business-module
 const apiMethods = new Set<ApiMethod>(["GET", "POST", "PUT", "PATCH", "DELETE"]);
 
 export function createProductionModuleConformanceInput() {
+  const baseModuleManagementRoutes = new Set(
+    baseApiPermissionManifest
+      .filter(({ module }) => module === "module-registry")
+      .map(({ method, path }) => `${method} ${path}`),
+  );
   const mountedApiRoutes = createApp()
     .routes.filter(
-      ({ method, path }) => path.startsWith("/api/modules/") && apiMethods.has(method as ApiMethod),
+      ({ method, path }) =>
+        path.startsWith("/api/modules/") &&
+        apiMethods.has(method as ApiMethod) &&
+        !baseModuleManagementRoutes.has(`${method} ${path}`),
     )
     .map(({ method, path }) => ({ method: method as ApiMethod, path }));
   const tanstackRoutePaths = Object.values(router.routesById)

@@ -12,7 +12,12 @@ import {
   type NotificationChannelAdapter,
   type QueueAdapter,
 } from "@web-admin-base/adapters";
-import { createOpenApiDocument, healthResponseSchema } from "@web-admin-base/contracts";
+import {
+  businessModuleDefinitions,
+  createOpenApiDocument,
+  healthResponseSchema,
+} from "@web-admin-base/contracts";
+import { createBusinessModuleRegistry } from "@web-admin-base/module-sdk";
 import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
@@ -21,6 +26,7 @@ import { createBusinessModuleRoutes } from "./business-modules/routes";
 import type { AppBindings } from "./app-bindings";
 import { createErrorResponse, normalizeError } from "./core/errors/error-response";
 import { createApiAuthorizationMiddleware } from "./middleware/api-authorization";
+import { createBusinessModuleActivationMiddleware } from "./middleware/business-module-activation";
 import { requestIdMiddleware } from "./middleware/request-id";
 import { createCommunicationsRoutes } from "./modules/communications/communications.routes";
 import { CommunicationsRepository } from "./modules/communications/communications.repository";
@@ -32,6 +38,10 @@ import {
 } from "./modules/core-foundation/services";
 import { createPersistentBackendCoreServices } from "./modules/core-foundation/persistence/persistent-backend-core-services";
 import { createManifestRoutes } from "./modules/manifests/manifest.routes";
+import { InMemoryModuleLifecycleStore } from "./modules/module-lifecycle/in-memory-module-lifecycle.store";
+import { ModuleLifecycleRepository } from "./modules/module-lifecycle/module-lifecycle.repository";
+import { createModuleLifecycleRoutes } from "./modules/module-lifecycle/module-lifecycle.routes";
+import { ModuleLifecycleService } from "./modules/module-lifecycle/module-lifecycle.service";
 import { createInfrastructureRoutes } from "./modules/infrastructure/infrastructure.routes";
 import { InfrastructureRepository } from "./modules/infrastructure/infrastructure.repository";
 import { InfrastructureServices } from "./modules/infrastructure/infrastructure.service";
@@ -45,6 +55,7 @@ import {
 
 export type AppDependencies = {
   backendCoreServices: BackendCoreServices;
+  moduleLifecycleService?: ModuleLifecycleService;
   communicationsServices?: CommunicationsServices;
   infrastructureServices?: InfrastructureServices;
   systemManagementServices?: SystemManagementServices;
@@ -59,11 +70,27 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
     dependencies.infrastructureServices ?? InfrastructureServices.inMemory();
   const systemManagementServices =
     dependencies.systemManagementServices ?? SystemManagementServices.inMemory();
+  const moduleLifecycleService =
+    dependencies.moduleLifecycleService ??
+    new ModuleLifecycleService(
+      createBusinessModuleRegistry(businessModuleDefinitions),
+      new InMemoryModuleLifecycleStore(),
+      {
+        afterApply: (definitions) =>
+          dependencies.backendCoreServices.refreshBusinessModuleMetadata(definitions),
+        beforeCompatibilitySync: () =>
+          dependencies.backendCoreServices.synchronizeBaseManifests().then(() => undefined),
+      },
+    );
   const app = new Hono<AppBindings>().basePath("/api");
 
   app.use("*", requestIdMiddleware);
   app.use("*", createStructuredLoggingMiddleware(structuredLogSink));
-  app.use("*", createApiAuthorizationMiddleware(dependencies.backendCoreServices));
+  app.use("*", createBusinessModuleActivationMiddleware(moduleLifecycleService));
+  app.use(
+    "*",
+    createApiAuthorizationMiddleware(dependencies.backendCoreServices, moduleLifecycleService),
+  );
 
   app.get("/health", (context) => {
     return context.json(
@@ -92,10 +119,19 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
   });
 
   const routedApp = app
-    .route("/", createCoreFoundationRoutes(dependencies.backendCoreServices))
+    .route(
+      "/",
+      createCoreFoundationRoutes(
+        dependencies.backendCoreServices,
+        (initializedBy) => moduleLifecycleService.bootstrap(initializedBy).then(() => undefined),
+        (actorId) => moduleLifecycleService.synchronizeCompatibility(actorId),
+        () => moduleLifecycleService.assertCanApply(),
+      ),
+    )
     .route("/", createCommunicationsRoutes(communicationsServices))
     .route("/", createInfrastructureRoutes(infrastructureServices))
     .route("/", createSystemManagementRoutes(systemManagementServices))
+    .route("/", createModuleLifecycleRoutes(moduleLifecycleService))
     .route("/", createManifestRoutes())
     .route("/", createBusinessModuleRoutes());
 
@@ -132,6 +168,15 @@ export function createDefaultAppDependencies(
   const backendCoreServices = createInMemoryBackendCoreServices(config.backendCore);
   return {
     backendCoreServices,
+    moduleLifecycleService: new ModuleLifecycleService(
+      createBusinessModuleRegistry(businessModuleDefinitions),
+      new InMemoryModuleLifecycleStore(),
+      {
+        afterApply: (definitions) => backendCoreServices.refreshBusinessModuleMetadata(definitions),
+        beforeCompatibilitySync: () =>
+          backendCoreServices.synchronizeBaseManifests().then(() => undefined),
+      },
+    ),
     communicationsServices: CommunicationsServices.inMemory(() =>
       backendCoreServices.listOrganizations().map((organization) => ({
         id: organization.id,
@@ -163,11 +208,26 @@ export async function createDatabaseBackedAppDependencies(
     infrastructureRepository,
   );
   const fileStorage = storage ?? (await createRuntimeFileStorage(config));
-  return {
-    backendCoreServices: await createPersistentBackendCoreServices(config.backendCore, undefined, {
+  const backendCoreServices = await createPersistentBackendCoreServices(
+    config.backendCore,
+    undefined,
+    {
       permissionCacheAdapter,
       webhookEventsEnabled: config.webhook.enabled,
-    }),
+    },
+  );
+  const moduleLifecycleRepository = ModuleLifecycleRepository.fromEnvironment();
+  const moduleLifecycleService = new ModuleLifecycleService(
+    createBusinessModuleRegistry(businessModuleDefinitions),
+    moduleLifecycleRepository,
+    { afterApply: (definitions) => backendCoreServices.refreshBusinessModuleMetadata(definitions) },
+  );
+  await backendCoreServices.refreshBusinessModuleMetadata(
+    await moduleLifecycleService.getActiveDefinitions(),
+  );
+  return {
+    backendCoreServices,
+    moduleLifecycleService,
     communicationsServices: CommunicationsServices.database(
       CommunicationsRepository.fromEnvironment(),
       config.webhook,

@@ -28,6 +28,7 @@ import { SchedulerPage } from "@/features/operations/scheduler-page";
 import { DictionaryPage } from "@/features/system/dictionary-page";
 import { FilesPage } from "@/features/system/files-page";
 import { I18nMessagesPage } from "@/features/system/i18n-messages-page";
+import { ModuleRegistryPage } from "@/features/system/module-registry-page";
 import { SystemConfigPage } from "@/features/system/system-config-page";
 import { PersonalSettingsPage } from "@/features/account/settings-page";
 import { ProfilePage } from "@/features/account/profile-page";
@@ -121,6 +122,8 @@ const managementRoutes = adminRouteMetadata
             <AnnouncementsPage route={route} />
           ) : route.routeCode === "system.i18nMessages" ? (
             <I18nMessagesPage route={route} />
+          ) : route.routeCode === "system.modules" ? (
+            <ModuleRegistryPage route={route} />
           ) : route.routeCode === "system.files" ? (
             <FilesPage route={route} />
           ) : route.routeCode === "notifications.templates" ? (

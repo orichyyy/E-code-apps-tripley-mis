@@ -56,6 +56,13 @@ pnpm dev:local
 
 This script sets the local SQLite environment, applies migrations, seeds the administrator, starts API/Web/Worker, and prints the browser URL and login account.
 
+`pnpm seed` accepts the complete compiled Business Module Registry on a fresh system. Later release changes are never accepted automatically at startup. Review them in the `/system/modules` page or from the same configured shell:
+
+```powershell
+pnpm modules:sync
+pnpm modules:sync --apply --expected-registry-hash=<sha256> --confirmed
+```
+
 Equivalent manual setup:
 
 ```powershell

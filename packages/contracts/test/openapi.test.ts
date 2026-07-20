@@ -3,6 +3,22 @@ import { describe, expect, it } from "vitest";
 import { baseApiPermissionManifest, createOpenApiDocument } from "../src";
 
 describe("OpenAPI document generation", () => {
+  it("documents Business Module registry lifecycle APIs with explicit schemas", () => {
+    const document = createOpenApiDocument();
+
+    expect(
+      document.paths["/modules/registry"]?.get?.responses["200"]?.content?.["application/json"]
+        ?.schema,
+    ).toEqual({ $ref: "#/components/schemas/BusinessModuleRegistryResponse" });
+    expect(
+      document.paths["/modules/sync/plan"]?.post?.responses["200"]?.content?.["application/json"]
+        ?.schema,
+    ).toEqual({ $ref: "#/components/schemas/ModuleSyncPlanResponse" });
+    expect(
+      document.paths["/modules/sync/apply"]?.post?.requestBody?.content["application/json"]?.schema,
+    ).toEqual({ $ref: "#/components/schemas/ApplyModuleSyncRequest" });
+  });
+
   it("documents every implemented API permission manifest entry", () => {
     const document = createOpenApiDocument();
     const documentedOperations = Object.entries(document.paths)
