@@ -47,6 +47,8 @@ describe("database migration execution", () => {
         "0010_email_delivery.sql",
         "0011_announcement_targeting.sql",
         "0012_business_module_lifecycle.sql",
+        "0013_business_permission_enforcement.sql",
+        "0014_multiple_data_permission_rules.sql",
       ]);
       expect(reapplied).toEqual([]);
       expect(tables).toContainEqual({ name: "users" });
@@ -92,6 +94,10 @@ describe("database migration execution", () => {
       expect(i18nColumns.map((column) => column.name)).toEqual(
         expect.arrayContaining(["default_message", "override_value", "status", "manifest_hash"]),
       );
+      const fieldPermissionColumns = client
+        .prepare("PRAGMA table_info(field_permission_rules)")
+        .all() as Array<{ name: string }>;
+      expect(fieldPermissionColumns.map((column) => column.name)).toContain("scenario");
     } finally {
       client.close();
     }
@@ -138,6 +144,8 @@ describe("database migration execution", () => {
       "0010_email_delivery.sql",
       "0011_announcement_targeting.sql",
       "0012_business_module_lifecycle.sql",
+      "0013_business_permission_enforcement.sql",
+      "0014_multiple_data_permission_rules.sql",
     ];
     const applied = await runPostgresqlMigrations({ url });
     const reapplied = await runPostgresqlMigrations({ url });

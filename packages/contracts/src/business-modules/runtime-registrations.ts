@@ -1,4 +1,5 @@
 import type { ApiMethod } from "./types";
+import type { DataPermissionOperatorHandler } from "../permissions/business-permissions";
 
 export type BusinessApiRouteRegistration = {
   code: string;
@@ -9,6 +10,7 @@ export type BusinessApiRouteRegistration = {
 export type BusinessApiModuleRegistration = {
   moduleCode: string;
   routes: BusinessApiRouteRegistration[];
+  dataPermissionOperators: Record<string, DataPermissionOperatorHandler>;
 };
 
 export type BusinessWebRouteRegistration = {

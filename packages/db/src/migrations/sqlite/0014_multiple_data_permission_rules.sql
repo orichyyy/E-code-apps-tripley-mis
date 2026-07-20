@@ -1,0 +1,1 @@
+DROP INDEX role_data_permissions_role_permission_unique;

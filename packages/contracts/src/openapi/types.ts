@@ -8,7 +8,7 @@ export type OpenApiSchema = {
   items?: OpenApiSchema;
   required?: string[];
   additionalProperties?: boolean | OpenApiSchema;
-  enum?: string[];
+  enum?: Array<string | number>;
   nullable?: boolean;
   description?: string;
   anyOf?: OpenApiSchema[];

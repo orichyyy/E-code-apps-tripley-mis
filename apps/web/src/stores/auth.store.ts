@@ -1,5 +1,7 @@
 import { create } from "zustand";
 
+import type { EffectiveFieldPermissionRule } from "@/features/permissions/field-permission-utils";
+
 export type AuthUser = {
   id: string;
   username: string;
@@ -12,13 +14,23 @@ type AuthState = {
   accessToken: string | null;
   user: AuthUser | null;
   permissionCodes: string[];
+  fieldPermissions: EffectiveFieldPermissionRule[];
+  isSuperAdministrator: boolean;
   hiddenFields: Record<string, string[]>;
   setAccessToken: (accessToken: string | null) => void;
-  signIn: (input: { accessToken: string; user: AuthUser; permissionCodes: string[] }) => void;
+  signIn: (input: {
+    accessToken: string;
+    user: AuthUser;
+    permissionCodes: string[];
+    fieldPermissions?: EffectiveFieldPermissionRule[];
+    isSuperAdministrator?: boolean;
+  }) => void;
   signOut: () => void;
   updateUser: (patch: Partial<AuthUser>) => void;
   setPermissionContext: (input: {
     permissionCodes: string[];
+    fieldPermissions?: EffectiveFieldPermissionRule[];
+    isSuperAdministrator?: boolean;
     hiddenFields?: Record<string, string[]>;
   }) => void;
   markPasswordChanged: () => void;
@@ -39,6 +51,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
     : null,
   permissionCodes: initialAccessToken ? ["*"] : [],
+  fieldPermissions: [],
+  isSuperAdministrator: false,
   hiddenFields: {},
   setAccessToken: (accessToken) => {
     if (typeof localStorage !== "undefined") {
@@ -50,24 +64,41 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
     set({ accessToken });
   },
-  signIn: ({ accessToken, user, permissionCodes }) => {
+  signIn: ({
+    accessToken,
+    user,
+    permissionCodes,
+    fieldPermissions = [],
+    isSuperAdministrator = false,
+  }) => {
     if (typeof localStorage !== "undefined") {
       localStorage.setItem("web-admin.access-token", accessToken);
     }
-    set({ accessToken, user, permissionCodes });
+    set({ accessToken, user, permissionCodes, fieldPermissions, isSuperAdministrator });
   },
   signOut: () => {
     if (typeof localStorage !== "undefined") {
       localStorage.removeItem("web-admin.access-token");
     }
-    set({ accessToken: null, user: null, permissionCodes: [], hiddenFields: {} });
+    set({
+      accessToken: null,
+      user: null,
+      permissionCodes: [],
+      fieldPermissions: [],
+      isSuperAdministrator: false,
+      hiddenFields: {},
+    });
   },
   updateUser: (patch) =>
     set((state) => ({
       user: state.user ? { ...state.user, ...patch } : state.user,
     })),
-  setPermissionContext: ({ permissionCodes, hiddenFields = {} }) =>
-    set({ permissionCodes, hiddenFields }),
+  setPermissionContext: ({
+    permissionCodes,
+    fieldPermissions = [],
+    isSuperAdministrator = false,
+    hiddenFields = {},
+  }) => set({ permissionCodes, fieldPermissions, isSuperAdministrator, hiddenFields }),
   markPasswordChanged: () =>
     set((state) => ({
       user: state.user ? { ...state.user, forcePasswordChange: false } : state.user,

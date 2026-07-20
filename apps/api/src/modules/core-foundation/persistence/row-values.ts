@@ -1,4 +1,8 @@
 import type { DatabaseDialect } from "@web-admin-base/db";
+import {
+  dataPermissionRuleDocumentSchema,
+  type DataPermissionRuleDocument,
+} from "@web-admin-base/contracts";
 
 import type {
   ApiPermissionRecord,
@@ -25,7 +29,7 @@ export function normalizeParam(value: unknown, dialect: DatabaseDialect): unknow
   return value;
 }
 
-export function jsonValue(value: Record<string, unknown>): unknown {
+export function jsonValue(value: unknown): unknown {
   return JSON.stringify(value);
 }
 
@@ -72,6 +76,15 @@ export function jsonRecord(value: unknown): Record<string, unknown> {
   if (value && typeof value === "object") return value as Record<string, unknown>;
   if (typeof value === "string") return JSON.parse(value) as Record<string, unknown>;
   return {};
+}
+
+export function dataPermissionRule(value: unknown): DataPermissionRuleDocument {
+  return dataPermissionRuleDocumentSchema.parse(jsonRecord(value));
+}
+
+export function fieldPermissionScenario(value: unknown): FieldPermissionRuleRecord["scenario"] {
+  if (value === "list" || value === "create" || value === "edit") return value;
+  return "detail";
 }
 
 export function entityStatus(value: unknown): "enabled" | "disabled" {

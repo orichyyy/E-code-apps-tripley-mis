@@ -291,7 +291,11 @@ describe("backend core schema", () => {
       ["roleDataPermissions", ["role_data_permissions_effect_check"]],
       [
         "fieldPermissionRules",
-        ["field_permission_rules_effect_check", "field_permission_rules_target_type_check"],
+        [
+          "field_permission_rules_effect_check",
+          "field_permission_rules_scenario_check",
+          "field_permission_rules_target_type_check",
+        ],
       ],
       ["userPermissionOverrides", ["user_permission_overrides_effect_check"]],
       ["menus", ["menus_status_check"]],
@@ -339,7 +343,7 @@ describe("backend core schema", () => {
       ["userOrganizationRoles", ["user_organization_roles_user_org_unique"]],
       ["permissions", ["permissions_code_unique"]],
       ["rolePermissions", ["role_permissions_role_permission_unique"]],
-      ["roleDataPermissions", ["role_data_permissions_role_permission_unique"]],
+      ["roleDataPermissions", []],
       ["fieldPermissionRules", ["field_permission_rules_target_field_unique"]],
       ["userPermissionOverrides", ["user_permission_overrides_user_permission_unique"]],
       ["menus", ["menus_code_unique", "menus_path_unique"]],

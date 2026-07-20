@@ -8,6 +8,7 @@ export * from "./migrations/module-migration-source";
 export * from "./migrations/postgresql-runner";
 export * from "./migrations/sqlite-runner";
 export * from "./organizations/org-path";
+export * from "./permissions/data-permission-predicate";
 export * from "./schema";
 export * from "./seeds";
 export * from "./business-modules/registry";

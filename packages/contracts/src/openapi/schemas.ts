@@ -46,6 +46,17 @@ const auditSchemaProperties: Record<string, OpenApiSchema> = {
   deletedBy: { ...idStringSchema, nullable: true },
 };
 
+const dataPermissionRuleSchema: OpenApiSchema = {
+  type: "object",
+  required: ["version", "resourceType", "expression"],
+  properties: {
+    version: { type: "integer", enum: [1] },
+    resourceType: { type: "string" },
+    expression: { $ref: "#/components/schemas/DataPermissionExpression" },
+  },
+  additionalProperties: false,
+};
+
 const roleDataPermissionSchema: OpenApiSchema = {
   type: "object",
   required: [
@@ -71,7 +82,7 @@ const roleDataPermissionSchema: OpenApiSchema = {
     permissionId: idStringSchema,
     permissionCode: { type: "string" },
     effect: { type: "string", enum: ["allow", "deny"] },
-    rule: { type: "object", additionalProperties: true },
+    rule: dataPermissionRuleSchema,
     ...auditSchemaProperties,
   },
   additionalProperties: false,
@@ -86,6 +97,7 @@ const roleFieldPermissionSchema: OpenApiSchema = {
     "targetId",
     "resource",
     "field",
+    "scenario",
     "effect",
     "isDeleted",
     "deletedAt",
@@ -102,6 +114,7 @@ const roleFieldPermissionSchema: OpenApiSchema = {
     targetId: idStringSchema,
     resource: { type: "string" },
     field: { type: "string" },
+    scenario: { type: "string", enum: ["list", "detail", "create", "edit"] },
     effect: { type: "string", enum: ["visible", "hidden", "readonly"] },
     ...auditSchemaProperties,
   },
@@ -144,18 +157,19 @@ const effectiveDataPermissionSchema: OpenApiSchema = {
     roleId: idStringSchema,
     permissionCode: { type: "string" },
     effect: { type: "string", enum: ["allow", "deny"] },
-    rule: { type: "object", additionalProperties: true },
+    rule: dataPermissionRuleSchema,
   },
   additionalProperties: false,
 };
 
 const effectiveFieldPermissionSchema: OpenApiSchema = {
   type: "object",
-  required: ["roleId", "resource", "field", "effect"],
+  required: ["roleId", "resource", "field", "scenario", "effect"],
   properties: {
     roleId: idStringSchema,
     resource: { type: "string" },
     field: { type: "string" },
+    scenario: { type: "string", enum: ["list", "detail", "create", "edit"] },
     effect: { type: "string", enum: ["visible", "hidden", "readonly"] },
   },
   additionalProperties: false,
@@ -388,7 +402,7 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
           properties: {
             permissionCode: { type: "string" },
             effect: { type: "string", enum: ["allow", "deny"] },
-            rule: { type: "object", additionalProperties: true },
+            rule: dataPermissionRuleSchema,
           },
           additionalProperties: false,
         },
@@ -404,10 +418,11 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
         type: "array",
         items: {
           type: "object",
-          required: ["resource", "field", "effect"],
+          required: ["resource", "field", "scenario", "effect"],
           properties: {
             resource: { type: "string" },
             field: { type: "string" },
+            scenario: { type: "string", enum: ["list", "detail", "create", "edit"] },
             effect: { type: "string", enum: ["visible", "hidden", "readonly"] },
           },
           additionalProperties: false,
@@ -578,6 +593,42 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
   },
   RoleDataPermission: roleDataPermissionSchema,
   RoleFieldPermission: roleFieldPermissionSchema,
+  EffectiveDataPermission: effectiveDataPermissionSchema,
+  EffectiveFieldPermission: effectiveFieldPermissionSchema,
+  EffectiveUserPermissionOverride: effectiveUserPermissionOverrideSchema,
+  DataPermissionRule: dataPermissionRuleSchema,
+  DataPermissionExpression: {
+    anyOf: [
+      {
+        type: "object",
+        required: ["type"],
+        properties: { type: { type: "string", enum: ["all"] } },
+        additionalProperties: false,
+      },
+      {
+        type: "object",
+        required: ["type", "expressions"],
+        properties: {
+          type: { type: "string", enum: ["and", "or"] },
+          expressions: {
+            type: "array",
+            items: { $ref: "#/components/schemas/DataPermissionExpression" },
+          },
+        },
+        additionalProperties: false,
+      },
+      {
+        type: "object",
+        required: ["type", "operatorCode", "arguments"],
+        properties: {
+          type: { type: "string", enum: ["condition"] },
+          operatorCode: { type: "string" },
+          arguments: { type: "object", additionalProperties: true },
+        },
+        additionalProperties: false,
+      },
+    ],
+  },
   UserPermissionOverride: userPermissionOverrideSchema,
   RoleDataPermissionListResponse: envelopeSchema({
     type: "array",
@@ -637,6 +688,7 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       "currentOrganization",
       "permissionCodes",
       "menus",
+      "isSuperAdministrator",
       "dataPermissions",
       "fieldPermissions",
       "userPermissionOverrides",
@@ -645,17 +697,18 @@ export const componentSchemas: OpenApiDocument["components"]["schemas"] = {
       currentOrganization: { type: "object", additionalProperties: true },
       permissionCodes: { type: "array", items: { type: "string" } },
       menus: { type: "array", items: { type: "object", additionalProperties: true } },
+      isSuperAdministrator: { type: "boolean" },
       dataPermissions: {
         type: "array",
-        items: effectiveDataPermissionSchema,
+        items: { $ref: "#/components/schemas/EffectiveDataPermission" },
       },
       fieldPermissions: {
         type: "array",
-        items: effectiveFieldPermissionSchema,
+        items: { $ref: "#/components/schemas/EffectiveFieldPermission" },
       },
       userPermissionOverrides: {
         type: "array",
-        items: effectiveUserPermissionOverrideSchema,
+        items: { $ref: "#/components/schemas/EffectiveUserPermissionOverride" },
       },
     },
     additionalProperties: false,

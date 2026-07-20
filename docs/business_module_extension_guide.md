@@ -2,7 +2,7 @@
 
 No example Business Module is implemented in the Base System. The production registries intentionally contain zero modules.
 
-The authoritative architecture is recorded in `docs/adr/0005-static-business-module-registry.md` and `docs/business_module_extension_design.md`. Phase 1 registry/conformance and Phase 2 lifecycle/Admin Sync are implemented. Executable data/field permissions and capability ports remain later phases.
+The authoritative architecture is recorded in ADRs 0005-0006 and `docs/business_module_extension_design.md`. Phase 1 registry/conformance, Phase 2 lifecycle/Admin Sync, and Phase 3 executable data/field permissions are implemented. Capability ports remain a later phase.
 
 ## Static Composition
 
@@ -58,6 +58,40 @@ Web declarations use `/modules/<moduleCode>/...` paths and must match the route 
 
 Scheduled jobs and import/export resource types require matching Worker handler registrations. A handler registration with no declaration is also a conformance error.
 
+## Executable Data Permissions
+
+Each Data Resource declares `accessModel`, a dedicated `data` permission through
+`permissionCode`, its queryable fields, and optional owner/Organization fields.
+Policy resources are fail-closed. Call `createBusinessPermissionEnforcer` with the
+compiled definitions and explicitly registered custom operator handlers, then pass
+the resulting neutral predicate to `toDrizzleDataPredicate` with the module's
+explicit Drizzle column map.
+
+The execution context must contain the effective permission codes after user
+overrides, current User and Organization, Organization descendants, role context,
+and the Super Administrator flag. Never pass raw SQL or a Drizzle expression through
+a permission rule or custom operator. Missing grants, handlers, context, or column
+mappings deny access.
+
+Role data-permission updates accept only version 1 rule documents. Multiple allow
+and deny records may exist for one role/permission; the compiler performs allow
+union minus deny union. `modules:check` verifies that resource permissions are
+declared with type `data`, referenced fields exist, custom operator codes are owned
+by the module, and API runtime operator registration is bidirectional.
+
+## Executable Field Permissions
+
+Field contributions and role field rules use the scenarios `list`, `detail`,
+`create`, and `edit`. Business API declarations use `resourceAccess` to identify
+their request and/or response resource scenario. Before returning records, call
+`filterResponseFields`; before create/edit persistence, call
+`assertWritableFields`. The API error boundary maps rejected writes to
+`PERMISSION_FIELD_DENIED` (HTTP 403).
+
+Frontend module pages use the field-permission helpers under
+`apps/web/src/features/permissions`. Backend filtering and write rejection remain
+mandatory; frontend hiding is only the matching user experience.
+
 ## Module Migrations
 
 Register a `BusinessModuleMigrationSource` with separate SQLite and PostgreSQL directories. Each directory uses matching logical filenames:
@@ -111,4 +145,4 @@ Fixture module codes must never appear in production definitions, API/Web/Worker
 
 ## Current Phase Boundary
 
-Phases 1 and 2 do not provide executable data/field permission enforcement or Base capability ports. Do not bypass those missing contracts inside a module. Their status is tracked in `docs/known_gaps.md`.
+Phases 1-3 are available. Phase 4 Base capability ports are not yet implemented; do not bypass that missing contract inside a module. Its status is tracked in `docs/known_gaps.md`.

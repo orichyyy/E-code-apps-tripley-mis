@@ -140,6 +140,10 @@ export class BackendCoreServices {
       organizations: userContext.organizations,
       permissionCodes: userContext.permissionCodes,
       menus: userContext.menus,
+      isSuperAdministrator: permissionContext.isSuperAdministrator,
+      dataPermissions: permissionContext.dataPermissions ?? [],
+      fieldPermissions: permissionContext.fieldPermissions ?? [],
+      userPermissionOverrides: permissionContext.userPermissionOverrides ?? [],
       passwordChangeRequired: userContext.passwordChangeRequired,
       preferences: this.profile.getPreferences(authContext.userId),
     };
@@ -174,11 +178,18 @@ export class BackendCoreServices {
       authContext.userId,
       input.organizationId,
     );
-    return this.auth.switchCurrentOrganization(
+    const result = await this.auth.switchCurrentOrganization(
       authContext,
       input,
       permissionContext.permissionCodes,
     );
+    return {
+      ...result,
+      isSuperAdministrator: permissionContext.isSuperAdministrator,
+      dataPermissions: permissionContext.dataPermissions ?? [],
+      fieldPermissions: permissionContext.fieldPermissions ?? [],
+      userPermissionOverrides: permissionContext.userPermissionOverrides ?? [],
+    };
   }
 
   async getCurrentUserContext(
@@ -238,6 +249,7 @@ export class BackendCoreServices {
     );
     return {
       ...this.auth.getCurrentPermissionContext(authContext, permissionContext.permissionCodes),
+      isSuperAdministrator: permissionContext.isSuperAdministrator,
       dataPermissions: permissionContext.dataPermissions ?? [],
       fieldPermissions: permissionContext.fieldPermissions ?? [],
       userPermissionOverrides: permissionContext.userPermissionOverrides ?? [],

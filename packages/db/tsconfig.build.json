@@ -5,7 +5,11 @@
     "declarationMap": true,
     "outDir": "dist",
     "rootDir": "src",
-    "noEmit": false
+    "noEmit": false,
+    "baseUrl": ".",
+    "paths": {
+      "@web-admin-base/contracts": ["../contracts/dist/index.d.ts"]
+    }
   },
   "include": ["src"]
 }

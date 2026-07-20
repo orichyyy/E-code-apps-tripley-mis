@@ -30,6 +30,17 @@ export const apiContributionSchema = z
     requestSchemaId: schemaId,
     responseSchemaId: schemaId,
     operationEventCode: namespacedCodeSchema.optional(),
+    resourceAccess: z
+      .object({
+        resourceType: namespacedCodeSchema,
+        requestScenario: z.enum(["create", "edit"]).optional(),
+        responseScenario: z.enum(["list", "detail"]).optional(),
+      })
+      .strict()
+      .refine((value) => value.requestScenario || value.responseScenario, {
+        message: "At least one request or response scenario is required.",
+      })
+      .optional(),
   })
   .strict();
 
@@ -60,6 +71,7 @@ export const menuContributionSchema = z
 export const dataResourceContributionSchema = z
   .object({
     resourceType: namespacedCodeSchema,
+    permissionCode: namespacedCodeSchema,
     title: localizedMessageSchema,
     accessModel: z.enum(["global", "policy"]),
     fields: z

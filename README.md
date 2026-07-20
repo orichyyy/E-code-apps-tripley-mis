@@ -8,8 +8,8 @@ Reusable multi-organization admin-system foundation built as a pnpm monorepo.
 - `apps/web`: React Vite SPA admin shell using TanStack Router, TanStack Query, TanStack Form, Zod, Zustand, Tailwind CSS, and shadcn/ui, including Business Module Registry sync, target-aware announcement management, Current Announcements, and safe Webhook/email delivery history.
 - `apps/worker`: Node.js worker runtime wired to database queue/scheduler adapters, durable Webhook Outbox fan-out/delivery, cleanup tasks, durable `runOnce`, and optional polling.
 - `packages/contracts`: Zod contracts, Hono RPC boundary types, permission/route/menu/API manifests, serializable Business Module definitions, and OpenAPI generation.
-- `packages/module-sdk`: static Business Module registry composition, deterministic hashes, ownership/reference validation, and conformance test helpers.
-- `packages/db`: Drizzle schemas, SQLite/PostgreSQL migration files, executable migration runners, and statically registered module migration sources.
+- `packages/module-sdk`: static Business Module registry composition, deterministic hashes, conformance tooling, and fail-closed data/field permission enforcement.
+- `packages/db`: Drizzle schemas, SQLite/PostgreSQL migrations/runners, module migration sources, and parameterized neutral-predicate translation.
 - `packages/adapters`: adapter interfaces plus in-memory defaults, database-backed infrastructure drivers, optional Redis/RabbitMQ drivers, token store, notification channels, atomic local file storage, and optional AWS SDK v3 S3-compatible storage.
 - `packages/shared`: shared constants, result types, i18n keys, and utilities.
 

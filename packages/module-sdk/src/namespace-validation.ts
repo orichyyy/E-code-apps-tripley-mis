@@ -29,6 +29,17 @@ export function validateNamespaces(
       `/api/modules/${definition.moduleCode}/`,
     );
   }
+  for (const resource of definition.contributions.dataResources) {
+    for (const operatorCode of resource.operatorCodes) {
+      requirePrefix(
+        diagnostics,
+        definition,
+        { kind: "dataPermissionOperator", identifier: operatorCode },
+        operatorCode,
+        modulePrefix,
+      );
+    }
+  }
   for (const route of definition.contributions.routes) {
     requirePrefix(
       diagnostics,

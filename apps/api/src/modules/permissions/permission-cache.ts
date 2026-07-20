@@ -1,19 +1,25 @@
 import type { CacheAdapter } from "@web-admin-base/adapters";
+import type {
+  DataPermissionRuleDocument,
+  FieldPermissionScenario,
+} from "@web-admin-base/contracts";
 
 export type PermissionContext = {
   userId: string;
   organizationId: string;
+  isSuperAdministrator: boolean;
   permissionCodes: string[];
   dataPermissions?: Array<{
     roleId: string;
     permissionCode: string;
     effect: "allow" | "deny";
-    rule: Record<string, unknown>;
+    rule: DataPermissionRuleDocument;
   }>;
   fieldPermissions?: Array<{
     roleId: string;
     resource: string;
     field: string;
+    scenario: FieldPermissionScenario;
     effect: "visible" | "hidden" | "readonly";
   }>;
   userPermissionOverrides?: Array<{

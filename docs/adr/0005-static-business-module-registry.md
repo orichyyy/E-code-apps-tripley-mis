@@ -6,4 +6,4 @@ The Base System remains a trusted compatibility definition and the production Bu
 
 This rejects directory scanning, dynamic packages, runtime install/uninstall, inter-business-module dependencies, raw SQL rule handlers, and public business APIs. The trade-off is deliberate release-time composition and explicit route files in exchange for deterministic builds, ownership enforcement, portable SQLite/PostgreSQL migrations, and auditable authorization boundaries.
 
-Implementation status: Registry/Conformance (Phase 1) and Registry Lifecycle/Admin Sync (Phase 2) are implemented. Executable data/field permissions and capability ports remain pending.
+Implementation status: Registry/Conformance (Phase 1), Registry Lifecycle/Admin Sync (Phase 2), and executable data/field permissions (Phase 3) are implemented. Capability ports remain pending.

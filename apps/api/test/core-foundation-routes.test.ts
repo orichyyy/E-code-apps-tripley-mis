@@ -725,7 +725,28 @@ describe("backend core foundation routes", () => {
           {
             permissionCode: "user:view",
             effect: "allow",
-            rule: { scope: "current_organization" },
+            rule: {
+              version: 1,
+              resourceType: "base.user",
+              expression: {
+                type: "condition",
+                operatorCode: "base.current-organization",
+                arguments: {},
+              },
+            },
+          },
+          {
+            permissionCode: "user:view",
+            effect: "deny",
+            rule: {
+              version: 1,
+              resourceType: "base.user",
+              expression: {
+                type: "condition",
+                operatorCode: "base.specified-users",
+                arguments: { userIds: ["999"] },
+              },
+            },
           },
         ],
       }),
@@ -741,7 +762,14 @@ describe("backend core foundation routes", () => {
       method: "PUT",
       headers: authHeaders,
       body: JSON.stringify({
-        rules: [{ resource: "user", field: "email", effect: "hidden" }],
+        rules: [
+          {
+            resource: "base.user",
+            field: "email",
+            scenario: "detail",
+            effect: "hidden",
+          },
+        ],
       }),
     });
     const fieldRulesResponse = await app.request("/api/roles/2/field-permissions", {
@@ -778,13 +806,25 @@ describe("backend core foundation routes", () => {
         roleId: "2",
         permissionCode: "user:view",
         effect: "allow",
-        rule: { scope: "current_organization" },
+        rule: expect.objectContaining({ version: 1, resourceType: "base.user" }),
+      }),
+      expect.objectContaining({
+        roleId: "2",
+        permissionCode: "user:view",
+        effect: "deny",
+        rule: expect.objectContaining({ version: 1, resourceType: "base.user" }),
       }),
     ]);
     expect(fieldResponse.status).toBe(200);
     expect(fieldRulesResponse.status).toBe(200);
     expect(afterField.data.fieldPermissions).toEqual([
-      expect.objectContaining({ roleId: "2", resource: "user", field: "email", effect: "hidden" }),
+      expect.objectContaining({
+        roleId: "2",
+        resource: "base.user",
+        field: "email",
+        scenario: "detail",
+        effect: "hidden",
+      }),
     ]);
     expect(overrideResponse.status).toBe(200);
     expect(overridesResponse.status).toBe(200);

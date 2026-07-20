@@ -9,11 +9,15 @@ export function validateReferences(
   baseMenuCodes: readonly string[],
 ): void {
   const contributions = definition.contributions;
-  const permissions = new Set(contributions.permissions.map(({ code }) => code));
+  const permissions = new Map(
+    contributions.permissions.map((permission) => [permission.code, permission]),
+  );
   const routes = new Set(contributions.routes.map(({ routeCode }) => routeCode));
   const menus = new Set(contributions.menus.map(({ code }) => code));
   const operationEvents = new Set(contributions.operationEvents.map(({ code }) => code));
-  const resources = new Set(contributions.dataResources.map(({ resourceType }) => resourceType));
+  const resources = new Map(
+    contributions.dataResources.map((resource) => [resource.resourceType, resource]),
+  );
   const missing = (kind: string, identifier: string, reference: string) =>
     addError(
       diagnostics,
@@ -25,6 +29,9 @@ export function validateReferences(
 
   for (const api of contributions.apis) {
     if (!permissions.has(api.requiredPermission)) missing("api", api.code, api.requiredPermission);
+    if (api.resourceAccess && !resources.has(api.resourceAccess.resourceType)) {
+      missing("api", api.code, api.resourceAccess.resourceType);
+    }
     if (api.method !== "GET" && !api.operationEventCode) {
       missing("api", api.code, "operationEventCode");
     }
@@ -53,6 +60,50 @@ export function validateReferences(
   for (const field of contributions.fields) {
     if (!resources.has(field.resourceType)) {
       missing("field", `${field.resourceType}:${field.field}`, field.resourceType);
+      continue;
+    }
+    const resource = resources.get(field.resourceType)!;
+    if (!resource.fields.some(({ code }) => code === field.field)) {
+      addError(
+        diagnostics,
+        definition,
+        { kind: "field", identifier: `${field.resourceType}:${field.field}` },
+        "MODULE_RESOURCE_FIELD_NOT_FOUND",
+        `Field ${field.field} was not declared by resource ${field.resourceType}`,
+      );
+    }
+  }
+  for (const resource of resources.values()) {
+    const permission = permissions.get(resource.permissionCode);
+    if (permission?.permissionType !== "data") {
+      addError(
+        diagnostics,
+        definition,
+        { kind: "dataResource", identifier: resource.resourceType },
+        "MODULE_DATA_PERMISSION_INVALID",
+        `Resource permission ${resource.permissionCode} must reference a declared data permission`,
+      );
+    }
+    const fields = new Set(resource.fields.map(({ code }) => code));
+    for (const field of [resource.ownerUserField, resource.organizationField]) {
+      if (field && !fields.has(field)) {
+        addError(
+          diagnostics,
+          definition,
+          { kind: "dataResource", identifier: resource.resourceType },
+          "MODULE_RESOURCE_FIELD_NOT_FOUND",
+          `Resource context field ${field} was not declared by ${resource.resourceType}`,
+        );
+      }
+    }
+    if (resource.accessModel === "global" && resource.operatorCodes.length > 0) {
+      addError(
+        diagnostics,
+        definition,
+        { kind: "dataResource", identifier: resource.resourceType },
+        "MODULE_GLOBAL_RESOURCE_OPERATOR_INVALID",
+        "Global resources cannot declare data permission operators",
+      );
     }
   }
   for (const event of contributions.operationEvents) {

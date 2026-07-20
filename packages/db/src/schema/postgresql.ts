@@ -249,10 +249,6 @@ export const roleDataPermissions = pgTable(
     updatedBy: integer("updated_by"),
   },
   (table) => ({
-    roleDataPermissionUnique: uniqueIndex("role_data_permissions_role_permission_unique").on(
-      table.roleId,
-      table.permissionId,
-    ),
     effectCheck: check(
       "role_data_permissions_effect_check",
       sql`${table.effect} IN ('allow', 'deny')`,
@@ -269,6 +265,7 @@ export const fieldPermissionRules = pgTable(
     targetId: integer("target_id").notNull(),
     resource: text("resource").notNull(),
     field: text("field").notNull(),
+    scenario: text("scenario").notNull(),
     effect: text("effect").notNull(),
     ...softDelete,
     ...timestamps,
@@ -281,6 +278,7 @@ export const fieldPermissionRules = pgTable(
       table.targetId,
       table.resource,
       table.field,
+      table.scenario,
     ),
     targetTypeCheck: check(
       "field_permission_rules_target_type_check",
@@ -289,6 +287,10 @@ export const fieldPermissionRules = pgTable(
     effectCheck: check(
       "field_permission_rules_effect_check",
       sql`${table.effect} IN ('visible', 'hidden', 'readonly')`,
+    ),
+    scenarioCheck: check(
+      "field_permission_rules_scenario_check",
+      sql`${table.scenario} IN ('list', 'detail', 'create', 'edit')`,
     ),
   }),
 );

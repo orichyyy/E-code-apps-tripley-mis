@@ -7,6 +7,7 @@ const matchingRuntime = {
   apiModules: [
     {
       moduleCode: fixtureModuleCode,
+      dataPermissionOperators: {},
       routes: [
         {
           code: "api.fixture-orders.list",
@@ -52,7 +53,9 @@ describe("Business Module conformance", () => {
 
   it("reports namespace, cross-reference, and runtime mismatches", () => {
     const definition = createValidFixtureModule();
-    definition.contributions.permissions[0]!.code = "other.order:view";
+    definition.contributions.permissions.find(
+      ({ code }) => code === "fixture-orders.order:view",
+    )!.code = "other.order:view";
 
     const report = checkBusinessModuleConformance({
       definitions: [definition],
@@ -87,5 +90,49 @@ describe("Business Module conformance", () => {
     });
 
     expect(report.diagnostics.map(({ code }) => code)).toContain("MODULE_DUPLICATE_OWNERSHIP");
+  });
+
+  it("rejects invalid resource permission and field references", () => {
+    const definition = createValidFixtureModule();
+    definition.contributions.dataResources[0]!.permissionCode = "fixture-orders.order:view";
+    definition.contributions.fields[0]!.field = "missingField";
+
+    const report = checkBusinessModuleConformance({
+      definitions: [definition],
+      runtime: matchingRuntime,
+    });
+
+    expect(report.diagnostics.map(({ code }) => code)).toEqual(
+      expect.arrayContaining(["MODULE_DATA_PERMISSION_INVALID", "MODULE_RESOURCE_FIELD_NOT_FOUND"]),
+    );
+  });
+
+  it("requires declared custom data operators to be registered by the API runtime", () => {
+    const definition = createValidFixtureModule();
+    definition.contributions.dataResources[0]!.operatorCodes = ["fixture-orders.region-access"];
+
+    const missing = checkBusinessModuleConformance({
+      definitions: [definition],
+      runtime: matchingRuntime,
+    });
+    const registered = checkBusinessModuleConformance({
+      definitions: [definition],
+      runtime: {
+        ...matchingRuntime,
+        apiModules: [
+          {
+            ...matchingRuntime.apiModules[0]!,
+            dataPermissionOperators: {
+              "fixture-orders.region-access": () => ({ type: "true" }),
+            },
+          },
+        ],
+      },
+    });
+
+    expect(missing.diagnostics.map(({ code }) => code)).toContain(
+      "MODULE_API_OPERATOR_REGISTRATION_MISMATCH",
+    );
+    expect(registered.ok).toBe(true);
   });
 });

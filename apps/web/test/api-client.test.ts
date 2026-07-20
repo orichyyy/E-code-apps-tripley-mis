@@ -238,6 +238,16 @@ describe("frontend API client", () => {
                   displayName: "Super Administrator",
                 },
                 permissionCodes: ["user:view", "role:view"],
+                fieldPermissions: [
+                  {
+                    roleId: "2",
+                    resource: "fixture-orders.order",
+                    field: "amount",
+                    scenario: "edit",
+                    effect: "readonly",
+                  },
+                ],
+                isSuperAdministrator: false,
                 passwordChangeRequired: true,
                 preferences: { language: "zh" },
               },
@@ -268,6 +278,15 @@ describe("frontend API client", () => {
         forcePasswordChange: true,
       },
       permissionCodes: ["user:view", "role:view"],
+      fieldPermissions: [
+        {
+          resource: "fixture-orders.order",
+          field: "amount",
+          scenario: "edit",
+          effect: "readonly",
+        },
+      ],
+      isSuperAdministrator: false,
       currentOrganizationId: "",
       organizations: [],
     });

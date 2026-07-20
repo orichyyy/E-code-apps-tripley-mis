@@ -18,6 +18,14 @@ export function createValidFixtureModule() {
           },
           permissionType: "page",
         },
+        {
+          code: "fixture-orders.order:data",
+          description: {
+            key: "modules.fixture-orders.permissions.orderData",
+            defaultMessage: "Access fixture order data",
+          },
+          permissionType: "data",
+        },
       ],
       apis: [
         {
@@ -32,6 +40,10 @@ export function createValidFixtureModule() {
           logLevel: "basic",
           requestSchemaId: "FixtureOrderListRequest",
           responseSchemaId: "FixtureOrderList",
+          resourceAccess: {
+            resourceType: "fixture-orders.order",
+            responseScenario: "list",
+          },
         },
       ],
       routes: [
@@ -57,6 +69,39 @@ export function createValidFixtureModule() {
           routeCode: "fixture-orders.orders",
           requiredPermission: "fixture-orders.order:view",
           sortOrder: 10,
+        },
+      ],
+      dataResources: [
+        {
+          resourceType: "fixture-orders.order",
+          permissionCode: "fixture-orders.order:data",
+          title: {
+            key: "modules.fixture-orders.resources.order",
+            defaultMessage: "Fixture order",
+          },
+          accessModel: "policy",
+          fields: [
+            {
+              code: "organizationId",
+              title: {
+                key: "modules.fixture-orders.fields.organizationId",
+                defaultMessage: "Organization",
+              },
+              valueType: "id",
+            },
+          ],
+          organizationField: "organizationId",
+        },
+      ],
+      fields: [
+        {
+          resourceType: "fixture-orders.order",
+          field: "organizationId",
+          title: {
+            key: "modules.fixture-orders.fields.organizationId",
+            defaultMessage: "Organization",
+          },
+          scenarios: ["list", "detail", "create", "edit"],
         },
       ],
     },

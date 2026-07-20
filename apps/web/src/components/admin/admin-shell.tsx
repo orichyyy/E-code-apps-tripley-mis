@@ -160,7 +160,11 @@ export function AdminShell() {
     try {
       const result = await switchCurrentOrganization(organizationId);
       setAccessToken(result.accessToken);
-      setPermissionContext({ permissionCodes: result.permissionCodes });
+      setPermissionContext({
+        permissionCodes: result.permissionCodes,
+        fieldPermissions: result.fieldPermissions,
+        isSuperAdministrator: result.isSuperAdministrator,
+      });
       switchOrganization(result.currentOrganizationId);
       await queryClient.invalidateQueries();
     } catch {

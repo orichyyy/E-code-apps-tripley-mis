@@ -212,6 +212,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@web-admin-base/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       better-sqlite3:
         specifier: ^11.10.0
         version: 11.10.0
@@ -231,6 +234,9 @@ importers:
       '@types/pg':
         specifier: ^8.15.4
         version: 8.20.0
+      '@web-admin-base/module-sdk':
+        specifier: workspace:*
+        version: link:../module-sdk
 
   packages/module-sdk:
     dependencies:

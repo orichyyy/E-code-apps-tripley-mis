@@ -59,6 +59,28 @@ function validateDeclaredRuntime(
       }
     }
     validateDeclaredWorker(definition, workerRegistration, diagnostics);
+    validateDeclaredOperators(definition, apiRegistration, diagnostics);
+  }
+}
+
+function validateDeclaredOperators(
+  definition: BusinessModuleDefinition,
+  registration: BusinessModuleConformanceInput["runtime"]["apiModules"][number] | undefined,
+  diagnostics: ConformanceDiagnostic[],
+): void {
+  const declared = new Set(
+    definition.contributions.dataResources.flatMap(({ operatorCodes }) => operatorCodes),
+  );
+  const registered = new Set(Object.keys(registration?.dataPermissionOperators ?? {}));
+  for (const operatorCode of declared) {
+    if (!registered.has(operatorCode)) {
+      runtimeError(diagnostics, definition, "dataPermissionOperator", operatorCode, "api_operator");
+    }
+  }
+  for (const operatorCode of registered) {
+    if (!declared.has(operatorCode)) {
+      runtimeError(diagnostics, definition, "dataPermissionOperator", operatorCode, "api_operator");
+    }
   }
 }
 

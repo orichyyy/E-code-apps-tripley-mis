@@ -1007,7 +1007,7 @@ Phase 1 of the confirmed ADR 0005 design is implemented:
 - Rebuilt the internal development SQLite/PostgreSQL databases for the new migration history shape without adding an automatic destructive reset to normal migration commands.
 - Added isolated valid/invalid synthetic fixtures and tests for contracts, hashes, namespace/ownership/reference diagnostics, API/Web/Worker mismatch, Hono RPC inference, fixture leakage, migration ordering/parity/checksums, SQLite execution, and PostgreSQL persistence.
 
-Production Business Module registries remain empty. Phase 3 executable data/field permissions and Phase 4 capability ports remain explicitly tracked in `docs/known_gaps.md`.
+Production Business Module registries remain empty. Phase 4 capability ports remain explicitly tracked in `docs/known_gaps.md`.
 
 ## Business Module Registry Lifecycle And Admin Sync
 
@@ -1023,4 +1023,19 @@ Phase 2 of the confirmed ADR 0005 design is implemented:
 - Added the bilingual `/system/modules` catalog and plan UI with contribution/dependency/drift visibility, permission-denied/loading/empty/error/mutation states, and confirmed Apply.
 - Added contract, plan/service, rollback, initialization, activation, Hono RPC, OpenAPI, SQLite migration, PostgreSQL persistence/reload, fixture isolation, CLI, API-client, and frontend component coverage.
 
-The next Business Module goal is Phase 3 executable data and field permissions. Phase 4 capability ports follows it; neither is implemented by this phase.
+Phase 3 executable data and field permissions is implemented in the following section. Phase 4 capability ports remains the next Business Module goal.
+
+## Executable Business Module Data And Field Permissions
+
+Phase 3 of the confirmed ADR 0005 design is implemented according to ADR 0006:
+
+- Added strict version 1 data-permission rule contracts, base operator codes, neutral predicate contracts, field scenarios, and strict role permission update schemas.
+- Added fail-closed compilation for global/policy resources, effective permission grants after user overrides, Super Administrator bypass, base/custom operators, allow union minus deny union, and declared-field validation.
+- Added parameterized Drizzle predicate translation with explicit column maps and real SQLite/PostgreSQL execution coverage, including injection-shaped values.
+- Upgraded role data/field permission persistence for multiple allow/deny records and `resource + field + scenario` uniqueness through migrations 0013-0014.
+- Added scenario-aware response filtering and create/edit write rejection, with `PERMISSION_FIELD_DENIED` authorization normalization at the Hono API boundary.
+- Extended Business Module declarations and conformance with resource permission/type checks, resource field checks, API request/response scenarios, custom operator ownership, and bidirectional API runtime registration.
+- Added effective field permissions and Super Administrator state to login, Organization-switch, and current permission contexts, plus Zustand storage and frontend visibility/writability helpers.
+- Kept every production Business Module registry empty; all executable query examples remain isolated under test fixture directories.
+
+Phase 4 capability ports remains incomplete and is tracked in `docs/known_gaps.md`.

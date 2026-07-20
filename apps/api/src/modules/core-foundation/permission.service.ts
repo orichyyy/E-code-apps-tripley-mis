@@ -372,6 +372,7 @@ export class PermissionService {
     const context = {
       userId,
       organizationId,
+      isSuperAdministrator: isSuperAdmin,
       permissionCodes,
       dataPermissions: this.listActiveRoleDataPermissionEffects(roleIds),
       fieldPermissions: this.listActiveRoleFieldPermissionEffects(roleIds),
@@ -432,6 +433,7 @@ export class PermissionService {
         roleId: record.targetId,
         resource: record.resource,
         field: record.field,
+        scenario: record.scenario,
         effect: record.effect,
       }));
   }

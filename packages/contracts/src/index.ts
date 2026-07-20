@@ -11,5 +11,6 @@ export * from "./manifests";
 export * from "./notification-jobs";
 export * from "./openapi";
 export * from "./permissions/permission-manifest";
+export * from "./permissions/business-permissions";
 export * from "./routes/admin-route-metadata";
 export * from "./webhook-events";
