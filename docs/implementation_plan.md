@@ -982,3 +982,29 @@ The contract in `docs/announcement_targeting_design.md` and ADR 0004 is implemen
 - Added contract, in-memory API, PostgreSQL persistence/reload, migration, manifest/OpenAPI, Hono RPC, API-client, and frontend component coverage.
 
 Publication remains independent from in-app Notification, email, SMS, and Webhook delivery. Scheduled publication, approval, role/user targets, title search, and per-user Announcement state remain outside the confirmed scope.
+
+## Business Module Extension Design Progress
+
+ADR 0005 and `docs/business_module_extension_design.md` now define the confirmed future-module extension architecture:
+
+- Explicit static Business Module registration with permanent namespaced identities and no runtime plugin discovery, installation, or inter-module dependency graph.
+- Serializable definitions separated from typed Hono, TanStack file-route, Worker, and database runtime registrations.
+- Build-time bidirectional conformance, an empty production Business Module Registry, isolated test fixtures, and retained Hono RPC inference.
+- Append-only, checksummed SQLite/PostgreSQL module migration sources with module-owned table namespaces.
+- Administrator-reviewed Module Sync Plans, dual definition/activation hashes, fail-closed per-module activation, retained data on removal, and a future Module Registry management page.
+- Executable fail-closed data/field permissions and narrow capability ports for logs, files, CSV, events, notifications, jobs, errors, i18n, and observability.
+
+## Business Module Registry And Conformance Foundation
+
+Phase 1 of the confirmed ADR 0005 design is implemented:
+
+- Added strict serializable `BusinessModuleDefinition` and Localized Message contracts with normalized empty contribution collections.
+- Added `packages/module-sdk` with `defineBusinessModule`, static registry composition, canonical SHA-256 `definitionHash`/`activationHash`, namespace and ownership validation, reference checks, runtime parity checks, deterministic diagnostics, and test helpers.
+- Wrapped existing Base System permission/API/route/menu identifiers in a trusted compatibility definition without renaming them.
+- Added explicit empty production registries for API, Web, Worker, definitions, and database migrations. The API keeps an explicit typed Hono composition point and existing `ApiApp` RPC inference.
+- Added `pnpm modules:check`, human and JSON diagnostics, deterministic generated module/migration metadata, and execution from build and `pnpm verify`/normal Verify CI.
+- Added module-aware SQLite/PostgreSQL migration sources with Base-first ordering, namespaced module IDs, dialect parity checks, SHA-256 history checks, append-only enforcement, and explicit legacy-history failure.
+- Rebuilt the internal development SQLite/PostgreSQL databases for the new migration history shape without adding an automatic destructive reset to normal migration commands.
+- Added isolated valid/invalid synthetic fixtures and tests for contracts, hashes, namespace/ownership/reference diagnostics, API/Web/Worker mismatch, Hono RPC inference, fixture leakage, migration ordering/parity/checksums, SQLite execution, and PostgreSQL persistence.
+
+Production Business Module registries remain empty. Phase 2 Registry Lifecycle/Admin Sync, Phase 3 executable data/field permissions, and Phase 4 capability ports remain explicitly tracked in `docs/known_gaps.md`.

@@ -10,6 +10,16 @@ TEST_DATABASE_URL=postgres://...
 
 `pnpm db:migrate` itself runs SQLite by default and skips PostgreSQL when no PostgreSQL URL is present. Use `TEST_DATABASE_URL` for local PostgreSQL migration smoke tests.
 
+If migration reports a legacy `schema_migrations` shape, rebuild only the intended internal development/test database, then rerun migrations. The runner intentionally has no automatic destructive reset or checksum-baseline compatibility path. Never apply that reset procedure to a retained deployment database.
+
+If migration reports a changed SHA-256 checksum, restore the already-applied SQL file and add a new higher-sequence migration. Applied migrations are append-only.
+
+## `pnpm modules:check` Fails
+
+Read the human-readable diagnostic and `.tmp/business-module-conformance.json`. Each diagnostic identifies the module, contribution kind, identifier, and cause. Common causes are an identifier outside its permanent Module Code namespace, a broken permission/menu/resource reference, a declared route without matching static registration, an actual Hono/TanStack route without a declaration, or SQLite/PostgreSQL module migration ID mismatch.
+
+Do not fix a mismatch by adding runtime discovery or moving a synthetic fixture into a production registry. Production definitions and API/Web/Worker/database registrations are explicit, and fixture modules belong only under test fixture directories.
+
 ## `better-sqlite3` Binding Is Missing
 
 The workspace allows the `better-sqlite3` build script through `pnpm-workspace.yaml`. If a local install still reports a missing native binding, run:

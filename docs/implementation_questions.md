@@ -119,3 +119,17 @@ No unresolved backend-core blockers remain from the previously listed questions.
 26. **Announcement lifecycle and API boundary**
 
     Confirmed: only drafts may be edited or soft deleted; publication is immediate; published Announcements must be withdrawn before edit/delete; optional UTC expiration is evaluated at read time without a scheduler. The management Catalog remains separate from authenticated Current Announcements, and publication does not trigger Notification, email, SMS, or Webhook delivery. Add the PRD-confirmed delete endpoint and `announcement:delete` permission despite its omission from the design route table.
+
+27. **Business-module export fields versus field permissions**
+
+    Confirmed: follow the more specific Version 1 boundary in design specification section 12.8. Export fields are controlled by the module's export permission and export configuration, not by role field-permission rules. Field-permission scenarios remain list, detail, create, and edit. This decision resolves the conflicting acceptance statement in PRD section 26.4; module export declarations and tests must prove that only explicitly configured export fields are emitted.
+
+28. **Business Module extension architecture and delivery sequence**
+
+    Confirmed: use the explicit static, namespaced registry in ADR 0005 and `docs/business_module_extension_design.md`. Definitions are serializable; API, Web, Worker, and database implementations register separately and are checked bidirectionally. Runtime plugin discovery, public Business Module APIs, cross-Business-Module dependencies, automatic migrations, and example modules are excluded.
+
+    Confirmed delivery: implement the design as four goals: Registry and Conformance Foundation; Registry Lifecycle and Admin Sync; Executable Data and Field Permissions; and Capability Ports. The next goal is only Registry and Conformance Foundation. Documentation must not mark PRD business-module extension acceptance complete before all four goals pass.
+
+29. **Migration checksum adoption for existing development databases**
+
+    Confirmed: no compatibility baseline is required. The project is still in internal development and has no retained deployment database, so existing SQLite and PostgreSQL development/test databases will be rebuilt when the module-aware migration history is introduced. Do not add permanent legacy-history backfill code. Normal migration commands must remain non-destructive and fail with a clear reset instruction when they encounter the old history shape.

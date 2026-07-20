@@ -19,6 +19,14 @@ This file records incomplete, reserved, or environment-dependent work that must 
 - Worker task registration includes the confirmed base-system task catalog. Future business-module task catalogs are outside the base system.
 - Outbound Webhook delivery is implemented with a controlled event catalog, transactional Outbox, durable attempts, bounded retries, secret encryption, HMAC signing, SSRF controls, retention cleanup, management APIs, and frontend history. It remains disabled unless `WEBHOOK_DELIVERY_ENABLED=true` is configured for both API and Worker.
 
+## Business Module Extension Gap
+
+- Phase 1 is complete: serializable definitions, `packages/module-sdk`, deterministic definition/activation hashes, explicit empty production registries, Base System compatibility metadata, bidirectional conformance, generated artifacts, and checksummed SQLite/PostgreSQL module migration sources are implemented.
+- Phase 2 remains incomplete: accepted registry persistence, Module Sync plan/apply, administrator confirmation, per-module activation gates, i18n default/override persistence, and `/system/modules` APIs/UI are not implemented.
+- Phase 3 remains incomplete: the generic data-permission DSL/operator compiler, Drizzle predicate translation, query enforcement, and scenario-aware backend field filtering are not implemented. Existing Base System permission-extension records remain metadata only for these future-module semantics.
+- Phase 4 remains incomplete: capability ports and executable module integration for operation events, typed errors, file attachments, CSV resources, events/notifications, scheduled jobs, and asynchronous context propagation are not implemented.
+- Production Business Module registries intentionally contain zero modules. Synthetic fixtures remain under test fixture directories and must never enter production manifests, OpenAPI, menus, seeds, or mounted routes.
+
 ## Reserved Optional Integrations
 
 - Redis cache/rate-limit drivers are implemented as optional adapter drivers and covered by Docker-backed integration tests when `REDIS_URL` is provided. They are not required for default local, CI, or deployment validation.

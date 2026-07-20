@@ -127,6 +127,7 @@ describe("database migration execution", () => {
       "0008_file_object_locations.sql",
       "0009_webhook_delivery.sql",
       "0010_email_delivery.sql",
+      "0011_announcement_targeting.sql",
     ];
     const applied = await runPostgresqlMigrations({ url });
     const reapplied = await runPostgresqlMigrations({ url });

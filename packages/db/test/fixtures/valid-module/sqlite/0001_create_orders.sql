@@ -1,0 +1,4 @@
+CREATE TABLE fixture_orders__orders (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL
+);

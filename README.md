@@ -7,8 +7,9 @@ Reusable multi-organization admin-system foundation built as a pnpm monorepo.
 - `apps/api`: Node.js Hono API with request IDs, auth/session/user/organization/role/permission/menu foundations, personal profile/preferences APIs, system configuration, dictionaries, i18n messages, file APIs, organization-targeted announcements, Webhook subscription/delivery-history APIs, OpenAPI JSON, and manifest-based authorization.
 - `apps/web`: React Vite SPA admin shell using TanStack Router, TanStack Query, TanStack Form, Zod, Zustand, Tailwind CSS, and shadcn/ui, including target-aware announcement management, Current Announcements, and safe Webhook/email delivery history.
 - `apps/worker`: Node.js worker runtime wired to database queue/scheduler adapters, durable Webhook Outbox fan-out/delivery, cleanup tasks, durable `runOnce`, and optional polling.
-- `packages/contracts`: Zod contracts, Hono RPC boundary types, permission/route/menu/API manifests, and OpenAPI generation.
-- `packages/db`: Drizzle schemas, SQLite/PostgreSQL migration files, and executable migration runners.
+- `packages/contracts`: Zod contracts, Hono RPC boundary types, permission/route/menu/API manifests, serializable Business Module definitions, and OpenAPI generation.
+- `packages/module-sdk`: static Business Module registry composition, deterministic hashes, ownership/reference validation, and conformance test helpers.
+- `packages/db`: Drizzle schemas, SQLite/PostgreSQL migration files, executable migration runners, and statically registered module migration sources.
 - `packages/adapters`: adapter interfaces plus in-memory defaults, database-backed infrastructure drivers, optional Redis/RabbitMQ drivers, token store, notification channels, atomic local file storage, and optional AWS SDK v3 S3-compatible storage.
 - `packages/shared`: shared constants, result types, i18n keys, and utilities.
 
@@ -23,6 +24,7 @@ pnpm verify
 
 ```bash
 pnpm format
+pnpm modules:check
 pnpm lint
 pnpm typecheck
 pnpm test
@@ -33,6 +35,8 @@ pnpm build
 ```
 
 Set `TEST_DATABASE_URL` or `DATABASE_URL` before running `pnpm verify`; the PostgreSQL migration step requires one of those variables.
+
+`pnpm modules:check` validates the explicit API/Web/Worker/database registries without a database or external service. It writes machine-readable diagnostics to `.tmp/business-module-conformance.json`. The production Business Module registries are intentionally empty until a real module is added in a later repository goal; synthetic modules are test fixtures only.
 
 ## Project Runbooks
 

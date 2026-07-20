@@ -223,6 +223,12 @@ importers:
         specifier: ^8.15.4
         version: 8.20.0
 
+  packages/module-sdk:
+    dependencies:
+      '@web-admin-base/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
   packages/shared: {}
 
 packages:

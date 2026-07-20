@@ -1,6 +1,72 @@
 # Web Admin Base System
 
-This context defines the domain language shared by the base system. It excludes business-module concepts and implementation details.
+This context defines the domain language shared by the Base System, including its Business Module extension boundary. It excludes concepts from any specific business domain and all implementation details.
+
+## Module Extensions
+
+**Business Module**:
+A cohesive administrative capability added to the Base System for a specific business domain.
+_Avoid_: Plugin, Base Module
+
+**Business Module Definition**:
+The authoritative declaration of a Business Module's identity and its required Base System integration points.
+_Avoid_: Plugin manifest, module configuration
+
+**Business Module Registry**:
+The authoritative set of Business Module Definitions included in one system release.
+_Avoid_: Plugin catalog, discovered modules
+
+**Module Code**:
+The globally unique and permanent identity of a Business Module and the namespace for everything that module owns.
+_Avoid_: Display name, package name
+
+**Module Contribution**:
+One Base System integration declaration owned by a Business Module, such as a permission, route, data resource, event, or task.
+_Avoid_: Plugin hook, extension setting
+
+**Module Sync Plan**:
+The immutable proposed difference between a Business Module Registry and the module metadata currently accepted by an administrator.
+_Avoid_: Module installation, migration plan
+
+**Active Business Module**:
+A Business Module whose security and runtime contract has been accepted for the current release.
+_Avoid_: Installed plugin, enabled package
+
+**Pending Business Module**:
+A Business Module included in the current release whose new or changed security and runtime contract has not yet been accepted.
+_Avoid_: Disabled plugin, broken module
+
+**Localized Message**:
+User-facing text identified by a stable message key and a Default Message, with optional translations for additional languages.
+_Avoid_: Literal UI text, magic translation prefix
+
+**Default Message**:
+The text shown when a Localized Message has no translation for the User's Effective Language.
+_Avoid_: Translation key, missing-translation marker
+
+**Single-Locale Business Module**:
+A Business Module that initially supplies Localized Messages only in its default language while remaining compatible with the Base System's internationalization lifecycle.
+_Avoid_: Non-i18n module, literal-only module
+
+**Policy-Controlled Resource**:
+A Business Module resource whose visible records are constrained by effective Data Permission rules in the current User and Organization context.
+_Avoid_: Filtered table, organization data
+
+**Global Resource**:
+A Business Module resource that is shared across Organization contexts and does not use Data Permission rules.
+_Avoid_: Unprotected resource, public data
+
+**Operation Event**:
+An auditable User or Worker action against a declared resource, recorded with its outcome and execution context.
+_Avoid_: API log, access log
+
+**Domain Event**:
+An immutable business fact emitted by a Business Module without selecting recipients.
+_Avoid_: Notification Event, queue job
+
+**Notification Event**:
+A directed intent to notify one or more Users through declared channels and templates.
+_Avoid_: Domain Event, arbitrary message
 
 ## Files
 

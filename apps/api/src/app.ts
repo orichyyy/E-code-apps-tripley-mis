@@ -17,10 +17,11 @@ import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 import { loadApiConfig, type ApiConfig } from "./config/load-config";
-import type { AuthContextVariables } from "./core/auth-context/auth-context";
+import { createBusinessModuleRoutes } from "./business-modules/routes";
+import type { AppBindings } from "./app-bindings";
 import { createErrorResponse, normalizeError } from "./core/errors/error-response";
 import { createApiAuthorizationMiddleware } from "./middleware/api-authorization";
-import { requestIdMiddleware, type RequestIdVariables } from "./middleware/request-id";
+import { requestIdMiddleware } from "./middleware/request-id";
 import { createCommunicationsRoutes } from "./modules/communications/communications.routes";
 import { CommunicationsRepository } from "./modules/communications/communications.repository";
 import { CommunicationsServices } from "./modules/communications/communications.service";
@@ -41,10 +42,6 @@ import {
   noopStructuredLogSink,
   type StructuredLogSink,
 } from "./observability/structured-logging";
-
-type AppBindings = {
-  Variables: RequestIdVariables & AuthContextVariables;
-};
 
 export type AppDependencies = {
   backendCoreServices: BackendCoreServices;
@@ -99,7 +96,8 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
     .route("/", createCommunicationsRoutes(communicationsServices))
     .route("/", createInfrastructureRoutes(infrastructureServices))
     .route("/", createSystemManagementRoutes(systemManagementServices))
-    .route("/", createManifestRoutes());
+    .route("/", createManifestRoutes())
+    .route("/", createBusinessModuleRoutes());
 
   routedApp.notFound((context) => {
     return context.json(
