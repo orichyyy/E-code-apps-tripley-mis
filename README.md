@@ -49,7 +49,7 @@ Start here based on the job you are doing:
 - CI maintainer: use `.github/workflows/verify.yml` and keep it running the root `pnpm verify` command with PostgreSQL and Playwright Chromium available.
 - Deployment operator: use `docs/deployment_guide.md` for deployment shape and `docs/deployment_acceptance.md` for the PostgreSQL-backed rollout checklist.
 - Release owner: use `docs/release_readiness.md`, review `docs/known_gaps.md`, and file a record under `docs/release_readiness_records/`.
-- Business module developer: use `docs/business_module_extension_guide.md` and do not add example business modules to the base system.
+- Business module developer: use `docs/business_module_extension_guide.md`, run `docs/business_module_acceptance.md`, and do not add example business modules to the base system.
 - Adapter extender: use `docs/adapter_extension_guide.md`; Redis, RabbitMQ, S3-compatible storage, SMTP, and outbound Webhook delivery are optional and disabled unless configured. SMS remains reserved.
 - Permission extender: use `docs/permission_extension_guide.md` and keep route, menu, API permission, OpenAPI, and frontend metadata aligned.
 - Troubleshooter: start with `docs/troubleshooting_guide.md`, then check `docs/known_gaps.md` before treating a reserved boundary as a bug.

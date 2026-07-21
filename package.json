@@ -20,6 +20,7 @@
     "test": "pnpm -r --sort --if-present test",
     "test:api": "pnpm --filter @web-admin-base/api test",
     "test:web": "pnpm --filter @web-admin-base/web test",
+    "test:business-module-acceptance": "tsx scripts/run-business-module-acceptance.ts",
     "test:optional-integrations": "pnpm --filter @web-admin-base/adapters exec vitest run test/redis-integration.test.ts test/rabbitmq-integration.test.ts",
     "test:s3-integration": "tsx scripts/run-s3-integration.ts",
     "test:smtp-integration": "tsx scripts/run-smtp-integration.ts",

@@ -1054,3 +1054,10 @@ Phase 4 is implemented according to ADR 0007:
 - Added contracts/module-sdk/API/Worker/SQLite/PostgreSQL tests for fail-closed capabilities, context propagation, idempotency, active-module gates, File authorization, queue fallback, CSV output, Outbox/Webhook fan-out, migrations, and fixture isolation.
 
 All four Business Module extension-foundation phases are implemented. Production API, Web, Worker, definition, and database registries remain intentionally empty; no example or production Business Module is included.
+
+## Business Module Extension Acceptance Progress
+
+- Added `pnpm test:business-module-acceptance` as a focused, cross-platform acceptance command for the four extension-foundation phases.
+- Kept every synthetic definition and runtime registration under test directories while checking that all production registries remain empty.
+- Covered Module Sync and activation, executable permissions, Managed Files, CSV, Operation/Domain/Notification Events, Webhook fan-out, background/scheduled jobs, Hono RPC, Worker execution, PostgreSQL persistence, and frontend integration.
+- Added `docs/business_module_acceptance.md` and a dated release-readiness record so extension changes have a reproducible pre-merge gate in addition to `pnpm verify`.

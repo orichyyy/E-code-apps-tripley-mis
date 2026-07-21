@@ -59,6 +59,11 @@ Deployment acceptance:
 - Follow `docs/deployment_acceptance.md`.
 - Confirm PostgreSQL migrations, API, static SPA, worker, file storage, authentication, OpenAPI, logs, scheduler, import/export, files, notifications, and core management surfaces pass their deployment checks.
 
+Business Module extension acceptance:
+
+- Follow `docs/business_module_acceptance.md` when changing module definitions, lifecycle, permissions, capability ports, or module-aware API/Web/Worker/database composition.
+- Run `pnpm test:business-module-acceptance` with PostgreSQL available before merging those changes.
+
 ## Go / No-Go Checklist
 
 Mark Go only when all applicable items are true:
