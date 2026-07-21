@@ -10,7 +10,7 @@
 - pnpm: `10.13.1`
 - PostgreSQL: `16.14` from Docker `dev-postgres` on `localhost:5432/devdb`
 - Scope: Business Module extension foundation Phases 1-4
-- Decision: Conditional Go for pull-request review; hosted CI must pass before merge.
+- Decision: Go for development-baseline merge. Production deployment still requires target-environment acceptance.
 
 Production deployment acceptance remains pending until a target environment is available. It is not a blocker for merging the extension foundation into the development baseline.
 
@@ -67,9 +67,11 @@ None is being represented as complete by this record.
 
 ## Hosted CI
 
-Pull request: `#2` on branch `codex/optional-adapter-runtime-wiring`.
+Pull request: [#2](https://github.com/orichyyy/E-code-apps-tripley-mis/pull/2) on branch `codex/optional-adapter-runtime-wiring`.
 
-The pull-request title and description must be updated to describe the complete Business Module extension foundation. Record the final Verify workflow URL and result here after pushing this readiness slice.
+Hosted Verify [run 29795805404](https://github.com/orichyyy/E-code-apps-tripley-mis/actions/runs/29795805404) passed for head `0b6d1f6` on 2026-07-21.
+
+The preceding run correctly exposed a clean-install TypeScript resolution gap: `apps/web` directly imports `@web-admin-base/module-sdk`, while its local `paths` override did not include the module SDK source. Adding the explicit source mapping made clean Linux CI consistent with local workspace typechecking; the full local and hosted gates then passed.
 
 ## Merge Checklist
 
@@ -80,5 +82,5 @@ The pull-request title and description must be updated to describe the complete 
 - No example Business Module was added: yes
 - No SQL Server code or migrations were added: yes
 - Known gaps reviewed: yes
-- Hosted Verify passed: pending
+- Hosted Verify passed: yes
 - Target-environment deployment acceptance: pending, not required for development-baseline merge
