@@ -27,6 +27,7 @@ describe("SMTP notification adapter", () => {
       secure: false,
       from: "sender@example.com",
       timeoutMs: 2_000,
+      allowInsecureLocalhost: true,
     });
 
     await adapter.send({
@@ -34,12 +35,35 @@ describe("SMTP notification adapter", () => {
       recipient: "recipient@example.com",
       subject: "Hello",
       body: "Welcome to the admin system.",
+      messageId: "<stable-message@example.local>",
     });
 
     expect(activeServer.commands).toContain("MAIL FROM:<sender@example.com>");
     expect(activeServer.commands).toContain("RCPT TO:<recipient@example.com>");
     expect(activeServer.messages.join("\n")).toContain("Subject: Hello");
     expect(activeServer.messages.join("\n")).toContain("Welcome to the admin system.");
+    expect(activeServer.messages.join("\n")).toContain(
+      "Message-ID: <stable-message@example.local>",
+    );
+  });
+
+  it("requires STARTTLS when plaintext localhost is not explicitly allowed", async () => {
+    activeServer = await startFakeSmtpServer();
+    const adapter = createSmtpNotificationChannelAdapter({
+      host: "127.0.0.1",
+      port: activeServer.port,
+      secure: false,
+      from: "sender@example.com",
+      timeoutMs: 2_000,
+    });
+
+    await expect(
+      adapter.send({
+        channel: "email",
+        recipient: "recipient@example.com",
+        body: "test",
+      }),
+    ).rejects.toMatchObject({ code: "SMTP_STARTTLS_REQUIRED", retryable: false });
   });
 
   it("rejects non-email messages", async () => {

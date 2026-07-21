@@ -6,10 +6,12 @@ import {
   sendTestEmailNotificationRequestSchema,
   updateNotificationTemplateRequestSchema,
   updateScheduledTaskRequestSchema,
+  emailDeliveryListQuerySchema,
 } from "@web-admin-base/contracts";
 import { Hono } from "hono";
 
 import type { AuthContextVariables } from "../../core/auth-context/auth-context";
+import type { RequestIdVariables } from "../../middleware/request-id";
 import { createKnownError } from "../../core/errors/error-codes";
 import { assertEmptyJsonBody } from "../core-foundation/request-body";
 import { toContentDisposition } from "./file-management";
@@ -17,8 +19,15 @@ import type { InfrastructureServices } from "./infrastructure.service";
 import type { LogType } from "./infrastructure.types";
 
 type InfrastructureRouteBindings = {
-  Variables: AuthContextVariables;
+  Variables: AuthContextVariables & RequestIdVariables;
 };
+
+export type FileContentAuthorization = (input: {
+  fileId: string;
+  mode: "download" | "preview";
+  auth: NonNullable<AuthContextVariables["authContext"]>;
+  requestId: string;
+}) => Promise<void>;
 
 const logPathToType = {
   login: "login",
@@ -31,7 +40,10 @@ const logPathToType = {
   files: "file_operation",
 } as const satisfies Record<string, LogType>;
 
-export function createInfrastructureRoutes(services: InfrastructureServices) {
+export function createInfrastructureRoutes(
+  services: InfrastructureServices,
+  authorizeFileContent?: FileContentAuthorization,
+) {
   const routes = new Hono<InfrastructureRouteBindings>();
 
   for (const [path, logType] of Object.entries(logPathToType)) {
@@ -62,23 +74,43 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
     context.json({ data: await services.getFile(context.req.param("id")) }),
   );
   routes.get("/files/:id/download", async (context) => {
-    const { body, file } = await services.getFileContent(context.req.param("id"), "download");
-    return new Response(toArrayBuffer(body), {
+    const fileId = context.req.param("id");
+    if (authorizeFileContent) {
+      await authorizeFileContent({
+        fileId,
+        mode: "download",
+        auth: requireAuth(context),
+        requestId: context.get("requestId"),
+      });
+    }
+    const result = await services.getFileContent(fileId, "download");
+    if (result.kind === "redirect") return privateRedirect(result.url);
+    return new Response(toArrayBuffer(result.body), {
       status: 200,
       headers: {
-        "content-type": String(file.contentType),
-        "content-length": String(body.byteLength),
-        "content-disposition": toContentDisposition(String(file.originalName)),
+        "content-type": String(result.file.contentType),
+        "content-length": String(result.body.byteLength),
+        "content-disposition": toContentDisposition(String(result.file.originalName)),
       },
     });
   });
   routes.get("/files/:id/preview", async (context) => {
-    const { body, file } = await services.getFileContent(context.req.param("id"), "preview");
-    return new Response(toArrayBuffer(body), {
+    const fileId = context.req.param("id");
+    if (authorizeFileContent) {
+      await authorizeFileContent({
+        fileId,
+        mode: "preview",
+        auth: requireAuth(context),
+        requestId: context.get("requestId"),
+      });
+    }
+    const result = await services.getFileContent(fileId, "preview");
+    if (result.kind === "redirect") return privateRedirect(result.url);
+    return new Response(toArrayBuffer(result.body), {
       status: 200,
       headers: {
-        "content-type": String(file.contentType),
-        "content-length": String(body.byteLength),
+        "content-type": String(result.file.contentType),
+        "content-length": String(result.body.byteLength),
       },
     });
   });
@@ -130,6 +162,14 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
   routes.post("/notifications/email/test", async (context) => {
     const input = sendTestEmailNotificationRequestSchema.parse(await context.req.json());
     return context.json({ data: await services.sendTestEmail(input) });
+  });
+
+  routes.get("/email-deliveries", async (context) => {
+    const query = emailDeliveryListQuerySchema.parse(context.req.query());
+    return context.json({ data: await services.listEmailDeliveries(query) });
+  });
+  routes.get("/email-deliveries/:id", async (context) => {
+    return context.json({ data: await services.getEmailDelivery(context.req.param("id")) });
   });
 
   routes.get("/notification-templates", async (context) =>
@@ -188,6 +228,13 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
   });
 
   return routes;
+}
+
+function privateRedirect(url: string): Response {
+  return new Response(null, {
+    status: 302,
+    headers: { location: url, "cache-control": "private, no-store" },
+  });
 }
 
 function actorId(context: {

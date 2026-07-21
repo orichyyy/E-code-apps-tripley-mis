@@ -5,19 +5,25 @@ import type { WebhookSubscription } from "./webhook-subscription-api";
 import { WebhookStatusBadge } from "./webhook-status";
 
 type WebhookTableProps = {
+  canDelete: boolean;
   canUpdate: boolean;
+  busy: boolean;
   isError: boolean;
   isLoading: boolean;
   onEdit: (record: WebhookSubscription) => void;
+  onDelete: (record: WebhookSubscription) => void;
   onToggle: (record: WebhookSubscription) => void;
   rows: WebhookSubscription[];
 };
 
 export function WebhookSubscriptionTable({
+  canDelete,
   canUpdate,
+  busy,
   isError,
   isLoading,
   onEdit,
+  onDelete,
   onToggle,
   rows,
 }: WebhookTableProps) {
@@ -69,6 +75,9 @@ export function WebhookSubscriptionTable({
               <td className="border-b px-4 py-3">
                 <WebhookRowActions
                   canUpdate={canUpdate}
+                  canDelete={canDelete}
+                  busy={busy}
+                  onDelete={onDelete}
                   onEdit={onEdit}
                   onToggle={onToggle}
                   record={record}
@@ -94,13 +103,19 @@ function SecretState({ configured }: { configured: boolean }) {
 }
 
 function WebhookRowActions({
+  canDelete,
   canUpdate,
+  busy,
   onEdit,
+  onDelete,
   onToggle,
   record,
 }: {
+  canDelete: boolean;
   canUpdate: boolean;
+  busy: boolean;
   onEdit: (record: WebhookSubscription) => void;
+  onDelete: (record: WebhookSubscription) => void;
   onToggle: (record: WebhookSubscription) => void;
   record: WebhookSubscription;
 }) {
@@ -108,16 +123,22 @@ function WebhookRowActions({
     <div className="flex gap-2">
       {canUpdate ? (
         <>
-          <Button onClick={() => onEdit(record)} size="sm" variant="outline">
+          <Button disabled={busy} onClick={() => onEdit(record)} size="sm" variant="outline">
             Edit
           </Button>
-          <Button onClick={() => onToggle(record)} size="sm" variant="ghost">
+          <Button disabled={busy} onClick={() => onToggle(record)} size="sm" variant="ghost">
             {record.status === "enabled" ? "Disable" : "Enable"}
           </Button>
         </>
-      ) : (
+      ) : null}
+      {canDelete ? (
+        <Button disabled={busy} onClick={() => onDelete(record)} size="sm" variant="ghost">
+          Delete
+        </Button>
+      ) : null}
+      {!canUpdate && !canDelete ? (
         <span className="text-xs text-muted-foreground">View only</span>
-      )}
+      ) : null}
     </div>
   );
 }

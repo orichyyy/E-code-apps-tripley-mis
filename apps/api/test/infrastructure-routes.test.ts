@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import {
   createInMemoryNotificationChannelAdapter,
   createLocalFileStorageAdapter,
+  type FileStorageAdapter,
 } from "@web-admin-base/adapters";
 import { createApp } from "../src/app";
 import { createInMemoryBackendCoreServices } from "../src/modules/core-foundation/services";
@@ -57,6 +58,7 @@ describe("infrastructure routes", () => {
       app.request("/api/logs/access", { headers }),
       app.request("/api/files", { headers }),
       app.request("/api/notifications", { headers }),
+      app.request("/api/email-deliveries", { headers }),
     ]);
 
     expect(createTemplateResponse.status).toBe(201);
@@ -121,6 +123,48 @@ describe("infrastructure routes", () => {
     } finally {
       await rm(root, { recursive: true, force: true });
     }
+  });
+
+  it("authorizes private S3 downloads before issuing short-lived redirects", async () => {
+    const storage = createTestS3Storage();
+    const app = createApp({
+      backendCoreServices: createInMemoryBackendCoreServices(),
+      infrastructureServices: InfrastructureServices.inMemory({ storage }),
+    });
+    await initialize(app);
+
+    const unauthorized = await app.request("/api/files/1/download");
+    expect(unauthorized.status).toBe(401);
+    expect(storage.signedLocations).toEqual([]);
+
+    const headers = await loginHeaders(app);
+    const form = new FormData();
+    form.set("file", new File(["private"], "private.txt", { type: "text/plain" }));
+    const uploadResponse = await app.request("/api/files/upload", {
+      method: "POST",
+      headers,
+      body: form,
+    });
+    const uploaded = (await uploadResponse.json()).data;
+    const downloadResponse = await app.request(`/api/files/${uploaded.id}/download`, { headers });
+
+    expect(uploaded).toEqual(
+      expect.objectContaining({ storageDriver: "s3", storageBucket: "admin-files" }),
+    );
+    expect(JSON.stringify(uploaded)).not.toContain("X-Amz-");
+    expect(downloadResponse.status).toBe(302);
+    expect(downloadResponse.headers.get("location")).toBe(
+      `http://storage.test/admin-files/${uploaded.objectKey}?X-Amz-Signature=masked`,
+    );
+    expect(storage.signedLocations).toEqual([
+      expect.objectContaining({ storageDriver: "s3", storageBucket: "admin-files" }),
+    ]);
+    expect(storage.signedTtls).toEqual([60]);
+
+    await app.request(`/api/files/${uploaded.id}`, { method: "DELETE", headers });
+    const invalidDownload = await app.request(`/api/files/${uploaded.id}/download`, { headers });
+    expect(invalidDownload.status).toBe(404);
+    expect(storage.signedLocations).toHaveLength(1);
   });
 
   it("renders and sends test email notifications from templates", async () => {
@@ -198,6 +242,48 @@ describe("infrastructure routes", () => {
     expect(body.error).toEqual(expect.objectContaining({ code: "VALIDATION_INVALID_REQUEST" }));
   });
 });
+
+function createTestS3Storage(): FileStorageAdapter & {
+  signedLocations: Parameters<FileStorageAdapter["get"]>[0][];
+  signedTtls: number[];
+} {
+  const objects = new Map<string, Uint8Array>();
+  const signedLocations: Parameters<FileStorageAdapter["get"]>[0][] = [];
+  const signedTtls: number[] = [];
+  return {
+    storageDriver: "s3",
+    signedLocations,
+    signedTtls,
+    async healthCheck() {
+      return { ok: true };
+    },
+    async put(objectKey, body, contentType) {
+      const completeKey = objectKey.replace(/^uploads\/\d{4}\/\d{2}\//, "");
+      objects.set(completeKey, body.slice());
+      return {
+        storageDriver: "s3",
+        storageBucket: "admin-files",
+        objectKey: completeKey,
+        contentType,
+        sizeBytes: body.byteLength,
+      };
+    },
+    async get(location) {
+      return objects.get(location.objectKey)?.slice() ?? null;
+    },
+    async delete(location) {
+      objects.delete(location.objectKey);
+    },
+    async createDownloadUrl(location, options) {
+      signedLocations.push(location);
+      signedTtls.push(options.expiresInSeconds);
+      return {
+        url: `http://storage.test/${location.storageBucket}/${location.objectKey}?X-Amz-Signature=masked`,
+        expiresAt: new Date(Date.now() + options.expiresInSeconds * 1000),
+      };
+    },
+  };
+}
 
 async function initialize(app: ReturnType<typeof createApp>): Promise<void> {
   const response = await app.request("/api/initialization/setup", {

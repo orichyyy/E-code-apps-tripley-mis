@@ -1,9 +1,9 @@
 import {
-  computeNextCronRun,
   createDatabaseQueueAdapter,
   type FileStorageAdapter,
   type NotificationChannelAdapter,
   type QueueAdapter,
+  type EmailDeliveryConfig,
 } from "@web-admin-base/adapters";
 import type { InAppNotificationDispatchPayload } from "@web-admin-base/contracts";
 import type {
@@ -18,28 +18,32 @@ import type {
 
 import { createKnownError } from "../../core/errors/error-codes";
 import type { NotificationTemplateRecord } from "./email-notification-sender";
-import {
-  createObjectKey,
-  isPreviewableImage,
-  validateUploadInput,
-  type FileUploadInput,
-} from "./file-management";
+import type { EmailDeliveryListQuery, EmailNotificationRequest } from "@web-admin-base/contracts";
+import { EmailDeliveryRepository } from "./email-delivery.repository";
+import { EmailDeliveryService } from "./email-delivery.service";
+import type { FileUploadInput } from "./file-management";
+import { createInMemoryExportTask } from "./in-memory-export-task";
 import type { EnqueueInAppNotificationInput } from "./in-app-notification-dispatcher";
+import { InfrastructureFileService } from "./infrastructure-file.service";
 import { InfrastructureNotificationService } from "./infrastructure-notification.service";
 import { InfrastructureRepository } from "./infrastructure.repository";
+import {
+  InfrastructureSchedulerService,
+  type InMemoryScheduledTask,
+} from "./infrastructure-scheduler.service";
 import {
   createDefaultFileStorage,
   createDefaultNotificationChannel,
   createDefaultQueue,
   readMaxFileSizeBytes,
+  readPresignedUrlTtlSeconds,
   resolveInfrastructureServiceOptions,
   type InfrastructureServiceOptions,
 } from "./infrastructure-service-options";
-import type { LogType, ScheduledTaskInput } from "./infrastructure.types";
+import type { LogType } from "./infrastructure.types";
 
 export class InfrastructureServices {
   private readonly memory = {
-    files: [] as Array<Record<string, unknown> & { id: string }>,
     importExportTasks: [] as Array<
       Record<string, unknown> & { id: string; resourceType: string; taskType: string }
     >,
@@ -47,22 +51,34 @@ export class InfrastructureServices {
     notifications: [] as Array<
       Record<string, unknown> & { id: string; status: string; userId?: string | null }
     >,
-    scheduledTasks: [] as Array<
-      Record<string, unknown> & { id: string; code: string; enabled: boolean }
-    >,
+    scheduledTasks: [] as InMemoryScheduledTask[],
     templates: [] as NotificationTemplateRecord[],
   };
   private sequence = 1;
   private readonly notificationService: InfrastructureNotificationService;
+  private readonly fileService: InfrastructureFileService;
+  private readonly emailDeliveryService?: EmailDeliveryService;
+  private readonly schedulerService: InfrastructureSchedulerService;
 
   constructor(
     private readonly repository?: InfrastructureRepository,
-    private readonly storage: FileStorageAdapter = createDefaultFileStorage(),
-    private readonly maxFileSizeBytes = readMaxFileSizeBytes(),
+    storage: FileStorageAdapter = createDefaultFileStorage(),
+    maxFileSizeBytes = readMaxFileSizeBytes(),
+    presignedUrlTtlSeconds = readPresignedUrlTtlSeconds(),
     notificationChannel: NotificationChannelAdapter = createDefaultNotificationChannel(),
     queue: QueueAdapter = createDefaultQueue(),
     organizationUserResolver?: (organizationId: string) => Promise<string[]>,
+    emailDeliveryConfig?: EmailDeliveryConfig,
+    smtpEnabled = true,
+    scheduledJobTypeSource?: () => Promise<ReadonlySet<string>>,
   ) {
+    this.fileService = new InfrastructureFileService({
+      repository,
+      storage,
+      maxFileSizeBytes,
+      presignedUrlTtlSeconds,
+      nextId: () => this.nextId(),
+    });
     this.notificationService = new InfrastructureNotificationService({
       repository,
       memory: {
@@ -73,7 +89,20 @@ export class InfrastructureServices {
       queue,
       nextId: () => this.nextId(),
       organizationUserResolver,
+      smtpEnabled,
     });
+    this.schedulerService = new InfrastructureSchedulerService(
+      repository,
+      this.memory.scheduledTasks,
+      () => this.nextId(),
+      scheduledJobTypeSource,
+    );
+    if (repository && emailDeliveryConfig) {
+      this.emailDeliveryService = new EmailDeliveryService(
+        new EmailDeliveryRepository(repository.executor),
+        emailDeliveryConfig,
+      );
+    }
   }
 
   static inMemory(
@@ -84,9 +113,13 @@ export class InfrastructureServices {
       undefined,
       resolved.storage,
       resolved.maxFileSizeBytes,
+      resolved.presignedUrlTtlSeconds,
       resolved.notificationChannel,
       resolved.queue,
       resolved.organizationUserResolver,
+      resolved.emailDeliveryConfig,
+      resolved.smtpEnabled ?? true,
+      resolved.scheduledJobTypeSource,
     );
   }
 
@@ -100,9 +133,13 @@ export class InfrastructureServices {
       repository,
       resolved.storage,
       resolved.maxFileSizeBytes,
+      resolved.presignedUrlTtlSeconds,
       resolved.notificationChannel,
       queue,
       resolved.organizationUserResolver,
+      resolved.emailDeliveryConfig,
+      resolved.smtpEnabled ?? true,
+      resolved.scheduledJobTypeSource,
     );
   }
 
@@ -125,71 +162,27 @@ export class InfrastructureServices {
   }
 
   listFiles() {
-    return this.repository?.listFiles() ?? Promise.resolve(this.memory.files);
+    return this.fileService.listFiles();
   }
 
   getFile(id: string) {
-    return (
-      this.repository?.getFile(id) ??
-      Promise.resolve(this.memory.files.find((file) => file.id === id) ?? null)
-    );
+    return this.fileService.getFile(id);
   }
 
-  async uploadFile(input: FileUploadInput) {
-    const normalized = validateUploadInput(input, this.maxFileSizeBytes);
-    const objectKey = createObjectKey(normalized.extension);
-    const stored = await this.storage.put(objectKey, input.body, normalized.contentType);
-    const metadata = {
-      objectKey: stored.objectKey,
-      originalName: normalized.originalName,
-      contentType: stored.contentType,
-      extension: normalized.extension,
-      sizeBytes: stored.sizeBytes,
-      storageDriver: "local",
-      actorId: input.actorId,
-    };
-    if (this.repository) return this.repository.createFile(metadata);
-    const now = new Date().toISOString();
-    const file = {
-      id: this.nextId(),
-      ...metadata,
-      status: "active",
-      referenced: false,
-      isDeleted: false,
-      createdAt: now,
-      updatedAt: now,
-    };
-    this.memory.files.unshift(file);
-    return file;
+  uploadFile(input: FileUploadInput) {
+    return this.fileService.uploadFile(input);
   }
 
-  async getFileContent(id: string, mode: "download" | "preview") {
-    const file = await this.getFile(id);
-    if (!file || file.isDeleted || file.status === "invalid")
-      throw createKnownError("FILE_NOT_FOUND");
-    if (mode === "preview" && !isPreviewableImage(String(file.contentType))) {
-      throw createKnownError("FILE_PREVIEW_NOT_SUPPORTED");
-    }
-    const body = await this.storage.get(String(file.objectKey));
-    if (!body) throw createKnownError("FILE_NOT_FOUND");
-    return { file, body };
+  getFileContent(id: string, mode: "download" | "preview") {
+    return this.fileService.getFileContent(id, mode);
   }
 
   deleteFile(id: string, actorId: string | null) {
-    if (this.repository) return this.repository.deleteFile(id, actorId);
-    const file = this.memory.files.find((item) => item.id === id);
-    if (!file) return Promise.resolve(null);
-    Object.assign(file, {
-      status: "invalid",
-      isDeleted: true,
-      deletedBy: actorId,
-      deletedAt: new Date().toISOString(),
-    });
-    return Promise.resolve(file);
+    return this.fileService.deleteFile(id, actorId);
   }
 
   listFileReferences(id: string) {
-    return this.repository?.listFileReferences(id) ?? Promise.resolve([]);
+    return this.fileService.listFileReferences(id);
   }
 
   listNotifications(userId: string) {
@@ -228,63 +221,40 @@ export class InfrastructureServices {
     return this.notificationService.sendTestEmail(input);
   }
 
+  requestEmailDelivery(input: EmailNotificationRequest) {
+    if (!this.emailDeliveryService) throw createKnownError("BUSINESS_EMAIL_DELIVERY_DISABLED");
+    return this.emailDeliveryService.request(input);
+  }
+
+  listEmailDeliveries(query: EmailDeliveryListQuery) {
+    return (
+      this.emailDeliveryService?.list(query) ??
+      Promise.resolve({ items: [], total: 0, page: query.page, pageSize: query.pageSize })
+    );
+  }
+
+  getEmailDelivery(id: string) {
+    return this.emailDeliveryService?.get(id) ?? Promise.resolve(null);
+  }
+
   listScheduledTasks() {
-    return this.repository?.listScheduledTasks() ?? Promise.resolve(this.memory.scheduledTasks);
+    return this.schedulerService.list();
   }
 
   createScheduledTask(input: CreateScheduledTaskRequest) {
-    const normalized: ScheduledTaskInput = {
-      code: input.code,
-      cronExpression: input.cronExpression,
-      handlerType: input.handlerType,
-      payload: input.payload,
-      enabled: input.enabled,
-    };
-    if (this.repository) return this.repository.createScheduledTask(normalized);
-    const now = new Date().toISOString();
-    const task = {
-      id: this.nextId(),
-      ...normalized,
-      status: normalized.enabled ? "enabled" : "disabled",
-      nextRunAt: normalized.enabled
-        ? nextScheduledRunOrThrow(normalized.cronExpression, now)
-        : null,
-      createdAt: now,
-      updatedAt: now,
-    };
-    this.memory.scheduledTasks.unshift(task);
-    return Promise.resolve(task);
+    return this.schedulerService.create(input);
   }
 
   updateScheduledTask(id: string, input: UpdateScheduledTaskRequest) {
-    if (this.repository) return this.repository.updateScheduledTask(id, input);
-    const task = this.memory.scheduledTasks.find((item) => item.id === id);
-    if (!task) return Promise.resolve(null);
-    const now = new Date().toISOString();
-    const next = { ...task, ...input };
-    Object.assign(task, input, {
-      nextRunAt: next.enabled ? nextScheduledRunOrThrow(String(next.cronExpression), now) : null,
-      updatedAt: now,
-    });
-    return Promise.resolve(task);
+    return this.schedulerService.update(id, input);
   }
 
   setScheduledTaskStatus(id: string, enabled: boolean) {
-    if (this.repository) return this.repository.setScheduledTaskStatus(id, enabled);
-    const task = this.memory.scheduledTasks.find((item) => item.id === id);
-    if (!task) return Promise.resolve(null);
-    const now = new Date().toISOString();
-    task.enabled = enabled;
-    task.status = enabled ? "enabled" : "disabled";
-    task.nextRunAt = enabled ? nextScheduledRunOrThrow(String(task.cronExpression), now) : null;
-    return Promise.resolve(task);
+    return this.schedulerService.setStatus(id, enabled);
   }
 
   enqueueScheduledTaskRun(id: string) {
-    return (
-      this.repository?.enqueueScheduledTaskRun(id) ??
-      Promise.resolve(this.memory.scheduledTasks.find((item) => item.id === id) ?? null)
-    );
+    return this.schedulerService.enqueueRun(id);
   }
 
   listImportExportTasks() {
@@ -308,21 +278,7 @@ export class InfrastructureServices {
   }
 
   private createMemoryExportTask(resourceType: string, actorId: string | null) {
-    const now = new Date().toISOString();
-    const task = {
-      id: this.nextId(),
-      taskType: "export",
-      resourceType,
-      status: "pending",
-      totalRows: 0,
-      successRows: 0,
-      failedRows: 0,
-      errorPreview: [],
-      resultExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      createdAt: now,
-      updatedAt: now,
-      createdBy: actorId,
-    };
+    const task = createInMemoryExportTask(resourceType, actorId, () => this.nextId());
     this.memory.importExportTasks.unshift(task);
     return Promise.resolve(task);
   }
@@ -331,16 +287,5 @@ export class InfrastructureServices {
     const id = String(this.sequence);
     this.sequence += 1;
     return id;
-  }
-}
-
-function nextScheduledRunOrThrow(cronExpression: string, nowIsoValue: string): string {
-  try {
-    return computeNextCronRun(cronExpression, new Date(nowIsoValue));
-  } catch (error) {
-    throw createKnownError("VALIDATION_INVALID_REQUEST", {
-      field: "cronExpression",
-      message: error instanceof Error ? error.message : String(error),
-    });
   }
 }

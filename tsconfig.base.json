@@ -19,6 +19,7 @@
       "@web-admin-base/adapters": ["packages/adapters/src/index.ts"],
       "@web-admin-base/contracts": ["packages/contracts/src/index.ts"],
       "@web-admin-base/db": ["packages/db/src/index.ts"],
+      "@web-admin-base/module-sdk": ["packages/module-sdk/src/index.ts"],
       "@web-admin-base/shared": ["packages/shared/src/index.ts"]
     }
   }

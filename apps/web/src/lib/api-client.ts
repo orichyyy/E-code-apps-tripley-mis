@@ -1,4 +1,5 @@
 import { internalApiClient, requestJson, stringField, unwrapRecords } from "./api-request";
+import type { EffectiveFieldPermissionRule } from "@/features/permissions/field-permission-utils";
 
 export type ApiMode = "available-api" | "typed-placeholder";
 
@@ -192,6 +193,12 @@ export async function loginWithPassword(input: { username: string; password: str
     permissionCodes: Array.isArray(data.permissionCodes)
       ? data.permissionCodes.filter((code): code is string => typeof code === "string")
       : [],
+    fieldPermissions: readFieldPermissions(data.fieldPermissions),
+    isSuperAdministrator: data.isSuperAdministrator === true,
+    currentOrganizationId: stringField(data.currentOrganization?.id, ""),
+    organizations: Array.isArray(data.organizations)
+      ? data.organizations.map(toSelectableOrganization).filter((item) => item.id.length > 0)
+      : [],
   };
 }
 
@@ -202,13 +209,69 @@ export async function changeOwnPassword(input: { oldPassword: string; newPasswor
   });
 }
 
+export async function switchCurrentOrganization(organizationId: string) {
+  const envelope = await requestJson<{ data: SwitchOrganizationResponseData }>(
+    "/context/current-organization",
+    {
+      method: "POST",
+      body: JSON.stringify({ organizationId }),
+    },
+  );
+  return {
+    accessToken: envelope.data.accessToken,
+    currentOrganizationId: stringField(envelope.data.currentOrganization?.id, organizationId),
+    permissionCodes: Array.isArray(envelope.data.permissionCodes)
+      ? envelope.data.permissionCodes.filter((code): code is string => typeof code === "string")
+      : [],
+    fieldPermissions: readFieldPermissions(envelope.data.fieldPermissions),
+    isSuperAdministrator: envelope.data.isSuperAdministrator === true,
+  };
+}
+
 type LoginResponseData = {
   accessToken: string;
   user: Record<string, unknown>;
   passwordChangeRequired?: boolean;
   permissionCodes?: unknown[];
+  fieldPermissions?: unknown;
+  isSuperAdministrator?: unknown;
   preferences?: unknown;
+  currentOrganization?: Record<string, unknown>;
+  organizations?: Array<Record<string, unknown>>;
 };
+
+type SwitchOrganizationResponseData = {
+  accessToken: string;
+  currentOrganization?: Record<string, unknown>;
+  permissionCodes?: unknown[];
+  fieldPermissions?: unknown;
+  isSuperAdministrator?: unknown;
+};
+
+function readFieldPermissions(value: unknown): EffectiveFieldPermissionRule[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((candidate) => {
+    if (!isRecord(candidate)) return [];
+    const scenario = candidate.scenario;
+    const effect = candidate.effect;
+    if (
+      typeof candidate.resource !== "string" ||
+      typeof candidate.field !== "string" ||
+      !["list", "detail", "create", "edit"].includes(String(scenario)) ||
+      !["visible", "hidden", "readonly"].includes(String(effect))
+    ) {
+      return [];
+    }
+    return [
+      {
+        resource: candidate.resource,
+        field: candidate.field,
+        scenario: scenario as EffectiveFieldPermissionRule["scenario"],
+        effect: effect as EffectiveFieldPermissionRule["effect"],
+      },
+    ];
+  });
+}
 
 function readLanguage(value: unknown): "en" | "zh" {
   return value === "zh" ? "zh" : "en";
@@ -216,4 +279,13 @@ function readLanguage(value: unknown): "en" | "zh" {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function toSelectableOrganization(record: Record<string, unknown>) {
+  return {
+    id: stringField(record.id, ""),
+    name: stringField(record.name, ""),
+    code: stringField(record.code, ""),
+    status: record.status === "disabled" ? ("disabled" as const) : ("enabled" as const),
+  };
 }

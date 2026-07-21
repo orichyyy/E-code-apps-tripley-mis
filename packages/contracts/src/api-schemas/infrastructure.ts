@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const strictObject = <T extends z.ZodRawShape>(shape: T) => z.object(shape).strict();
+const primitiveTemplateValueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
 export const createLogExportTaskRequestSchema = strictObject({
   logType: z.enum([
@@ -24,14 +25,18 @@ export const createNotificationTemplateRequestSchema = strictObject({
   variables: z.array(z.string()).default([]),
 });
 
-export const updateNotificationTemplateRequestSchema =
-  createNotificationTemplateRequestSchema.partial();
+export const updateNotificationTemplateRequestSchema = strictObject({
+  subject: z.string().nullable().optional(),
+  body: z.string().min(1).optional(),
+  variables: z.array(z.string()).optional(),
+  status: z.enum(["enabled", "disabled"]).optional(),
+});
 
 export const sendTestEmailNotificationRequestSchema = strictObject({
   templateCode: z.string().min(1),
   locale: z.string().min(1),
   recipient: z.string().email(),
-  variables: z.record(z.unknown()).default({}),
+  variables: z.record(primitiveTemplateValueSchema).default({}),
 });
 
 export const createScheduledTaskRequestSchema = strictObject({

@@ -15,7 +15,7 @@ type I18nMessageFormProps = {
 
 export function I18nMessageForm({ busy, initialRecord, onCancel, onSubmit }: I18nMessageFormProps) {
   const form = useForm({
-    defaultValues: { messageValue: initialRecord.messageValue },
+    defaultValues: { overrideValue: initialRecord.overrideValue ?? "" },
     validators: { onSubmit: i18nMessageFormSchema },
     onSubmit: ({ value }) => onSubmit(toI18nMessageApiInput(value)),
   });
@@ -38,6 +38,12 @@ export function I18nMessageForm({ busy, initialRecord, onCancel, onSubmit }: I18
             <dd className="mt-1">{initialRecord.module || "-"}</dd>
           </div>
         </div>
+        <div>
+          <dt className="font-medium text-foreground">Manifest default</dt>
+          <dd className="mt-1 whitespace-pre-wrap text-foreground">
+            {initialRecord.defaultMessage}
+          </dd>
+        </div>
       </dl>
       <form
         className="mt-4 space-y-4"
@@ -47,15 +53,16 @@ export function I18nMessageForm({ busy, initialRecord, onCancel, onSubmit }: I18
         }}
       >
         <form.Field
-          name="messageValue"
+          name="overrideValue"
           children={(field) => (
             <label className="block text-sm font-medium">
-              Message value
+              Administrator override
               <textarea
                 className="mt-2 min-h-40 w-full rounded-md border bg-background px-3 py-2"
                 onBlur={field.handleBlur}
                 onChange={(event) => field.handleChange(event.target.value)}
                 value={field.state.value}
+                placeholder="Leave empty to use the manifest default"
               />
             </label>
           )}
@@ -64,6 +71,16 @@ export function I18nMessageForm({ busy, initialRecord, onCancel, onSubmit }: I18
           <Button onClick={onCancel} type="button" variant="ghost">
             Cancel
           </Button>
+          {initialRecord.overrideValue !== null ? (
+            <Button
+              disabled={busy}
+              onClick={() => onSubmit({ overrideValue: null })}
+              type="button"
+              variant="outline"
+            >
+              Restore default
+            </Button>
+          ) : null}
           <Button disabled={busy} type="submit">
             {busy ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
             Save

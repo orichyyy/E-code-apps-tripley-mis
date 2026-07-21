@@ -8,10 +8,14 @@ export type OpenApiSchema = {
   items?: OpenApiSchema;
   required?: string[];
   additionalProperties?: boolean | OpenApiSchema;
-  enum?: string[];
+  enum?: Array<string | number>;
   nullable?: boolean;
   description?: string;
   anyOf?: OpenApiSchema[];
+  allOf?: OpenApiSchema[];
+  minimum?: number;
+  maximum?: number;
+  pattern?: string;
 };
 
 export type OpenApiOperation = {
@@ -34,11 +38,8 @@ export type OpenApiOperation = {
     string,
     {
       description: string;
-      content?: {
-        "application/json": {
-          schema: OpenApiSchema;
-        };
-      };
+      headers?: Record<string, { description: string; schema: OpenApiSchema }>;
+      content?: Record<string, { schema: OpenApiSchema }>;
     }
   >;
   "x-permission-code": string;

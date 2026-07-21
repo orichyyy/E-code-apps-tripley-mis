@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+import {
+  dataPermissionRuleDocumentSchema,
+  fieldPermissionScenarioSchema,
+} from "../permissions/business-permissions";
+
 export const integerIdStringSchema = z.string().regex(/^[1-9]\d*$/);
 
 export const initializationSetupRequestSchema = z
@@ -180,7 +185,7 @@ export const updateRoleDataPermissionsRequestSchema = z
         .object({
           permissionCode: z.string().min(1),
           effect: dataPermissionEffectSchema.default("allow"),
-          rule: z.record(z.string(), z.unknown()),
+          rule: dataPermissionRuleDocumentSchema,
         })
         .strict(),
     ),
@@ -194,6 +199,7 @@ export const updateRoleFieldPermissionsRequestSchema = z
         .object({
           resource: z.string().min(1),
           field: z.string().min(1),
+          scenario: fieldPermissionScenarioSchema,
           effect: fieldPermissionEffectSchema,
         })
         .strict(),

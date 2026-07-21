@@ -28,6 +28,7 @@ describe("database migration execution", () => {
   it("runs SQLite migrations against a local database file", () => {
     const filename = createTempSqliteFilename();
     const applied = runSqliteMigrations({ url: `file:${filename}` });
+    const reapplied = runSqliteMigrations({ url: `file:${filename}` });
     const client = createSqliteClient(filename);
 
     try {
@@ -41,7 +42,17 @@ describe("database migration execution", () => {
         "0005_announcements_webhooks.sql",
         "0006_file_references.sql",
         "0007_user_preferences.sql",
+        "0008_file_object_locations.sql",
+        "0009_webhook_delivery.sql",
+        "0010_email_delivery.sql",
+        "0011_announcement_targeting.sql",
+        "0012_business_module_lifecycle.sql",
+        "0013_business_permission_enforcement.sql",
+        "0014_multiple_data_permission_rules.sql",
+        "0015_business_module_capability_context.sql",
+        "0016_notification_request_idempotency.sql",
       ]);
+      expect(reapplied).toEqual([]);
       expect(tables).toContainEqual({ name: "users" });
       expect(tables).toContainEqual({ name: "organizations" });
       expect(tables).toContainEqual({ name: "system_initialization_state" });
@@ -52,10 +63,59 @@ describe("database migration execution", () => {
       expect(tables).toContainEqual({ name: "dictionary_types" });
       expect(tables).toContainEqual({ name: "dictionary_items" });
       expect(tables).toContainEqual({ name: "i18n_messages" });
+      expect(tables).toContainEqual({ name: "business_module_registry_state" });
+      expect(tables).toContainEqual({ name: "business_module_registry_entries" });
       expect(tables).toContainEqual({ name: "announcements" });
+      expect(tables).toContainEqual({ name: "announcement_targets" });
       expect(tables).toContainEqual({ name: "webhook_subscriptions" });
+      expect(tables).toContainEqual({ name: "webhook_deliveries" });
+      expect(tables).toContainEqual({ name: "webhook_delivery_attempts" });
+      expect(tables).toContainEqual({ name: "email_deliveries" });
+      expect(tables).toContainEqual({ name: "email_delivery_attempts" });
       expect(tables).toContainEqual({ name: "file_references" });
       expect(tables).toContainEqual({ name: "user_preferences" });
+      const fileColumns = client.prepare("PRAGMA table_info(file_objects)").all() as Array<{
+        name: string;
+      }>;
+      expect(fileColumns.map((column) => column.name)).toEqual(
+        expect.arrayContaining(["storage_bucket", "content_deleted_at"]),
+      );
+      const subscriptionColumns = client
+        .prepare("PRAGMA table_info(webhook_subscriptions)")
+        .all() as Array<{ name: string }>;
+      expect(subscriptionColumns.map((column) => column.name)).toContain("revision");
+      const announcementColumns = client
+        .prepare("PRAGMA table_info(announcements)")
+        .all() as Array<{
+        name: string;
+      }>;
+      expect(announcementColumns.map((column) => column.name)).toContain("expire_at");
+      const i18nColumns = client.prepare("PRAGMA table_info(i18n_messages)").all() as Array<{
+        name: string;
+      }>;
+      expect(i18nColumns.map((column) => column.name)).toEqual(
+        expect.arrayContaining(["default_message", "override_value", "status", "manifest_hash"]),
+      );
+      const fieldPermissionColumns = client
+        .prepare("PRAGMA table_info(field_permission_rules)")
+        .all() as Array<{ name: string }>;
+      expect(fieldPermissionColumns.map((column) => column.name)).toContain("scenario");
+      const outboxColumns = client.prepare("PRAGMA table_info(event_outbox)").all() as Array<{
+        name: string;
+      }>;
+      expect(outboxColumns.map((column) => column.name)).toContain("event_key");
+      const taskColumns = client.prepare("PRAGMA table_info(import_export_tasks)").all() as Array<{
+        name: string;
+      }>;
+      expect(taskColumns.map((column) => column.name)).toEqual(
+        expect.arrayContaining(["idempotency_key", "request_json", "execution_context_json"]),
+      );
+      const notificationColumns = client
+        .prepare("PRAGMA table_info(notifications)")
+        .all() as Array<{
+        name: string;
+      }>;
+      expect(notificationColumns.map((column) => column.name)).toContain("request_key");
     } finally {
       client.close();
     }
@@ -89,7 +149,26 @@ describe("database migration execution", () => {
 
   it.runIf(postgresqlUrl)("runs PostgreSQL migrations against TEST_DATABASE_URL", async () => {
     const url = getPostgresqlUrl();
+    const expectedMigrations = [
+      "0001_backend_core_foundation.sql",
+      "0002_permission_extension_persistence.sql",
+      "0003_infrastructure_foundation.sql",
+      "0004_system_dictionary_i18n.sql",
+      "0005_announcements_webhooks.sql",
+      "0006_file_references.sql",
+      "0007_user_preferences.sql",
+      "0008_file_object_locations.sql",
+      "0009_webhook_delivery.sql",
+      "0010_email_delivery.sql",
+      "0011_announcement_targeting.sql",
+      "0012_business_module_lifecycle.sql",
+      "0013_business_permission_enforcement.sql",
+      "0014_multiple_data_permission_rules.sql",
+      "0015_business_module_capability_context.sql",
+      "0016_notification_request_idempotency.sql",
+    ];
     const applied = await runPostgresqlMigrations({ url });
+    const reapplied = await runPostgresqlMigrations({ url });
     const pool = new Pool({ connectionString: url });
 
     try {
@@ -108,27 +187,37 @@ describe("database migration execution", () => {
              'dictionary_types',
              'dictionary_items',
              'i18n_messages',
+             'business_module_registry_state',
+             'business_module_registry_entries',
              'announcements',
              'file_references',
              'user_preferences',
-             'webhook_subscriptions'
+             'webhook_subscriptions',
+             'webhook_deliveries',
+             'webhook_delivery_attempts',
+             'email_deliveries',
+             'email_delivery_attempts'
            )
          ORDER BY table_name`,
       );
+      const columns = await pool.query<{ column_name: string }>(
+        `SELECT column_name FROM information_schema.columns
+         WHERE table_schema = 'public' AND table_name = 'file_objects'`,
+      );
 
-      expect(applied).toEqual([
-        "0001_backend_core_foundation.sql",
-        "0002_permission_extension_persistence.sql",
-        "0003_infrastructure_foundation.sql",
-        "0004_system_dictionary_i18n.sql",
-        "0005_announcements_webhooks.sql",
-        "0006_file_references.sql",
-        "0007_user_preferences.sql",
-      ]);
+      expect(applied.every((migration) => expectedMigrations.includes(migration))).toBe(true);
+      expect(reapplied).toEqual([]);
+      expect(columns.rows.map((row) => row.column_name)).toEqual(
+        expect.arrayContaining(["storage_bucket", "content_deleted_at"]),
+      );
       expect(result.rows.map((row) => row.table_name)).toEqual([
         "announcements",
+        "business_module_registry_entries",
+        "business_module_registry_state",
         "dictionary_items",
         "dictionary_types",
+        "email_deliveries",
+        "email_delivery_attempts",
         "event_outbox",
         "file_references",
         "i18n_messages",
@@ -139,6 +228,8 @@ describe("database migration execution", () => {
         "system_initialization_state",
         "user_preferences",
         "users",
+        "webhook_deliveries",
+        "webhook_delivery_attempts",
         "webhook_subscriptions",
       ]);
     } finally {

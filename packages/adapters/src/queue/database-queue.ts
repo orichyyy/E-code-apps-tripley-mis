@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import type { QueueAdapter, QueueJob } from ".";
+import type { QueueAdapter, QueueEnqueueOptions, QueueJob } from ".";
 import type { DatabaseAdapterExecutor, DatabaseRow } from "../database/executor";
 import { jsonParam, nowIso, readJson } from "../database/executor";
 
@@ -17,6 +17,7 @@ export type DatabaseQueueAdapterOptions = {
   retryDelaySeconds?: number;
   maxAttempts?: number;
   runningTimeoutSeconds?: number;
+  emitJobFailureEvents?: boolean;
 };
 
 export function createDatabaseQueueAdapter(
@@ -28,14 +29,22 @@ export function createDatabaseQueueAdapter(
   const retryDelaySeconds = options.retryDelaySeconds ?? 60;
   const maxAttempts = options.maxAttempts ?? 3;
   const runningTimeoutSeconds = options.runningTimeoutSeconds ?? 15 * 60;
+  const emitJobFailureEvents = options.emitJobFailureEvents ?? false;
 
   return {
-    async enqueue<TPayload>(type: string, payload: TPayload) {
+    async enqueue<TPayload>(type: string, payload: TPayload, enqueueOptions?: QueueEnqueueOptions) {
       const now = nowIso();
       await executor.run(
         `INSERT INTO queue_jobs (type, payload_json, status, attempt, max_attempts, available_at, created_at, updated_at)
          VALUES (${p(executor, 1)}, ${p(executor, 2)}, 'pending', 0, ${p(executor, 3)}, ${timestampP(executor, 4)}, ${timestampP(executor, 5)}, ${timestampP(executor, 6)})`,
-        [type, jsonParam(payload, executor.dialect), maxAttempts, now, now, now],
+        [
+          type,
+          jsonParam(payload, executor.dialect),
+          enqueueOptions?.maxAttempts ?? maxAttempts,
+          now,
+          now,
+          now,
+        ],
       );
       const rows = await executor.all(
         `SELECT id, type, payload_json FROM queue_jobs WHERE type = ${p(executor, 1)} ORDER BY id DESC LIMIT 1`,
@@ -52,7 +61,13 @@ export function createDatabaseQueueAdapter(
       if (!job) return false;
       const handler = handlers.get(job.type);
       if (!handler) {
-        await failJob(executor, job.id, "No handler registered", retryDelaySeconds);
+        await failJob(
+          executor,
+          job,
+          "No handler registered",
+          retryDelaySeconds,
+          emitJobFailureEvents,
+        );
         return true;
       }
       try {
@@ -61,9 +76,10 @@ export function createDatabaseQueueAdapter(
       } catch (error) {
         await failJob(
           executor,
-          job.id,
+          job,
           error instanceof Error ? error.message : String(error),
           retryDelaySeconds,
+          emitJobFailureEvents,
         );
       }
       return true;
@@ -122,13 +138,14 @@ async function completeJob(executor: DatabaseAdapterExecutor, id: string): Promi
 
 async function failJob(
   executor: DatabaseAdapterExecutor,
-  id: string,
+  job: QueueJob,
   error: string,
   retryDelaySeconds: number,
+  emitJobFailureEvents: boolean,
 ): Promise<void> {
   const rows = await executor.all(
     `SELECT attempt, max_attempts FROM queue_jobs WHERE id = ${p(executor, 1)}`,
-    [id],
+    [job.id],
   );
   const attempt = Number(rows[0]?.attempt ?? 1);
   const maxAttempts = Number(rows[0]?.max_attempts ?? 1);
@@ -138,10 +155,24 @@ async function failJob(
     finalStatus === "pending"
       ? new Date(Date.now() + retryDelaySeconds * 1000).toISOString()
       : null;
-  await executor.run(
-    `UPDATE queue_jobs SET status = ${p(executor, 1)}, locked_by = NULL, locked_at = NULL, last_error = ${p(executor, 2)}, next_run_at = ${timestampP(executor, 3)}, updated_at = ${timestampP(executor, 4)} WHERE id = ${p(executor, 5)}`,
-    [finalStatus, error, nextRunAt, now, id],
-  );
+  await executor.transaction(async () => {
+    await executor.run(
+      `UPDATE queue_jobs SET status = ${p(executor, 1)}, locked_by = NULL, locked_at = NULL, last_error = ${p(executor, 2)}, next_run_at = ${timestampP(executor, 3)}, updated_at = ${timestampP(executor, 4)} WHERE id = ${p(executor, 5)}`,
+      [finalStatus, error, nextRunAt, now, job.id],
+    );
+    if (finalStatus === "dead_letter" && emitJobFailureEvents && !job.type.startsWith("webhook.")) {
+      const event = {
+        subject: `jobs/queue/${job.id}`,
+        occurredAt: now,
+        data: { jobId: job.id, jobKind: "queue", jobCode: job.type, attempt, maxAttempts },
+      };
+      await executor.run(
+        `INSERT INTO event_outbox (event_type, payload_json, status, attempt, max_attempts, occurred_at, created_at, updated_at)
+         VALUES ('job.failed', ${p(executor, 1)}, 'pending', 0, 1, ${timestampP(executor, 2)}, ${timestampP(executor, 3)}, ${timestampP(executor, 4)})`,
+        [jsonParam(event, executor.dialect), now, now, now],
+      );
+    }
+  });
 }
 
 async function recoverStaleRunningJobs(

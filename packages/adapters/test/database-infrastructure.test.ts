@@ -15,9 +15,12 @@ import {
   createDatabaseEventBusAdapter,
   createDatabaseJobSchedulerAdapter,
   createDatabaseLockAdapter,
+  createDatabaseWebhookNotificationPublisher,
+  createWebhookNotificationChannelAdapter,
   createDatabaseQueueAdapter,
   createDatabaseRateLimitAdapter,
   computeNextCronRun,
+  readJson,
   type DatabaseAdapterExecutor,
 } from "../src";
 
@@ -48,6 +51,29 @@ describe("database infrastructure adapters", () => {
     } finally {
       await clearInfrastructureTables(executor);
       await executor.close();
+    }
+  });
+
+  it.runIf(postgresqlUrl)("returns one winner for a concurrent PostgreSQL lease", async () => {
+    const url = getPostgresqlUrl();
+    await runPostgresqlMigrations({ url });
+    const firstExecutor = createPostgresqlTestExecutor(url);
+    const secondExecutor = createPostgresqlTestExecutor(url);
+    const key = `concurrent-lock-${process.pid}-${Date.now()}`;
+    try {
+      const [first, second] = await Promise.all([
+        createDatabaseLockAdapter(firstExecutor, { owner: "first" }).acquire(key),
+        createDatabaseLockAdapter(secondExecutor, { owner: "second" }).acquire(key),
+      ]);
+      expect([first, second].filter(Boolean)).toHaveLength(1);
+      await (first ?? second)?.release();
+      await expect(
+        createDatabaseLockAdapter(secondExecutor, { owner: "next" }).acquire(key),
+      ).resolves.not.toBeNull();
+    } finally {
+      await firstExecutor.run("DELETE FROM locks WHERE key = $1", [key]);
+      await firstExecutor.close();
+      await secondExecutor.close();
     }
   });
 
@@ -128,6 +154,25 @@ async function expectInfrastructureAdapters(executor: DatabaseAdapterExecutor): 
     expect.objectContaining({ status: "dead_letter", attempt: 2, last_error: "write failed" }),
   ]);
 
+  const eventQueue = createDatabaseQueueAdapter(executor, {
+    workerId: "event-worker",
+    maxAttempts: 1,
+    retryDelaySeconds: 0,
+    emitJobFailureEvents: true,
+  });
+  for (const type of ["base.fail", "webhook.internal.fail"]) {
+    await eventQueue.consume(type, async () => {
+      throw new Error("final failure");
+    });
+    await eventQueue.enqueue(type, {});
+    await eventQueue.processNext(type);
+  }
+  const queueFailureEvents = await executor.all(
+    "SELECT event_type, payload_json FROM event_outbox WHERE event_type = 'job.failed'",
+  );
+  expect(queueFailureEvents).toHaveLength(1);
+  expect(JSON.stringify(queueFailureEvents[0]?.payload_json)).toContain("base.fail");
+
   const staleAt = new Date(Date.now() - 20 * 60 * 1000).toISOString();
   await executor.run(
     `INSERT INTO queue_jobs (type, payload_json, status, attempt, max_attempts, available_at, locked_by, locked_at, created_at, updated_at)
@@ -154,6 +199,7 @@ async function expectInfrastructureAdapters(executor: DatabaseAdapterExecutor): 
     occurredAt: "2026-07-03T00:00:00.000Z",
   });
   await expect(events.processNext()).resolves.toBe(true);
+  if (handledEvents.length === 0) await expect(events.processNext()).resolves.toBe(true);
   expect(handledEvents).toEqual(["Welcome"]);
 
   await scheduler.register(
@@ -215,6 +261,47 @@ async function expectInfrastructureAdapters(executor: DatabaseAdapterExecutor): 
     expect.objectContaining({ level: "error", message: "cleanup failed" }),
     expect.objectContaining({ level: "error", message: "cleanup failed" }),
   ]);
+
+  const eventScheduler = createDatabaseJobSchedulerAdapter(executor, {
+    retryDelaySeconds: 0,
+    emitJobFailureEvents: true,
+  });
+  for (const code of ["base.schedule.fail", "webhook.schedule.fail"]) {
+    await eventScheduler.register(
+      { code, cronExpression: "* * * * *", enabled: true },
+      async () => {
+        throw new Error("final scheduled failure");
+      },
+    );
+    await executor.run(
+      `UPDATE scheduled_jobs SET next_run_at = ${marker(executor, 1)}, max_attempts = 1 WHERE code = ${marker(executor, 2)}`,
+      ["2026-01-01T00:00:00.000Z", code],
+    );
+  }
+  await eventScheduler.processDue(2);
+  const allFailureEvents = await executor.all(
+    "SELECT payload_json FROM event_outbox WHERE event_type = 'job.failed' ORDER BY id",
+  );
+  expect(allFailureEvents).toHaveLength(2);
+  expect(JSON.stringify(allFailureEvents[1]?.payload_json)).toContain("base.schedule.fail");
+
+  const webhookNotifications = createWebhookNotificationChannelAdapter({
+    enabled: true,
+    publisher: createDatabaseWebhookNotificationPublisher(executor),
+    now: () => "2026-07-17T00:00:00.000Z",
+  });
+  await webhookNotifications.send({
+    channel: "webhook",
+    recipient: "42",
+    subject: "Directed notification",
+    body: "A safe body",
+    metadata: { notificationId: "91", locale: "en" },
+  });
+  const directedEvents = await executor.all(
+    "SELECT payload_json FROM event_outbox WHERE event_type = 'notification.requested'",
+  );
+  expect(directedEvents).toHaveLength(1);
+  expect(readJson(directedEvents[0]?.payload_json)).toMatchObject({ targetSubscriptionId: "42" });
 }
 
 async function clearInfrastructureTables(executor: DatabaseAdapterExecutor): Promise<void> {

@@ -4,7 +4,11 @@ import { Hono } from "hono";
 
 import type { BackendCoreServices } from "./services";
 
-export function createInitializationRoutes(services: BackendCoreServices) {
+export function createInitializationRoutes(
+  services: BackendCoreServices,
+  afterInitialize?: (initializedBy: string | null) => Promise<void>,
+  beforeInitialize?: () => Promise<void>,
+) {
   const routes = new Hono();
 
   const statusHandler = (context: Context) => {
@@ -13,7 +17,10 @@ export function createInitializationRoutes(services: BackendCoreServices) {
 
   const setupHandler = async (context: Context) => {
     const input = initializationSetupRequestSchema.parse(await context.req.json());
-    return context.json({ data: await services.initialize(input) }, 201);
+    await beforeInitialize?.();
+    const result = await services.initialize(input);
+    await afterInitialize?.(result.admin?.id ?? null);
+    return context.json({ data: result }, 201);
   };
 
   routes.get("/initialization/status", statusHandler);

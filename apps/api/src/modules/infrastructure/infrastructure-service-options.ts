@@ -3,6 +3,7 @@ import {
   createInMemoryQueueAdapter,
   createLocalFileStorageAdapter,
   type FileStorageAdapter,
+  type EmailDeliveryConfig,
   type NotificationChannelAdapter,
   type QueueAdapter,
 } from "@web-admin-base/adapters";
@@ -12,7 +13,11 @@ export type InfrastructureServiceOptions = {
   notificationChannel?: NotificationChannelAdapter;
   queue?: QueueAdapter;
   organizationUserResolver?: (organizationId: string) => Promise<string[]>;
+  emailDeliveryConfig?: EmailDeliveryConfig;
+  smtpEnabled?: boolean;
   maxFileSizeBytes?: number;
+  presignedUrlTtlSeconds?: number;
+  scheduledJobTypeSource?: () => Promise<ReadonlySet<string>>;
 };
 
 export function resolveInfrastructureServiceOptions(
@@ -40,6 +45,11 @@ export function createDefaultQueue(): QueueAdapter {
 export function readMaxFileSizeBytes(): number {
   const configured = Number(process.env.FILE_MAX_SIZE_BYTES);
   return Number.isFinite(configured) && configured > 0 ? configured : 50 * 1024 * 1024;
+}
+
+export function readPresignedUrlTtlSeconds(): number {
+  const configured = Number(process.env.S3_PRESIGNED_URL_TTL_SECONDS);
+  return Number.isInteger(configured) && configured >= 15 && configured <= 900 ? configured : 60;
 }
 
 function isFileStorageAdapter(value: unknown): value is FileStorageAdapter {

@@ -1,3 +1,8 @@
+import type {
+  DataPermissionRuleDocument,
+  FieldPermissionScenario,
+} from "@web-admin-base/contracts";
+
 export type EntityStatus = "enabled" | "disabled";
 export type UserStatus = EntityStatus | "locked";
 export type AuthSessionStatus = "active" | "revoked" | "expired";
@@ -113,6 +118,8 @@ export type MenuRecord = AuditFields &
     sortOrder: number;
     visible: boolean;
     status: EntityStatus;
+    source?: string;
+    ownerModule?: string | null;
   };
 
 export type RouteMetadataRecord = AuditFields & {
@@ -128,6 +135,8 @@ export type RouteMetadataRecord = AuditFields & {
   icon: string | null;
   sortOrder: number;
   status: EntityStatus;
+  source?: string;
+  ownerModule?: string | null;
 };
 
 export type PermissionRecord = AuditFields & {
@@ -157,6 +166,8 @@ export type ApiPermissionRecord = AuditFields & {
   logLevel: "none" | "basic" | "request" | "request_response";
   status: EntityStatus;
   public: boolean;
+  source?: string;
+  manifestHash?: string | null;
 };
 
 export type MenuApiBindingRecord = {
@@ -220,7 +231,7 @@ export type RoleDataPermissionRecord = ActorAuditFields &
     permissionId: string;
     permissionCode: string;
     effect: "allow" | "deny";
-    rule: Record<string, unknown>;
+    rule: DataPermissionRuleDocument;
   } & AuditFields;
 
 export type FieldPermissionRuleRecord = ActorAuditFields &
@@ -231,6 +242,7 @@ export type FieldPermissionRuleRecord = ActorAuditFields &
     targetId: string;
     resource: string;
     field: string;
+    scenario: FieldPermissionScenario;
     effect: "visible" | "hidden" | "readonly";
   } & AuditFields;
 

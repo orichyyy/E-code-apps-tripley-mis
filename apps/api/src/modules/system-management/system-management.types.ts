@@ -39,6 +39,10 @@ export type I18nMessageRecord = {
   messageKey: string;
   language: string;
   messageValue: string;
+  defaultMessage: string;
+  overrideValue: string | null;
   module: string;
+  status: EnabledStatus;
+  manifestHash: string | null;
   updatedAt: string;
 };

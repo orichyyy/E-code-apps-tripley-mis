@@ -19,7 +19,8 @@ import { CoreManagementPage } from "@/features/core-management/core-management-p
 import { AnnouncementsPage } from "@/features/notifications/announcements-page";
 import { InAppNotificationsPage } from "@/features/notifications/in-app-notifications-page";
 import { NotificationTemplatesPage } from "@/features/notifications/notification-templates-page";
-import { WebhookSubscriptionsPage } from "@/features/notifications/webhook-subscriptions-page";
+import { WebhookSubscriptionsPage } from "@/features/notifications/webhook-management-page";
+import { EmailDeliveriesPage } from "@/features/notifications/email-deliveries-page";
 import { LogsPage } from "@/features/logs/logs-page";
 import { ImportExportPage } from "@/features/operations/import-export-page";
 import { OnlineUsersPage } from "@/features/operations/online-users-page";
@@ -27,6 +28,7 @@ import { SchedulerPage } from "@/features/operations/scheduler-page";
 import { DictionaryPage } from "@/features/system/dictionary-page";
 import { FilesPage } from "@/features/system/files-page";
 import { I18nMessagesPage } from "@/features/system/i18n-messages-page";
+import { ModuleRegistryPage } from "@/features/system/module-registry-page";
 import { SystemConfigPage } from "@/features/system/system-config-page";
 import { PersonalSettingsPage } from "@/features/account/settings-page";
 import { ProfilePage } from "@/features/account/profile-page";
@@ -120,12 +122,16 @@ const managementRoutes = adminRouteMetadata
             <AnnouncementsPage route={route} />
           ) : route.routeCode === "system.i18nMessages" ? (
             <I18nMessagesPage route={route} />
+          ) : route.routeCode === "system.modules" ? (
+            <ModuleRegistryPage route={route} />
           ) : route.routeCode === "system.files" ? (
             <FilesPage route={route} />
           ) : route.routeCode === "notifications.templates" ? (
             <NotificationTemplatesPage route={route} />
           ) : route.routeCode === "notifications.webhooks" ? (
             <WebhookSubscriptionsPage route={route} />
+          ) : route.routeCode === "notifications.email-deliveries" ? (
+            <EmailDeliveriesPage route={route} />
           ) : route.routeCode === "operations.online-users" ? (
             <OnlineUsersPage route={route} />
           ) : route.routeCode === "operations.scheduler" ? (

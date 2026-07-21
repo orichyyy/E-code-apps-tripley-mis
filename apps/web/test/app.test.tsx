@@ -5,6 +5,7 @@ import { App } from "../src/app/App";
 import { queryClient } from "../src/queries/query-client";
 import { useAuthStore } from "../src/stores/auth.store";
 import { useLayoutStore } from "../src/stores/layout.store";
+import { useOrganizationStore } from "../src/stores/organization.store";
 
 describe("web admin frontend", () => {
   afterEach(() => {
@@ -21,6 +22,13 @@ describe("web admin frontend", () => {
         themeColor: "blue",
         openTabs: ["/"],
         language: "en",
+      });
+      useOrganizationStore.setState({
+        currentOrganizationId: "1",
+        organizations: [
+          { id: "1", name: "Main Organization", code: "main", status: "enabled" },
+          { id: "2", name: "Operations", code: "operations", status: "enabled" },
+        ],
       });
     });
   });
@@ -120,7 +128,8 @@ describe("web admin frontend", () => {
 
   it("renders personal settings with tab and theme controls", async () => {
     window.history.pushState(null, "", "/account/settings");
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((...args) => {
+      const init = args[1];
       const method = init?.method ?? "GET";
       const body =
         method === "PATCH"
@@ -191,7 +200,7 @@ describe("web admin frontend", () => {
               id: "31",
               name: "Audit webhook",
               url: "https://example.com/audit",
-              eventTypes: ["security.event"],
+              eventTypes: ["user.created"],
               secret: "raw-secret",
               secretConfigured: true,
               status: "enabled",
@@ -226,24 +235,31 @@ describe("web admin frontend", () => {
     vi.spyOn(globalThis, "fetch").mockImplementation(() =>
       Promise.resolve(
         jsonResponse({
-          data: [
-            {
-              id: "21",
-              tenantId: null,
-              title: "Maintenance",
-              content: "Planned window",
-              scopeType: "system",
-              status: "published",
-              publishedAt: "2026-07-03T00:00:00.000Z",
-              isDeleted: false,
-              deletedAt: null,
-              deletedBy: null,
-              createdAt: "2026-07-03T00:00:00.000Z",
-              updatedAt: "2026-07-03T00:00:00.000Z",
-              createdBy: "1",
-              updatedBy: "1",
-            },
-          ],
+          data: {
+            items: [
+              {
+                id: "21",
+                tenantId: null,
+                title: "Maintenance",
+                content: "Planned window",
+                scopeType: "system",
+                targetOrganizationIds: [],
+                status: "published",
+                publishedAt: "2026-07-03T00:00:00.000Z",
+                expiresAt: null,
+                isDeleted: false,
+                deletedAt: null,
+                deletedBy: null,
+                createdAt: "2026-07-03T00:00:00.000Z",
+                updatedAt: "2026-07-03T00:00:00.000Z",
+                createdBy: "1",
+                updatedBy: "1",
+              },
+            ],
+            page: 1,
+            pageSize: 20,
+            total: 1,
+          },
         }),
       ),
     );
@@ -261,6 +277,7 @@ describe("web admin frontend", () => {
         "announcement:create",
         "announcement:update",
         "announcement:publish",
+        "announcement:delete",
       ],
     });
 
@@ -269,6 +286,106 @@ describe("web admin frontend", () => {
     expect(await screen.findByText("Maintenance")).toBeInTheDocument();
     expect(screen.getByText("Planned window")).toBeInTheDocument();
     expect(screen.getAllByText("Announcements").length).toBeGreaterThan(0);
+  });
+
+  it("shows current announcements without requiring management permission", async () => {
+    window.history.pushState(null, "", "/");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      jsonResponse({
+        data: {
+          items: [
+            {
+              id: "31",
+              title: "Operations notice",
+              content: "Visible in the current organization",
+              scopeType: "organization",
+              targetOrganizationIds: ["1"],
+              status: "published",
+              publishedAt: "2026-07-03T00:00:00.000Z",
+              expiresAt: null,
+              isDeleted: false,
+              deletedAt: null,
+              deletedBy: null,
+              createdAt: "2026-07-03T00:00:00.000Z",
+              updatedAt: "2026-07-03T00:00:00.000Z",
+              createdBy: "1",
+              updatedBy: "1",
+            },
+          ],
+          page: 1,
+          pageSize: 10,
+          total: 1,
+        },
+      }),
+    );
+    useAuthStore.getState().signIn({
+      accessToken: "test-token",
+      user: {
+        id: "1",
+        username: "member",
+        displayName: "Member",
+        language: "en",
+        forcePasswordChange: false,
+      },
+      permissionCodes: [],
+    });
+
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "Current announcements" }));
+
+    expect(await screen.findByText("Operations notice")).toBeInTheDocument();
+    expect(screen.getByText("Visible in the current organization")).toBeInTheDocument();
+  });
+
+  it("switches organization through the backend and refreshes current announcements", async () => {
+    window.history.pushState(null, "", "/");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      if (String(input) === "/api/context/current-organization") {
+        return Promise.resolve(
+          jsonResponse({
+            data: {
+              accessToken: "organization-2-token",
+              currentOrganization: { id: "2" },
+              permissionCodes: ["announcement:view"],
+              menus: [],
+            },
+          }),
+        );
+      }
+      return Promise.resolve(
+        jsonResponse({ data: { items: [], page: 1, pageSize: 10, total: 0 } }),
+      );
+    });
+    useAuthStore.getState().signIn({
+      accessToken: "test-token",
+      user: {
+        id: "1",
+        username: "admin",
+        displayName: "Admin",
+        language: "en",
+        forcePasswordChange: false,
+      },
+      permissionCodes: ["*"],
+    });
+
+    render(<App />);
+    fireEvent.change(await screen.findByLabelText("Current organization"), {
+      target: { value: "2" },
+    });
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/context/current-organization", {
+        method: "POST",
+        body: JSON.stringify({ organizationId: "2" }),
+        headers: {
+          authorization: "Bearer test-token",
+          "content-type": "application/json",
+        },
+      });
+      expect(localStorage.getItem("web-admin.current-organization-id")).toBe("2");
+      expect(useAuthStore.getState().accessToken).toBe("organization-2-token");
+      expect(useOrganizationStore.getState().currentOrganizationId).toBe("2");
+    });
   });
 
   it("renders in-app notifications from the backend API", async () => {
@@ -371,7 +488,11 @@ describe("web admin frontend", () => {
               messageKey: "routes.dashboard",
               language: "en",
               messageValue: "Dashboard",
+              defaultMessage: "Dashboard",
+              overrideValue: null,
               module: "routes",
+              status: "enabled",
+              manifestHash: null,
               updatedAt: "2026-07-03T00:00:00.000Z",
             },
           ],

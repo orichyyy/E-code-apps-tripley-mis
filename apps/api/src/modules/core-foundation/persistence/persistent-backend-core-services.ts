@@ -1,14 +1,14 @@
 import {
   createInMemoryCacheAdapter,
   createInMemoryTokenStoreAdapter,
+  type CacheAdapter,
 } from "@web-admin-base/adapters";
 import type {
-  AssignUserOrganizationRoleRequest,
+  BusinessModuleDefinition,
   ChangePasswordRequest,
   CreateMenuRequest,
   CreateOrganizationRequest,
   CreateRoleRequest,
-  CreateUserRequest,
   InitializationSetupRequest,
   ResetPasswordRequest,
   SwitchCurrentOrganizationRequest,
@@ -19,47 +19,38 @@ import type {
   UpdateOwnAvatarRequest,
   UpdateOwnPreferencesRequest,
   UpdateOwnProfileRequest,
-  UpdateRoleDataPermissionsRequest,
-  UpdateRoleFieldPermissionsRequest,
-  UpdateRolePermissionsRequest,
   UpdateRoleRequest,
-  UpdateUserPermissionOverridesRequest,
   UpdateUserRequest,
+  WebhookOutboxEvent,
 } from "@web-admin-base/contracts";
 
 import { PermissionCache } from "../../permissions/permission-cache";
 import type { AuthService, OnlineUserListFilters } from "../auth.service";
 import { BackendCoreServices } from "../services";
 import { defaultBackendCoreConfig, type BackendCoreConfig } from "../service-context";
+import {
+  BackendCorePersistenceCoordinator,
+  type PersistenceScope,
+} from "./backend-core-persistence-coordinator";
 import { BackendCoreStoreRepository } from "./backend-core-store-repository";
+import { WebhookAwareBackendCoreServices } from "./webhook-aware-backend-core-services";
 
-type PersistenceScope =
-  | "all"
-  | "authSessions"
-  | "initializationState"
-  | "menus"
-  | "organizations"
-  | "permissions"
-  | "permissionExtensions"
-  | "roles"
-  | "routeMetadata"
-  | "userOrganizationRoles"
-  | "userPreferences"
-  | "users";
-
-export class PersistentBackendCoreServices extends BackendCoreServices {
-  private pendingSave: Promise<void> = Promise.resolve();
+export class PersistentBackendCoreServices extends WebhookAwareBackendCoreServices {
+  private readonly persistence: BackendCorePersistenceCoordinator;
 
   private constructor(
     private readonly repository: BackendCoreStoreRepository,
     context: ConstructorParameters<typeof BackendCoreServices>[0],
+    private readonly webhookEventsEnabled: boolean,
   ) {
     super(context);
+    this.persistence = new BackendCorePersistenceCoordinator(repository, () => this.context.store);
   }
 
   static async create(
     repository: BackendCoreStoreRepository,
     config?: Partial<BackendCoreConfig>,
+    options: { permissionCacheAdapter?: CacheAdapter; webhookEventsEnabled?: boolean } = {},
   ): Promise<PersistentBackendCoreServices> {
     const store = await repository.load();
     const tokenStore = createInMemoryTokenStoreAdapter();
@@ -74,19 +65,25 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
         revokedAt: token.revokedAt,
       });
     }
-    return new PersistentBackendCoreServices(repository, {
-      store,
-      permissionCache: new PermissionCache(createInMemoryCacheAdapter()),
-      tokenStore,
-      config: {
-        ...defaultBackendCoreConfig,
-        ...config,
+    return new PersistentBackendCoreServices(
+      repository,
+      {
+        store,
+        permissionCache: new PermissionCache(
+          options.permissionCacheAdapter ?? createInMemoryCacheAdapter(),
+        ),
+        tokenStore,
+        config: {
+          ...defaultBackendCoreConfig,
+          ...config,
+        },
       },
-    });
+      options.webhookEventsEnabled ?? false,
+    );
   }
 
   close(): Promise<void> {
-    return this.flush().then(() => this.repository.close());
+    return this.persistence.flush().then(() => this.repository.close());
   }
 
   override async initialize(input: InitializationSetupRequest) {
@@ -95,6 +92,59 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
 
   override async seedInitialization(input: InitializationSetupRequest) {
     return this.persistAfter(() => super.seedInitialization(input), ["all"]);
+  }
+
+  override async refreshBusinessModuleMetadata(
+    _definitions: BusinessModuleDefinition[],
+  ): Promise<void> {
+    const reloaded = await this.repository.load();
+    replaceMap(this.context.store.permissions, reloaded.permissions);
+    replaceMap(this.context.store.apiPermissions, reloaded.apiPermissions);
+    replaceMap(this.context.store.routeMetadata, reloaded.routeMetadata);
+    replaceMap(this.context.store.menus, reloaded.menus);
+    replaceMap(this.context.store.menuApiBindings, reloaded.menuApiBindings);
+    replaceMap(this.context.store.roleDataPermissions, reloaded.roleDataPermissions);
+    replaceMap(this.context.store.userPermissionOverrides, reloaded.userPermissionOverrides);
+    this.context.store.rolePermissions.splice(
+      0,
+      this.context.store.rolePermissions.length,
+      ...reloaded.rolePermissions,
+    );
+    const activeModuleCodes = new Set(_definitions.map((definition) => definition.moduleCode));
+    for (const permission of this.context.store.permissions.values()) {
+      if (permission.source === "business_module" && !activeModuleCodes.has(permission.module)) {
+        permission.status = "disabled";
+      }
+    }
+    for (const api of this.context.store.apiPermissions.values()) {
+      if (api.source === "business_module" && !activeModuleCodes.has(api.module)) {
+        api.status = "disabled";
+      }
+    }
+    for (const route of this.context.store.routeMetadata.values()) {
+      if (route.source === "business_module" && !activeModuleCodes.has(route.ownerModule ?? "")) {
+        route.status = "disabled";
+      }
+    }
+    for (const menu of this.context.store.menus.values()) {
+      if (menu.source === "business_module" && !activeModuleCodes.has(menu.ownerModule ?? "")) {
+        menu.status = "disabled";
+      }
+    }
+    const enabledCodes = new Set(
+      [...this.context.store.permissions.values()]
+        .filter((permission) => permission.status === "enabled")
+        .map((permission) => permission.code),
+    );
+    const retained = this.context.store.rolePermissions.filter((binding) =>
+      enabledCodes.has(binding.permissionCode),
+    );
+    this.context.store.rolePermissions.splice(
+      0,
+      this.context.store.rolePermissions.length,
+      ...retained,
+    );
+    await this.permissions.invalidateAllPermissionContexts();
   }
 
   override async login(
@@ -197,13 +247,6 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
     );
   }
 
-  override async createUser(input: CreateUserRequest, actorId: string | null = null) {
-    return this.persistAfter(
-      () => super.createUser(input, actorId),
-      ["users", "userOrganizationRoles"],
-    );
-  }
-
   override async updateUser(id: string, input: UpdateUserRequest, actorId: string | null = null) {
     return this.persistAfter(
       () => super.updateUser(id, input, actorId),
@@ -234,28 +277,6 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
     );
   }
 
-  override async assignUserOrganizationRole(
-    userId: string,
-    input: AssignUserOrganizationRoleRequest,
-    actorId: string | null = null,
-  ) {
-    return this.persistAfter(
-      () => super.assignUserOrganizationRole(userId, input, actorId),
-      ["users", "userOrganizationRoles"],
-    );
-  }
-
-  override async removeUserOrganizationRole(
-    userId: string,
-    organizationId: string,
-    deletedBy: string | null = null,
-  ) {
-    return this.persistAfter(
-      () => super.removeUserOrganizationRole(userId, organizationId, deletedBy),
-      ["users", "userOrganizationRoles"],
-    );
-  }
-
   override createRole(input: CreateRoleRequest, actorId: string | null = null) {
     return this.persistSync(() => super.createRole(input, actorId), ["roles"]);
   }
@@ -276,56 +297,11 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
     return this.persistSync(() => super.copyRole(id, actorId), ["roles"]);
   }
 
-  override async updateRolePermissions(
-    id: string,
-    input: UpdateRolePermissionsRequest,
-    actorId: string | null = null,
-  ) {
-    return this.persistAfter(() => super.updateRolePermissions(id, input, actorId), ["roles"]);
-  }
-
-  override async updateRoleDataPermissions(
-    id: string,
-    input: UpdateRoleDataPermissionsRequest,
-    actorId: string | null = null,
-  ) {
-    return this.persistAfter(
-      () => super.updateRoleDataPermissions(id, input, actorId),
-      ["permissionExtensions"],
-    );
-  }
-
-  override async updateRoleFieldPermissions(
-    id: string,
-    input: UpdateRoleFieldPermissionsRequest,
-    actorId: string | null = null,
-  ) {
-    return this.persistAfter(
-      () => super.updateRoleFieldPermissions(id, input, actorId),
-      ["permissionExtensions"],
-    );
-  }
-
-  override async updateUserPermissionOverrides(
-    userId: string,
-    input: UpdateUserPermissionOverridesRequest,
-    actorId: string | null = null,
-  ) {
-    return this.persistAfter(
-      () => super.updateUserPermissionOverrides(userId, input, actorId),
-      ["permissionExtensions"],
-    );
-  }
-
   override async deleteRole(id: string, deletedBy: string | null = null) {
     return this.persistAfter(
       () => super.deleteRole(id, deletedBy),
       ["roles", "userOrganizationRoles"],
     );
-  }
-
-  override syncPermissions() {
-    return this.persistAfter(() => super.syncPermissions(), ["permissions"]);
   }
 
   override async syncRoutes() {
@@ -348,99 +324,32 @@ export class PersistentBackendCoreServices extends BackendCoreServices {
     return this.persistAfter(() => super.updateMenuApiBindings(id, input), ["menus"]);
   }
 
-  private async persistAfter<T>(
+  protected override async persistAfter<T>(
     operation: () => T | Promise<T>,
     scopes: PersistenceScope[],
+    eventFactory?: (result: Awaited<T>) => WebhookOutboxEvent | null,
   ): Promise<Awaited<T>> {
-    const result = await operation();
-    await this.persistNow(scopes);
-    return result;
+    return this.persistence.persistAfter(
+      operation,
+      scopes,
+      this.webhookEventsEnabled ? eventFactory : undefined,
+    );
   }
 
   private persistSync<T>(operation: () => T, scopes: PersistenceScope[]): T {
-    const result = operation();
-    this.enqueueSave(scopes);
-    return result;
+    return this.persistence.persistSync(operation, scopes);
   }
+}
 
-  private async persistNow(scopes: PersistenceScope[]): Promise<void> {
-    await this.flush();
-    const save = this.persistScopes(scopes);
-    this.pendingSave = save.catch(() => undefined);
-    await save;
-  }
-
-  private enqueueSave(scopes: PersistenceScope[]): void {
-    this.pendingSave = this.pendingSave.then(() => this.persistScopes(scopes));
-  }
-
-  flush(): Promise<void> {
-    return this.pendingSave;
-  }
-
-  private async persistScopes(scopes: PersistenceScope[]): Promise<void> {
-    const normalizedScopes = scopes.includes("all")
-      ? (["all"] as PersistenceScope[])
-      : [...new Set(scopes)];
-
-    await this.repository.transaction(async () => {
-      for (const scope of normalizedScopes) {
-        await this.persistScope(scope);
-      }
-    });
-  }
-
-  private async persistScope(scope: PersistenceScope): Promise<void> {
-    const store = this.getStore();
-
-    switch (scope) {
-      case "all":
-        await this.repository.aggregates.replaceAllFromStore(store);
-        return;
-      case "authSessions":
-        await this.repository.aggregates.authSessions.replaceFromStore(store);
-        return;
-      case "initializationState":
-        await this.repository.aggregates.initializationState.replaceFromStore(store);
-        return;
-      case "menus":
-        await this.repository.aggregates.menus.replaceFromStore(store);
-        return;
-      case "organizations":
-        await this.repository.aggregates.organizations.replaceFromStore(store);
-        return;
-      case "permissions":
-        await this.repository.aggregates.permissions.replaceFromStore(store);
-        return;
-      case "permissionExtensions":
-        await this.repository.aggregates.permissionExtensions.replaceFromStore(store);
-        return;
-      case "roles":
-        await this.repository.aggregates.roles.replaceFromStore(store);
-        return;
-      case "routeMetadata":
-        await this.repository.aggregates.routeMetadata.replaceFromStore(store);
-        return;
-      case "userOrganizationRoles":
-        await this.repository.aggregates.userOrganizationRoles.replaceFromStore(store);
-        return;
-      case "userPreferences":
-        await this.repository.aggregates.userPreferences.replaceFromStore(store);
-        return;
-      case "users":
-        await this.repository.aggregates.users.replaceFromStore(store);
-        return;
-    }
-  }
-
-  private getStore() {
-    return this.context.store;
-  }
+function replaceMap<K, V>(target: Map<K, V>, source: Map<K, V>): void {
+  target.clear();
+  for (const [key, value] of source) target.set(key, value);
 }
 
 export async function createPersistentBackendCoreServices(
   config?: Partial<BackendCoreConfig>,
   repository = BackendCoreStoreRepository.fromEnvironment(),
+  options: { permissionCacheAdapter?: CacheAdapter; webhookEventsEnabled?: boolean } = {},
 ) {
-  return PersistentBackendCoreServices.create(repository, config);
+  return PersistentBackendCoreServices.create(repository, config, options);
 }

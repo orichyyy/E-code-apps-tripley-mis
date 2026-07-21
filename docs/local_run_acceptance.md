@@ -6,7 +6,7 @@ This runbook verifies that a developer can run the Web Admin Base System locally
 
 This checklist covers the local SQLite demo path, the repeatable smoke script, and a manual browser walkthrough of implemented base pages.
 
-It does not validate Redis, RabbitMQ, S3-compatible storage, SMS sending, or real outbound webhook delivery. Those integrations remain optional or reserved unless explicitly configured by a future goal.
+The default checklist does not require Redis, RabbitMQ, S3-compatible storage, SMS sending, reliable email, or outbound Webhook delivery. Optional S3, SMTP, and Webhook compatibility can be verified separately below.
 
 ## Prerequisites
 
@@ -125,10 +125,36 @@ Operations and logs:
 Files and notifications:
 
 - Open File management and confirm file metadata list, upload, detail, download, image preview, reference display, and delete-invalidate behavior are reachable.
-- Open Announcements and confirm list/create/edit/publish/unpublish behavior is reachable.
+- Open Announcements and create a system draft and an organization-scoped draft. Confirm the Organization target tree prevents redundant child selection after a parent is selected.
+- Confirm Announcement status/scope/publication-time filters and pagination load from the server. Publish a valid draft, verify edit/delete disappear until it is unpublished, then unpublish and soft delete it.
+- Set an expiration and confirm a past expiration cannot be published. Confirm an expired published Announcement remains in the management Catalog but is absent from Current Announcements.
+- Open the top-bar Current Announcements panel. Switch current Organization and confirm the panel reloads: system Announcements remain visible, while organization Announcements follow the selected target subtree.
 - Open In-app notifications and confirm unread/read/archive/delete behavior is reachable for current-user notifications.
 - Open Notification templates and confirm template list/create/edit behavior is reachable.
-- Open Webhooks and confirm list/create/edit/enable/disable behavior is reachable. Persisted webhook secrets must not be displayed as raw values.
+- Open Webhooks and confirm subscription list/create/edit/enable/disable/delete behavior is reachable. Confirm the Deliveries tab has subscription/event/status/time filters. Persisted secrets, full target URLs, event payloads, signatures, and response bodies must not be displayed.
+- Open Email deliveries and confirm the read-only list/detail view exposes only masked recipients, safe status, attempts, SMTP code, and safe error codes. It must not expose full recipients, subject, body, variables, ciphertext, credentials, or full SMTP responses.
+
+Optional SMTP compatibility:
+
+1. Start `scripts/mailpit-dev.ps1` and run `pnpm test:smtp-integration`.
+2. Confirm the inbox is reachable only at `http://127.0.0.1:8025` and the test message traverses required STARTTLS with certificate validation while preserving its Message ID and UTF-8 plain-text content.
+3. Stop the disposable backend with `scripts/mailpit-dev.ps1 -Action Stop`.
+
+Optional S3 compatibility:
+
+- Start `scripts/rustfs-dev.ps1` and run `pnpm test:s3-integration`.
+- Confirm the container binds only `127.0.0.1:9000`, has no Console port, and uses the 256 MB memory limit.
+- Confirm the test creates its bucket explicitly, persists a prefixed object key, reads through AWS SDK v3, follows a 60-second presigned GET, and deletes the object.
+- Stop the disposable backend with `scripts/rustfs-dev.ps1 -Action Stop`.
+
+Optional Webhook delivery:
+
+1. Configure a disposable keyring, `WEBHOOK_DELIVERY_ENABLED=true`, `WEBHOOK_ALLOW_INSECURE_LOCALHOST=true`, and a nonzero Worker polling interval for API and Worker.
+2. Start a loopback-only receiver or run `pnpm test:webhook-integration`.
+3. Create an enabled subscription for a controlled event and trigger that event.
+4. Confirm one durable delivery and attempt appear, the event ID remains stable across retries, and a configured signature is present at the receiver.
+5. Confirm the UI/API exposes only the target hostname and safe error summary.
+6. Disable delivery after acceptance; pending work must pause rather than be canceled.
 
 Account:
 

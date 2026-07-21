@@ -261,10 +261,6 @@ export const roleDataPermissions = sqliteTable(
     updatedBy: integer("updated_by"),
   },
   (table) => ({
-    roleDataPermissionUnique: uniqueIndex("role_data_permissions_role_permission_unique").on(
-      table.roleId,
-      table.permissionId,
-    ),
     effectCheck: check(
       "role_data_permissions_effect_check",
       sql`${table.effect} IN ('allow', 'deny')`,
@@ -281,6 +277,7 @@ export const fieldPermissionRules = sqliteTable(
     targetId: integer("target_id").notNull(),
     resource: text("resource").notNull(),
     field: text("field").notNull(),
+    scenario: text("scenario", { enum: ["list", "detail", "create", "edit"] }).notNull(),
     effect: text("effect", { enum: ["visible", "hidden", "readonly"] }).notNull(),
     ...softDelete,
     ...timestamps,
@@ -293,6 +290,7 @@ export const fieldPermissionRules = sqliteTable(
       table.targetId,
       table.resource,
       table.field,
+      table.scenario,
     ),
     targetTypeCheck: check(
       "field_permission_rules_target_type_check",
@@ -301,6 +299,10 @@ export const fieldPermissionRules = sqliteTable(
     effectCheck: check(
       "field_permission_rules_effect_check",
       sql`${table.effect} IN ('visible', 'hidden', 'readonly')`,
+    ),
+    scenarioCheck: check(
+      "field_permission_rules_scenario_check",
+      sql`${table.scenario} IN ('list', 'detail', 'create', 'edit')`,
     ),
   }),
 );
@@ -347,6 +349,8 @@ export const menus = sqliteTable(
     status: text("status", { enum: ["enabled", "disabled"] })
       .notNull()
       .default("enabled"),
+    source: text("source").notNull().default("manual"),
+    ownerModule: text("owner_module"),
     ...softDelete,
     ...timestamps,
   },
@@ -374,6 +378,8 @@ export const routeMetadata = sqliteTable(
     status: text("status", { enum: ["enabled", "disabled"] })
       .notNull()
       .default("enabled"),
+    source: text("source").notNull().default("base_manifest"),
+    ownerModule: text("owner_module"),
     ...timestamps,
   },
   (table) => ({
@@ -400,6 +406,8 @@ export const apiPermissions = sqliteTable(
       .notNull()
       .default("basic"),
     public: integer("public", { mode: "boolean" }).notNull().default(false),
+    source: text("source").notNull().default("base_manifest"),
+    manifestHash: text("manifest_hash"),
     status: text("status", { enum: ["enabled", "disabled"] })
       .notNull()
       .default("enabled"),
@@ -590,7 +598,13 @@ export const i18nMessages = sqliteTable(
     messageKey: text("message_key").notNull(),
     language: text("language").notNull(),
     messageValue: text("message_value").notNull(),
+    defaultMessage: text("default_message").notNull().default(""),
+    overrideValue: text("override_value"),
     module: text("module").notNull(),
+    status: text("status", { enum: ["enabled", "disabled"] })
+      .notNull()
+      .default("enabled"),
+    manifestHash: text("manifest_hash"),
     updatedAt: text("updated_at").notNull(),
   },
   (table) => ({
@@ -599,6 +613,48 @@ export const i18nMessages = sqliteTable(
       table.language,
     ),
     moduleIndex: index("i18n_messages_module_idx").on(table.module),
+  }),
+);
+
+export const businessModuleRegistryState = sqliteTable(
+  "business_module_registry_state",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    singletonKey: text("singleton_key").notNull().default("current"),
+    registryHash: text("registry_hash").notNull(),
+    acceptedAt: text("accepted_at").notNull(),
+    acceptedBy: integer("accepted_by"),
+    ...timestamps,
+  },
+  (table) => ({
+    singletonUnique: uniqueIndex("business_module_registry_state_singleton_unique").on(
+      table.singletonKey,
+    ),
+  }),
+);
+
+export const businessModuleRegistryEntries = sqliteTable(
+  "business_module_registry_entries",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    moduleCode: text("module_code").notNull(),
+    definitionJson: text("definition_json", { mode: "json" }).notNull(),
+    definitionHash: text("definition_hash").notNull(),
+    activationHash: text("activation_hash").notNull(),
+    status: text("status", { enum: ["active", "disabled"] })
+      .notNull()
+      .default("active"),
+    acceptedAt: text("accepted_at").notNull(),
+    acceptedBy: integer("accepted_by"),
+    disabledAt: text("disabled_at"),
+    ...timestamps,
+  },
+  (table) => ({
+    codeUnique: uniqueIndex("business_module_registry_entries_code_unique").on(table.moduleCode),
+    statusCheck: check(
+      "business_module_registry_entries_status_check",
+      sql`${table.status} IN ('active', 'disabled')`,
+    ),
   }),
 );
 
@@ -689,6 +745,7 @@ export const eventOutbox = sqliteTable(
   "event_outbox",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
+    eventKey: text("event_key"),
     eventType: text("event_type").notNull(),
     payloadJson: text("payload_json", { mode: "json" }).notNull(),
     status: text("status", { enum: ["pending", "published", "failed", "dead_letter"] })
@@ -703,6 +760,7 @@ export const eventOutbox = sqliteTable(
     ...timestamps,
   },
   (table) => ({
+    eventKeyUnique: uniqueIndex("event_outbox_event_key_unique").on(table.eventKey),
     statusNextRunIndex: index("event_outbox_status_next_run_idx").on(table.status, table.nextRunAt),
     statusCheck: check(
       "event_outbox_status_check",
@@ -749,6 +807,8 @@ export const fileObjects = sqliteTable(
     extension: text("extension").notNull(),
     sizeBytes: integer("size_bytes").notNull(),
     storageDriver: text("storage_driver").notNull(),
+    storageBucket: text("storage_bucket"),
+    contentDeletedAt: text("content_deleted_at"),
     status: text("status", { enum: ["active", "invalid"] })
       .notNull()
       .default("active"),
@@ -760,6 +820,11 @@ export const fileObjects = sqliteTable(
   },
   (table) => ({
     objectKeyUnique: uniqueIndex("file_objects_object_key_unique").on(table.objectKey),
+    contentCleanupIndex: index("file_objects_content_cleanup_idx").on(
+      table.status,
+      table.isDeleted,
+      table.contentDeletedAt,
+    ),
     statusCheck: check("file_objects_status_check", sql`${table.status} IN ('active', 'invalid')`),
   }),
 );
@@ -796,6 +861,7 @@ export const notifications = sqliteTable(
     channel: text("channel", { enum: ["in_app", "email", "webhook", "sms"] }).notNull(),
     title: text("title").notNull(),
     body: text("body").notNull(),
+    requestKey: text("request_key"),
     status: text("status", { enum: ["unread", "read", "archived", "deleted"] })
       .notNull()
       .default("unread"),
@@ -807,6 +873,10 @@ export const notifications = sqliteTable(
   },
   (table) => ({
     userStatusIndex: index("notifications_user_status_idx").on(table.userId, table.status),
+    userRequestKeyUnique: uniqueIndex("notifications_user_request_key_unique").on(
+      table.userId,
+      table.requestKey,
+    ),
     channelCheck: check(
       "notifications_channel_check",
       sql`${table.channel} IN ('in_app', 'email', 'webhook', 'sms')`,
@@ -834,7 +904,8 @@ export const notificationTemplates = sqliteTable(
     ...timestamps,
   },
   (table) => ({
-    codeLocaleUnique: uniqueIndex("notification_templates_code_locale_unique").on(
+    codeLocaleUnique: uniqueIndex("notification_templates_channel_code_locale_unique").on(
+      table.channel,
       table.code,
       table.locale,
     ),
@@ -845,6 +916,89 @@ export const notificationTemplates = sqliteTable(
     statusCheck: check(
       "notification_templates_status_check",
       sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
+);
+
+export const emailDeliveries = sqliteTable(
+  "email_deliveries",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    requestKey: text("request_key").notNull(),
+    requestFingerprint: text("request_fingerprint").notNull(),
+    userId: integer("user_id").notNull(),
+    templateId: integer("template_id").notNull(),
+    templateCode: text("template_code").notNull(),
+    locale: text("locale").notNull(),
+    templateUpdatedAt: text("template_updated_at").notNull(),
+    maskedRecipient: text("masked_recipient").notNull(),
+    messageId: text("message_id").notNull(),
+    contentKeyId: text("content_key_id"),
+    contentEnvelope: text("content_envelope"),
+    referenceType: text("reference_type"),
+    referenceId: text("reference_id"),
+    status: text("status", {
+      enum: ["pending", "running", "succeeded", "failed", "canceled"],
+    })
+      .notNull()
+      .default("pending"),
+    attempt: integer("attempt").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull(),
+    nextAttemptAt: text("next_attempt_at").notNull(),
+    lockedBy: text("locked_by"),
+    lockedAt: text("locked_at"),
+    lastSmtpCode: integer("last_smtp_code"),
+    lastErrorCode: text("last_error_code"),
+    lastErrorMessage: text("last_error_message"),
+    succeededAt: text("succeeded_at"),
+    failedAt: text("failed_at"),
+    canceledAt: text("canceled_at"),
+    contentPurgedAt: text("content_purged_at"),
+    ...timestamps,
+  },
+  (table) => ({
+    requestUserUnique: uniqueIndex("email_deliveries_request_user_unique").on(
+      table.requestKey,
+      table.userId,
+    ),
+    claimIndex: index("email_deliveries_claim_idx").on(table.status, table.nextAttemptAt),
+    userIndex: index("email_deliveries_user_idx").on(table.userId, table.createdAt),
+    templateIndex: index("email_deliveries_template_idx").on(
+      table.templateCode,
+      table.locale,
+      table.createdAt,
+    ),
+    statusCheck: check(
+      "email_deliveries_status_check",
+      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed', 'canceled')`,
+    ),
+  }),
+);
+
+export const emailDeliveryAttempts = sqliteTable(
+  "email_delivery_attempts",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    deliveryId: integer("delivery_id").notNull(),
+    attemptNumber: integer("attempt_number").notNull(),
+    status: text("status", { enum: ["succeeded", "failed"] }).notNull(),
+    startedAt: text("started_at").notNull(),
+    finishedAt: text("finished_at").notNull(),
+    durationMs: integer("duration_ms").notNull(),
+    smtpCode: integer("smtp_code"),
+    errorCode: text("error_code"),
+    errorMessage: text("error_message"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => ({
+    deliveryAttemptUnique: uniqueIndex("email_delivery_attempts_delivery_number_unique").on(
+      table.deliveryId,
+      table.attemptNumber,
+    ),
+    deliveryIndex: index("email_delivery_attempts_delivery_idx").on(table.deliveryId),
+    statusCheck: check(
+      "email_delivery_attempts_status_check",
+      sql`${table.status} IN ('succeeded', 'failed')`,
     ),
   }),
 );
@@ -861,6 +1015,7 @@ export const announcements = sqliteTable(
       .notNull()
       .default("draft"),
     publishedAt: text("published_at"),
+    expiresAt: text("expire_at"),
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
@@ -879,6 +1034,29 @@ export const announcements = sqliteTable(
   }),
 );
 
+export const announcementTargets = sqliteTable(
+  "announcement_targets",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    announcementId: integer("announcement_id").notNull(),
+    targetType: text("target_type", { enum: ["organization"] }).notNull(),
+    targetId: integer("target_id").notNull(),
+  },
+  (table) => ({
+    announcementTargetUnique: uniqueIndex("announcement_targets_binding_unique").on(
+      table.announcementId,
+      table.targetType,
+      table.targetId,
+    ),
+    announcementIndex: index("announcement_targets_announcement_idx").on(table.announcementId),
+    targetIndex: index("announcement_targets_target_idx").on(table.targetType, table.targetId),
+    targetTypeCheck: check(
+      "announcement_targets_target_type_check",
+      sql`${table.targetType} = 'organization'`,
+    ),
+  }),
+);
+
 export const webhookSubscriptions = sqliteTable(
   "webhook_subscriptions",
   {
@@ -888,6 +1066,7 @@ export const webhookSubscriptions = sqliteTable(
     url: text("url").notNull(),
     eventTypes: text("event_types", { mode: "json" }).notNull(),
     secret: text("secret"),
+    revision: integer("revision").notNull().default(1),
     status: text("status", { enum: ["enabled", "disabled"] })
       .notNull()
       .default("enabled"),
@@ -901,6 +1080,80 @@ export const webhookSubscriptions = sqliteTable(
     statusCheck: check(
       "webhook_subscriptions_status_check",
       sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
+);
+
+export const webhookDeliveries = sqliteTable(
+  "webhook_deliveries",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    eventOutboxId: integer("event_outbox_id").notNull(),
+    subscriptionId: integer("subscription_id").notNull(),
+    subscriptionRevision: integer("subscription_revision").notNull(),
+    eventType: text("event_type").notNull(),
+    eventSource: text("event_source").notNull(),
+    eventPayloadJson: text("event_payload_json", { mode: "json" }).notNull(),
+    targetUrl: text("target_url").notNull(),
+    status: text("status", {
+      enum: ["pending", "running", "succeeded", "failed", "canceled"],
+    })
+      .notNull()
+      .default("pending"),
+    attempt: integer("attempt").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull(),
+    nextAttemptAt: text("next_attempt_at").notNull(),
+    lockedBy: text("locked_by"),
+    lockedAt: text("locked_at"),
+    lastHttpStatus: integer("last_http_status"),
+    lastErrorCode: text("last_error_code"),
+    lastErrorMessage: text("last_error_message"),
+    succeededAt: text("succeeded_at"),
+    failedAt: text("failed_at"),
+    canceledAt: text("canceled_at"),
+    ...timestamps,
+  },
+  (table) => ({
+    eventSubscriptionUnique: uniqueIndex("webhook_deliveries_event_subscription_unique").on(
+      table.eventOutboxId,
+      table.subscriptionId,
+    ),
+    claimIndex: index("webhook_deliveries_claim_idx").on(table.status, table.nextAttemptAt),
+    subscriptionIndex: index("webhook_deliveries_subscription_idx").on(
+      table.subscriptionId,
+      table.createdAt,
+    ),
+    statusCheck: check(
+      "webhook_deliveries_status_check",
+      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed', 'canceled')`,
+    ),
+  }),
+);
+
+export const webhookDeliveryAttempts = sqliteTable(
+  "webhook_delivery_attempts",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    deliveryId: integer("delivery_id").notNull(),
+    attemptNumber: integer("attempt_number").notNull(),
+    status: text("status", { enum: ["succeeded", "failed"] }).notNull(),
+    startedAt: text("started_at").notNull(),
+    finishedAt: text("finished_at").notNull(),
+    durationMs: integer("duration_ms").notNull(),
+    httpStatus: integer("http_status"),
+    errorCode: text("error_code"),
+    errorMessage: text("error_message"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => ({
+    deliveryAttemptUnique: uniqueIndex("webhook_delivery_attempts_delivery_number_unique").on(
+      table.deliveryId,
+      table.attemptNumber,
+    ),
+    deliveryIndex: index("webhook_delivery_attempts_delivery_idx").on(table.deliveryId),
+    statusCheck: check(
+      "webhook_delivery_attempts_status_check",
+      sql`${table.status} IN ('succeeded', 'failed')`,
     ),
   }),
 );
@@ -936,6 +1189,7 @@ export const importExportTasks = sqliteTable(
   "import_export_tasks",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
+    idempotencyKey: text("idempotency_key"),
     taskType: text("task_type", { enum: ["import", "export"] }).notNull(),
     resourceType: text("resource_type").notNull(),
     status: text("status", { enum: ["pending", "running", "succeeded", "failed"] })
@@ -948,11 +1202,18 @@ export const importExportTasks = sqliteTable(
     successRows: integer("success_rows").notNull().default(0),
     failedRows: integer("failed_rows").notNull().default(0),
     errorPreviewJson: text("error_preview_json", { mode: "json" }).notNull(),
+    requestJson: text("request_json", { mode: "json" }).notNull().default({}),
+    executionContextJson: text("execution_context_json", { mode: "json" }),
     resultExpiresAt: text("result_expires_at"),
     ...timestamps,
     createdBy: integer("created_by"),
   },
   (table) => ({
+    idempotencyUnique: uniqueIndex("import_export_tasks_idempotency_unique").on(
+      table.taskType,
+      table.resourceType,
+      table.idempotencyKey,
+    ),
     statusIndex: index("import_export_tasks_status_idx").on(table.status),
     typeCheck: check(
       "import_export_tasks_type_check",
@@ -969,9 +1230,13 @@ export const sqliteSchema = {
   announcements,
   apiPermissions,
   authSessions,
+  businessModuleRegistryEntries,
+  businessModuleRegistryState,
   cacheEntries,
   dictionaryItems,
   dictionaryTypes,
+  emailDeliveries,
+  emailDeliveryAttempts,
   eventOutbox,
   fileObjects,
   fileReferences,
@@ -1001,5 +1266,7 @@ export const sqliteSchema = {
   userPreferences,
   userOrganizationRoles,
   webhookSubscriptions,
+  webhookDeliveries,
+  webhookDeliveryAttempts,
   users,
 };

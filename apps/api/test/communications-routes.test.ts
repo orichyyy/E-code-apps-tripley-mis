@@ -46,7 +46,7 @@ describe("communications routes", () => {
       body: JSON.stringify({
         name: "Audit webhook",
         url: "https://example.com/webhook",
-        eventTypes: ["security.event"],
+        eventTypes: ["user.created"],
         secret: "top-secret",
         status: "enabled",
       }),
@@ -60,7 +60,24 @@ describe("communications routes", () => {
     const listResponses = await Promise.all([
       app.request("/api/announcements", { headers }),
       app.request("/api/webhooks", { headers }),
+      app.request("/api/webhook-event-types", { headers }),
+      app.request("/api/webhook-deliveries", { headers }),
     ]);
+    const deleteWebhookResponse = await app.request(`/api/webhooks/${webhookBody.data.id}`, {
+      method: "DELETE",
+      headers,
+    });
+    const invalidEventResponse = await app.request("/api/webhooks", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        name: "Invalid webhook",
+        url: "https://example.com/webhook",
+        eventTypes: ["arbitrary.event"],
+        status: "enabled",
+      }),
+    });
+    const unauthorizedDeliveryResponse = await app.request("/api/webhook-deliveries");
 
     expect(announcementResponse.status).toBe(201);
     expect(updateAnnouncementResponse.status).toBe(200);
@@ -80,7 +97,7 @@ describe("communications routes", () => {
     expect(webhookBody.data).toEqual(
       expect.objectContaining({
         name: "Audit webhook",
-        eventTypes: ["security.event"],
+        eventTypes: ["user.created"],
         secretConfigured: true,
         status: "enabled",
       }),
@@ -95,6 +112,18 @@ describe("communications routes", () => {
       }),
     });
     for (const response of listResponses) expect(response.status).toBe(200);
+    await expect(listResponses[2]?.json()).resolves.toEqual({
+      data: expect.arrayContaining([expect.objectContaining({ type: "user.created" })]),
+    });
+    await expect(listResponses[3]?.json()).resolves.toEqual({
+      data: { items: [], page: 1, pageSize: 20, total: 0 },
+    });
+    expect(deleteWebhookResponse.status).toBe(200);
+    await expect(deleteWebhookResponse.json()).resolves.toEqual({
+      data: expect.objectContaining({ id: webhookBody.data.id, isDeleted: true }),
+    });
+    expect(invalidEventResponse.status).toBe(400);
+    expect(unauthorizedDeliveryResponse.status).toBe(401);
   });
 });
 

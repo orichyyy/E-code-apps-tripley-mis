@@ -3,6 +3,7 @@ import {
   updateWebhookSubscriptionRequestSchema,
   type CreateWebhookSubscriptionRequest,
   type UpdateWebhookSubscriptionRequest,
+  type WebhookEventType,
 } from "@web-admin-base/contracts";
 import { z } from "zod";
 
@@ -11,7 +12,7 @@ export type WebhookFormMode = "create" | "edit";
 export type WebhookFormValues = {
   name: string;
   url: string;
-  eventTypesText: string;
+  eventTypes: WebhookEventType[];
   secret: string;
   status: "enabled" | "disabled";
 };
@@ -19,7 +20,9 @@ export type WebhookFormValues = {
 export const webhookFormSchema = z.object({
   name: z.string().min(1),
   url: z.string().url(),
-  eventTypesText: z.string(),
+  eventTypes: z
+    .array(z.enum(["user.created", "job.failed", "permission.changed", "notification.requested"]))
+    .min(1),
   secret: z.string(),
   status: z.enum(["enabled", "disabled"]),
 });
@@ -27,7 +30,7 @@ export const webhookFormSchema = z.object({
 export const defaultWebhookFormValues: WebhookFormValues = {
   name: "",
   url: "",
-  eventTypesText: "",
+  eventTypes: [],
   secret: "",
   status: "enabled",
 };
@@ -39,7 +42,7 @@ export function toWebhookApiInput(
   const base = {
     name: value.name,
     url: value.url,
-    eventTypes: parseEventTypes(value.eventTypesText),
+    eventTypes: value.eventTypes,
     status: value.status,
   };
   const secret = value.secret.trim();
@@ -47,11 +50,4 @@ export function toWebhookApiInput(
   return mode === "create"
     ? createWebhookSubscriptionRequestSchema.parse({ ...input, secret: secret || null })
     : updateWebhookSubscriptionRequestSchema.parse(input);
-}
-
-function parseEventTypes(value: string): string[] {
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
 }

@@ -11,17 +11,22 @@ import { createRouteMetadataRoutes } from "./route-metadata.routes";
 import { createUserRoutes } from "./user.routes";
 import type { BackendCoreServices } from "./services";
 
-export function createCoreFoundationRoutes(services: BackendCoreServices) {
+export function createCoreFoundationRoutes(
+  services: BackendCoreServices,
+  afterInitialize?: (initializedBy: string | null) => Promise<void>,
+  synchronizeModuleRegistry?: (actorId: string | null) => Promise<void>,
+  beforeInitialize?: () => Promise<void>,
+) {
   const routes = new Hono();
 
-  routes.route("/", createInitializationRoutes(services));
+  routes.route("/", createInitializationRoutes(services, afterInitialize, beforeInitialize));
   routes.route("/", createAuthRoutes(services));
   routes.route("/", createProfileRoutes(services));
   routes.route("/", createOrganizationRoutes(services));
   routes.route("/", createUserRoutes(services));
-  routes.route("/", createRoleRoutes(services));
+  routes.route("/", createRoleRoutes(services, synchronizeModuleRegistry));
   routes.route("/", createMenuRoutes(services));
-  routes.route("/", createRouteMetadataRoutes(services));
+  routes.route("/", createRouteMetadataRoutes(services, synchronizeModuleRegistry));
 
   return routes.route("/", createPermissionExtensionRoutes(services));
 }

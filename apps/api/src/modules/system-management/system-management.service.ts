@@ -121,7 +121,8 @@ export class SystemManagementServices {
     if (this.repository) return this.repository.updateI18nMessage(id, input);
     const record = this.memory.i18nMessages.find((item) => item.id === id);
     if (!record) return Promise.resolve(null);
-    record.messageValue = input.messageValue;
+    record.overrideValue = input.overrideValue;
+    record.messageValue = input.overrideValue ?? record.defaultMessage;
     record.updatedAt = new Date().toISOString();
     return Promise.resolve(record);
   }

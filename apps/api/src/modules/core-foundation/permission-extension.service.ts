@@ -1,4 +1,9 @@
 import type {
+  DataPermissionRuleDocument,
+  FieldPermissionScenario,
+} from "@web-admin-base/contracts";
+
+import type {
   FieldPermissionRuleRecord,
   PermissionRecord,
   RoleDataPermissionRecord,
@@ -12,12 +17,13 @@ import { nowUtc, toUtcIso } from "../../core/time/utc";
 export type RoleDataPermissionInput = {
   permissionCode: string;
   effect: "allow" | "deny";
-  rule: Record<string, unknown>;
+  rule: DataPermissionRuleDocument;
 };
 
 export type RoleFieldPermissionInput = {
   resource: string;
   field: string;
+  scenario: FieldPermissionScenario;
   effect: "visible" | "hidden" | "readonly";
 };
 
@@ -62,22 +68,17 @@ export class PermissionExtensionService {
     }
 
     for (const rule of rules) {
-      const record =
-        this.findRoleDataPermission(roleId, rule.permission.id) ??
-        ({
-          id: this.context.store.nextId("roleDataPermission"),
-          tenantId: null,
-          roleId,
-          permissionId: rule.permission.id,
-          permissionCode: rule.permission.code,
-          effect: rule.effect,
-          rule: rule.rule,
-          createdAt: now,
-          createdBy: actorId,
-        } as RoleDataPermissionRecord);
-      record.permissionCode = rule.permission.code;
-      record.effect = rule.effect;
-      record.rule = rule.rule;
+      const record = {
+        id: this.context.store.nextId("roleDataPermission"),
+        tenantId: null,
+        roleId,
+        permissionId: rule.permission.id,
+        permissionCode: rule.permission.code,
+        effect: rule.effect,
+        rule: rule.rule,
+        createdAt: now,
+        createdBy: actorId,
+      } as RoleDataPermissionRecord;
       restore(record, now, actorId);
       this.context.store.roleDataPermissions.set(record.id, record);
     }
@@ -110,7 +111,7 @@ export class PermissionExtensionService {
 
     for (const rule of input.rules) {
       const record =
-        this.findRoleFieldPermission(roleId, rule.resource, rule.field) ??
+        this.findRoleFieldPermission(roleId, rule.resource, rule.field, rule.scenario) ??
         ({
           id: this.context.store.nextId("fieldPermissionRule"),
           tenantId: null,
@@ -118,11 +119,13 @@ export class PermissionExtensionService {
           targetId: roleId,
           resource: rule.resource,
           field: rule.field,
+          scenario: rule.scenario,
           effect: rule.effect,
           createdAt: now,
           createdBy: actorId,
         } as FieldPermissionRuleRecord);
       record.effect = rule.effect;
+      record.scenario = rule.scenario;
       restore(record, now, actorId);
       this.context.store.fieldPermissionRules.set(record.id, record);
     }
@@ -186,26 +189,19 @@ export class PermissionExtensionService {
     return permission;
   }
 
-  private findRoleDataPermission(
-    roleId: string,
-    permissionId: string,
-  ): RoleDataPermissionRecord | undefined {
-    return [...this.context.store.roleDataPermissions.values()].find(
-      (record) => record.roleId === roleId && record.permissionId === permissionId,
-    );
-  }
-
   private findRoleFieldPermission(
     roleId: string,
     resource: string,
     field: string,
+    scenario: FieldPermissionScenario,
   ): FieldPermissionRuleRecord | undefined {
     return [...this.context.store.fieldPermissionRules.values()].find(
       (record) =>
         record.targetType === "role" &&
         record.targetId === roleId &&
         record.resource === resource &&
-        record.field === field,
+        record.field === field &&
+        record.scenario === scenario,
     );
   }
 

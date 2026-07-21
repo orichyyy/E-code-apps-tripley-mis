@@ -73,6 +73,14 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     sortOrder: 165,
   },
   {
+    routeCode: "system.modules",
+    path: "/system/modules",
+    titleI18nKey: "routes.system.modules",
+    requiredPermission: "module-registry:view",
+    menuVisible: true,
+    sortOrder: 167,
+  },
+  {
     routeCode: "system.files",
     path: "/system/files",
     titleI18nKey: "routes.system.files",
@@ -111,6 +119,14 @@ export const baseRouteManifest: AdminRouteMetadata[] = [
     requiredPermission: "webhook:view",
     menuVisible: true,
     sortOrder: 220,
+  },
+  {
+    routeCode: "notifications.email-deliveries",
+    path: "/notifications/email-deliveries",
+    titleI18nKey: "routes.notifications.emailDeliveries",
+    requiredPermission: "notification:email-delivery:view",
+    menuVisible: true,
+    sortOrder: 225,
   },
   {
     routeCode: "operations.online-users",

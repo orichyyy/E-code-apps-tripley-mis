@@ -1,9 +1,16 @@
-import { initializationSetupRequestSchema } from "@web-admin-base/contracts";
+import {
+  businessModuleDefinitions,
+  initializationSetupRequestSchema,
+} from "@web-admin-base/contracts";
+import { createBusinessModuleRegistry } from "@web-admin-base/module-sdk";
 import { pathToFileURL } from "node:url";
 
 import { createPersistentBackendCoreServices } from "./modules/core-foundation/persistence/persistent-backend-core-services";
 import { createInMemoryBackendCoreServices } from "./modules/core-foundation/services";
 import type { BackendCoreServices } from "./modules/core-foundation/services";
+import { InMemoryModuleLifecycleStore } from "./modules/module-lifecycle/in-memory-module-lifecycle.store";
+import { ModuleLifecycleRepository } from "./modules/module-lifecycle/module-lifecycle.repository";
+import { ModuleLifecycleService } from "./modules/module-lifecycle/module-lifecycle.service";
 
 export type SeedEnvironment = Record<string, string | undefined>;
 
@@ -26,8 +33,18 @@ export function readInitializationSeedInput(env: SeedEnvironment) {
 
 export async function runInitializationSeed(env: SeedEnvironment = process.env) {
   const services = await createSeedServices(env);
+  const moduleStore =
+    env.BACKEND_CORE_STORE === "database"
+      ? ModuleLifecycleRepository.fromEnvironment(env as NodeJS.ProcessEnv)
+      : new InMemoryModuleLifecycleStore();
+  const moduleLifecycle = new ModuleLifecycleService(
+    createBusinessModuleRegistry(businessModuleDefinitions),
+    moduleStore,
+  );
   try {
+    await moduleLifecycle.assertCanApply();
     const result = await services.seedInitialization(readInitializationSeedInput(env));
+    const moduleSync = await moduleLifecycle.bootstrap(result.admin?.id ?? null);
 
     return {
       initialized: result.state.status === "initialized",
@@ -39,9 +56,12 @@ export async function runInitializationSeed(env: SeedEnvironment = process.env) 
       apiPermissionCount: result.apiPermissions.length,
       menuCount: result.menus.length,
       routeCount: result.routes.length,
+      moduleRegistryHash: moduleSync.registryHash,
+      moduleCount: moduleSync.modules.length,
     };
   } finally {
     await closeSeedServices(services);
+    if (moduleStore instanceof ModuleLifecycleRepository) await moduleStore.close();
   }
 }
 

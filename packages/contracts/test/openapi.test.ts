@@ -3,6 +3,22 @@ import { describe, expect, it } from "vitest";
 import { baseApiPermissionManifest, createOpenApiDocument } from "../src";
 
 describe("OpenAPI document generation", () => {
+  it("documents Business Module registry lifecycle APIs with explicit schemas", () => {
+    const document = createOpenApiDocument();
+
+    expect(
+      document.paths["/modules/registry"]?.get?.responses["200"]?.content?.["application/json"]
+        ?.schema,
+    ).toEqual({ $ref: "#/components/schemas/BusinessModuleRegistryResponse" });
+    expect(
+      document.paths["/modules/sync/plan"]?.post?.responses["200"]?.content?.["application/json"]
+        ?.schema,
+    ).toEqual({ $ref: "#/components/schemas/ModuleSyncPlanResponse" });
+    expect(
+      document.paths["/modules/sync/apply"]?.post?.requestBody?.content["application/json"]?.schema,
+    ).toEqual({ $ref: "#/components/schemas/ApplyModuleSyncRequest" });
+  });
+
   it("documents every implemented API permission manifest entry", () => {
     const document = createOpenApiDocument();
     const documentedOperations = Object.entries(document.paths)
@@ -212,6 +228,74 @@ describe("OpenAPI document generation", () => {
       ).toBeGreaterThan(0);
       expect(schema.additionalProperties, `${schemaName} should not be a broad object`).toBe(false);
     }
+  });
+
+  it("documents local file content and private S3 redirect responses", () => {
+    const document = createOpenApiDocument();
+    const download = document.paths["/files/{id}/download"]?.get;
+    const preview = document.paths["/files/{id}/preview"]?.get;
+
+    for (const operation of [download, preview]) {
+      expect(operation?.responses["200"]).toMatchObject({
+        content: {
+          "application/octet-stream": { schema: { type: "string", format: "binary" } },
+        },
+      });
+      expect(operation?.responses["302"]).toMatchObject({
+        headers: { Location: { schema: { type: "string", format: "uri" } } },
+      });
+    }
+  });
+
+  it("documents webhook delivery filters and safe response schemas", () => {
+    const document = createOpenApiDocument();
+    const list = document.paths["/webhook-deliveries"]?.get;
+    const detail = document.paths["/webhook-deliveries/{id}"]?.get;
+
+    expect(list?.parameters?.map((parameter) => parameter.name)).toEqual([
+      "subscriptionId",
+      "eventType",
+      "status",
+      "from",
+      "to",
+      "page",
+      "pageSize",
+    ]);
+    expect(list?.responses["200"]?.content?.["application/json"]?.schema).toEqual({
+      $ref: "#/components/schemas/WebhookDeliveryListResponse",
+    });
+    expect(detail?.responses["200"]?.content?.["application/json"]?.schema).toEqual({
+      $ref: "#/components/schemas/WebhookDeliveryDetailResponse",
+    });
+    expect(document.components.schemas.WebhookSubscription.properties).not.toHaveProperty("secret");
+    expect(document.components.schemas.WebhookDelivery.properties).not.toHaveProperty(
+      "eventPayload",
+    );
+  });
+
+  it("documents scoped announcement contracts and current-user visibility", () => {
+    const document = createOpenApiDocument();
+    const catalog = document.paths["/announcements"]?.get;
+    const current = document.paths["/announcements/current"]?.get;
+    const remove = document.paths["/announcements/{id}"]?.delete;
+
+    expect(catalog?.parameters?.map((parameter) => parameter.name)).toEqual([
+      "status",
+      "scopeType",
+      "publishedFrom",
+      "publishedTo",
+      "page",
+      "pageSize",
+    ]);
+    expect(current?.security).toEqual([{ bearerAuth: [] }]);
+    expect(current?.["x-required-permission"]).toBeUndefined();
+    expect(current?.responses["200"]?.content?.["application/json"]?.schema).toEqual({
+      $ref: "#/components/schemas/CurrentAnnouncementListResponse",
+    });
+    expect(remove?.["x-required-permission"]).toBe("announcement:delete");
+    expect(document.components.schemas.Announcement.required).toEqual(
+      expect.arrayContaining(["targetOrganizationIds", "expiresAt"]),
+    );
   });
 });
 

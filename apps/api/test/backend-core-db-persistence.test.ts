@@ -476,7 +476,28 @@ describe("backend core database persistence", () => {
               {
                 permissionCode: "user:view",
                 effect: "allow",
-                rule: { scope: "current_organization" },
+                rule: {
+                  version: 1,
+                  resourceType: "base.user",
+                  expression: {
+                    type: "condition",
+                    operatorCode: "base.current-organization",
+                    arguments: {},
+                  },
+                },
+              },
+              {
+                permissionCode: "user:view",
+                effect: "deny",
+                rule: {
+                  version: 1,
+                  resourceType: "base.user",
+                  expression: {
+                    type: "condition",
+                    operatorCode: "base.specified-users",
+                    arguments: { userIds: ["999"] },
+                  },
+                },
               },
             ],
           },
@@ -485,7 +506,14 @@ describe("backend core database persistence", () => {
           method: "PUT",
           headers: authHeaders,
           body: {
-            rules: [{ resource: "user", field: "email", effect: "readonly" }],
+            rules: [
+              {
+                resource: "base.user",
+                field: "email",
+                scenario: "edit",
+                effect: "readonly",
+              },
+            ],
           },
         });
         await requestData(app, `/api/permissions/user-overrides/${user.id}`, {
@@ -540,15 +568,23 @@ describe("backend core database persistence", () => {
             expect.objectContaining({
               roleId: role.id,
               permissionCode: "user:view",
-              rule: { scope: "current_organization" },
+              rule: expect.objectContaining({ version: 1, resourceType: "base.user" }),
+              isDeleted: false,
+            }),
+            expect.objectContaining({
+              roleId: role.id,
+              permissionCode: "user:view",
+              effect: "deny",
+              rule: expect.objectContaining({ version: 1, resourceType: "base.user" }),
               isDeleted: false,
             }),
           ]);
           expect([...store.fieldPermissionRules.values()]).toEqual([
             expect.objectContaining({
               targetId: role.id,
-              resource: "user",
+              resource: "base.user",
               field: "email",
+              scenario: "edit",
               effect: "readonly",
               isDeleted: false,
             }),
@@ -569,10 +605,24 @@ describe("backend core database persistence", () => {
           );
           expect(effective.permissionCodes).toEqual(["role:view"]);
           expect(effective.dataPermissions).toEqual([
-            expect.objectContaining({ roleId: role.id, permissionCode: "user:view" }),
+            expect.objectContaining({
+              roleId: role.id,
+              permissionCode: "user:view",
+              effect: "allow",
+            }),
+            expect.objectContaining({
+              roleId: role.id,
+              permissionCode: "user:view",
+              effect: "deny",
+            }),
           ]);
           expect(effective.fieldPermissions).toEqual([
-            expect.objectContaining({ roleId: role.id, resource: "user", field: "email" }),
+            expect.objectContaining({
+              roleId: role.id,
+              resource: "base.user",
+              field: "email",
+              scenario: "edit",
+            }),
           ]);
         } finally {
           await reloadedServices.close();

@@ -68,6 +68,8 @@ export class MenuService {
       sortOrder: input.sortOrder ?? 0,
       visible: input.visible ?? true,
       status: input.status ?? "enabled",
+      source: "manual",
+      ownerModule: null,
       isDeleted: false,
       deletedAt: null,
       deletedBy: null,
@@ -167,6 +169,8 @@ export class MenuService {
         existing.sortOrder = entry.sortOrder;
         existing.visible = entry.visible ?? true;
         existing.status = "enabled";
+        existing.source = "base_manifest";
+        existing.ownerModule = null;
         existing.isDeleted = false;
         existing.deletedAt = null;
         existing.deletedBy = null;
@@ -186,6 +190,7 @@ export class MenuService {
         sortOrder: entry.sortOrder,
         visible: entry.visible,
       });
+      menu.source = "base_manifest";
       byCode.set(menu.code, menu);
       seeded.push(menu);
     }

@@ -1,5 +1,6 @@
 import { loadDatabaseConfig } from "@web-admin-base/db";
 import type { DatabaseConfig } from "@web-admin-base/db";
+import { webhookOutboxEventSchema, type WebhookOutboxEvent } from "@web-admin-base/contracts";
 
 import { InMemoryBackendStore } from "../in-memory-store";
 import { BackendCoreAggregateRepositories } from "./backend-core-aggregate-repositories";
@@ -13,8 +14,10 @@ import {
   bigint,
   booleanValue,
   dataPermissionEffect,
+  dataPermissionRule,
   entityStatus,
   fieldPermissionEffect,
+  fieldPermissionScenario,
   id,
   initializationStatus,
   iso,
@@ -61,6 +64,23 @@ export class BackendCoreStoreRepository {
 
   transaction<T>(operation: () => Promise<T>): Promise<T> {
     return this.executor.transaction(operation);
+  }
+
+  async appendWebhookEvent(event: WebhookOutboxEvent): Promise<void> {
+    const value = webhookOutboxEventSchema.parse(event);
+    const marker = (index: number) => (this.executor.dialect === "postgresql" ? `$${index}` : "?");
+    await this.executor.run(
+      `INSERT INTO event_outbox
+       (event_type, payload_json, status, attempt, max_attempts, occurred_at, created_at, updated_at)
+       VALUES (${marker(1)}, ${marker(2)}, 'pending', 0, 1, ${marker(3)}, ${marker(4)}, ${marker(5)})`,
+      [
+        value.type,
+        this.executor.dialect === "sqlite" ? JSON.stringify(value) : value,
+        value.occurredAt,
+        value.occurredAt,
+        value.occurredAt,
+      ],
+    );
   }
 
   async load(): Promise<InMemoryBackendStore> {
@@ -271,6 +291,8 @@ export class BackendCoreStoreRepository {
         requiredPermission: nullableString(row.required_permission),
         logLevel: logLevel(row.log_level),
         public: booleanValue(row.public),
+        source: stringValue(row.source),
+        manifestHash: nullableString(row.manifest_hash),
         status: entityStatus(row.status),
         createdAt: iso(row.created_at),
         updatedAt: iso(row.updated_at),
@@ -294,6 +316,8 @@ export class BackendCoreStoreRepository {
         sortOrder: numberValue(row.sort_order),
         visible: booleanValue(row.visible),
         status: entityStatus(row.status),
+        source: stringValue(row.source),
+        ownerModule: nullableString(row.owner_module),
         isDeleted: booleanValue(row.is_deleted),
         deletedAt: nullableIso(row.deleted_at),
         deletedBy: nullableId(row.deleted_by),
@@ -332,6 +356,8 @@ export class BackendCoreStoreRepository {
         icon: nullableString(row.icon),
         sortOrder: numberValue(row.sort_order),
         status: entityStatus(row.status),
+        source: stringValue(row.source),
+        ownerModule: nullableString(row.owner_module),
         createdAt: iso(row.created_at),
         updatedAt: iso(row.updated_at),
       }),
@@ -431,7 +457,7 @@ export class BackendCoreStoreRepository {
         permissionId: id(row.permission_id),
         permissionCode: stringValue(row.permission_code),
         effect: dataPermissionEffect(row.effect),
-        rule: jsonRecord(row.rule_json),
+        rule: dataPermissionRule(row.rule_json),
         isDeleted: booleanValue(row.is_deleted),
         deletedAt: nullableIso(row.deleted_at),
         deletedBy: nullableId(row.deleted_by),
@@ -453,6 +479,7 @@ export class BackendCoreStoreRepository {
         targetId: id(row.target_id),
         resource: stringValue(row.resource),
         field: stringValue(row.field),
+        scenario: fieldPermissionScenario(row.scenario),
         effect: fieldPermissionEffect(row.effect),
         isDeleted: booleanValue(row.is_deleted),
         deletedAt: nullableIso(row.deleted_at),
@@ -743,8 +770,8 @@ export class BackendCoreStoreRepository {
         record.action,
         record.description,
         record.module,
-        record.source,
-        record.manifestHash,
+        record.source ?? "base_manifest",
+        record.manifestHash ?? null,
         record.status,
         record.createdAt,
         record.updatedAt,
@@ -766,6 +793,8 @@ export class BackendCoreStoreRepository {
         "required_permission",
         "log_level",
         "public",
+        "source",
+        "manifest_hash",
         "status",
         "created_at",
         "updated_at",
@@ -781,6 +810,8 @@ export class BackendCoreStoreRepository {
         record.requiredPermission,
         record.logLevel,
         record.public,
+        record.source,
+        record.manifestHash,
         record.status,
         record.createdAt,
         record.updatedAt,
@@ -804,6 +835,8 @@ export class BackendCoreStoreRepository {
         "sort_order",
         "visible",
         "status",
+        "source",
+        "owner_module",
         "is_deleted",
         "deleted_at",
         "deleted_by",
@@ -823,6 +856,8 @@ export class BackendCoreStoreRepository {
         record.sortOrder,
         record.visible,
         record.status,
+        record.source ?? "manual",
+        record.ownerModule,
         record.isDeleted,
         record.deletedAt,
         record.deletedBy,
@@ -862,6 +897,8 @@ export class BackendCoreStoreRepository {
         "icon",
         "sort_order",
         "status",
+        "source",
+        "owner_module",
         "created_at",
         "updated_at",
       ],
@@ -878,6 +915,8 @@ export class BackendCoreStoreRepository {
         record.icon,
         record.sortOrder,
         record.status,
+        record.source ?? "base_manifest",
+        record.ownerModule,
         record.createdAt,
         record.updatedAt,
       ]),

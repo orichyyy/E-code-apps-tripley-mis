@@ -17,7 +17,10 @@ type RoleRouteBindings = {
   Variables: AuthContextVariables;
 };
 
-export function createRoleRoutes(services: BackendCoreServices) {
+export function createRoleRoutes(
+  services: BackendCoreServices,
+  synchronizeModuleRegistry?: (actorId: string | null) => Promise<void>,
+) {
   const routes = new Hono<RoleRouteBindings>();
 
   routes.get("/roles", (context) => {
@@ -139,7 +142,17 @@ export function createRoleRoutes(services: BackendCoreServices) {
 
   routes.post("/permissions/sync", async (context) => {
     await assertEmptyJsonBody(context.req.raw);
-    return context.json({ data: await services.syncPermissions() });
+    if (synchronizeModuleRegistry) {
+      await synchronizeModuleRegistry(context.get("authContext")?.userId ?? null);
+    } else {
+      await services.syncPermissions();
+    }
+    return context.json({
+      data: {
+        permissions: services.listPermissions({ status: "enabled" }),
+        apiPermissions: services.listApiPermissions({ status: "enabled" }),
+      },
+    });
   });
 
   routes.get("/permissions/api", (context) => {
@@ -163,8 +176,12 @@ export function createRoleRoutes(services: BackendCoreServices) {
 
   routes.post("/permissions/api/sync", async (context) => {
     await assertEmptyJsonBody(context.req.raw);
-    const result = await services.syncPermissions();
-    return context.json({ data: result.apiPermissions });
+    if (synchronizeModuleRegistry) {
+      await synchronizeModuleRegistry(context.get("authContext")?.userId ?? null);
+    } else {
+      await services.syncPermissions();
+    }
+    return context.json({ data: services.listApiPermissions({ status: "enabled" }) });
   });
 
   return routes;

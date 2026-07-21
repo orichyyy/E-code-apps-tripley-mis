@@ -27,19 +27,39 @@ it("keeps Hono RPC type inference available for communications routes", () => {
 
   const listAnnouncements = client.api.announcements.$get;
   const createAnnouncement = client.api.announcements.$post;
+  const listCurrentAnnouncements = client.api.announcements.current.$get;
   const updateAnnouncement = client.api.announcements[":id"].$patch;
+  const deleteAnnouncement = client.api.announcements[":id"].$delete;
   const publishAnnouncement = client.api.announcements[":id"].publish.$post;
   const unpublishAnnouncement = client.api.announcements[":id"].unpublish.$post;
   const listWebhooks = client.api.webhooks.$get;
   const createWebhook = client.api.webhooks.$post;
   const updateWebhook = client.api.webhooks[":id"].$patch;
+  const deleteWebhook = client.api.webhooks[":id"].$delete;
+  const listWebhookEventTypes = client.api["webhook-event-types"].$get;
+  const listWebhookDeliveries = client.api["webhook-deliveries"].$get;
+  const getWebhookDelivery = client.api["webhook-deliveries"][":id"].$get;
 
   expect(listAnnouncements).toBeDefined();
   expect(createAnnouncement).toBeDefined();
+  expect(listCurrentAnnouncements).toBeDefined();
   expect(updateAnnouncement).toBeDefined();
+  expect(deleteAnnouncement).toBeDefined();
   expect(publishAnnouncement).toBeDefined();
   expect(unpublishAnnouncement).toBeDefined();
   expect(listWebhooks).toBeDefined();
   expect(createWebhook).toBeDefined();
   expect(updateWebhook).toBeDefined();
+  expect(deleteWebhook).toBeDefined();
+  expect(listWebhookEventTypes).toBeDefined();
+  expect(listWebhookDeliveries).toBeDefined();
+  expect(getWebhookDelivery).toBeDefined();
+});
+
+it("keeps Hono RPC type inference available for Module Registry lifecycle routes", () => {
+  const client = hc<ApiApp>("/");
+
+  expect(client.api.modules.registry.$get).toBeDefined();
+  expect(client.api.modules.sync.plan.$post).toBeDefined();
+  expect(client.api.modules.sync.apply.$post).toBeDefined();
 });

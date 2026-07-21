@@ -10,6 +10,7 @@ describe("permission cache", () => {
     await cache.set({
       userId: "1",
       organizationId: "2",
+      isSuperAdministrator: false,
       permissionCodes: ["user:view"],
     });
 

@@ -4,7 +4,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@web-admin-base/contracts": ["../../packages/contracts/src/index.ts"]
+      "@web-admin-base/contracts": ["../../packages/contracts/src/index.ts"],
+      "@web-admin-base/module-sdk": ["../../packages/module-sdk/src/index.ts"]
     },
     "types": ["vite/client", "vitest/globals"]
   },

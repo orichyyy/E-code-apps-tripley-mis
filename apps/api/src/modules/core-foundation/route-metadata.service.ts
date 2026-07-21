@@ -50,7 +50,10 @@ export class RouteMetadataService {
     const currentRouteCodes = new Set(manifest.map((entry) => entry.routeCode));
     const now = toUtcIso(nowUtc());
     for (const route of this.context.store.routeMetadata.values()) {
-      if (!currentRouteCodes.has(route.routeCode)) {
+      if (
+        (route.source ?? "base_manifest") === "base_manifest" &&
+        !currentRouteCodes.has(route.routeCode)
+      ) {
         route.status = "disabled";
         route.updatedAt = now;
       }
@@ -75,6 +78,8 @@ export class RouteMetadataService {
       existing.icon = entry.icon ?? null;
       existing.sortOrder = entry.sortOrder ?? 0;
       existing.status = "enabled";
+      existing.source = "base_manifest";
+      existing.ownerModule = null;
       existing.updatedAt = now;
       return existing;
     }
@@ -92,6 +97,8 @@ export class RouteMetadataService {
       icon: entry.icon ?? null,
       sortOrder: entry.sortOrder ?? 0,
       status: "enabled",
+      source: "base_manifest",
+      ownerModule: null,
       createdAt: now,
       updatedAt: now,
     };

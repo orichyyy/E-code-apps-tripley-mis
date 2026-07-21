@@ -17,12 +17,14 @@ export type EnqueueInAppNotificationInput = {
   locale: string;
   audience: InAppNotificationAudience;
   variables?: Record<string, unknown>;
+  requestKey?: string | null;
   metadata?: Record<string, unknown>;
   createdBy?: string | null;
 };
 
 export type InAppNotificationRecordInput = {
   userId: string;
+  requestKey: string | null;
   title: string;
   body: string;
   metadata: Record<string, unknown>;
@@ -56,6 +58,7 @@ export async function enqueueInAppNotificationDispatch(
     recipientUserIds,
     title: renderNotificationTemplate(template.subject, variables),
     body: renderNotificationTemplate(template.body, variables),
+    requestKey: input.requestKey ?? null,
     metadata: {
       ...(input.metadata ?? {}),
       templateCode: input.templateCode,
@@ -84,6 +87,7 @@ export async function dispatchInAppNotificationJob(
   await dependencies.createNotifications(
     parsed.recipientUserIds.map((userId) => ({
       userId,
+      requestKey: parsed.requestKey,
       title: parsed.title,
       body: parsed.body,
       metadata: parsed.metadata,

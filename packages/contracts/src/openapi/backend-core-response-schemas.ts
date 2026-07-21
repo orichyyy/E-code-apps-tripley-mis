@@ -13,6 +13,22 @@ import {
   softDeleteProperties,
 } from "./backend-core-schema-helpers";
 
+const executablePermissionContextProperties: Record<string, OpenApiSchema> = {
+  isSuperAdministrator: { type: "boolean" },
+  dataPermissions: {
+    type: "array",
+    items: { $ref: "#/components/schemas/EffectiveDataPermission" },
+  },
+  fieldPermissions: {
+    type: "array",
+    items: { $ref: "#/components/schemas/EffectiveFieldPermission" },
+  },
+  userPermissionOverrides: {
+    type: "array",
+    items: { $ref: "#/components/schemas/EffectiveUserPermissionOverride" },
+  },
+};
+
 export const backendCoreResponseSchemas: OpenApiDocument["components"]["schemas"] = {
   Menu: {
     type: "object",
@@ -147,6 +163,7 @@ export const backendCoreResponseSchemas: OpenApiDocument["components"]["schemas"
     authContextDataSchema({
       accessToken: { type: "string" },
       refreshTokenCookie: { type: "object", additionalProperties: true },
+      ...executablePermissionContextProperties,
     }),
   ),
   AuthRefreshResponse: envelopeSchema({
@@ -162,13 +179,21 @@ export const backendCoreResponseSchemas: OpenApiDocument["components"]["schemas"
   AuthSessionResponse: objectEnvelope("AuthSession"),
   SwitchCurrentOrganizationResponse: envelopeSchema({
     type: "object",
-    required: ["accessToken", "session", "currentOrganization", "permissionCodes", "menus"],
+    required: [
+      "accessToken",
+      "session",
+      "currentOrganization",
+      "permissionCodes",
+      "menus",
+      ...Object.keys(executablePermissionContextProperties),
+    ],
     properties: {
       accessToken: { type: "string" },
       session: { $ref: "#/components/schemas/AuthSession" },
       currentOrganization: { $ref: "#/components/schemas/Organization" },
       permissionCodes: { type: "array", items: { type: "string" } },
       menus: { type: "array", items: { $ref: "#/components/schemas/Menu" } },
+      ...executablePermissionContextProperties,
     },
     additionalProperties: false,
   }),

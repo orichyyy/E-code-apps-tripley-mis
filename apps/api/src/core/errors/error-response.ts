@@ -1,4 +1,9 @@
 import { ZodError } from "zod";
+import {
+  BusinessFieldPermissionError,
+  BusinessModuleCapabilityError,
+  BusinessModuleDeclaredError,
+} from "@web-admin-base/module-sdk";
 
 import { AppError, isAppError } from "./app-error";
 import { createKnownError, isKnownErrorCode } from "./error-codes";
@@ -15,8 +20,26 @@ export type ErrorResponseBody = {
 export function normalizeError(error: unknown): AppError {
   if (isAppError(error)) return error;
 
+  if (error instanceof BusinessModuleDeclaredError) {
+    return new AppError({
+      code: error.code,
+      message: error.message,
+      status: error.status,
+      category: "business",
+      details: error.details,
+    });
+  }
+
+  if (error instanceof BusinessModuleCapabilityError) {
+    return createKnownError("PERMISSION_MODULE_CAPABILITY_DENIED");
+  }
+
   if (error instanceof ZodError) {
     return createKnownError("VALIDATION_INVALID_REQUEST", error.flatten());
+  }
+
+  if (error instanceof BusinessFieldPermissionError) {
+    return createKnownError("PERMISSION_FIELD_DENIED", { fields: error.fields });
   }
 
   if (error instanceof SyntaxError) {

@@ -112,6 +112,22 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
     ],
   },
   {
+    routeCode: "system.modules",
+    path: "/system/modules",
+    titleI18nKey: "routes.system.modules",
+    requiredPermission: "module-registry:view",
+    menuVisible: true,
+    group: "system",
+    sortOrder: 167,
+    actions: [
+      {
+        code: "module-registry:sync",
+        labelI18nKey: "actions.sync",
+        requiredPermission: "module-registry:sync",
+      },
+    ],
+  },
+  {
     routeCode: "system.files",
     path: "/system/files",
     titleI18nKey: "routes.system.files",
@@ -158,6 +174,11 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
         code: "announcement:publish",
         labelI18nKey: "actions.publish",
         requiredPermission: "announcement:publish",
+      },
+      {
+        code: "announcement:delete",
+        labelI18nKey: "actions.delete",
+        requiredPermission: "announcement:delete",
       },
     ],
   },
@@ -218,6 +239,15 @@ export const adminRoutes: WebAdminRouteMetadata[] = [
         requiredPermission: "webhook:update",
       },
     ],
+  },
+  {
+    routeCode: "notifications.email-deliveries",
+    path: "/notifications/email-deliveries",
+    titleI18nKey: "routes.notifications.emailDeliveries",
+    requiredPermission: "notification:email-delivery:view",
+    menuVisible: true,
+    group: "notifications",
+    sortOrder: 225,
   },
   {
     routeCode: "operations.online-users",

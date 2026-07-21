@@ -13,7 +13,11 @@ import {
   createPostgresqlInfrastructureExecutor,
   createSqliteInfrastructureExecutor,
 } from "./infrastructure.executor";
-import type { StoredFileMetadataInput } from "./file-management";
+import {
+  parseStorageDriver,
+  type ManagedFileRecord,
+  type StoredFileMetadataInput,
+} from "./file-management";
 import type { InAppNotificationRecordInput } from "./in-app-notification-dispatcher";
 import type { LogType, ScheduledTaskInput } from "./infrastructure.types";
 
@@ -59,7 +63,7 @@ export class InfrastructureRepository {
 
   async listFiles() {
     const rows = await this.executor.all(
-      `SELECT id, object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at
+      `SELECT id, object_key, storage_bucket, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, content_deleted_at, created_at, updated_at
        FROM file_objects ORDER BY id DESC LIMIT 100`,
     );
     return rows.map(toFileRecord);
@@ -67,7 +71,7 @@ export class InfrastructureRepository {
 
   async getFile(id: string) {
     const rows = await this.executor.all(
-      `SELECT id, object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at
+      `SELECT id, object_key, storage_bucket, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, content_deleted_at, created_at, updated_at
        FROM file_objects WHERE id = ${this.p(1)} LIMIT 1`,
       [id],
     );
@@ -77,10 +81,11 @@ export class InfrastructureRepository {
   async createFile(input: StoredFileMetadataInput) {
     const now = nowIso();
     await this.executor.run(
-      `INSERT INTO file_objects (object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at, created_by, updated_by)
-       VALUES (${this.p(1)}, ${this.p(2)}, ${this.p(3)}, ${this.p(4)}, ${this.p(5)}, ${this.p(6)}, 'active', ${this.bool(false)}, ${this.bool(false)}, ${this.p(7)}, ${this.p(8)}, ${this.p(9)}, ${this.p(10)})`,
+      `INSERT INTO file_objects (object_key, storage_bucket, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at, created_by, updated_by)
+       VALUES (${this.p(1)}, ${this.p(2)}, ${this.p(3)}, ${this.p(4)}, ${this.p(5)}, ${this.p(6)}, ${this.p(7)}, 'active', ${this.bool(false)}, ${this.bool(false)}, ${this.p(8)}, ${this.p(9)}, ${this.p(10)}, ${this.p(11)})`,
       [
         input.objectKey,
+        input.storageBucket,
         input.originalName,
         input.contentType,
         input.extension,
@@ -93,7 +98,7 @@ export class InfrastructureRepository {
       ],
     );
     const rows = await this.executor.all(
-      `SELECT id, object_key, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, created_at, updated_at
+      `SELECT id, object_key, storage_bucket, original_name, content_type, extension, size_bytes, storage_driver, status, referenced, is_deleted, content_deleted_at, created_at, updated_at
        FROM file_objects WHERE object_key = ${this.p(1)} LIMIT 1`,
       [input.objectKey],
     );
@@ -186,12 +191,17 @@ export class InfrastructureRepository {
     await this.executor.transaction(async () => {
       for (const record of records) {
         await this.executor.run(
-          `INSERT INTO notifications (user_id, channel, title, body, status, metadata_json, is_deleted, created_at, updated_at)
-           VALUES (${this.p(1)}, 'in_app', ${this.p(2)}, ${this.p(3)}, 'unread', ${this.p(4)}, ${this.bool(false)}, ${this.p(5)}, ${this.p(6)})`,
+          `INSERT INTO notifications
+            (user_id, channel, title, body, status, request_key, metadata_json,
+             is_deleted, created_at, updated_at)
+           VALUES (${this.p(1)}, 'in_app', ${this.p(2)}, ${this.p(3)}, 'unread',
+            ${this.p(4)}, ${this.p(5)}, ${this.bool(false)}, ${this.p(6)}, ${this.p(7)})
+           ON CONFLICT (user_id, request_key) DO NOTHING`,
           [
             record.userId,
             record.title,
             record.body,
+            record.requestKey,
             jsonParam({ ...record.metadata, createdBy: record.createdBy }, this.executor.dialect),
             now,
             now,
@@ -232,7 +242,7 @@ export class InfrastructureRepository {
       locale: String(row.locale),
       subject: nullableString(row.subject),
       body: String(row.body),
-      variables: readJson(row.variables_json),
+      variables: readJson<string[]>(row.variables_json),
       status: String(row.status),
       createdAt: iso(row.created_at),
       updatedAt: iso(row.updated_at),
@@ -271,14 +281,12 @@ export class InfrastructureRepository {
     if (!current) return null;
     const next = { ...current, ...input };
     await this.executor.run(
-      `UPDATE notification_templates SET code = ${this.p(1)}, channel = ${this.p(2)}, locale = ${this.p(3)}, subject = ${this.p(4)}, body = ${this.p(5)}, variables_json = ${this.p(6)}, updated_at = ${this.p(7)} WHERE id = ${this.p(8)}`,
+      `UPDATE notification_templates SET subject = ${this.p(1)}, body = ${this.p(2)}, variables_json = ${this.p(3)}, status = ${this.p(4)}, updated_at = ${this.p(5)} WHERE id = ${this.p(6)}`,
       [
-        next.code,
-        next.channel,
-        next.locale,
         next.subject ?? null,
         next.body,
         jsonParam(next.variables, this.executor.dialect),
+        next.status,
         nowIso(),
         id,
       ],
@@ -455,7 +463,7 @@ function toScheduledTask(row: DatabaseRow) {
   };
 }
 
-function toFileRecord(row: DatabaseRow) {
+function toFileRecord(row: DatabaseRow): ManagedFileRecord {
   return {
     id: String(row.id),
     objectKey: String(row.object_key),
@@ -463,10 +471,12 @@ function toFileRecord(row: DatabaseRow) {
     contentType: String(row.content_type),
     extension: String(row.extension),
     sizeBytes: Number(row.size_bytes),
-    storageDriver: String(row.storage_driver),
+    storageDriver: parseStorageDriver(String(row.storage_driver)),
+    storageBucket: nullableString(row.storage_bucket),
     status: String(row.status),
     referenced: Boolean(row.referenced),
     isDeleted: Boolean(row.is_deleted),
+    contentDeletedAt: nullableIso(row.content_deleted_at),
     createdAt: iso(row.created_at),
     updatedAt: iso(row.updated_at),
   };

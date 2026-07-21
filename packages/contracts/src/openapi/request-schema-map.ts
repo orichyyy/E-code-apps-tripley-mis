@@ -43,4 +43,5 @@ export const requestSchemaByOperationCode: Record<string, string> = {
   "api.scheduled-tasks.create": "CreateScheduledTaskRequest",
   "api.scheduled-tasks.update": "UpdateScheduledTaskRequest",
   "api.import-export.export.create": "CreateExportTaskRequest",
+  "api.modules.sync.apply": "ApplyModuleSyncRequest",
 };

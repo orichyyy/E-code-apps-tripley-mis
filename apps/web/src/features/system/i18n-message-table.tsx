@@ -42,7 +42,8 @@ export function I18nMessageTable({
             <th className="border-b px-4 py-3 font-medium">Key</th>
             <th className="border-b px-4 py-3 font-medium">Language</th>
             <th className="border-b px-4 py-3 font-medium">Module</th>
-            <th className="border-b px-4 py-3 font-medium">Value</th>
+            <th className="border-b px-4 py-3 font-medium">Effective value</th>
+            <th className="border-b px-4 py-3 font-medium">Source</th>
             <th className="border-b px-4 py-3 font-medium">Updated</th>
             <th className="border-b px-4 py-3 font-medium">Actions</th>
           </tr>
@@ -61,6 +62,9 @@ export function I18nMessageTable({
               </td>
               <td className="border-b px-4 py-3 text-muted-foreground">{record.module || "-"}</td>
               <td className="max-w-96 truncate border-b px-4 py-3">{record.messageValue}</td>
+              <td className="border-b px-4 py-3 text-muted-foreground">
+                {record.overrideValue === null ? "Manifest default" : "Administrator override"}
+              </td>
               <td className="border-b px-4 py-3 text-muted-foreground">{record.updatedAt}</td>
               <td className="border-b px-4 py-3">
                 {canUpdate ? (

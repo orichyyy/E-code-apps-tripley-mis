@@ -2,7 +2,11 @@ import {
   createInMemoryCacheAdapter,
   createInMemoryTokenStoreAdapter,
 } from "@web-admin-base/adapters";
-import { baseRouteManifest, type BaseApiPermissionManifestEntry } from "@web-admin-base/contracts";
+import {
+  baseMenuManifest,
+  baseRouteManifest,
+  type BaseApiPermissionManifestEntry,
+} from "@web-admin-base/contracts";
 import type {
   AssignUserOrganizationRoleRequest,
   ChangePasswordRequest,
@@ -30,6 +34,7 @@ import type {
 } from "@web-admin-base/contracts";
 
 import { AuthService, type OnlineUserListFilters } from "./auth.service";
+import { BusinessModuleMetadataService } from "./business-module-metadata.service";
 import { InitializationService } from "./initialization.service";
 import { InMemoryBackendStore } from "./in-memory-store";
 import { MenuService } from "./menu.service";
@@ -64,6 +69,7 @@ export class BackendCoreServices {
   readonly routeMetadata: RouteMetadataService;
   readonly roles: RoleService;
   readonly users: UserService;
+  private readonly businessModuleMetadata: BusinessModuleMetadataService;
 
   constructor(protected readonly context: BackendCoreContext) {
     this.organizations = new OrganizationService(context);
@@ -75,6 +81,7 @@ export class BackendCoreServices {
     this.profile = new ProfileService(context, this.users);
     this.permissions = new PermissionService(context, context.permissionCache);
     this.permissionExtensions = new PermissionExtensionService(context, this.permissions);
+    this.businessModuleMetadata = new BusinessModuleMetadataService(context);
     this.initialization = new InitializationService(
       context,
       this.organizations,
@@ -88,6 +95,13 @@ export class BackendCoreServices {
 
   getInitializationStatus() {
     return this.initialization.getStatus();
+  }
+
+  async refreshBusinessModuleMetadata(
+    definitions: import("@web-admin-base/contracts").BusinessModuleDefinition[],
+  ): Promise<void> {
+    this.businessModuleMetadata.synchronize(definitions);
+    await this.permissions.invalidateAllPermissionContexts();
   }
 
   initialize(input: InitializationSetupRequest) {
@@ -126,6 +140,10 @@ export class BackendCoreServices {
       organizations: userContext.organizations,
       permissionCodes: userContext.permissionCodes,
       menus: userContext.menus,
+      isSuperAdministrator: permissionContext.isSuperAdministrator,
+      dataPermissions: permissionContext.dataPermissions ?? [],
+      fieldPermissions: permissionContext.fieldPermissions ?? [],
+      userPermissionOverrides: permissionContext.userPermissionOverrides ?? [],
       passwordChangeRequired: userContext.passwordChangeRequired,
       preferences: this.profile.getPreferences(authContext.userId),
     };
@@ -160,11 +178,18 @@ export class BackendCoreServices {
       authContext.userId,
       input.organizationId,
     );
-    return this.auth.switchCurrentOrganization(
+    const result = await this.auth.switchCurrentOrganization(
       authContext,
       input,
       permissionContext.permissionCodes,
     );
+    return {
+      ...result,
+      isSuperAdministrator: permissionContext.isSuperAdministrator,
+      dataPermissions: permissionContext.dataPermissions ?? [],
+      fieldPermissions: permissionContext.fieldPermissions ?? [],
+      userPermissionOverrides: permissionContext.userPermissionOverrides ?? [],
+    };
   }
 
   async getCurrentUserContext(
@@ -224,6 +249,7 @@ export class BackendCoreServices {
     );
     return {
       ...this.auth.getCurrentPermissionContext(authContext, permissionContext.permissionCodes),
+      isSuperAdministrator: permissionContext.isSuperAdministrator,
       dataPermissions: permissionContext.dataPermissions ?? [],
       fieldPermissions: permissionContext.fieldPermissions ?? [],
       userPermissionOverrides: permissionContext.userPermissionOverrides ?? [],
@@ -239,6 +265,11 @@ export class BackendCoreServices {
     apiPermission: BaseApiPermissionManifestEntry,
   ) {
     return this.permissions.requireApiPermission(authContext, apiPermission);
+  }
+
+  async hasPermission(userId: string, organizationId: string, permissionCode: string) {
+    const context = await this.permissions.getPermissionContext(userId, organizationId);
+    return context.permissionCodes.includes(permissionCode);
   }
 
   logout(sessionId: string) {
@@ -465,6 +496,13 @@ export class BackendCoreServices {
 
   syncPermissions() {
     return this.permissions.syncPermissionManifests();
+  }
+
+  async synchronizeBaseManifests() {
+    const permissionMetadata = await this.syncPermissions();
+    const routes = await this.syncRoutes();
+    const menus = this.menus.seedBaseMenus(baseMenuManifest);
+    return { ...permissionMetadata, routes, menus };
   }
 
   listRoutes(filters: RouteMetadataListFilters = {}) {

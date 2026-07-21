@@ -145,7 +145,8 @@ export class SystemManagementRepository {
 
   async listI18nMessages(): Promise<I18nMessageRecord[]> {
     const rows = await this.executor.all(
-      `SELECT id, tenant_id, message_key, language, message_value, module, updated_at
+      `SELECT id, tenant_id, message_key, language, message_value, default_message,
+              override_value, module, status, manifest_hash, updated_at
        FROM i18n_messages ORDER BY module, message_key, language LIMIT 500`,
     );
     return rows.map(toI18nMessage);
@@ -155,10 +156,14 @@ export class SystemManagementRepository {
     id: string,
     input: UpdateI18nMessageRequest,
   ): Promise<I18nMessageRecord | null> {
+    const current = (await this.listI18nMessages()).find((record) => record.id === id);
+    if (!current) return null;
+    const messageValue = input.overrideValue ?? current.defaultMessage;
     await this.executor.run(
-      `UPDATE i18n_messages SET message_value = ${this.p(1)}, updated_at = ${this.p(2)}
-       WHERE id = ${this.p(3)}`,
-      [input.messageValue, nowIso(), id],
+      `UPDATE i18n_messages
+       SET override_value = ${this.p(1)}, message_value = ${this.p(2)}, updated_at = ${this.p(3)}
+       WHERE id = ${this.p(4)}`,
+      [input.overrideValue, messageValue, nowIso(), id],
     );
     return (await this.listI18nMessages()).find((record) => record.id === id) ?? null;
   }
@@ -222,7 +227,11 @@ function toI18nMessage(row: DatabaseRow): I18nMessageRecord {
     messageKey: String(row.message_key),
     language: String(row.language),
     messageValue: String(row.message_value),
+    defaultMessage: String(row.default_message),
+    overrideValue: nullableString(row.override_value),
     module: String(row.module),
+    status: String(row.status) as I18nMessageRecord["status"],
+    manifestHash: nullableString(row.manifest_hash),
     updatedAt: iso(row.updated_at),
   };
 }

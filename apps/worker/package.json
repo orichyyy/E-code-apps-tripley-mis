@@ -14,7 +14,9 @@
     "@web-admin-base/adapters": "workspace:*",
     "@web-admin-base/contracts": "workspace:*",
     "@web-admin-base/db": "workspace:*",
+    "@web-admin-base/module-sdk": "workspace:*",
     "@web-admin-base/shared": "workspace:*",
+    "csv-parse": "^6.1.0",
     "zod": "^3.25.67"
   }
 }

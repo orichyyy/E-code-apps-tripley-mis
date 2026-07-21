@@ -6,8 +6,16 @@ export type QueueJob<TPayload = unknown> = {
   payload: TPayload;
 };
 
+export type QueueEnqueueOptions = {
+  maxAttempts?: number;
+};
+
 export type QueueAdapter = HealthCheckableAdapter & {
-  enqueue: <TPayload>(type: string, payload: TPayload) => Promise<QueueJob<TPayload>>;
+  enqueue: <TPayload>(
+    type: string,
+    payload: TPayload,
+    options?: QueueEnqueueOptions,
+  ) => Promise<QueueJob<TPayload>>;
   consume: <TPayload>(
     type: string,
     handler: (job: QueueJob<TPayload>) => Promise<void>,
@@ -16,3 +24,4 @@ export type QueueAdapter = HealthCheckableAdapter & {
 
 export * from "./in-memory-queue";
 export * from "./database-queue";
+export * from "./rabbitmq-queue";

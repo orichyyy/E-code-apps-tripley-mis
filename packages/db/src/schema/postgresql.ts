@@ -249,10 +249,6 @@ export const roleDataPermissions = pgTable(
     updatedBy: integer("updated_by"),
   },
   (table) => ({
-    roleDataPermissionUnique: uniqueIndex("role_data_permissions_role_permission_unique").on(
-      table.roleId,
-      table.permissionId,
-    ),
     effectCheck: check(
       "role_data_permissions_effect_check",
       sql`${table.effect} IN ('allow', 'deny')`,
@@ -269,6 +265,7 @@ export const fieldPermissionRules = pgTable(
     targetId: integer("target_id").notNull(),
     resource: text("resource").notNull(),
     field: text("field").notNull(),
+    scenario: text("scenario").notNull(),
     effect: text("effect").notNull(),
     ...softDelete,
     ...timestamps,
@@ -281,6 +278,7 @@ export const fieldPermissionRules = pgTable(
       table.targetId,
       table.resource,
       table.field,
+      table.scenario,
     ),
     targetTypeCheck: check(
       "field_permission_rules_target_type_check",
@@ -289,6 +287,10 @@ export const fieldPermissionRules = pgTable(
     effectCheck: check(
       "field_permission_rules_effect_check",
       sql`${table.effect} IN ('visible', 'hidden', 'readonly')`,
+    ),
+    scenarioCheck: check(
+      "field_permission_rules_scenario_check",
+      sql`${table.scenario} IN ('list', 'detail', 'create', 'edit')`,
     ),
   }),
 );
@@ -333,6 +335,8 @@ export const menus = pgTable(
     sortOrder: integer("sort_order").notNull().default(0),
     visible: boolean("visible").notNull().default(true),
     status: text("status").notNull().default("enabled"),
+    source: text("source").notNull().default("manual"),
+    ownerModule: text("owner_module"),
     ...softDelete,
     ...timestamps,
   },
@@ -358,6 +362,8 @@ export const routeMetadata = pgTable(
     icon: text("icon"),
     sortOrder: integer("sort_order").notNull().default(0),
     status: text("status").notNull().default("enabled"),
+    source: text("source").notNull().default("base_manifest"),
+    ownerModule: text("owner_module"),
     ...timestamps,
   },
   (table) => ({
@@ -382,6 +388,8 @@ export const apiPermissions = pgTable(
     requiredPermission: text("required_permission"),
     logLevel: text("log_level").notNull().default("basic"),
     public: boolean("public").notNull().default(false),
+    source: text("source").notNull().default("base_manifest"),
+    manifestHash: text("manifest_hash"),
     status: text("status").notNull().default("enabled"),
     ...timestamps,
   },
@@ -562,7 +570,11 @@ export const i18nMessages = pgTable(
     messageKey: text("message_key").notNull(),
     language: text("language").notNull(),
     messageValue: text("message_value").notNull(),
+    defaultMessage: text("default_message").notNull().default(""),
+    overrideValue: text("override_value"),
     module: text("module").notNull(),
+    status: text("status").notNull().default("enabled"),
+    manifestHash: text("manifest_hash"),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
   },
   (table) => ({
@@ -571,6 +583,46 @@ export const i18nMessages = pgTable(
       table.language,
     ),
     moduleIndex: index("i18n_messages_module_idx").on(table.module),
+  }),
+);
+
+export const businessModuleRegistryState = pgTable(
+  "business_module_registry_state",
+  {
+    id: serial("id").primaryKey(),
+    singletonKey: text("singleton_key").notNull().default("current"),
+    registryHash: text("registry_hash").notNull(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }).notNull(),
+    acceptedBy: integer("accepted_by"),
+    ...timestamps,
+  },
+  (table) => ({
+    singletonUnique: uniqueIndex("business_module_registry_state_singleton_unique").on(
+      table.singletonKey,
+    ),
+  }),
+);
+
+export const businessModuleRegistryEntries = pgTable(
+  "business_module_registry_entries",
+  {
+    id: serial("id").primaryKey(),
+    moduleCode: text("module_code").notNull(),
+    definitionJson: jsonb("definition_json").notNull(),
+    definitionHash: text("definition_hash").notNull(),
+    activationHash: text("activation_hash").notNull(),
+    status: text("status").notNull().default("active"),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }).notNull(),
+    acceptedBy: integer("accepted_by"),
+    disabledAt: timestamp("disabled_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => ({
+    codeUnique: uniqueIndex("business_module_registry_entries_code_unique").on(table.moduleCode),
+    statusCheck: check(
+      "business_module_registry_entries_status_check",
+      sql`${table.status} IN ('active', 'disabled')`,
+    ),
   }),
 );
 
@@ -659,6 +711,7 @@ export const eventOutbox = pgTable(
   "event_outbox",
   {
     id: serial("id").primaryKey(),
+    eventKey: text("event_key"),
     eventType: text("event_type").notNull(),
     payloadJson: jsonb("payload_json").notNull(),
     status: text("status").notNull().default("pending"),
@@ -671,6 +724,7 @@ export const eventOutbox = pgTable(
     ...timestamps,
   },
   (table) => ({
+    eventKeyUnique: uniqueIndex("event_outbox_event_key_unique").on(table.eventKey),
     statusNextRunIndex: index("event_outbox_status_next_run_idx").on(table.status, table.nextRunAt),
     statusCheck: check(
       "event_outbox_status_check",
@@ -715,6 +769,8 @@ export const fileObjects = pgTable(
     extension: text("extension").notNull(),
     sizeBytes: integer("size_bytes").notNull(),
     storageDriver: text("storage_driver").notNull(),
+    storageBucket: text("storage_bucket"),
+    contentDeletedAt: timestamp("content_deleted_at", { withTimezone: true }),
     status: text("status").notNull().default("active"),
     referenced: boolean("referenced").notNull().default(false),
     ...softDelete,
@@ -724,6 +780,11 @@ export const fileObjects = pgTable(
   },
   (table) => ({
     objectKeyUnique: uniqueIndex("file_objects_object_key_unique").on(table.objectKey),
+    contentCleanupIndex: index("file_objects_content_cleanup_idx").on(
+      table.status,
+      table.isDeleted,
+      table.contentDeletedAt,
+    ),
     statusCheck: check("file_objects_status_check", sql`${table.status} IN ('active', 'invalid')`),
   }),
 );
@@ -758,6 +819,7 @@ export const notifications = pgTable(
     channel: text("channel").notNull(),
     title: text("title").notNull(),
     body: text("body").notNull(),
+    requestKey: text("request_key"),
     status: text("status").notNull().default("unread"),
     metadataJson: jsonb("metadata_json").notNull(),
     readAt: timestamp("read_at", { withTimezone: true }),
@@ -767,6 +829,10 @@ export const notifications = pgTable(
   },
   (table) => ({
     userStatusIndex: index("notifications_user_status_idx").on(table.userId, table.status),
+    userRequestKeyUnique: uniqueIndex("notifications_user_request_key_unique").on(
+      table.userId,
+      table.requestKey,
+    ),
     channelCheck: check(
       "notifications_channel_check",
       sql`${table.channel} IN ('in_app', 'email', 'webhook', 'sms')`,
@@ -792,7 +858,8 @@ export const notificationTemplates = pgTable(
     ...timestamps,
   },
   (table) => ({
-    codeLocaleUnique: uniqueIndex("notification_templates_code_locale_unique").on(
+    codeLocaleUnique: uniqueIndex("notification_templates_channel_code_locale_unique").on(
+      table.channel,
       table.code,
       table.locale,
     ),
@@ -807,6 +874,85 @@ export const notificationTemplates = pgTable(
   }),
 );
 
+export const emailDeliveries = pgTable(
+  "email_deliveries",
+  {
+    id: serial("id").primaryKey(),
+    requestKey: text("request_key").notNull(),
+    requestFingerprint: text("request_fingerprint").notNull(),
+    userId: integer("user_id").notNull(),
+    templateId: integer("template_id").notNull(),
+    templateCode: text("template_code").notNull(),
+    locale: text("locale").notNull(),
+    templateUpdatedAt: timestamp("template_updated_at", { withTimezone: true }).notNull(),
+    maskedRecipient: text("masked_recipient").notNull(),
+    messageId: text("message_id").notNull(),
+    contentKeyId: text("content_key_id"),
+    contentEnvelope: text("content_envelope"),
+    referenceType: text("reference_type"),
+    referenceId: text("reference_id"),
+    status: text("status").notNull().default("pending"),
+    attempt: integer("attempt").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull(),
+    nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).notNull(),
+    lockedBy: text("locked_by"),
+    lockedAt: timestamp("locked_at", { withTimezone: true }),
+    lastSmtpCode: integer("last_smtp_code"),
+    lastErrorCode: text("last_error_code"),
+    lastErrorMessage: text("last_error_message"),
+    succeededAt: timestamp("succeeded_at", { withTimezone: true }),
+    failedAt: timestamp("failed_at", { withTimezone: true }),
+    canceledAt: timestamp("canceled_at", { withTimezone: true }),
+    contentPurgedAt: timestamp("content_purged_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => ({
+    requestUserUnique: uniqueIndex("email_deliveries_request_user_unique").on(
+      table.requestKey,
+      table.userId,
+    ),
+    claimIndex: index("email_deliveries_claim_idx").on(table.status, table.nextAttemptAt),
+    userIndex: index("email_deliveries_user_idx").on(table.userId, table.createdAt),
+    templateIndex: index("email_deliveries_template_idx").on(
+      table.templateCode,
+      table.locale,
+      table.createdAt,
+    ),
+    statusCheck: check(
+      "email_deliveries_status_check",
+      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed', 'canceled')`,
+    ),
+  }),
+);
+
+export const emailDeliveryAttempts = pgTable(
+  "email_delivery_attempts",
+  {
+    id: serial("id").primaryKey(),
+    deliveryId: integer("delivery_id").notNull(),
+    attemptNumber: integer("attempt_number").notNull(),
+    status: text("status").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }).notNull(),
+    durationMs: integer("duration_ms").notNull(),
+    smtpCode: integer("smtp_code"),
+    errorCode: text("error_code"),
+    errorMessage: text("error_message"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  },
+  (table) => ({
+    deliveryAttemptUnique: uniqueIndex("email_delivery_attempts_delivery_number_unique").on(
+      table.deliveryId,
+      table.attemptNumber,
+    ),
+    deliveryIndex: index("email_delivery_attempts_delivery_idx").on(table.deliveryId),
+    statusCheck: check(
+      "email_delivery_attempts_status_check",
+      sql`${table.status} IN ('succeeded', 'failed')`,
+    ),
+  }),
+);
+
 export const announcements = pgTable(
   "announcements",
   {
@@ -817,6 +963,7 @@ export const announcements = pgTable(
     scopeType: text("scope_type").notNull(),
     status: text("status").notNull().default("draft"),
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    expiresAt: timestamp("expire_at", { withTimezone: true }),
     ...softDelete,
     ...timestamps,
     createdBy: integer("created_by"),
@@ -835,6 +982,29 @@ export const announcements = pgTable(
   }),
 );
 
+export const announcementTargets = pgTable(
+  "announcement_targets",
+  {
+    id: serial("id").primaryKey(),
+    announcementId: integer("announcement_id").notNull(),
+    targetType: text("target_type").notNull(),
+    targetId: integer("target_id").notNull(),
+  },
+  (table) => ({
+    announcementTargetUnique: uniqueIndex("announcement_targets_binding_unique").on(
+      table.announcementId,
+      table.targetType,
+      table.targetId,
+    ),
+    announcementIndex: index("announcement_targets_announcement_idx").on(table.announcementId),
+    targetIndex: index("announcement_targets_target_idx").on(table.targetType, table.targetId),
+    targetTypeCheck: check(
+      "announcement_targets_target_type_check",
+      sql`${table.targetType} = 'organization'`,
+    ),
+  }),
+);
+
 export const webhookSubscriptions = pgTable(
   "webhook_subscriptions",
   {
@@ -844,6 +1014,7 @@ export const webhookSubscriptions = pgTable(
     url: text("url").notNull(),
     eventTypes: jsonb("event_types").notNull(),
     secret: text("secret"),
+    revision: integer("revision").notNull().default(1),
     status: text("status").notNull().default("enabled"),
     ...softDelete,
     ...timestamps,
@@ -855,6 +1026,76 @@ export const webhookSubscriptions = pgTable(
     statusCheck: check(
       "webhook_subscriptions_status_check",
       sql`${table.status} IN ('enabled', 'disabled')`,
+    ),
+  }),
+);
+
+export const webhookDeliveries = pgTable(
+  "webhook_deliveries",
+  {
+    id: serial("id").primaryKey(),
+    eventOutboxId: integer("event_outbox_id").notNull(),
+    subscriptionId: integer("subscription_id").notNull(),
+    subscriptionRevision: integer("subscription_revision").notNull(),
+    eventType: text("event_type").notNull(),
+    eventSource: text("event_source").notNull(),
+    eventPayloadJson: jsonb("event_payload_json").notNull(),
+    targetUrl: text("target_url").notNull(),
+    status: text("status").notNull().default("pending"),
+    attempt: integer("attempt").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull(),
+    nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).notNull(),
+    lockedBy: text("locked_by"),
+    lockedAt: timestamp("locked_at", { withTimezone: true }),
+    lastHttpStatus: integer("last_http_status"),
+    lastErrorCode: text("last_error_code"),
+    lastErrorMessage: text("last_error_message"),
+    succeededAt: timestamp("succeeded_at", { withTimezone: true }),
+    failedAt: timestamp("failed_at", { withTimezone: true }),
+    canceledAt: timestamp("canceled_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => ({
+    eventSubscriptionUnique: uniqueIndex("webhook_deliveries_event_subscription_unique").on(
+      table.eventOutboxId,
+      table.subscriptionId,
+    ),
+    claimIndex: index("webhook_deliveries_claim_idx").on(table.status, table.nextAttemptAt),
+    subscriptionIndex: index("webhook_deliveries_subscription_idx").on(
+      table.subscriptionId,
+      table.createdAt,
+    ),
+    statusCheck: check(
+      "webhook_deliveries_status_check",
+      sql`${table.status} IN ('pending', 'running', 'succeeded', 'failed', 'canceled')`,
+    ),
+  }),
+);
+
+export const webhookDeliveryAttempts = pgTable(
+  "webhook_delivery_attempts",
+  {
+    id: serial("id").primaryKey(),
+    deliveryId: integer("delivery_id").notNull(),
+    attemptNumber: integer("attempt_number").notNull(),
+    status: text("status").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }).notNull(),
+    durationMs: integer("duration_ms").notNull(),
+    httpStatus: integer("http_status"),
+    errorCode: text("error_code"),
+    errorMessage: text("error_message"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  },
+  (table) => ({
+    deliveryAttemptUnique: uniqueIndex("webhook_delivery_attempts_delivery_number_unique").on(
+      table.deliveryId,
+      table.attemptNumber,
+    ),
+    deliveryIndex: index("webhook_delivery_attempts_delivery_idx").on(table.deliveryId),
+    statusCheck: check(
+      "webhook_delivery_attempts_status_check",
+      sql`${table.status} IN ('succeeded', 'failed')`,
     ),
   }),
 );
@@ -890,6 +1131,7 @@ export const importExportTasks = pgTable(
   "import_export_tasks",
   {
     id: serial("id").primaryKey(),
+    idempotencyKey: text("idempotency_key"),
     taskType: text("task_type").notNull(),
     resourceType: text("resource_type").notNull(),
     status: text("status").notNull().default("pending"),
@@ -900,11 +1142,18 @@ export const importExportTasks = pgTable(
     successRows: integer("success_rows").notNull().default(0),
     failedRows: integer("failed_rows").notNull().default(0),
     errorPreviewJson: jsonb("error_preview_json").notNull(),
+    requestJson: jsonb("request_json").notNull().default({}),
+    executionContextJson: jsonb("execution_context_json"),
     resultExpiresAt: timestamp("result_expires_at", { withTimezone: true }),
     ...timestamps,
     createdBy: integer("created_by"),
   },
   (table) => ({
+    idempotencyUnique: uniqueIndex("import_export_tasks_idempotency_unique").on(
+      table.taskType,
+      table.resourceType,
+      table.idempotencyKey,
+    ),
     statusIndex: index("import_export_tasks_status_idx").on(table.status),
     typeCheck: check(
       "import_export_tasks_type_check",
@@ -921,9 +1170,13 @@ export const postgresqlSchema = {
   announcements,
   apiPermissions,
   authSessions,
+  businessModuleRegistryEntries,
+  businessModuleRegistryState,
   cacheEntries,
   dictionaryItems,
   dictionaryTypes,
+  emailDeliveries,
+  emailDeliveryAttempts,
   eventOutbox,
   fileObjects,
   fileReferences,
@@ -953,5 +1206,7 @@ export const postgresqlSchema = {
   userPreferences,
   userOrganizationRoles,
   webhookSubscriptions,
+  webhookDeliveries,
+  webhookDeliveryAttempts,
   users,
 };

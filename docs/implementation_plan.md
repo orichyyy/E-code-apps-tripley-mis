@@ -481,7 +481,7 @@ The webhook subscription frontend slice completed the following:
 - Preserved the sensitive-field boundary: persisted raw secrets are never rendered; the UI only displays whether a secret is configured and allows setting/replacing a secret.
 - Added frontend API/client and component coverage for listing, create/update requests, route rendering, and raw-secret non-display.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. Real outbound webhook delivery, retry workers, S3-compatible storage, Redis, and RabbitMQ remain optional/reserved until concrete package and runtime contracts are confirmed; SMTP is available only when explicitly configured.
+At this historical slice, outbound Webhook delivery and the listed optional drivers were still reserved. Later sections record their implementation status.
 
 ## Announcement Frontend Progress
 
@@ -530,7 +530,7 @@ The notification template frontend slice completed the following:
 - Added list, filter, create, and edit behavior for persisted in-app, email, and reserved SMS template records.
 - Added frontend API/client and component coverage for listing, create/update requests, route rendering, and template variable display.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. SMTP delivery is available through the optional configured driver and test-send API. SMS delivery, real outbound webhook delivery, retry workers, S3-compatible storage, Redis, and RabbitMQ remain optional/reserved until concrete package and runtime contracts are confirmed.
+At this historical slice, outbound Webhook delivery and the listed optional drivers were still reserved. Later sections record their implementation status; SMS sending remains reserved.
 
 ## i18n Message Frontend Progress
 
@@ -613,7 +613,7 @@ The SMTP email notification slice completed the following:
 - Added OpenAPI request/response schema coverage for the test-send endpoint.
 - Added in-memory route tests, PostgreSQL route tests for DB-backed template lookup, and SMTP adapter protocol tests against a local fake SMTP server.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. SMTP remains optional and disabled unless configured. SMS sending, real outbound webhook delivery, notification fan-out/retry workers, and production delivery retry catalogs remain reserved.
+At this historical slice, outbound Webhook delivery remained reserved. It is implemented in the later Webhook section; SMTP remains optional and SMS sending remains reserved.
 
 ## In-App Notification Dispatch Progress
 
@@ -627,7 +627,7 @@ The in-app notification dispatch slice completed the following:
 - Kept public administrator notification creation APIs and frontend create flows out of scope because no base API contract confirms them.
 - Added in-memory service coverage, worker task coverage, and PostgreSQL durable queue/notification persistence coverage.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. Production notification retry catalogs, external webhook delivery, SMS sending, S3-compatible storage, Redis, and RabbitMQ remain reserved or optional until their concrete contracts are confirmed.
+Remaining base-system gaps are tracked in `docs/known_gaps.md`. Reliable outbound webhook delivery now follows ADR 0002; production destination acceptance remains pending. SMS sending and optional external integrations remain bounded by their documented contracts and deployment decisions.
 
 ## Worker Runtime Wiring Progress
 
@@ -664,7 +664,7 @@ The base worker task catalog slice completed the following:
 - Kept unknown import/export resource types from silently succeeding; unsupported resources are marked failed with an error preview instead of inventing business-module handlers.
 - Added worker integration coverage for CSV log export, manual scheduled runs, log retention cleanup, invalid file cleanup, result cleanup, and default task registration.
 
-Remaining base-system gaps are tracked in `docs/known_gaps.md`. Future business-module task catalogs, real outbound webhook delivery, SMS sending, S3-compatible storage, Redis, and RabbitMQ remain reserved or optional until their concrete contracts are confirmed.
+At this historical slice, outbound Webhook delivery and the listed optional drivers remained reserved. Later sections record their implementation status; future business-module catalogs and SMS remain outside scope.
 
 ## Final Consistency Hardening Progress
 
@@ -812,7 +812,7 @@ The local run acceptance slice completed the following:
 - Added `docs/local_run_acceptance.md` as the reproducible local acceptance runbook.
 - Documented automated acceptance through `pnpm verify` and `pnpm smoke:local`.
 - Documented the persistent SQLite manual run path with seed credentials, worker startup, browser page checklist, API documentation check, evidence to record, and cleanup steps.
-- Kept optional Redis, RabbitMQ, S3-compatible storage, SMS, and real outbound webhook delivery outside the acceptance scope unless explicitly configured by a future goal.
+- At that time, kept optional integrations outside acceptance; current Webhook acceptance remains optional and is documented separately.
 
 ## Deployment Acceptance Progress
 
@@ -821,7 +821,7 @@ The deployment acceptance slice completed the following:
 - Added `docs/deployment_acceptance.md` as the PostgreSQL-backed deployment acceptance runbook.
 - Documented required production variables, deployment order, initialization choices, static SPA serving requirements, API checks, browser checks, worker checks, security/consistency checks, and acceptance evidence.
 - Added rollback and troubleshooting entry points for migration, login, worker, file access, OpenAPI, and permission consistency failures.
-- Kept Redis, RabbitMQ, S3-compatible storage, SMS, and real outbound webhook delivery outside the required deployment acceptance path unless explicitly configured by a future goal.
+- Kept optional integrations outside required deployment acceptance; current S3 and Webhook acceptance sections remain opt-in.
 
 ## Release Readiness Progress
 
@@ -880,3 +880,184 @@ The production deployment acceptance slice completed the following:
 - Found and fixed the Node ESM production start path for API and worker services by bundling their built entrypoints with esbuild while keeping `start` as `node dist/main.js`.
 - Verified production-built API, worker, and static SPA serving with `/api` reverse proxy behavior.
 - Confirmed API health, metrics, OpenAPI, login, core API checks, asynchronous log export task creation, and browser navigation through representative admin pages.
+
+## Optional Redis and RabbitMQ Adapter Progress
+
+The optional external adapter slice completed the following:
+
+- Added optional Redis cache and rate-limit adapter drivers behind the existing `CacheAdapter` and `RateLimitAdapter` interfaces.
+- Added optional RabbitMQ queue and event-bus adapter drivers behind the existing `QueueAdapter` and `EventBusAdapter` interfaces.
+- Kept Redis and RabbitMQ disabled for default local startup, CI, deployment acceptance, API runtime, and worker runtime unless a future runtime-wiring goal explicitly opts in.
+- Added `scripts/start-optional-integrations.ps1` to start lightweight Docker Desktop development containers using `redis:8.8.0-alpine` and `rabbitmq:4.3.2-alpine`.
+- Added `pnpm test:optional-integrations` with tests gated by `REDIS_URL` and `RABBITMQ_URL`, so normal `pnpm test` skips the external-driver coverage when the services are absent.
+- Verified the optional Redis and RabbitMQ adapter tests against local Docker containers.
+
+## Optional Adapter Runtime Wiring Progress
+
+The optional adapter runtime-wiring slice completed the following:
+
+- Added validated API runtime configuration for `CACHE_DRIVER`, `RATE_LIMIT_DRIVER`, `QUEUE_DRIVER`, `EVENT_BUS_DRIVER`, `REDIS_URL`, and `RABBITMQ_URL`.
+- Wired DB-backed API dependencies so `CACHE_DRIVER=database` uses the existing `cache_entries` table and `CACHE_DRIVER=redis` uses the optional Redis cache adapter for backend permission-cache storage.
+- Wired DB-backed API infrastructure so `QUEUE_DRIVER=rabbitmq` can enqueue adapter-backed jobs through RabbitMQ while default `QUEUE_DRIVER=database` preserves the existing durable database queue behavior.
+- Added worker runtime configuration for `QUEUE_DRIVER=rabbitmq`; the worker registers RabbitMQ consumers for adapter-backed jobs while still processing database durable queue and scheduler work for scheduled tasks, import/export, and log-export flows.
+- Added configuration tests proving external drivers require `REDIS_URL` or `RABBITMQ_URL` only when explicitly selected.
+
+## S3-Compatible File Storage Design Progress
+
+The next file-storage goal has a confirmed implementation contract:
+
+- Use AWS SDK v3 behind the existing `FileStorageAdapter`; keep local filesystem storage as the default.
+- Keep buckets private and authorize downloads through the backend before redirecting S3-backed requests to a 60-second presigned URL.
+- Persist each file's storage driver, optional bucket, and complete object key so local and S3 historical files remain accessible after the active upload driver changes.
+- Provision production buckets outside the application; permit automatic bucket creation only through explicit development/test configuration.
+- Invalidate file metadata and references before asynchronous physical content deletion, record content-deletion completion, and compensate storage writes when metadata persistence fails.
+- Share validated `FILE_STORAGE_DRIVER` and `S3_*` configuration between API and worker runtimes, with either explicit credentials or the AWS SDK default credential chain.
+- Use pinned `rustfs/rustfs:1.0.0-beta.8` only as the optional Docker-backed S3 compatibility-test backend. Do not use RustFS-specific APIs or select it as the production provider.
+- Keep ordinary tests and push CI independent of external object storage; expose a local integration command and manually triggered workflow for the real RustFS compatibility suite.
+
+## S3-Compatible File Storage Implementation Progress
+
+The confirmed ADR contract is now implemented:
+
+- Added an AWS SDK v3 S3-compatible adapter with custom endpoint, path-style, explicit/default-chain credentials, bucket health validation, explicit development/test bucket creation, put/get/delete, and private presigned GET support.
+- Added shared API/worker configuration and mixed local/S3 routing based on each persisted Object Location. `FILE_STORAGE_DRIVER` controls new writes only.
+- Added `storage_bucket` and `content_deleted_at` to SQLite/PostgreSQL schemas and migrations, with idempotent migration tracking.
+- Added authenticated S3 download/preview redirects, 15-900 second TTL validation with a 60-second default, metadata-failure upload compensation, and asynchronous physical deletion with later retry after failures.
+- Updated import/export result storage and worker cleanup to route through recorded driver, bucket, and complete key.
+- Added unit, API, worker, SQLite, PostgreSQL persistence, and real RustFS compatibility coverage.
+- Added `scripts/rustfs-dev.ps1`, `pnpm test:s3-integration`, and a manually triggered `S3 Compatibility` workflow using `rustfs/rustfs:1.0.0-beta.8` at a verified 256 MB limit.
+
+Production object-storage provider selection and target-environment deployment acceptance remain pending until that environment is ready. Direct browser uploads, multipart upload, automatic historical migration, and an S3 configuration UI remain outside this goal.
+
+## Reliable Outbound Webhook Delivery Progress
+
+The confirmed design in `docs/webhook_delivery_design.md` and ADR 0002 is implemented:
+
+- Added the controlled event catalog and strict CloudEvents-compatible payload contracts for user creation, exhausted jobs, permission changes, and directed notification requests.
+- Added transactional backend-core/queue/scheduler Outbox production with no-op mutation suppression and recursion exclusion for Webhook pipeline jobs.
+- Added durable subscription revisions, delivery records, immutable attempts, idempotent fan-out, PostgreSQL concurrent claims, stale-running recovery, bounded retries, and database-locked retention cleanup.
+- Added AES-256-GCM secret storage/rotation tooling, HMAC-SHA256 signatures, HTTPS/SSRF/DNS-pinning controls, redirect rejection, response limits, safe structured logs, and a no-op-by-default alert boundary.
+- Added subscription deletion, controlled event catalog, delivery list/detail APIs, explicit OpenAPI schemas/query parameters, Hono RPC inference checks, and API permission metadata.
+- Added Subscriptions/Deliveries frontend tabs, controlled event selection, delivery filters/details, bilingual labels, mutation states, and sensitive-data non-disclosure.
+- Added SQLite migrations and smoke tests plus PostgreSQL, adapter, Worker, API, frontend, key migration, local HTTP receiver, retry, concurrency, revision cancellation, directed notification, and retention coverage.
+
+Delivery remains disabled by default and requires matching API/Worker `WEBHOOK_*` configuration. Manual replay/cancel/export, custom headers, a separate Webhook dead-letter queue, a public arbitrary-notification API, and automatic subscription disabling are outside the confirmed v1 contract. Target-environment destination acceptance remains pending until that environment is ready.
+
+## Reliable Email Delivery Design Progress
+
+The next recommended implementation goal has a confirmed contract in `docs/email_delivery_design.md` and ADR 0003:
+
+- Accept one internal, idempotent Email Notification Request per enabled User without exposing a public arbitrary-email API.
+- Resolve the User's Effective Language, require an exact enabled Email Template, validate its strict variable contract, and persist an encrypted rendered snapshot.
+- Use dedicated Email Delivery and Attempt records as the only durable Worker claim, retry, recovery, and history authority.
+- Provide bounded at-least-once SMTP retries with a stable Message ID, stale-running recovery, safe final alerts, immediate terminal content purge, and database-locked retention cleanup.
+- Require implicit TLS or STARTTLS for remote SMTP and permit insecure plaintext only for explicitly configured development/test loopback servers.
+- Add safe read-only management APIs/UI, OpenAPI and Hono RPC coverage, PostgreSQL tests, SQLite migration smoke, a development-only request CLI, and optional pinned Mailpit compatibility tooling.
+- Keep reliable delivery and SMTP transport disabled independently by default. Production SMTP provider selection and target-environment acceptance remain pending.
+
+Do not add business-module triggers, default email templates, a public create API, HTML/attachments, manual retry/cancel/export, bounce tracking, SMS sending, or a separate email DLQ in this goal.
+
+## Reliable Email Delivery Implementation Progress
+
+The confirmed ADR 0003 contract is implemented:
+
+- Added dedicated SQLite/PostgreSQL Email Delivery and Attempt persistence, exact channel/code/locale template identity, strict template variables, idempotent internal requests, Effective Language resolution, encrypted rendered snapshots, and stable Message IDs.
+- Added Worker concurrent claims, SMTP Acceptance outcomes, bounded retry, stale recovery, deleted-User cancellation, missing-key health checks, corruption final failure, safe alerts/logs, immediate terminal content purge, and distributed-lock retention cleanup.
+- Hardened SMTP with implicit TLS or mandatory STARTTLS for remote hosts. Plaintext is limited to an explicit loopback development/test exception.
+- Added read-only permissioned list/detail APIs, explicit OpenAPI schemas, route/menu metadata, and a bilingual safe-history frontend page.
+- Added development-only request tooling, scan/apply content-key rotation tooling, a pinned 128 MB Mailpit environment, `pnpm test:smtp-integration`, and a manual compatibility workflow.
+
+Reliable email and SMTP remain independently disabled by default. Production provider selection, key custody, and target-environment acceptance remain pending.
+
+## Organization-Scoped Announcement Implementation Progress
+
+The contract in `docs/announcement_targeting_design.md` and ADR 0004 is implemented:
+
+- Added SQLite/PostgreSQL expiration and durable multi-Organization target persistence with auto-increment IDs, uniqueness, target-type enforcement, and transactional replacement.
+- Added strict scope/target validation, minimal ancestor/descendant target sets, draft-only edit/delete, publish-time revalidation, immediate publish/unpublish, UTC publication time, and read-time expiration.
+- Added the permissioned paginated Announcement Catalog and authenticated Current Announcements endpoint with dynamic current-Organization subtree visibility and no recipient snapshots.
+- Added `announcement:delete`, API/permission/route metadata, explicit OpenAPI request/query/response coverage, and Hono RPC inference checks.
+- Added the bilingual management UI with Organization target tree, expiration, filters, pagination, lifecycle-aware actions, deletion, and the top-bar Current Announcements panel.
+- Wired frontend Organization switching to the backend context API and invalidated server queries so menus, permissions, data, and Current Announcements reload together.
+- Added contract, in-memory API, PostgreSQL persistence/reload, migration, manifest/OpenAPI, Hono RPC, API-client, and frontend component coverage.
+
+Publication remains independent from in-app Notification, email, SMS, and Webhook delivery. Scheduled publication, approval, role/user targets, title search, and per-user Announcement state remain outside the confirmed scope.
+
+## Business Module Extension Design Progress
+
+ADR 0005 and `docs/business_module_extension_design.md` now define the confirmed future-module extension architecture:
+
+- Explicit static Business Module registration with permanent namespaced identities and no runtime plugin discovery, installation, or inter-module dependency graph.
+- Serializable definitions separated from typed Hono, TanStack file-route, Worker, and database runtime registrations.
+- Build-time bidirectional conformance, an empty production Business Module Registry, isolated test fixtures, and retained Hono RPC inference.
+- Append-only, checksummed SQLite/PostgreSQL module migration sources with module-owned table namespaces.
+- Administrator-reviewed Module Sync Plans, dual definition/activation hashes, fail-closed per-module activation, retained data on removal, and a Module Registry management page.
+- Executable fail-closed data/field permissions and narrow capability ports for logs, files, CSV, events, notifications, jobs, errors, i18n, and observability.
+
+## Business Module Registry And Conformance Foundation
+
+Phase 1 of the confirmed ADR 0005 design is implemented:
+
+- Added strict serializable `BusinessModuleDefinition` and Localized Message contracts with normalized empty contribution collections.
+- Added `packages/module-sdk` with `defineBusinessModule`, static registry composition, canonical SHA-256 `definitionHash`/`activationHash`, namespace and ownership validation, reference checks, runtime parity checks, deterministic diagnostics, and test helpers.
+- Wrapped existing Base System permission/API/route/menu identifiers in a trusted compatibility definition without renaming them.
+- Added explicit empty production registries for API, Web, Worker, definitions, and database migrations. The API keeps an explicit typed Hono composition point and existing `ApiApp` RPC inference.
+- Added `pnpm modules:check`, human and JSON diagnostics, deterministic generated module/migration metadata, and execution from build and `pnpm verify`/normal Verify CI.
+- Added module-aware SQLite/PostgreSQL migration sources with Base-first ordering, namespaced module IDs, dialect parity checks, SHA-256 history checks, append-only enforcement, and explicit legacy-history failure.
+- Rebuilt the internal development SQLite/PostgreSQL databases for the new migration history shape without adding an automatic destructive reset to normal migration commands.
+- Added isolated valid/invalid synthetic fixtures and tests for contracts, hashes, namespace/ownership/reference diagnostics, API/Web/Worker mismatch, Hono RPC inference, fixture leakage, migration ordering/parity/checksums, SQLite execution, and PostgreSQL persistence.
+
+Production Business Module registries remain empty. Phase 4 Capability Ports are implemented in the later section below.
+
+## Business Module Registry Lifecycle And Admin Sync
+
+Phase 2 of the confirmed ADR 0005 design is implemented:
+
+- Added SQLite/PostgreSQL accepted registry state and entries with immutable definition snapshots, definition/activation hashes, accepted actor/time, and retained disabled history.
+- Added deterministic read-only catalog/plan services and confirmed transactional Apply with stale-hash rejection, dictionary dependency validation, authorization-binding removal reporting, idempotency, audit logs, and permission-cache invalidation.
+- Added owned metadata synchronization for permissions, API permissions, routes, menus, and Localized Messages. Default messages and administrator overrides persist separately, and removed module metadata is disabled rather than deleted.
+- Added first-start and seed dependency preflight/bootstrap while keeping normal startup read-only. Existing permission/route manifest sync endpoints delegate to the complete registry metadata transaction.
+- Added fail-closed API activation before authorization, active metadata/menu filtering, and shared active-registration selection for Web/Worker composition.
+- Added `GET /api/modules/registry`, `POST /api/modules/sync/plan`, and `POST /api/modules/sync/apply` with permission manifests, explicit OpenAPI schemas, stable errors, and Hono RPC inference.
+- Added read-only-by-default `pnpm modules:sync` CLI with explicit reviewed-hash and confirmation flags for Apply.
+- Added the bilingual `/system/modules` catalog and plan UI with contribution/dependency/drift visibility, permission-denied/loading/empty/error/mutation states, and confirmed Apply.
+- Added contract, plan/service, rollback, initialization, activation, Hono RPC, OpenAPI, SQLite migration, PostgreSQL persistence/reload, fixture isolation, CLI, API-client, and frontend component coverage.
+
+Phase 3 executable data and field permissions is implemented in the following section. Phase 4 Capability Ports are implemented after it.
+
+## Executable Business Module Data And Field Permissions
+
+Phase 3 of the confirmed ADR 0005 design is implemented according to ADR 0006:
+
+- Added strict version 1 data-permission rule contracts, base operator codes, neutral predicate contracts, field scenarios, and strict role permission update schemas.
+- Added fail-closed compilation for global/policy resources, effective permission grants after user overrides, Super Administrator bypass, base/custom operators, allow union minus deny union, and declared-field validation.
+- Added parameterized Drizzle predicate translation with explicit column maps and real SQLite/PostgreSQL execution coverage, including injection-shaped values.
+- Upgraded role data/field permission persistence for multiple allow/deny records and `resource + field + scenario` uniqueness through migrations 0013-0014.
+- Added scenario-aware response filtering and create/edit write rejection, with `PERMISSION_FIELD_DENIED` authorization normalization at the Hono API boundary.
+- Extended Business Module declarations and conformance with resource permission/type checks, resource field checks, API request/response scenarios, custom operator ownership, and bidirectional API runtime registration.
+- Added effective field permissions and Super Administrator state to login, Organization-switch, and current permission contexts, plus Zustand storage and frontend visibility/writability helpers.
+- Kept every production Business Module registry empty; all executable query examples remain isolated under test fixture directories.
+
+## Business Module Capability Ports
+
+Phase 4 is implemented according to ADR 0007:
+
+- Added strict Module Execution Context, asynchronous message, Operation Event, Managed File reference, and CSV task contracts.
+- Added `packages/module-sdk` capability runtimes for declared permissions, Operation Events, typed module errors, Managed Files, CSV tasks, Domain/Notification Events, clock/ID services, and bounded background jobs.
+- Extended API/Worker registrations with explicit Zod schemas, file authorizers, CSV handlers, notification recipient resolvers, and job handlers; `pnpm modules:check` validates declaration/runtime parity and capability limits.
+- Added DB-backed capability bindings for durable File References, idempotent CSV tasks, Outbox events, queue jobs, asynchronous Operation Logs, and a local JSONL fallback when Queue publication is unavailable.
+- Added authenticated module-reference File download/preview authorization while preserving the global file permissions and existing local/S3 response behavior.
+- Added active-module controlled Webhook event catalogs for Domain and Notification Events, with durable Worker fan-out through the existing delivery aggregate.
+- Added Worker CSV execution, full import error reports, formula-safe explicit-field exports, Operation Log writing, context reconstruction, timeout cancellation, singleton locking, and active-registration loading.
+- Added a shared Base scheduled-job catalog and API validation so unknown or inactive module handlers cannot be created, enabled, or run immediately; module removal disables retained schedules.
+- Added SQLite/PostgreSQL migrations 0015-0016 for Outbox/CSV idempotency and context plus final in-app Notification request deduplication.
+- Added contracts/module-sdk/API/Worker/SQLite/PostgreSQL tests for fail-closed capabilities, context propagation, idempotency, active-module gates, File authorization, queue fallback, CSV output, Outbox/Webhook fan-out, migrations, and fixture isolation.
+
+All four Business Module extension-foundation phases are implemented. Production API, Web, Worker, definition, and database registries remain intentionally empty; no example or production Business Module is included.
+
+## Business Module Extension Acceptance Progress
+
+- Added `pnpm test:business-module-acceptance` as a focused, cross-platform acceptance command for the four extension-foundation phases.
+- Kept every synthetic definition and runtime registration under test directories while checking that all production registries remain empty.
+- Covered Module Sync and activation, executable permissions, Managed Files, CSV, Operation/Domain/Notification Events, Webhook fan-out, background/scheduled jobs, Hono RPC, Worker execution, PostgreSQL persistence, and frontend integration.
+- Added `docs/business_module_acceptance.md` and a dated release-readiness record so extension changes have a reproducible pre-merge gate in addition to `pnpm verify`.

@@ -17,9 +17,17 @@ export function createDatabaseEventBusAdapter(
     async publish(event) {
       const now = nowIso();
       await executor.run(
-        `INSERT INTO event_outbox (event_type, payload_json, status, attempt, max_attempts, occurred_at, created_at, updated_at)
-         VALUES (${p(executor, 1)}, ${p(executor, 2)}, 'pending', 0, 1, ${p(executor, 3)}, ${p(executor, 4)}, ${p(executor, 5)})`,
-        [event.type, jsonParam(event.payload, executor.dialect), event.occurredAt, now, now],
+        `INSERT INTO event_outbox (event_key, event_type, payload_json, status, attempt, max_attempts, occurred_at, created_at, updated_at)
+         VALUES (${p(executor, 1)}, ${p(executor, 2)}, ${p(executor, 3)}, 'pending', 0, 1, ${p(executor, 4)}, ${p(executor, 5)}, ${p(executor, 6)})
+         ON CONFLICT (event_key) DO NOTHING`,
+        [
+          event.id,
+          event.type,
+          jsonParam(event.payload, executor.dialect),
+          event.occurredAt,
+          now,
+          now,
+        ],
       );
     },
     async subscribe(eventType, handler) {

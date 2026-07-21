@@ -14,6 +14,7 @@ export function createLocalFileStorageAdapter(
   const root = normalize(options.rootDirectory);
 
   return {
+    storageDriver: "local",
     async healthCheck() {
       await mkdir(root, { recursive: true });
       return { ok: true };
@@ -25,23 +26,36 @@ export function createLocalFileStorageAdapter(
       await writeFile(temp, body);
       await rename(temp, target);
       return {
+        storageDriver: "local",
+        storageBucket: null,
         objectKey,
         contentType,
         sizeBytes: body.byteLength,
       };
     },
-    async get(objectKey) {
+    async get(location) {
+      assertLocalLocation(location.storageDriver);
       try {
-        return await readFile(resolveObjectPath(root, objectKey));
+        return await readFile(resolveObjectPath(root, location.objectKey));
       } catch (error) {
         if (isNodeError(error) && error.code === "ENOENT") return null;
         throw error;
       }
     },
-    async delete(objectKey) {
-      await rm(resolveObjectPath(root, objectKey), { force: true });
+    async delete(location) {
+      assertLocalLocation(location.storageDriver);
+      await rm(resolveObjectPath(root, location.objectKey), { force: true });
+    },
+    async createDownloadUrl() {
+      return null;
     },
   };
+}
+
+function assertLocalLocation(storageDriver: string): void {
+  if (storageDriver !== "local") {
+    throw new Error(`Local file storage cannot access ${storageDriver} objects.`);
+  }
 }
 
 function resolveObjectPath(root: string, objectKey: string): string {

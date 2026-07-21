@@ -16,6 +16,7 @@
     "@tanstack/react-query": "^5.81.5",
     "@tanstack/react-router": "^1.121.12",
     "@web-admin-base/contracts": "workspace:*",
+    "@web-admin-base/module-sdk": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.525.0",

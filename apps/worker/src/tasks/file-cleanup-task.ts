@@ -1,10 +1,15 @@
-import type { DatabaseAdapterExecutor, FileStorageAdapter } from "@web-admin-base/adapters";
+import type {
+  DatabaseAdapterExecutor,
+  FileObjectLocation,
+  FileStorageAdapter,
+} from "@web-admin-base/adapters";
+import { baseScheduledJobTypes } from "@web-admin-base/contracts";
 
 import { bool, now, p } from "./db-utils";
 import { writeWorkerTaskLog } from "./task-log";
 
-export const fileCleanupTaskCode = "base.files.cleanup";
-export const importExportResultCleanupTaskCode = "base.import-export.result-cleanup";
+export const fileCleanupTaskCode = baseScheduledJobTypes.fileCleanup;
+export const importExportResultCleanupTaskCode = baseScheduledJobTypes.importExportResultCleanup;
 
 export function createFileCleanupTaskHandler(
   executor: DatabaseAdapterExecutor,
@@ -12,18 +17,17 @@ export function createFileCleanupTaskHandler(
 ) {
   return async (): Promise<void> => {
     const rows = await executor.all(
-      `SELECT id, object_key FROM file_objects
+      `SELECT id, storage_driver, storage_bucket, object_key FROM file_objects
        WHERE status = 'invalid' AND is_deleted = ${bool(executor, true)}
+         AND content_deleted_at IS NULL
        ORDER BY id ASC LIMIT 100`,
     );
-    for (const row of rows) {
-      await storage.delete(String(row.object_key));
-    }
+    const result = await deleteFileContents(executor, storage, rows.map(toStoredFile));
     await writeWorkerTaskLog(executor, {
       level: "info",
       message: "Invalid file cleanup completed",
       taskCode: fileCleanupTaskCode,
-      metadata: { deletedObjects: rows.length, completedAt: now() },
+      metadata: { ...result, completedAt: now() },
     });
   };
 }
@@ -56,9 +60,7 @@ export function createImportExportResultCleanupTaskHandler(
         );
       }
     });
-    for (const file of files) {
-      await storage.delete(file.objectKey);
-    }
+    const deletion = await deleteFileContents(executor, storage, files);
 
     await writeWorkerTaskLog(executor, {
       level: "info",
@@ -67,6 +69,7 @@ export function createImportExportResultCleanupTaskHandler(
       metadata: {
         expiredTasks: expired.length,
         invalidatedFiles: files.length,
+        ...deletion,
         completedAt: deletedAt,
       },
     });
@@ -76,13 +79,61 @@ export function createImportExportResultCleanupTaskHandler(
 async function selectFiles(
   executor: DatabaseAdapterExecutor,
   ids: string[],
-): Promise<Array<{ id: string; objectKey: string }>> {
+): Promise<StoredFile[]> {
   const markers = ids.map((_, index) => p(executor, index + 1)).join(", ");
   const rows = await executor.all(
-    `SELECT id, object_key FROM file_objects WHERE id IN (${markers})`,
+    `SELECT id, storage_driver, storage_bucket, object_key FROM file_objects WHERE id IN (${markers})`,
     ids,
   );
-  return rows.map((row) => ({ id: String(row.id), objectKey: String(row.object_key) }));
+  return rows.map(toStoredFile);
+}
+
+type StoredFile = FileObjectLocation & { id: string };
+
+async function deleteFileContents(
+  executor: DatabaseAdapterExecutor,
+  storage: FileStorageAdapter,
+  files: StoredFile[],
+): Promise<{ deletedObjects: number; failedObjects: number }> {
+  let deletedObjects = 0;
+  let failedObjects = 0;
+  for (const file of files) {
+    try {
+      await storage.delete(file);
+      const deletedAt = now();
+      await executor.run(
+        `UPDATE file_objects SET content_deleted_at = ${p(executor, 1)}, updated_at = ${p(executor, 2)} WHERE id = ${p(executor, 3)}`,
+        [deletedAt, deletedAt, file.id],
+      );
+      deletedObjects += 1;
+    } catch (error) {
+      failedObjects += 1;
+      await writeWorkerTaskLog(executor, {
+        level: "error",
+        message: "File content deletion failed and will be retried",
+        taskCode: fileCleanupTaskCode,
+        metadata: { fileId: file.id, storageDriver: file.storageDriver, error: toMessage(error) },
+      });
+    }
+  }
+  return { deletedObjects, failedObjects };
+}
+
+function toStoredFile(row: Record<string, unknown>): StoredFile {
+  const storageDriver = String(row.storage_driver);
+  if (storageDriver !== "local" && storageDriver !== "s3") {
+    throw new Error(`Unsupported file storage driver: ${storageDriver}.`);
+  }
+  return {
+    id: String(row.id),
+    storageDriver,
+    storageBucket: row.storage_bucket == null ? null : String(row.storage_bucket),
+    objectKey: String(row.object_key),
+  };
+}
+
+function toMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function uniqueIds(values: unknown[]): string[] {

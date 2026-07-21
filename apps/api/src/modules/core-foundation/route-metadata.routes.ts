@@ -1,13 +1,17 @@
 import { Hono } from "hono";
 
+import type { AuthContextVariables } from "../../core/auth-context/auth-context";
 import { createKnownError } from "../../core/errors/error-codes";
 import { pageItems } from "./pagination";
 import { assertEmptyJsonBody } from "./request-body";
 import type { RouteMetadataListFilters } from "./route-metadata.service";
 import type { BackendCoreServices } from "./services";
 
-export function createRouteMetadataRoutes(services: BackendCoreServices) {
-  const routes = new Hono();
+export function createRouteMetadataRoutes(
+  services: BackendCoreServices,
+  synchronizeModuleRegistry?: (actorId: string | null) => Promise<void>,
+) {
+  const routes = new Hono<{ Variables: AuthContextVariables }>();
 
   routes.get("/routes/manifest", (context) => {
     const routeMetadata = services.listRoutes({
@@ -30,7 +34,12 @@ export function createRouteMetadataRoutes(services: BackendCoreServices) {
 
   routes.post("/routes/sync", async (context) => {
     await assertEmptyJsonBody(context.req.raw);
-    return context.json({ data: await services.syncRoutes() });
+    if (synchronizeModuleRegistry) {
+      await synchronizeModuleRegistry(context.get("authContext")?.userId ?? null);
+    } else {
+      await services.syncRoutes();
+    }
+    return context.json({ data: services.listRoutes({ status: "enabled" }) });
   });
 
   return routes;

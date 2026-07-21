@@ -13,7 +13,7 @@ This checklist covers the supported v1 deployment shape:
 - Worker service from `apps/worker`.
 - Database-backed backend-core, infrastructure, system-management, file, notification, scheduler, and import/export persistence.
 
-It does not require Redis, RabbitMQ, S3-compatible storage, SMS sending, or real outbound webhook delivery. Those integrations remain optional or reserved unless explicitly implemented and configured by a future goal.
+It does not require Redis, RabbitMQ, S3-compatible storage, SMS sending, or enabling outbound Webhook delivery. S3-compatible storage and Webhook delivery are implemented but remain optional; production-provider and destination acceptance require the target environment.
 
 ## Pre-Deployment Gate
 
@@ -80,13 +80,32 @@ SMTP_SECURE=false
 SMTP_USERNAME=optional-user
 SMTP_PASSWORD=optional-password
 SMTP_FROM=no-reply@example.com
+SMTP_TIMEOUT_MS=10000
+EMAIL_DELIVERY_ENABLED=true
+EMAIL_CONTENT_KEYS={"primary":"<managed-canonical-base64-key>"}
+EMAIL_CONTENT_ACTIVE_KEY_ID=primary
 ```
 
 ## Storage Check
 
 For local filesystem storage, `FILE_STORAGE_ROOT` must point to a writable path.
 
-In multi-server deployments, this path must be a shared mounted directory for every API and worker instance. Local storage writes use a temp-file-then-rename flow for atomic compatibility. S3-compatible storage remains the recommended production direction once its concrete client and runtime configuration contract are implemented.
+In multi-server deployments, this path must be a shared mounted directory for every API and worker instance. Local storage writes use a temp-file-then-rename flow for atomic compatibility.
+
+When a target environment explicitly selects S3-compatible storage, record the provider and configure a private, externally provisioned bucket. API and worker must share endpoint, region, bucket, prefix, path-style, and credential-chain settings. Keep `S3_AUTO_CREATE_BUCKET=false` in production. This checklist does not claim that any production provider has been selected or accepted.
+
+```bash
+FILE_STORAGE_DRIVER=s3
+S3_ENDPOINT=https://provider-endpoint.example
+S3_REGION=<provider-region>
+S3_BUCKET=<private-preprovisioned-bucket>
+S3_OBJECT_PREFIX=web-admin-base/
+S3_FORCE_PATH_STYLE=false
+S3_AUTO_CREATE_BUCKET=false
+S3_PRESIGNED_URL_TTL_SECONDS=60
+```
+
+Use `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, and optional `S3_SESSION_TOKEN` only when the deployment does not use the AWS SDK default credential chain.
 
 Acceptance checks:
 
@@ -180,10 +199,13 @@ Logs:
 Files and notifications:
 
 - File management supports upload, metadata, detail, download, image preview, references, and delete-invalidate behavior.
-- Announcements support list/create/edit/publish/unpublish.
+- Announcements support a paginated management Catalog, system and minimal multi-Organization targets, draft-only edit/delete, publish/unpublish, UTC expiration, and dynamic current-Organization visibility.
+- The top-bar Current Announcements panel reloads after Organization switching and never exposes drafts, deleted, expired, or unrelated Announcements.
+- Publishing an Announcement creates no recipient snapshots, in-app Notification, email, SMS, or Webhook delivery.
 - In-app notifications support unread/read/archive/delete for current-user notifications.
 - Notification templates support list/create/edit.
-- Webhooks support list/create/edit/enable/disable, and persisted secrets are not displayed as raw values.
+- Webhooks support subscription list/create/edit/enable/disable/delete and safe delivery history. Persisted secrets, full target URLs, payloads, signatures, and response bodies are not displayed.
+- Email deliveries expose read-only safe history. Verify remote STARTTLS/implicit TLS, stable Message IDs, retries, final alerts, terminal content purge, and absence of full recipient/content/ciphertext in API, UI, and logs.
 
 Account:
 
@@ -193,7 +215,7 @@ Account:
 
 ## Worker Acceptance
 
-Confirm the worker is running with the same `DATABASE_DIALECT`, `DATABASE_URL`, and `FILE_STORAGE_ROOT` as the API service.
+Confirm the worker is running with the same database and file-storage configuration as the API service. For local storage this includes `FILE_STORAGE_ROOT`; for S3 it includes all `S3_*` location settings.
 
 Acceptance checks:
 
@@ -213,7 +235,8 @@ If a job does not move, inspect `queue_jobs.status`, `attempt`, `max_attempts`, 
 - Organization paths still follow the confirmed BIGINT materialized-path design and organization nodes cannot be moved in v1.
 - API permission manifest entries exist for implemented private endpoints.
 - Hono RPC internal frontend typing remains the frontend API boundary; OpenAPI is documentation.
-- Redis, RabbitMQ, S3-compatible storage, SMS sending, and real outbound webhook delivery are not required for base deployment acceptance.
+- Redis, RabbitMQ, S3-compatible storage, SMS sending, and enabled outbound Webhook delivery are not required for base deployment acceptance.
+- If S3 is selected, verify private bucket access and authenticated redirect behavior in the target environment before recording provider acceptance.
 
 ## Rollback And Troubleshooting Entry Points
 
@@ -247,6 +270,18 @@ OpenAPI or permission inconsistency:
 - Run the contracts and API tests.
 - Confirm route/API permission manifests were generated from the current build.
 - Confirm permission sync was run where needed.
+
+## Optional Webhook Acceptance
+
+Perform this section only when outbound delivery is selected for the target environment:
+
+1. Confirm API and Worker use identical `WEBHOOK_*` configuration and `WEBHOOK_ALLOW_INSECURE_LOCALHOST=false`.
+2. Run the secret migration in scan mode, restore required old keys, then apply and rescan.
+3. Verify the selected HTTPS destination is authorized and does not require redirects.
+4. Trigger one controlled event and confirm the receiver validates the HMAC signature and deduplicates by CloudEvent ID.
+5. Exercise a retryable response and a final `4xx`; confirm durable attempts, bounded retry timing, and final alert-boundary invocation.
+6. Confirm logs and APIs do not expose full URLs, query strings, bodies, signatures, secrets, or ciphertext.
+7. Record the destination owner, allowlisted private hostnames, key IDs, and rollback procedure without recording key material.
 
 ## Acceptance Evidence
 

@@ -71,6 +71,15 @@ function getIndexNames(table: unknown): string[] {
 }
 
 describe("backend core schema", () => {
+  it("keeps Business Module asynchronous capability columns aligned across dialects", () => {
+    expect(sqlite.eventOutbox.eventKey.name).toBe("event_key");
+    expect(postgresql.eventOutbox.eventKey.name).toBe("event_key");
+    expect(sqlite.importExportTasks.idempotencyKey.name).toBe("idempotency_key");
+    expect(sqlite.importExportTasks.executionContextJson.name).toBe("execution_context_json");
+    expect(postgresql.importExportTasks.idempotencyKey.name).toBe("idempotency_key");
+    expect(postgresql.importExportTasks.executionContextJson.name).toBe("execution_context_json");
+  });
+
   it("keeps permission metadata columns aligned across SQLite and PostgreSQL", () => {
     expect(sqlite.permissions.module.name).toBe("module");
     expect(sqlite.permissions.resource.name).toBe("resource");
@@ -201,8 +210,14 @@ describe("backend core schema", () => {
     expect(postgresql.fileReferences.fileObjectId.name).toBe("file_object_id");
     expect(sqlite.notifications.metadataJson.name).toBe("metadata_json");
     expect(postgresql.notifications.metadataJson.name).toBe("metadata_json");
+    expect(sqlite.notifications.requestKey.name).toBe("request_key");
+    expect(postgresql.notifications.requestKey.name).toBe("request_key");
     expect(sqlite.notificationTemplates.variablesJson.name).toBe("variables_json");
     expect(postgresql.notificationTemplates.variablesJson.name).toBe("variables_json");
+    expect(sqlite.emailDeliveries.contentEnvelope.name).toBe("content_envelope");
+    expect(postgresql.emailDeliveries.contentEnvelope.name).toBe("content_envelope");
+    expect(sqlite.emailDeliveryAttempts.smtpCode.name).toBe("smtp_code");
+    expect(postgresql.emailDeliveryAttempts.smtpCode.name).toBe("smtp_code");
     expect(sqlite.logEntries.logType.name).toBe("log_type");
     expect(postgresql.logEntries.logType.name).toBe("log_type");
     expect(sqlite.importExportTasks.resultExpiresAt.name).toBe("result_expires_at");
@@ -220,6 +235,19 @@ describe("backend core schema", () => {
     expect(postgresql.dictionaryItems.labelI18nKey.name).toBe("label_i18n_key");
     expect(sqlite.i18nMessages.messageKey.name).toBe("message_key");
     expect(postgresql.i18nMessages.messageKey.name).toBe("message_key");
+    expect(sqlite.i18nMessages.defaultMessage.name).toBe("default_message");
+    expect(postgresql.i18nMessages.defaultMessage.name).toBe("default_message");
+    expect(sqlite.i18nMessages.overrideValue.name).toBe("override_value");
+    expect(postgresql.i18nMessages.overrideValue.name).toBe("override_value");
+  });
+
+  it("keeps accepted Business Module registry tables aligned across dialects", () => {
+    expect(sqlite.businessModuleRegistryState.registryHash.name).toBe("registry_hash");
+    expect(postgresql.businessModuleRegistryState.registryHash.name).toBe("registry_hash");
+    expect(sqlite.businessModuleRegistryEntries.moduleCode.name).toBe("module_code");
+    expect(postgresql.businessModuleRegistryEntries.moduleCode.name).toBe("module_code");
+    expect(sqlite.businessModuleRegistryEntries.definitionJson.name).toBe("definition_json");
+    expect(postgresql.businessModuleRegistryEntries.definitionJson.name).toBe("definition_json");
   });
 
   it("keeps announcement and webhook subscription tables aligned across dialects", () => {
@@ -274,7 +302,11 @@ describe("backend core schema", () => {
       ["roleDataPermissions", ["role_data_permissions_effect_check"]],
       [
         "fieldPermissionRules",
-        ["field_permission_rules_effect_check", "field_permission_rules_target_type_check"],
+        [
+          "field_permission_rules_effect_check",
+          "field_permission_rules_scenario_check",
+          "field_permission_rules_target_type_check",
+        ],
       ],
       ["userPermissionOverrides", ["user_permission_overrides_effect_check"]],
       ["menus", ["menus_status_check"]],
@@ -292,11 +324,14 @@ describe("backend core schema", () => {
         "notificationTemplates",
         ["notification_templates_channel_check", "notification_templates_status_check"],
       ],
+      ["emailDeliveries", ["email_deliveries_status_check"]],
+      ["emailDeliveryAttempts", ["email_delivery_attempts_status_check"]],
       ["logEntries", ["log_entries_level_check", "log_entries_type_check"]],
       ["importExportTasks", ["import_export_tasks_status_check", "import_export_tasks_type_check"]],
       ["systemConfigs", ["system_configs_status_check", "system_configs_value_type_check"]],
       ["dictionaryTypes", ["dictionary_types_status_check"]],
       ["dictionaryItems", ["dictionary_items_status_check"]],
+      ["businessModuleRegistryEntries", ["business_module_registry_entries_status_check"]],
       ["announcements", ["announcements_scope_type_check", "announcements_status_check"]],
       ["webhookSubscriptions", ["webhook_subscriptions_status_check"]],
     ]);
@@ -319,7 +354,7 @@ describe("backend core schema", () => {
       ["userOrganizationRoles", ["user_organization_roles_user_org_unique"]],
       ["permissions", ["permissions_code_unique"]],
       ["rolePermissions", ["role_permissions_role_permission_unique"]],
-      ["roleDataPermissions", ["role_data_permissions_role_permission_unique"]],
+      ["roleDataPermissions", []],
       ["fieldPermissionRules", ["field_permission_rules_target_field_unique"]],
       ["userPermissionOverrides", ["user_permission_overrides_user_permission_unique"]],
       ["menus", ["menus_code_unique", "menus_path_unique"]],
@@ -335,18 +370,36 @@ describe("backend core schema", () => {
       ],
       ["locks", ["locks_expires_at_idx", "locks_key_unique"]],
       ["queueJobs", ["queue_jobs_status_available_idx"]],
-      ["eventOutbox", ["event_outbox_status_next_run_idx"]],
+      ["eventOutbox", ["event_outbox_event_key_unique", "event_outbox_status_next_run_idx"]],
       ["scheduledJobs", ["scheduled_jobs_code_unique", "scheduled_jobs_next_run_idx"]],
-      ["fileObjects", ["file_objects_object_key_unique"]],
+      ["fileObjects", ["file_objects_content_cleanup_idx", "file_objects_object_key_unique"]],
       ["fileReferences", ["file_references_file_idx", "file_references_resource_idx"]],
-      ["notifications", ["notifications_user_status_idx"]],
-      ["notificationTemplates", ["notification_templates_code_locale_unique"]],
+      ["notifications", ["notifications_user_request_key_unique", "notifications_user_status_idx"]],
+      ["notificationTemplates", ["notification_templates_channel_code_locale_unique"]],
+      [
+        "emailDeliveries",
+        [
+          "email_deliveries_claim_idx",
+          "email_deliveries_request_user_unique",
+          "email_deliveries_template_idx",
+          "email_deliveries_user_idx",
+        ],
+      ],
+      [
+        "emailDeliveryAttempts",
+        ["email_delivery_attempts_delivery_idx", "email_delivery_attempts_delivery_number_unique"],
+      ],
       ["logEntries", ["log_entries_type_occurred_idx"]],
-      ["importExportTasks", ["import_export_tasks_status_idx"]],
+      [
+        "importExportTasks",
+        ["import_export_tasks_idempotency_unique", "import_export_tasks_status_idx"],
+      ],
       ["systemConfigs", ["system_configs_group_idx", "system_configs_key_unique"]],
       ["dictionaryTypes", ["dictionary_types_code_unique"]],
       ["dictionaryItems", ["dictionary_items_type_idx", "dictionary_items_type_value_unique"]],
       ["i18nMessages", ["i18n_messages_key_language_unique", "i18n_messages_module_idx"]],
+      ["businessModuleRegistryState", ["business_module_registry_state_singleton_unique"]],
+      ["businessModuleRegistryEntries", ["business_module_registry_entries_code_unique"]],
       ["announcements", ["announcements_status_idx"]],
       ["webhookSubscriptions", ["webhook_subscriptions_status_idx"]],
     ]);

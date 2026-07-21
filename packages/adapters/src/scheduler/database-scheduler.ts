@@ -21,6 +21,7 @@ export type DatabaseJobSchedulerAdapterOptions = {
   retryDelaySeconds?: number;
   runningTimeoutSeconds?: number;
   executionLogs?: boolean;
+  emitJobFailureEvents?: boolean;
 };
 
 export function createDatabaseJobSchedulerAdapter(
@@ -31,6 +32,7 @@ export function createDatabaseJobSchedulerAdapter(
   const retryDelaySeconds = options.retryDelaySeconds ?? 60;
   const runningTimeoutSeconds = options.runningTimeoutSeconds ?? 15 * 60;
   const executionLogs = options.executionLogs ?? true;
+  const emitJobFailureEvents = options.emitJobFailureEvents ?? false;
 
   return {
     async register(job, handler) {
@@ -70,6 +72,7 @@ export function createDatabaseJobSchedulerAdapter(
             retryDelaySeconds,
             executionLogs,
             startedAt,
+            emitJobFailureEvents,
           );
           processed += 1;
           continue;
@@ -85,6 +88,7 @@ export function createDatabaseJobSchedulerAdapter(
             retryDelaySeconds,
             executionLogs,
             startedAt,
+            emitJobFailureEvents,
           );
         }
         processed += 1;
@@ -171,21 +175,40 @@ async function markScheduleFailure(
   retryDelaySeconds: number,
   executionLogs: boolean,
   startedAt: Date,
+  emitJobFailureEvents: boolean,
 ): Promise<void> {
   const now = nowIso();
   const exhausted = job.attempt >= job.maxAttempts;
   const nextRunAt = exhausted
     ? computeNextCronRun(job.cronExpression, new Date(now))
     : new Date(Date.now() + retryDelaySeconds * 1000).toISOString();
-  await executor.run(
-    `UPDATE scheduled_jobs
-     SET next_run_at = ${p(executor, 1)}, attempt = ${p(executor, 2)}, last_error = ${p(executor, 3)}, updated_at = ${p(executor, 4)}
-     WHERE id = ${p(executor, 5)}`,
-    [nextRunAt, exhausted ? 0 : job.attempt, error, now, job.id],
-  );
-  if (executionLogs) {
-    await writeSchedulerLog(executor, job, "error", error, startedAt, now);
-  }
+  await executor.transaction(async () => {
+    await executor.run(
+      `UPDATE scheduled_jobs
+       SET next_run_at = ${p(executor, 1)}, attempt = ${p(executor, 2)}, last_error = ${p(executor, 3)}, updated_at = ${p(executor, 4)}
+       WHERE id = ${p(executor, 5)}`,
+      [nextRunAt, exhausted ? 0 : job.attempt, error, now, job.id],
+    );
+    if (executionLogs) await writeSchedulerLog(executor, job, "error", error, startedAt, now);
+    if (exhausted && emitJobFailureEvents && !job.code.startsWith("webhook.")) {
+      const event = {
+        subject: `jobs/scheduled/${job.id}`,
+        occurredAt: now,
+        data: {
+          jobId: job.id,
+          jobKind: "scheduled",
+          jobCode: job.code,
+          attempt: job.attempt,
+          maxAttempts: job.maxAttempts,
+        },
+      };
+      await executor.run(
+        `INSERT INTO event_outbox (event_type, payload_json, status, attempt, max_attempts, occurred_at, created_at, updated_at)
+         VALUES ('job.failed', ${p(executor, 1)}, 'pending', 0, 1, ${p(executor, 2)}, ${p(executor, 3)}, ${p(executor, 4)})`,
+        [jsonParam(event, executor.dialect), now, now, now],
+      );
+    }
+  });
 }
 
 async function writeSchedulerLog(

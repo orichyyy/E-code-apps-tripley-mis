@@ -54,7 +54,7 @@ describe("database-backed system management routes", () => {
         const i18nResponse = await app.request(`/api/i18n/messages/${i18nId}`, {
           method: "PATCH",
           headers,
-          body: JSON.stringify({ messageValue: "Updated" }),
+          body: JSON.stringify({ overrideValue: "Updated" }),
         });
         const persisted = await executor.all(
           `SELECT
@@ -89,8 +89,9 @@ async function seedSystemManagementRows(executor: DatabaseAdapterExecutor): Prom
     ["password.minimumLength", "8", new Date().toISOString()],
   );
   await executor.run(
-    `INSERT INTO i18n_messages (message_key, language, message_value, module, updated_at)
-     VALUES ($1, 'en', 'Initial', 'system', $2)`,
+    `INSERT INTO i18n_messages
+      (message_key, language, message_value, default_message, override_value, module, status, updated_at)
+     VALUES ($1, 'en', 'Initial', 'Initial', NULL, 'system', 'enabled', $2)`,
     ["system.title", new Date().toISOString()],
   );
 }

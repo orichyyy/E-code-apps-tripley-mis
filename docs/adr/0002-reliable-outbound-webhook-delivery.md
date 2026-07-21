@@ -1,0 +1,7 @@
+# Use a database outbox and durable deliveries for outbound webhooks
+
+Outbound webhooks use the database Outbox as their reliable source, then create one durable Webhook Delivery per matching Webhook Subscription revision and one immutable Delivery Attempt record per HTTP request. This preserves the domain mutation and event atomically, provides at-least-once delivery with stable CloudEvents-compatible event identifiers, and keeps RabbitMQ optional rather than introducing an unreliable database/message-broker dual write.
+
+Webhook destinations are private integration boundaries even though they are outbound: production permits HTTPS only, validates and pins DNS results before connecting, rejects redirects and non-public addresses unless the exact hostname is allowlisted, and never logs complete URLs, event bodies, signatures, or secrets. Subscription secrets use versioned AES-256-GCM encryption under an environment-provided keyring; request authentication uses HMAC-SHA256 over the timestamp and exact request body.
+
+System events fan out through a controlled event catalog, while `notification.requested` is directed to an explicitly selected subscription. Delivery is at least once and unordered across events, with one active request per subscription, bounded retries, durable attempt history, and receiver deduplication by event ID. The feature is deployment-configured and disabled by default; disabling it globally pauses pending work, while disabling, deleting, or changing a subscription revision cancels pending work tied to the old revision.
