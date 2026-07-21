@@ -16,7 +16,7 @@ Production deployment acceptance remains pending until a target environment is a
 
 ## Verification Results
 
-`pnpm verify` passed locally for capability commit `165cf07` on 2026-07-21. The run covered formatting, module conformance, lint, typechecking, the full test suite, SQLite/PostgreSQL migrations, local smoke, generated manifests, and production builds.
+`pnpm verify` passed locally for capability commit `165cf07` and again after the focused acceptance slice on 2026-07-21. The run covered formatting, module conformance, lint, typechecking, the full test suite, SQLite/PostgreSQL migrations, local smoke, generated manifests, and production builds.
 
 `pnpm test:business-module-acceptance` passed locally after the focused acceptance runner and checklist were added. It executed 31 relevant test files with 87 passing tests across contracts, Module SDK, database migrations and permission predicates, API lifecycle/capabilities, Worker execution, and frontend integration.
 
