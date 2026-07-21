@@ -13,7 +13,9 @@ import {
   type QueueAdapter,
 } from "@web-admin-base/adapters";
 import {
+  baseScheduledJobTypeCatalog,
   businessModuleDefinitions,
+  createWebhookEventCatalog,
   createOpenApiDocument,
   healthResponseSchema,
 } from "@web-admin-base/contracts";
@@ -23,6 +25,9 @@ import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 import { loadApiConfig, type ApiConfig } from "./config/load-config";
 import { createBusinessModuleRoutes } from "./business-modules/routes";
+import type { BusinessModuleCapabilityFactory } from "./business-modules/capabilities/factory";
+import { createDatabaseBusinessModuleCapabilityFactory } from "./business-modules/capabilities/factory";
+import { createBusinessModuleFileContentAuthorization } from "./business-modules/capabilities/file-content-authorization";
 import type { AppBindings } from "./app-bindings";
 import { createErrorResponse, normalizeError } from "./core/errors/error-response";
 import { createApiAuthorizationMiddleware } from "./middleware/api-authorization";
@@ -60,6 +65,7 @@ export type AppDependencies = {
   infrastructureServices?: InfrastructureServices;
   systemManagementServices?: SystemManagementServices;
   structuredLogSink?: StructuredLogSink;
+  businessModuleCapabilityFactory?: BusinessModuleCapabilityFactory;
 };
 
 export function createApp(dependencies: AppDependencies = createDefaultAppDependencies()) {
@@ -129,11 +135,26 @@ export function createApp(dependencies: AppDependencies = createDefaultAppDepend
       ),
     )
     .route("/", createCommunicationsRoutes(communicationsServices))
-    .route("/", createInfrastructureRoutes(infrastructureServices))
+    .route(
+      "/",
+      createInfrastructureRoutes(
+        infrastructureServices,
+        createBusinessModuleFileContentAuthorization({
+          backend: dependencies.backendCoreServices,
+          infrastructure: infrastructureServices,
+          lifecycle: moduleLifecycleService,
+        }),
+      ),
+    )
     .route("/", createSystemManagementRoutes(systemManagementServices))
     .route("/", createModuleLifecycleRoutes(moduleLifecycleService))
     .route("/", createManifestRoutes())
-    .route("/", createBusinessModuleRoutes());
+    .route(
+      "/",
+      createBusinessModuleRoutes({
+        capabilityFactory: dependencies.businessModuleCapabilityFactory,
+      }),
+    );
 
   routedApp.notFound((context) => {
     return context.json(
@@ -225,20 +246,36 @@ export async function createDatabaseBackedAppDependencies(
   await backendCoreServices.refreshBusinessModuleMetadata(
     await moduleLifecycleService.getActiveDefinitions(),
   );
+  const infrastructureQueue = await createInfrastructureQueue(config, infrastructureRepository);
+  const infrastructureServices = InfrastructureServices.database(infrastructureRepository, {
+    storage: fileStorage,
+    presignedUrlTtlSeconds: config.storage.presignedUrlTtlSeconds,
+    notificationChannel: createNotificationChannel(config),
+    emailDeliveryConfig: config.emailDelivery,
+    smtpEnabled: config.smtp.enabled,
+    queue: infrastructureQueue,
+    scheduledJobTypeSource: async () =>
+      new Set([
+        ...baseScheduledJobTypeCatalog,
+        ...(await moduleLifecycleService.getActiveDefinitions()).flatMap((definition) =>
+          definition.contributions.scheduledJobs.map(({ jobType }) => jobType),
+        ),
+      ]),
+  });
   return {
     backendCoreServices,
     moduleLifecycleService,
     communicationsServices: CommunicationsServices.database(
       CommunicationsRepository.fromEnvironment(),
       config.webhook,
+      async () => createWebhookEventCatalog(await moduleLifecycleService.getActiveDefinitions()),
     ),
-    infrastructureServices: InfrastructureServices.database(infrastructureRepository, {
-      storage: fileStorage,
-      presignedUrlTtlSeconds: config.storage.presignedUrlTtlSeconds,
-      notificationChannel: createNotificationChannel(config),
-      emailDeliveryConfig: config.emailDelivery,
-      smtpEnabled: config.smtp.enabled,
-      queue: await createInfrastructureQueue(config, infrastructureRepository),
+    infrastructureServices,
+    businessModuleCapabilityFactory: createDatabaseBusinessModuleCapabilityFactory({
+      backend: backendCoreServices,
+      executor: infrastructureRepository.executor,
+      infrastructure: infrastructureServices,
+      queue: infrastructureQueue,
     }),
     systemManagementServices: SystemManagementServices.database(),
     structuredLogSink: noopStructuredLogSink,
@@ -269,7 +306,7 @@ async function createPermissionCacheAdapter(
 async function createInfrastructureQueue(
   config: ApiConfig,
   repository: InfrastructureRepository,
-): Promise<QueueAdapter | undefined> {
+): Promise<QueueAdapter> {
   if (config.adapters.queueDriver === "rabbitmq") {
     if (!config.adapters.rabbitMqUrl) {
       throw new Error("RABBITMQ_URL is required when QUEUE_DRIVER=rabbitmq.");

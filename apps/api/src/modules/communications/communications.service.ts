@@ -11,7 +11,7 @@ import {
   validateWebhookUrl,
   type WebhookDeliveryConfig,
 } from "@web-admin-base/adapters";
-import { webhookEventCatalog, type ListWebhookDeliveriesQuery } from "@web-admin-base/contracts";
+import { type ListWebhookDeliveriesQuery } from "@web-admin-base/contracts";
 
 import { createKnownError } from "../../core/errors/error-codes";
 import { CommunicationsRepository } from "./communications.repository";
@@ -21,6 +21,11 @@ import {
   InMemoryAnnouncementRepository,
   type AnnouncementOrganizationSource,
 } from "./in-memory-announcement.repository";
+import {
+  assertWebhookEventTypes,
+  listWebhookEventCatalog,
+  type WebhookEventCatalogSource,
+} from "./webhook-event-catalog";
 
 export class CommunicationsServices {
   private readonly memory = {
@@ -33,20 +38,35 @@ export class CommunicationsServices {
     private readonly repository?: CommunicationsRepository,
     private readonly webhookConfig?: WebhookDeliveryConfig,
     organizationSource?: AnnouncementOrganizationSource,
+    private readonly webhookEventCatalogSource?: WebhookEventCatalogSource,
   ) {
     this.announcements =
       repository?.announcements ?? new InMemoryAnnouncementRepository(organizationSource);
   }
 
-  static inMemory(organizationSource?: AnnouncementOrganizationSource): CommunicationsServices {
-    return new CommunicationsServices(undefined, undefined, organizationSource);
+  static inMemory(
+    organizationSource?: AnnouncementOrganizationSource,
+    webhookEventCatalogSource?: WebhookEventCatalogSource,
+  ): CommunicationsServices {
+    return new CommunicationsServices(
+      undefined,
+      undefined,
+      organizationSource,
+      webhookEventCatalogSource,
+    );
   }
 
   static database(
     repository = CommunicationsRepository.fromEnvironment(),
     webhookConfig?: WebhookDeliveryConfig,
+    webhookEventCatalogSource?: WebhookEventCatalogSource,
   ): CommunicationsServices {
-    return new CommunicationsServices(repository, webhookConfig);
+    return new CommunicationsServices(
+      repository,
+      webhookConfig,
+      undefined,
+      webhookEventCatalogSource,
+    );
   }
 
   close(): Promise<void> {
@@ -84,8 +104,9 @@ export class CommunicationsServices {
     return records.then((items) => items.map(stripWebhookSecret));
   }
 
-  createWebhook(input: CreateWebhookSubscriptionRequest, actorId: string | null) {
+  async createWebhook(input: CreateWebhookSubscriptionRequest, actorId: string | null) {
     this.validateWebhookInput(input.url);
+    await assertWebhookEventTypes(this.webhookEventCatalogSource, input.eventTypes);
     if (this.repository) {
       return this.repository.webhooks.create(
         input,
@@ -113,18 +134,22 @@ export class CommunicationsServices {
       updatedBy: actorId,
     };
     this.memory.webhooks.unshift(record);
-    return Promise.resolve(stripWebhookSecret(record));
+    return stripWebhookSecret(record);
   }
 
-  updateWebhook(id: string, input: UpdateWebhookSubscriptionRequest, actorId: string | null) {
+  async updateWebhook(id: string, input: UpdateWebhookSubscriptionRequest, actorId: string | null) {
     if (input.url) this.validateWebhookInput(input.url);
+    if (input.eventTypes) {
+      await assertWebhookEventTypes(this.webhookEventCatalogSource, input.eventTypes);
+    }
     const encryptedSecret = Object.hasOwn(input, "secret")
       ? this.encryptSecret(input.secret ?? null)
       : undefined;
-    if (this.repository)
+    if (this.repository) {
       return this.repository.webhooks.update(id, input, encryptedSecret, actorId);
+    }
     const record = this.memory.webhooks.find((item) => item.id === id && !item.isDeleted);
-    if (!record) return Promise.resolve(null);
+    if (!record) return null;
     const affectsDelivery =
       input.url !== undefined ||
       input.eventTypes !== undefined ||
@@ -139,7 +164,7 @@ export class CommunicationsServices {
       updatedBy: actorId,
       revision: record.revision + (affectsDelivery ? 1 : 0),
     });
-    return Promise.resolve(stripWebhookSecret(record));
+    return stripWebhookSecret(record);
   }
 
   deleteWebhook(id: string, actorId: string | null) {
@@ -160,7 +185,7 @@ export class CommunicationsServices {
   }
 
   listWebhookEventTypes() {
-    return Promise.resolve(webhookEventCatalog);
+    return listWebhookEventCatalog(this.webhookEventCatalogSource);
   }
 
   listWebhookDeliveries(query: ListWebhookDeliveriesQuery) {

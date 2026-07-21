@@ -3,11 +3,12 @@ import type {
   LockAdapter,
   WebhookDeliveryConfig,
 } from "@web-admin-base/adapters";
+import { baseScheduledJobTypes } from "@web-admin-base/contracts";
 
 import { WebhookDeliveryRepository } from "../webhooks/webhook-delivery.repository";
 import { withDistributedTaskLock } from "./distributed-task";
 
-export const webhookDeliveryCleanupTaskCode = "webhook.delivery.cleanup";
+export const webhookDeliveryCleanupTaskCode = baseScheduledJobTypes.webhookDeliveryCleanup;
 
 export function createWebhookDeliveryCleanupTaskHandler(
   executor: DatabaseAdapterExecutor,

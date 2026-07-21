@@ -1,5 +1,4 @@
 import {
-  computeNextCronRun,
   createDatabaseQueueAdapter,
   type FileStorageAdapter,
   type NotificationChannelAdapter,
@@ -29,6 +28,10 @@ import { InfrastructureFileService } from "./infrastructure-file.service";
 import { InfrastructureNotificationService } from "./infrastructure-notification.service";
 import { InfrastructureRepository } from "./infrastructure.repository";
 import {
+  InfrastructureSchedulerService,
+  type InMemoryScheduledTask,
+} from "./infrastructure-scheduler.service";
+import {
   createDefaultFileStorage,
   createDefaultNotificationChannel,
   createDefaultQueue,
@@ -37,7 +40,7 @@ import {
   resolveInfrastructureServiceOptions,
   type InfrastructureServiceOptions,
 } from "./infrastructure-service-options";
-import type { LogType, ScheduledTaskInput } from "./infrastructure.types";
+import type { LogType } from "./infrastructure.types";
 
 export class InfrastructureServices {
   private readonly memory = {
@@ -48,15 +51,14 @@ export class InfrastructureServices {
     notifications: [] as Array<
       Record<string, unknown> & { id: string; status: string; userId?: string | null }
     >,
-    scheduledTasks: [] as Array<
-      Record<string, unknown> & { id: string; code: string; enabled: boolean }
-    >,
+    scheduledTasks: [] as InMemoryScheduledTask[],
     templates: [] as NotificationTemplateRecord[],
   };
   private sequence = 1;
   private readonly notificationService: InfrastructureNotificationService;
   private readonly fileService: InfrastructureFileService;
   private readonly emailDeliveryService?: EmailDeliveryService;
+  private readonly schedulerService: InfrastructureSchedulerService;
 
   constructor(
     private readonly repository?: InfrastructureRepository,
@@ -68,6 +70,7 @@ export class InfrastructureServices {
     organizationUserResolver?: (organizationId: string) => Promise<string[]>,
     emailDeliveryConfig?: EmailDeliveryConfig,
     smtpEnabled = true,
+    scheduledJobTypeSource?: () => Promise<ReadonlySet<string>>,
   ) {
     this.fileService = new InfrastructureFileService({
       repository,
@@ -88,6 +91,12 @@ export class InfrastructureServices {
       organizationUserResolver,
       smtpEnabled,
     });
+    this.schedulerService = new InfrastructureSchedulerService(
+      repository,
+      this.memory.scheduledTasks,
+      () => this.nextId(),
+      scheduledJobTypeSource,
+    );
     if (repository && emailDeliveryConfig) {
       this.emailDeliveryService = new EmailDeliveryService(
         new EmailDeliveryRepository(repository.executor),
@@ -110,6 +119,7 @@ export class InfrastructureServices {
       resolved.organizationUserResolver,
       resolved.emailDeliveryConfig,
       resolved.smtpEnabled ?? true,
+      resolved.scheduledJobTypeSource,
     );
   }
 
@@ -129,6 +139,7 @@ export class InfrastructureServices {
       resolved.organizationUserResolver,
       resolved.emailDeliveryConfig,
       resolved.smtpEnabled ?? true,
+      resolved.scheduledJobTypeSource,
     );
   }
 
@@ -227,62 +238,23 @@ export class InfrastructureServices {
   }
 
   listScheduledTasks() {
-    return this.repository?.listScheduledTasks() ?? Promise.resolve(this.memory.scheduledTasks);
+    return this.schedulerService.list();
   }
 
   createScheduledTask(input: CreateScheduledTaskRequest) {
-    const normalized: ScheduledTaskInput = {
-      code: input.code,
-      cronExpression: input.cronExpression,
-      handlerType: input.handlerType,
-      payload: input.payload,
-      enabled: input.enabled,
-    };
-    if (this.repository) return this.repository.createScheduledTask(normalized);
-    const now = new Date().toISOString();
-    const task = {
-      id: this.nextId(),
-      ...normalized,
-      status: normalized.enabled ? "enabled" : "disabled",
-      nextRunAt: normalized.enabled
-        ? nextScheduledRunOrThrow(normalized.cronExpression, now)
-        : null,
-      createdAt: now,
-      updatedAt: now,
-    };
-    this.memory.scheduledTasks.unshift(task);
-    return Promise.resolve(task);
+    return this.schedulerService.create(input);
   }
 
   updateScheduledTask(id: string, input: UpdateScheduledTaskRequest) {
-    if (this.repository) return this.repository.updateScheduledTask(id, input);
-    const task = this.memory.scheduledTasks.find((item) => item.id === id);
-    if (!task) return Promise.resolve(null);
-    const now = new Date().toISOString();
-    const next = { ...task, ...input };
-    Object.assign(task, input, {
-      nextRunAt: next.enabled ? nextScheduledRunOrThrow(String(next.cronExpression), now) : null,
-      updatedAt: now,
-    });
-    return Promise.resolve(task);
+    return this.schedulerService.update(id, input);
   }
 
   setScheduledTaskStatus(id: string, enabled: boolean) {
-    if (this.repository) return this.repository.setScheduledTaskStatus(id, enabled);
-    const task = this.memory.scheduledTasks.find((item) => item.id === id);
-    if (!task) return Promise.resolve(null);
-    const now = new Date().toISOString();
-    task.enabled = enabled;
-    task.status = enabled ? "enabled" : "disabled";
-    task.nextRunAt = enabled ? nextScheduledRunOrThrow(String(task.cronExpression), now) : null;
-    return Promise.resolve(task);
+    return this.schedulerService.setStatus(id, enabled);
   }
 
   enqueueScheduledTaskRun(id: string) {
-    return (
-      this.repository?.enqueueScheduledTaskRun(id) ??
-      Promise.resolve(this.memory.scheduledTasks.find((item) => item.id === id) ?? null)
-    );
+    return this.schedulerService.enqueueRun(id);
   }
 
   listImportExportTasks() {
@@ -315,16 +287,5 @@ export class InfrastructureServices {
     const id = String(this.sequence);
     this.sequence += 1;
     return id;
-  }
-}
-
-function nextScheduledRunOrThrow(cronExpression: string, nowIsoValue: string): string {
-  try {
-    return computeNextCronRun(cronExpression, new Date(nowIsoValue));
-  } catch (error) {
-    throw createKnownError("VALIDATION_INVALID_REQUEST", {
-      field: "cronExpression",
-      message: error instanceof Error ? error.message : String(error),
-    });
   }
 }

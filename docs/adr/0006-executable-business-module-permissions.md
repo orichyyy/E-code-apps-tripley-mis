@@ -36,5 +36,4 @@ This decision rejects arbitrary JSON rules, raw SQL rules, implicit resource-to-
 permission naming, frontend-only enforcement, and permissive fallback behavior.
 Capability ports remain a separate Phase 4 concern.
 
-Implementation status: Phase 3 executable data and field permissions are
-implemented. Phase 4 capability ports remain pending.
+Implementation status: Phase 3 executable data and field permissions are implemented. Phase 4 capability ports are implemented under ADR 0007.

@@ -7,12 +7,18 @@ export function createDatabaseInAppNotificationDispatchHandler(executor: Databas
     await executor.transaction(async () => {
       for (const userId of payload.recipientUserIds) {
         await executor.run(
-          `INSERT INTO notifications (user_id, channel, title, body, status, metadata_json, is_deleted, created_at, updated_at)
-           VALUES (${p(executor, 1)}, 'in_app', ${p(executor, 2)}, ${p(executor, 3)}, 'unread', ${p(executor, 4)}, ${bool(executor, false)}, ${p(executor, 5)}, ${p(executor, 6)})`,
+          `INSERT INTO notifications
+            (user_id, channel, title, body, status, request_key, metadata_json,
+             is_deleted, created_at, updated_at)
+           VALUES (${p(executor, 1)}, 'in_app', ${p(executor, 2)}, ${p(executor, 3)},
+            'unread', ${p(executor, 4)}, ${p(executor, 5)}, ${bool(executor, false)},
+            ${p(executor, 6)}, ${p(executor, 7)})
+           ON CONFLICT (user_id, request_key) DO NOTHING`,
           [
             userId,
             payload.title,
             payload.body,
+            payload.requestKey,
             jsonParam({ ...payload.metadata, createdBy: payload.createdBy }, executor.dialect),
             now,
             now,

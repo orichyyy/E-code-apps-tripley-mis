@@ -1,13 +1,22 @@
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 
 import { assertBusinessModuleConformance, checkBusinessModuleConformance } from "../src";
 import { createValidFixtureModule, fixtureModuleCode } from "./fixtures/valid-business-module";
+import { capabilityApiRegistration, capabilityModule } from "./fixtures/capability-business-module";
 
 const matchingRuntime = {
   apiModules: [
     {
       moduleCode: fixtureModuleCode,
+      schemas: {
+        FixtureOrderListRequest: z.object({}),
+        FixtureOrderList: z.object({}),
+      },
       dataPermissionOperators: {},
+      fileAttachmentAuthorizers: {},
+      importExportResources: {},
+      notificationRecipientResolvers: {},
       routes: [
         {
           code: "api.fixture-orders.list",
@@ -28,7 +37,9 @@ const matchingRuntime = {
       ],
     },
   ],
-  workerModules: [{ moduleCode: fixtureModuleCode, jobTypes: [], importExportResourceTypes: [] }],
+  workerModules: [
+    { moduleCode: fixtureModuleCode, schemas: {}, jobHandlers: {}, importExportHandlers: {} },
+  ],
   databaseModuleCodes: [],
   mountedApiRoutes: [{ method: "GET" as const, path: "/api/modules/fixture-orders/orders" }],
   tanstackRoutePaths: ["/modules/fixture-orders/orders"],
@@ -134,5 +145,50 @@ describe("Business Module conformance", () => {
       "MODULE_API_OPERATOR_REGISTRATION_MISMATCH",
     );
     expect(registered.ok).toBe(true);
+  });
+
+  it("requires executable capability schemas, authorizers, resolvers, and Worker handlers", () => {
+    const missing = checkBusinessModuleConformance({
+      definitions: [capabilityModule],
+      runtime: {
+        apiModules: [],
+        webModules: [],
+        workerModules: [],
+        databaseModuleCodes: [],
+        mountedApiRoutes: [],
+        tanstackRoutePaths: [],
+      },
+    });
+    const valid = checkBusinessModuleConformance({
+      definitions: [capabilityModule],
+      runtime: {
+        apiModules: [capabilityApiRegistration],
+        webModules: [],
+        workerModules: [
+          {
+            moduleCode: capabilityModule.moduleCode,
+            schemas: { ReconcileInput: z.object({ batchSize: z.number() }) },
+            jobHandlers: { "fixture-capabilities.reconcile": async () => undefined },
+            importExportHandlers: {
+              "fixture-capabilities:records": {
+                export: async () => ({ rows: [] }),
+                import: async () => ({ totalRows: 0, successRows: 0, errors: [] }),
+              },
+            },
+          },
+        ],
+        databaseModuleCodes: [],
+        mountedApiRoutes: [],
+        tanstackRoutePaths: [],
+      },
+    });
+
+    expect(missing.diagnostics.map(({ code }) => code)).toEqual(
+      expect.arrayContaining([
+        "MODULE_API_REGISTRATION_MISMATCH",
+        "MODULE_WORKER_REGISTRATION_MISMATCH",
+      ]),
+    );
+    expect(valid.ok).toBe(true);
   });
 });

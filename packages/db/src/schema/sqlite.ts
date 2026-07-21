@@ -745,6 +745,7 @@ export const eventOutbox = sqliteTable(
   "event_outbox",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
+    eventKey: text("event_key"),
     eventType: text("event_type").notNull(),
     payloadJson: text("payload_json", { mode: "json" }).notNull(),
     status: text("status", { enum: ["pending", "published", "failed", "dead_letter"] })
@@ -759,6 +760,7 @@ export const eventOutbox = sqliteTable(
     ...timestamps,
   },
   (table) => ({
+    eventKeyUnique: uniqueIndex("event_outbox_event_key_unique").on(table.eventKey),
     statusNextRunIndex: index("event_outbox_status_next_run_idx").on(table.status, table.nextRunAt),
     statusCheck: check(
       "event_outbox_status_check",
@@ -859,6 +861,7 @@ export const notifications = sqliteTable(
     channel: text("channel", { enum: ["in_app", "email", "webhook", "sms"] }).notNull(),
     title: text("title").notNull(),
     body: text("body").notNull(),
+    requestKey: text("request_key"),
     status: text("status", { enum: ["unread", "read", "archived", "deleted"] })
       .notNull()
       .default("unread"),
@@ -870,6 +873,10 @@ export const notifications = sqliteTable(
   },
   (table) => ({
     userStatusIndex: index("notifications_user_status_idx").on(table.userId, table.status),
+    userRequestKeyUnique: uniqueIndex("notifications_user_request_key_unique").on(
+      table.userId,
+      table.requestKey,
+    ),
     channelCheck: check(
       "notifications_channel_check",
       sql`${table.channel} IN ('in_app', 'email', 'webhook', 'sms')`,
@@ -1182,6 +1189,7 @@ export const importExportTasks = sqliteTable(
   "import_export_tasks",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
+    idempotencyKey: text("idempotency_key"),
     taskType: text("task_type", { enum: ["import", "export"] }).notNull(),
     resourceType: text("resource_type").notNull(),
     status: text("status", { enum: ["pending", "running", "succeeded", "failed"] })
@@ -1194,11 +1202,18 @@ export const importExportTasks = sqliteTable(
     successRows: integer("success_rows").notNull().default(0),
     failedRows: integer("failed_rows").notNull().default(0),
     errorPreviewJson: text("error_preview_json", { mode: "json" }).notNull(),
+    requestJson: text("request_json", { mode: "json" }).notNull().default({}),
+    executionContextJson: text("execution_context_json", { mode: "json" }),
     resultExpiresAt: text("result_expires_at"),
     ...timestamps,
     createdBy: integer("created_by"),
   },
   (table) => ({
+    idempotencyUnique: uniqueIndex("import_export_tasks_idempotency_unique").on(
+      table.taskType,
+      table.resourceType,
+      table.idempotencyKey,
+    ),
     statusIndex: index("import_export_tasks_status_idx").on(table.status),
     typeCheck: check(
       "import_export_tasks_type_check",

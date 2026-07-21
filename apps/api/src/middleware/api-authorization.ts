@@ -26,11 +26,23 @@ export function createApiAuthorizationMiddleware(
     context.set("authContext", authContext);
 
     if (apiPermission) {
-      await services.requireApiPermission(authContext, apiPermission);
+      await services.requireApiPermission(
+        authContext,
+        isDeferredFileContentAuthorization(context.req.method, context.req.path)
+          ? { ...apiPermission, requiredPermission: undefined }
+          : apiPermission,
+      );
     }
 
     await next();
   };
+}
+
+function isDeferredFileContentAuthorization(method: string, path: string): boolean {
+  return (
+    method === "GET" &&
+    (/^\/api\/files\/[^/]+\/download$/.test(path) || /^\/api\/files\/[^/]+\/preview$/.test(path))
+  );
 }
 
 function findApiPermission(method: string, path: string) {

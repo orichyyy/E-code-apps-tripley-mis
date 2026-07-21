@@ -1,6 +1,6 @@
 # Business Module Extension Design
 
-This document records the confirmed design for a future implementation goal. It defines extension infrastructure only and must not introduce an example business module.
+This document records the implemented Business Module extension design. It defines extension infrastructure only and does not introduce an example business module.
 
 ## Registration Model
 
@@ -185,11 +185,11 @@ The confirmed design is implemented through four reviewable goals:
 3. Executable Data and Field Permissions: versioned DSL, operator handlers, neutral predicates, Drizzle translation, response/write field enforcement, frontend helpers, and fail-closed tests.
 4. Capability Ports: Operation Events, typed errors, file attachment authorization, CSV resources, Domain/Notification Events, scheduled jobs, async context propagation, and their conformance tests.
 
-The complete PRD extension acceptance criteria remain incomplete until all four goals are implemented. No phase may introduce an example business module.
+The four extension-foundation phases are implemented. No phase introduces an example business module, and production registries remain empty until a separately reviewed business module is added.
 
 ## Implementation Status
 
 - Phase 1 Registry and Conformance Foundation: implemented.
 - Phase 2 Registry Lifecycle and Admin Sync: implemented.
 - Phase 3 Executable Data and Field Permissions: implemented.
-- Phase 4 Capability Ports: not implemented.
+- Phase 4 Capability Ports: implemented.

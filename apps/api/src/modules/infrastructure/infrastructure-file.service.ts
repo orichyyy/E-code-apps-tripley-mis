@@ -7,6 +7,7 @@ import {
   validateUploadInput,
   type FileUploadInput,
   type ManagedFileRecord,
+  type ManagedFileReferenceRecord,
   type StoredFileMetadataInput,
 } from "./file-management";
 
@@ -15,7 +16,7 @@ type FileMetadataRepository = {
   getFile: (id: string) => Promise<ManagedFileRecord | null>;
   createFile: (input: StoredFileMetadataInput) => Promise<ManagedFileRecord | null>;
   deleteFile: (id: string, actorId: string | null) => Promise<ManagedFileRecord | null>;
-  listFileReferences: (id: string) => Promise<Array<Record<string, unknown> & { id: string }>>;
+  listFileReferences: (id: string) => Promise<ManagedFileReferenceRecord[]>;
 };
 
 export type FileStorageErrorEvent = {

@@ -49,6 +49,8 @@ describe("database migration execution", () => {
         "0012_business_module_lifecycle.sql",
         "0013_business_permission_enforcement.sql",
         "0014_multiple_data_permission_rules.sql",
+        "0015_business_module_capability_context.sql",
+        "0016_notification_request_idempotency.sql",
       ]);
       expect(reapplied).toEqual([]);
       expect(tables).toContainEqual({ name: "users" });
@@ -98,6 +100,22 @@ describe("database migration execution", () => {
         .prepare("PRAGMA table_info(field_permission_rules)")
         .all() as Array<{ name: string }>;
       expect(fieldPermissionColumns.map((column) => column.name)).toContain("scenario");
+      const outboxColumns = client.prepare("PRAGMA table_info(event_outbox)").all() as Array<{
+        name: string;
+      }>;
+      expect(outboxColumns.map((column) => column.name)).toContain("event_key");
+      const taskColumns = client.prepare("PRAGMA table_info(import_export_tasks)").all() as Array<{
+        name: string;
+      }>;
+      expect(taskColumns.map((column) => column.name)).toEqual(
+        expect.arrayContaining(["idempotency_key", "request_json", "execution_context_json"]),
+      );
+      const notificationColumns = client
+        .prepare("PRAGMA table_info(notifications)")
+        .all() as Array<{
+        name: string;
+      }>;
+      expect(notificationColumns.map((column) => column.name)).toContain("request_key");
     } finally {
       client.close();
     }
@@ -146,6 +164,8 @@ describe("database migration execution", () => {
       "0012_business_module_lifecycle.sql",
       "0013_business_permission_enforcement.sql",
       "0014_multiple_data_permission_rules.sql",
+      "0015_business_module_capability_context.sql",
+      "0016_notification_request_idempotency.sql",
     ];
     const applied = await runPostgresqlMigrations({ url });
     const reapplied = await runPostgresqlMigrations({ url });

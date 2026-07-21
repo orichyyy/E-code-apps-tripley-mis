@@ -17,6 +17,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@web-admin-base/contracts": "workspace:*"
+    "@web-admin-base/contracts": "workspace:*",
+    "zod": "^3.25.76"
   }
 }

@@ -191,12 +191,17 @@ export class InfrastructureRepository {
     await this.executor.transaction(async () => {
       for (const record of records) {
         await this.executor.run(
-          `INSERT INTO notifications (user_id, channel, title, body, status, metadata_json, is_deleted, created_at, updated_at)
-           VALUES (${this.p(1)}, 'in_app', ${this.p(2)}, ${this.p(3)}, 'unread', ${this.p(4)}, ${this.bool(false)}, ${this.p(5)}, ${this.p(6)})`,
+          `INSERT INTO notifications
+            (user_id, channel, title, body, status, request_key, metadata_json,
+             is_deleted, created_at, updated_at)
+           VALUES (${this.p(1)}, 'in_app', ${this.p(2)}, ${this.p(3)}, 'unread',
+            ${this.p(4)}, ${this.p(5)}, ${this.bool(false)}, ${this.p(6)}, ${this.p(7)})
+           ON CONFLICT (user_id, request_key) DO NOTHING`,
           [
             record.userId,
             record.title,
             record.body,
+            record.requestKey,
             jsonParam({ ...record.metadata, createdBy: record.createdBy }, this.executor.dialect),
             now,
             now,

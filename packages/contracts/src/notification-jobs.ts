@@ -7,6 +7,7 @@ export const inAppNotificationDispatchPayloadSchema = z
     recipientUserIds: z.array(z.string().min(1)).min(1),
     title: z.string().min(1),
     body: z.string().min(1),
+    requestKey: z.string().min(1).nullable().default(null),
     metadata: z.record(z.unknown()).default({}),
     createdBy: z.string().nullable().default(null),
     enqueuedAt: z.string().datetime(),

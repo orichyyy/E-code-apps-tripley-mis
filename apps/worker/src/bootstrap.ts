@@ -1,5 +1,6 @@
 import {
   createDatabaseJobSchedulerAdapter,
+  createDatabaseLockAdapter,
   createAlertIntegrationPlaceholder,
   createDatabaseQueueAdapter,
   createConfiguredFileStorageAdapter,
@@ -12,6 +13,12 @@ import {
   type AlertIntegration,
   type QueueAdapter,
 } from "@web-admin-base/adapters";
+import {
+  businessModuleDefinitions,
+  createWebhookEventCatalog,
+  type BusinessModuleDefinition,
+  type BusinessWorkerModuleRegistration,
+} from "@web-admin-base/contracts";
 
 import type { WorkerConfig } from "./config/load-config";
 import { createWorkerDatabaseExecutor } from "./infra/worker-database-executor";
@@ -23,6 +30,14 @@ import { createDatabaseInAppNotificationDispatchHandler } from "./tasks/in-app-n
 import { createBaseWorkerTaskCatalog } from "./tasks/task-catalog";
 import { createWebhookDeliveryProcessor } from "./webhooks/webhook-delivery.processor";
 import { WebhookDeliveryRepository } from "./webhooks/webhook-delivery.repository";
+import { businessWorkerModuleRegistry } from "./business-modules/registry";
+import { loadActiveBusinessWorkerRegistrations } from "./business-modules/active-registrations";
+import { createBusinessModuleCsvTask } from "./business-modules/csv.task";
+import { createBusinessModuleOperationLogTask } from "./business-modules/operation-log.task";
+import {
+  createBusinessModuleJobTasks,
+  createBusinessModuleScheduledHandlers,
+} from "./business-modules/worker-tasks";
 
 export type WorkerApplication = {
   runtime: WorkerRuntime;
@@ -36,6 +51,10 @@ export type WorkerApplicationOptions = {
   storage?: FileStorageAdapter;
   log?: (message: string) => void;
   alert?: AlertIntegration;
+  businessModules?: {
+    definitions: readonly BusinessModuleDefinition[];
+    registrations: readonly BusinessWorkerModuleRegistration[];
+  };
 };
 
 export function createWorkerApplication(
@@ -73,9 +92,17 @@ export async function createConfiguredWorkerApplication(
           queuePrefix: "web-admin-base.queue",
         })
       : durableQueue;
+  const activeRegistrations = await loadActiveBusinessWorkerRegistrations(
+    executor,
+    businessWorkerModuleRegistry,
+  );
   return createWorkerApplicationWithQueue(config, executor, ownsExecutor, queue, durableQueue, {
     ...options,
     storage,
+    businessModules: {
+      definitions: businessModuleDefinitions,
+      registrations: activeRegistrations,
+    },
   });
 }
 
@@ -87,11 +114,19 @@ function createWorkerApplicationWithQueue(
   durableQueue: Pick<DatabaseQueueAdapter, "processReady">,
   options: WorkerApplicationOptions,
 ): WorkerApplication {
+  const moduleRegistrations = options.businessModules?.registrations ?? [];
+  const activeModuleCodes = new Set(moduleRegistrations.map(({ moduleCode }) => moduleCode));
+  const moduleDefinitions = (options.businessModules?.definitions ?? []).filter(({ moduleCode }) =>
+    activeModuleCodes.has(moduleCode),
+  );
   const scheduler = createDatabaseJobSchedulerAdapter(executor, {
     emitJobFailureEvents: config.webhook.enabled,
   });
   const webhookDelivery = createWebhookDeliveryProcessor({
-    repository: new WebhookDeliveryRepository(executor),
+    repository: new WebhookDeliveryRepository(
+      executor,
+      createWebhookEventCatalog(moduleDefinitions).map(({ type }) => type),
+    ),
     config: config.webhook,
     workerId: config.workerName,
     log: (entry) =>
@@ -124,6 +159,11 @@ function createWorkerApplicationWithQueue(
     storage: options.storage,
     webhookConfig: config.webhook,
     emailDeliveryConfig: config.emailDelivery,
+    businessModuleHandlers: createBusinessModuleScheduledHandlers(
+      options.businessModules?.definitions ?? [],
+      options.businessModules?.registrations ?? [],
+      createDatabaseLockAdapter(executor, { owner: `${config.workerName}:business-modules` }),
+    ),
   });
   const runtime = createWorkerRuntime(config, {
     queue,
@@ -136,6 +176,18 @@ function createWorkerApplicationWithQueue(
     log: options.log,
     queueTasks: [
       createInAppNotificationDispatchTask(createDatabaseInAppNotificationDispatchHandler(executor)),
+      createBusinessModuleOperationLogTask(executor),
+      createBusinessModuleCsvTask(
+        executor,
+        catalog.storage,
+        moduleDefinitions,
+        moduleRegistrations,
+      ),
+      ...createBusinessModuleJobTasks(
+        moduleDefinitions,
+        moduleRegistrations,
+        createDatabaseLockAdapter(executor, { owner: `${config.workerName}:business-module-jobs` }),
+      ),
       ...catalog.queueTasks,
     ],
     scheduledTasks: catalog.scheduledTasks,

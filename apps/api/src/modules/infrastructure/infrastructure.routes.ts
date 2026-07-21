@@ -11,6 +11,7 @@ import {
 import { Hono } from "hono";
 
 import type { AuthContextVariables } from "../../core/auth-context/auth-context";
+import type { RequestIdVariables } from "../../middleware/request-id";
 import { createKnownError } from "../../core/errors/error-codes";
 import { assertEmptyJsonBody } from "../core-foundation/request-body";
 import { toContentDisposition } from "./file-management";
@@ -18,8 +19,15 @@ import type { InfrastructureServices } from "./infrastructure.service";
 import type { LogType } from "./infrastructure.types";
 
 type InfrastructureRouteBindings = {
-  Variables: AuthContextVariables;
+  Variables: AuthContextVariables & RequestIdVariables;
 };
+
+export type FileContentAuthorization = (input: {
+  fileId: string;
+  mode: "download" | "preview";
+  auth: NonNullable<AuthContextVariables["authContext"]>;
+  requestId: string;
+}) => Promise<void>;
 
 const logPathToType = {
   login: "login",
@@ -32,7 +40,10 @@ const logPathToType = {
   files: "file_operation",
 } as const satisfies Record<string, LogType>;
 
-export function createInfrastructureRoutes(services: InfrastructureServices) {
+export function createInfrastructureRoutes(
+  services: InfrastructureServices,
+  authorizeFileContent?: FileContentAuthorization,
+) {
   const routes = new Hono<InfrastructureRouteBindings>();
 
   for (const [path, logType] of Object.entries(logPathToType)) {
@@ -63,7 +74,16 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
     context.json({ data: await services.getFile(context.req.param("id")) }),
   );
   routes.get("/files/:id/download", async (context) => {
-    const result = await services.getFileContent(context.req.param("id"), "download");
+    const fileId = context.req.param("id");
+    if (authorizeFileContent) {
+      await authorizeFileContent({
+        fileId,
+        mode: "download",
+        auth: requireAuth(context),
+        requestId: context.get("requestId"),
+      });
+    }
+    const result = await services.getFileContent(fileId, "download");
     if (result.kind === "redirect") return privateRedirect(result.url);
     return new Response(toArrayBuffer(result.body), {
       status: 200,
@@ -75,7 +95,16 @@ export function createInfrastructureRoutes(services: InfrastructureServices) {
     });
   });
   routes.get("/files/:id/preview", async (context) => {
-    const result = await services.getFileContent(context.req.param("id"), "preview");
+    const fileId = context.req.param("id");
+    if (authorizeFileContent) {
+      await authorizeFileContent({
+        fileId,
+        mode: "preview",
+        auth: requireAuth(context),
+        requestId: context.get("requestId"),
+      });
+    }
+    const result = await services.getFileContent(fileId, "preview");
     if (result.kind === "redirect") return privateRedirect(result.url);
     return new Response(toArrayBuffer(result.body), {
       status: 200,

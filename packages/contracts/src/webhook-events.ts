@@ -1,13 +1,17 @@
 import { z } from "zod";
 
+import type { BusinessModuleDefinition } from "./business-modules";
+
 const nullableId = z.string().min(1).nullable();
 
-export const webhookEventTypeSchema = z.enum([
+export const baseWebhookEventTypes = [
   "user.created",
   "job.failed",
   "permission.changed",
   "notification.requested",
-]);
+] as const;
+
+export const webhookEventTypeSchema = z.string().min(3);
 
 export type WebhookEventType = z.infer<typeof webhookEventTypeSchema>;
 
@@ -17,6 +21,26 @@ export const webhookEventCatalog = [
   { type: "permission.changed", description: "Persisted permission state changed." },
   { type: "notification.requested", description: "A directed webhook notification was requested." },
 ] as const satisfies ReadonlyArray<{ type: WebhookEventType; description: string }>;
+
+export type WebhookEventCatalogEntry = { type: string; description: string };
+
+export function createWebhookEventCatalog(
+  definitions: readonly BusinessModuleDefinition[],
+): WebhookEventCatalogEntry[] {
+  const moduleEvents = definitions.flatMap((definition) => [
+    ...definition.contributions.domainEvents.map((event) => ({
+      type: event.eventType,
+      description: event.title.defaultMessage,
+    })),
+    ...definition.contributions.notificationEvents.map((event) => ({
+      type: event.eventType,
+      description: event.title.defaultMessage,
+    })),
+  ]);
+  return [...webhookEventCatalog, ...moduleEvents].sort((left, right) =>
+    left.type.localeCompare(right.type),
+  );
+}
 
 const baseOutboxEventShape = {
   subject: z.string().min(1),
@@ -95,6 +119,19 @@ export const webhookOutboxEventSchema = z.discriminatedUnion("type", [
 
 export type WebhookOutboxEvent = z.infer<typeof webhookOutboxEventSchema>;
 
+export const businessModuleWebhookOutboxEventSchema = z
+  .object({
+    type: z.string().min(3),
+    subject: z.string().min(1),
+    occurredAt: z.string().datetime(),
+    data: z.record(z.unknown()),
+  })
+  .strict();
+
+export type BusinessModuleWebhookOutboxEvent = z.infer<
+  typeof businessModuleWebhookOutboxEventSchema
+>;
+
 export const cloudEventEnvelopeSchema = z
   .object({
     specversion: z.literal("1.0"),
@@ -113,7 +150,7 @@ export type CloudEventEnvelope = z.infer<typeof cloudEventEnvelopeSchema>;
 export function createCloudEventEnvelope(
   id: string,
   source: string,
-  event: WebhookOutboxEvent,
+  event: WebhookOutboxEvent | BusinessModuleWebhookOutboxEvent,
 ): CloudEventEnvelope {
   return cloudEventEnvelopeSchema.parse({
     specversion: "1.0",

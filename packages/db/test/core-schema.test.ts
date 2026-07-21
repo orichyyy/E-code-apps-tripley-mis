@@ -71,6 +71,15 @@ function getIndexNames(table: unknown): string[] {
 }
 
 describe("backend core schema", () => {
+  it("keeps Business Module asynchronous capability columns aligned across dialects", () => {
+    expect(sqlite.eventOutbox.eventKey.name).toBe("event_key");
+    expect(postgresql.eventOutbox.eventKey.name).toBe("event_key");
+    expect(sqlite.importExportTasks.idempotencyKey.name).toBe("idempotency_key");
+    expect(sqlite.importExportTasks.executionContextJson.name).toBe("execution_context_json");
+    expect(postgresql.importExportTasks.idempotencyKey.name).toBe("idempotency_key");
+    expect(postgresql.importExportTasks.executionContextJson.name).toBe("execution_context_json");
+  });
+
   it("keeps permission metadata columns aligned across SQLite and PostgreSQL", () => {
     expect(sqlite.permissions.module.name).toBe("module");
     expect(sqlite.permissions.resource.name).toBe("resource");
@@ -201,6 +210,8 @@ describe("backend core schema", () => {
     expect(postgresql.fileReferences.fileObjectId.name).toBe("file_object_id");
     expect(sqlite.notifications.metadataJson.name).toBe("metadata_json");
     expect(postgresql.notifications.metadataJson.name).toBe("metadata_json");
+    expect(sqlite.notifications.requestKey.name).toBe("request_key");
+    expect(postgresql.notifications.requestKey.name).toBe("request_key");
     expect(sqlite.notificationTemplates.variablesJson.name).toBe("variables_json");
     expect(postgresql.notificationTemplates.variablesJson.name).toBe("variables_json");
     expect(sqlite.emailDeliveries.contentEnvelope.name).toBe("content_envelope");
@@ -359,11 +370,11 @@ describe("backend core schema", () => {
       ],
       ["locks", ["locks_expires_at_idx", "locks_key_unique"]],
       ["queueJobs", ["queue_jobs_status_available_idx"]],
-      ["eventOutbox", ["event_outbox_status_next_run_idx"]],
+      ["eventOutbox", ["event_outbox_event_key_unique", "event_outbox_status_next_run_idx"]],
       ["scheduledJobs", ["scheduled_jobs_code_unique", "scheduled_jobs_next_run_idx"]],
       ["fileObjects", ["file_objects_content_cleanup_idx", "file_objects_object_key_unique"]],
       ["fileReferences", ["file_references_file_idx", "file_references_resource_idx"]],
-      ["notifications", ["notifications_user_status_idx"]],
+      ["notifications", ["notifications_user_request_key_unique", "notifications_user_status_idx"]],
       ["notificationTemplates", ["notification_templates_channel_code_locale_unique"]],
       [
         "emailDeliveries",
@@ -379,7 +390,10 @@ describe("backend core schema", () => {
         ["email_delivery_attempts_delivery_idx", "email_delivery_attempts_delivery_number_unique"],
       ],
       ["logEntries", ["log_entries_type_occurred_idx"]],
-      ["importExportTasks", ["import_export_tasks_status_idx"]],
+      [
+        "importExportTasks",
+        ["import_export_tasks_idempotency_unique", "import_export_tasks_status_idx"],
+      ],
       ["systemConfigs", ["system_configs_group_idx", "system_configs_key_unique"]],
       ["dictionaryTypes", ["dictionary_types_code_unique"]],
       ["dictionaryItems", ["dictionary_items_type_idx", "dictionary_items_type_value_unique"]],

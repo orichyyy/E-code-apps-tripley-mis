@@ -1007,7 +1007,7 @@ Phase 1 of the confirmed ADR 0005 design is implemented:
 - Rebuilt the internal development SQLite/PostgreSQL databases for the new migration history shape without adding an automatic destructive reset to normal migration commands.
 - Added isolated valid/invalid synthetic fixtures and tests for contracts, hashes, namespace/ownership/reference diagnostics, API/Web/Worker mismatch, Hono RPC inference, fixture leakage, migration ordering/parity/checksums, SQLite execution, and PostgreSQL persistence.
 
-Production Business Module registries remain empty. Phase 4 capability ports remain explicitly tracked in `docs/known_gaps.md`.
+Production Business Module registries remain empty. Phase 4 Capability Ports are implemented in the later section below.
 
 ## Business Module Registry Lifecycle And Admin Sync
 
@@ -1023,7 +1023,7 @@ Phase 2 of the confirmed ADR 0005 design is implemented:
 - Added the bilingual `/system/modules` catalog and plan UI with contribution/dependency/drift visibility, permission-denied/loading/empty/error/mutation states, and confirmed Apply.
 - Added contract, plan/service, rollback, initialization, activation, Hono RPC, OpenAPI, SQLite migration, PostgreSQL persistence/reload, fixture isolation, CLI, API-client, and frontend component coverage.
 
-Phase 3 executable data and field permissions is implemented in the following section. Phase 4 capability ports remains the next Business Module goal.
+Phase 3 executable data and field permissions is implemented in the following section. Phase 4 Capability Ports are implemented after it.
 
 ## Executable Business Module Data And Field Permissions
 
@@ -1038,4 +1038,19 @@ Phase 3 of the confirmed ADR 0005 design is implemented according to ADR 0006:
 - Added effective field permissions and Super Administrator state to login, Organization-switch, and current permission contexts, plus Zustand storage and frontend visibility/writability helpers.
 - Kept every production Business Module registry empty; all executable query examples remain isolated under test fixture directories.
 
-Phase 4 capability ports remains incomplete and is tracked in `docs/known_gaps.md`.
+## Business Module Capability Ports
+
+Phase 4 is implemented according to ADR 0007:
+
+- Added strict Module Execution Context, asynchronous message, Operation Event, Managed File reference, and CSV task contracts.
+- Added `packages/module-sdk` capability runtimes for declared permissions, Operation Events, typed module errors, Managed Files, CSV tasks, Domain/Notification Events, clock/ID services, and bounded background jobs.
+- Extended API/Worker registrations with explicit Zod schemas, file authorizers, CSV handlers, notification recipient resolvers, and job handlers; `pnpm modules:check` validates declaration/runtime parity and capability limits.
+- Added DB-backed capability bindings for durable File References, idempotent CSV tasks, Outbox events, queue jobs, asynchronous Operation Logs, and a local JSONL fallback when Queue publication is unavailable.
+- Added authenticated module-reference File download/preview authorization while preserving the global file permissions and existing local/S3 response behavior.
+- Added active-module controlled Webhook event catalogs for Domain and Notification Events, with durable Worker fan-out through the existing delivery aggregate.
+- Added Worker CSV execution, full import error reports, formula-safe explicit-field exports, Operation Log writing, context reconstruction, timeout cancellation, singleton locking, and active-registration loading.
+- Added a shared Base scheduled-job catalog and API validation so unknown or inactive module handlers cannot be created, enabled, or run immediately; module removal disables retained schedules.
+- Added SQLite/PostgreSQL migrations 0015-0016 for Outbox/CSV idempotency and context plus final in-app Notification request deduplication.
+- Added contracts/module-sdk/API/Worker/SQLite/PostgreSQL tests for fail-closed capabilities, context propagation, idempotency, active-module gates, File authorization, queue fallback, CSV output, Outbox/Webhook fan-out, migrations, and fixture isolation.
+
+All four Business Module extension-foundation phases are implemented. Production API, Web, Worker, definition, and database registries remain intentionally empty; no example or production Business Module is included.

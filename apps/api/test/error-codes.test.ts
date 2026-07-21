@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { BusinessFieldPermissionError } from "@web-admin-base/module-sdk";
+import {
+  BusinessFieldPermissionError,
+  BusinessModuleCapabilityError,
+  BusinessModuleDeclaredError,
+} from "@web-admin-base/module-sdk";
 
 import { listErrorCodeDefinitions } from "../src/core/errors/error-codes";
 import { normalizeError } from "../src/core/errors/error-response";
@@ -47,6 +51,28 @@ describe("error code specification", () => {
       status: 403,
       category: "authorization",
       details: { fields: ["secret", "ownerUserId"] },
+    });
+  });
+
+  it("normalizes declared module and capability errors", () => {
+    expect(
+      normalizeError(
+        new BusinessModuleDeclaredError(
+          "BUSINESS_FIXTURE_CONFLICT",
+          409,
+          { key: "modules.fixture.errors.conflict", defaultMessage: "Conflict" },
+          { recordId: "9" },
+        ),
+      ),
+    ).toMatchObject({
+      code: "BUSINESS_FIXTURE_CONFLICT",
+      status: 409,
+      category: "business",
+      details: { recordId: "9" },
+    });
+    expect(normalizeError(new BusinessModuleCapabilityError("secret"))).toMatchObject({
+      code: "PERMISSION_MODULE_CAPABILITY_DENIED",
+      status: 403,
     });
   });
 });

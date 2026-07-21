@@ -42,6 +42,12 @@ describe("database-backed Business Module lifecycle", () => {
 
       expect(await service.isModuleActive(definition.moduleCode)).toBe(true);
       await expectModuleMetadataEnabled(executor);
+      await executor.run(
+        `INSERT INTO scheduled_jobs
+          (code, cron_expression, handler_type, payload_json, status, created_at, updated_at)
+         VALUES (?, '0 * * * *', 'fixture-lifecycle.reconcile', '{}', 'enabled', ?, ?)`,
+        ["fixture-lifecycle.schedule", "2026-07-20T02:00:00.000Z", "2026-07-20T02:00:00.000Z"],
+      );
 
       await executor.run(
         `UPDATE i18n_messages SET override_value = ?, message_value = ?
@@ -102,6 +108,12 @@ describe("database-backed Business Module lifecycle", () => {
 
       const snapshot = await repository.loadSnapshot();
       expect(snapshot.entries[0]).toMatchObject({ status: "disabled" });
+      expect(
+        await executor.all(
+          "SELECT status, next_run_at FROM scheduled_jobs WHERE handler_type = ?",
+          ["fixture-lifecycle.reconcile"],
+        ),
+      ).toEqual([{ status: "disabled", next_run_at: null }]);
       expect(await executor.all("SELECT id FROM role_permissions")).toEqual([]);
       expect(
         await executor.all(
@@ -179,5 +191,5 @@ async function expectModuleMetadataEnabled(
       "SELECT COUNT(*) AS count FROM i18n_messages WHERE module = 'fixture-lifecycle' AND status = 'enabled'",
     ].map(async (sql) => (await executor.all(sql))[0]?.count),
   );
-  expect(counts.map(Number)).toEqual([1, 1, 1, 1, 7]);
+  expect(counts.map(Number)).toEqual([1, 1, 1, 1, 8]);
 }

@@ -1,4 +1,5 @@
 import type { DatabaseAdapterExecutor } from "@web-admin-base/adapters";
+import { baseScheduledJobTypes } from "@web-admin-base/contracts";
 
 import { now, p } from "./db-utils";
 import { writeWorkerTaskLog } from "./task-log";
@@ -14,7 +15,7 @@ const logTypes = [
   "file_operation",
 ] as const;
 
-export const logRetentionTaskCode = "base.logs.retention";
+export const logRetentionTaskCode = baseScheduledJobTypes.logRetention;
 export const defaultLogRetentionDays = 90;
 
 export function createLogRetentionTaskHandler(executor: DatabaseAdapterExecutor) {

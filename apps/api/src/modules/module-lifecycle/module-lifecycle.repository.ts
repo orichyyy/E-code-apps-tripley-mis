@@ -141,11 +141,39 @@ export class ModuleLifecycleRepository implements ModuleLifecycleStore {
     const exclusion = codes.length
       ? ` AND module_code NOT IN (${codes.map((_, index) => this.p(index + 3)).join(", ")})`
       : "";
+    const selectExclusion = codes.length
+      ? ` AND module_code NOT IN (${codes.map((_, index) => this.p(index + 1)).join(", ")})`
+      : "";
+    const removed = await this.executor.all(
+      `SELECT definition_json FROM business_module_registry_entries
+       WHERE status = 'active'${selectExclusion}`,
+      codes,
+    );
+    await this.disableRemovedModuleSchedules(
+      removed.map((row) => parseDefinition(row.definition_json)),
+      input.acceptedAt,
+    );
     await this.executor.run(
       `UPDATE business_module_registry_entries
        SET status = 'disabled', disabled_at = ${this.p(1)}, updated_at = ${this.p(2)}
        WHERE status = 'active'${exclusion}`,
       [input.acceptedAt, input.acceptedAt, ...codes],
+    );
+  }
+
+  private async disableRemovedModuleSchedules(
+    definitions: BusinessModuleDefinition[],
+    updatedAt: string,
+  ): Promise<void> {
+    const jobTypes = definitions.flatMap((definition) =>
+      definition.contributions.scheduledJobs.map(({ jobType }) => jobType),
+    );
+    if (jobTypes.length === 0) return;
+    const placeholders = jobTypes.map((_, index) => this.p(index + 2)).join(", ");
+    await this.executor.run(
+      `UPDATE scheduled_jobs SET status = 'disabled', next_run_at = NULL, updated_at = ${this.p(1)}
+       WHERE handler_type IN (${placeholders})`,
+      [updatedAt, ...jobTypes],
     );
   }
 

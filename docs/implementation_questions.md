@@ -128,7 +128,7 @@ No unresolved backend-core blockers remain from the previously listed questions.
 
     Confirmed: use the explicit static, namespaced registry in ADR 0005 and `docs/business_module_extension_design.md`. Definitions are serializable; API, Web, Worker, and database implementations register separately and are checked bidirectionally. Runtime plugin discovery, public Business Module APIs, cross-Business-Module dependencies, automatic migrations, and example modules are excluded.
 
-    Confirmed delivery: implement the design as four goals: Registry and Conformance Foundation; Registry Lifecycle and Admin Sync; Executable Data and Field Permissions; and Capability Ports. Phases 1, 2, and 3 are implemented. Documentation must not mark PRD business-module extension acceptance complete before all four goals pass.
+    Confirmed delivery: implement the design as four goals: Registry and Conformance Foundation; Registry Lifecycle and Admin Sync; Executable Data and Field Permissions; and Capability Ports. All four phases are implemented. Production registries remain empty, so this completes the extension foundation without claiming that a production Business Module exists.
 
 29. **Migration checksum adoption for existing development databases**
 

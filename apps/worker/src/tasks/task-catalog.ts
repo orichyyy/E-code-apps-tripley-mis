@@ -44,6 +44,7 @@ export type WorkerTaskCatalogOptions = {
   fileStorageRoot?: string;
   webhookConfig?: WebhookDeliveryConfig;
   emailDeliveryConfig?: EmailDeliveryConfig;
+  businessModuleHandlers?: ScheduledTaskHandlerRegistry;
 };
 
 export function createBaseWorkerTaskCatalog(
@@ -61,6 +62,7 @@ export function createBaseWorkerTaskCatalog(
     storage,
     options.webhookConfig,
     options.emailDeliveryConfig,
+    options.businessModuleHandlers,
   );
 
   return {
@@ -85,9 +87,11 @@ function createHandlerRegistry(
   storage: FileStorageAdapter,
   webhookConfig?: WebhookDeliveryConfig,
   emailDeliveryConfig?: EmailDeliveryConfig,
+  businessModuleHandlers: ScheduledTaskHandlerRegistry = new Map(),
 ): ScheduledTaskHandlerRegistry {
   const lock = createDatabaseLockAdapter(executor);
   return new Map([
+    ...businessModuleHandlers,
     [logRetentionTaskCode, createLogRetentionTaskHandler(executor)],
     [fileCleanupTaskCode, createFileCleanupTaskHandler(executor, storage)],
     [importExportProcessTaskCode, createImportExportScheduledHandler(executor, storage)],

@@ -1,5 +1,6 @@
 export * from "./activation";
 export * from "./business-permissions";
+export * from "./capabilities";
 export * from "./canonical-json";
 export * from "./conformance";
 export * from "./conformance-test-helpers";

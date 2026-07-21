@@ -60,6 +60,8 @@ function validateDeclaredRuntime(
     }
     validateDeclaredWorker(definition, workerRegistration, diagnostics);
     validateDeclaredOperators(definition, apiRegistration, diagnostics);
+    validateDeclaredSchemas(definition, apiRegistration, workerRegistration, diagnostics);
+    validateDeclaredCapabilities(definition, apiRegistration, diagnostics);
   }
 }
 
@@ -90,12 +92,14 @@ function validateDeclaredWorker(
   diagnostics: ConformanceDiagnostic[],
 ): void {
   for (const job of definition.contributions.scheduledJobs) {
-    if (!registration?.jobTypes.includes(job.jobType)) {
+    if (!registration?.jobHandlers[job.jobType]) {
       runtimeError(diagnostics, definition, "scheduledJob", job.jobType, "Worker");
     }
   }
   for (const resource of definition.contributions.importExportResources) {
-    if (!registration?.importExportResourceTypes.includes(resource.resourceType)) {
+    const handlers = registration?.importExportHandlers[resource.resourceType];
+    const missingHandler = resource.capabilities.some((capability) => !handlers?.[capability]);
+    if (missingHandler) {
       runtimeError(
         diagnostics,
         definition,
@@ -104,6 +108,113 @@ function validateDeclaredWorker(
         "Worker",
       );
     }
+  }
+}
+
+function validateDeclaredSchemas(
+  definition: BusinessModuleDefinition,
+  api: BusinessModuleConformanceInput["runtime"]["apiModules"][number] | undefined,
+  worker: BusinessModuleConformanceInput["runtime"]["workerModules"][number] | undefined,
+  diagnostics: ConformanceDiagnostic[],
+): void {
+  const apiSchemaIds = new Set([
+    ...definition.contributions.apis.flatMap((item) => [
+      item.requestSchemaId,
+      item.responseSchemaId,
+    ]),
+    ...definition.contributions.domainEvents.map(({ payloadSchemaId }) => payloadSchemaId),
+    ...definition.contributions.notificationEvents.map(({ payloadSchemaId }) => payloadSchemaId),
+    ...definition.contributions.errors.flatMap(({ detailsSchemaId }) =>
+      detailsSchemaId ? [detailsSchemaId] : [],
+    ),
+    ...definition.contributions.scheduledJobs.map(({ parameterSchemaId }) => parameterSchemaId),
+  ]);
+  const workerSchemaIds = new Set(
+    definition.contributions.scheduledJobs.map(({ parameterSchemaId }) => parameterSchemaId),
+  );
+  validateSchemaSet(
+    definition,
+    apiSchemaIds,
+    new Set(Object.keys(api?.schemas ?? {})),
+    "API",
+    diagnostics,
+  );
+  validateSchemaSet(
+    definition,
+    workerSchemaIds,
+    new Set(Object.keys(worker?.schemas ?? {})),
+    "Worker",
+    diagnostics,
+  );
+}
+
+function validateSchemaSet(
+  definition: BusinessModuleDefinition,
+  declared: Set<string>,
+  registered: Set<string>,
+  runtime: string,
+  diagnostics: ConformanceDiagnostic[],
+): void {
+  for (const schemaId of declared) {
+    if (!registered.has(schemaId))
+      runtimeError(diagnostics, definition, "schema", schemaId, runtime);
+  }
+  for (const schemaId of registered) {
+    if (!declared.has(schemaId)) runtimeError(diagnostics, definition, "schema", schemaId, runtime);
+  }
+}
+
+function validateDeclaredCapabilities(
+  definition: BusinessModuleDefinition,
+  registration: BusinessModuleConformanceInput["runtime"]["apiModules"][number] | undefined,
+  diagnostics: ConformanceDiagnostic[],
+): void {
+  validateRegistrationKeys(
+    definition,
+    "fileAttachment",
+    definition.contributions.fileAttachments.map(({ attachmentCode }) => attachmentCode),
+    Object.keys(registration?.fileAttachmentAuthorizers ?? {}),
+    diagnostics,
+  );
+  for (const resource of definition.contributions.importExportResources) {
+    const runtime = registration?.importExportResources[resource.resourceType];
+    const missing = resource.capabilities.some((capability) =>
+      capability === "import" ? !runtime?.previewImport : !runtime?.normalizeExportFilters,
+    );
+    if (missing) {
+      runtimeError(diagnostics, definition, "importExportResource", resource.resourceType, "API");
+    }
+  }
+  validateRegistrationKeys(
+    definition,
+    "importExportResource",
+    definition.contributions.importExportResources.map(({ resourceType }) => resourceType),
+    Object.keys(registration?.importExportResources ?? {}),
+    diagnostics,
+  );
+  validateRegistrationKeys(
+    definition,
+    "notificationEvent",
+    definition.contributions.notificationEvents.map(({ eventType }) => eventType),
+    Object.keys(registration?.notificationRecipientResolvers ?? {}),
+    diagnostics,
+  );
+}
+
+function validateRegistrationKeys(
+  definition: BusinessModuleDefinition,
+  kind: string,
+  declaredValues: string[],
+  registeredValues: string[],
+  diagnostics: ConformanceDiagnostic[],
+): void {
+  const declared = new Set(declaredValues);
+  const registered = new Set(registeredValues);
+  for (const value of declared) {
+    if (!registered.has(value)) runtimeError(diagnostics, definition, kind, value, "API");
+  }
+  for (const value of registered) {
+    if (!declared.has(value)) runtimeError(diagnostics, definition, kind, value, "API");
   }
 }
 
@@ -148,11 +259,11 @@ function validateRegisteredWorker(
   const resources = new Set(
     definition.contributions.importExportResources.map(({ resourceType }) => resourceType),
   );
-  for (const jobType of registration.jobTypes) {
+  for (const jobType of Object.keys(registration.jobHandlers)) {
     if (!jobs.has(jobType))
       runtimeError(diagnostics, definition, "scheduledJob", jobType, "Worker");
   }
-  for (const resourceType of registration.importExportResourceTypes) {
+  for (const resourceType of Object.keys(registration.importExportHandlers)) {
     if (!resources.has(resourceType)) {
       runtimeError(diagnostics, definition, "importExportResource", resourceType, "Worker");
     }

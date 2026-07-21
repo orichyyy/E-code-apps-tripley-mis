@@ -122,4 +122,72 @@ describe("durable webhook delivery", () => {
       await executor.close();
     }
   });
+
+  it("fans out active Business Module events with their propagated context", async () => {
+    const filename = join(tmpdir(), `webhook-module-${process.pid}-${Date.now()}.sqlite`);
+    files.push(filename);
+    const url = `file:${filename}`;
+    runSqliteMigrations({ url });
+    const executor = createWorkerDatabaseExecutor({ dialect: "sqlite", url });
+    const now = new Date().toISOString();
+    try {
+      await executor.run(
+        `INSERT INTO webhook_subscriptions
+         (name, url, event_types, revision, status, is_deleted, created_at, updated_at)
+         VALUES (?, ?, ?, 1, 'enabled', 0, ?, ?)`,
+        [
+          "module receiver",
+          "https://example.com/module-events",
+          jsonParam(["fixture-events.changed"], "sqlite"),
+          now,
+          now,
+        ],
+      );
+      await executor.run(
+        `INSERT INTO event_outbox
+         (event_type, payload_json, status, attempt, max_attempts, occurred_at, created_at, updated_at)
+         VALUES ('fixture-events.changed', ?, 'pending', 0, 1, ?, ?, ?)`,
+        [
+          jsonParam(
+            {
+              messageId: "message-1",
+              idempotencyKey: "change-1",
+              context: {
+                moduleCode: "fixture-events",
+                source: "api",
+                actorId: "7",
+                organizationId: "3",
+                sessionId: null,
+                requestId: "request-1",
+                traceId: "trace-1",
+                correlationId: "correlation-1",
+                locale: "en",
+              },
+              payload: { recordId: "42" },
+              createdAt: now,
+            },
+            "sqlite",
+          ),
+          now,
+          now,
+          now,
+        ],
+      );
+      const repository = new WebhookDeliveryRepository(executor, ["fixture-events.changed"]);
+
+      await expect(repository.fanOutPending("test.admin", 5)).resolves.toBe(1);
+      const deliveries = await repository.claimReady("test-worker", 1);
+
+      expect(deliveries[0]?.event).toMatchObject({
+        type: "fixture-events.changed",
+        subject: "modules/fixture-events/messages/message-1",
+        data: {
+          idempotencyKey: "change-1",
+          context: { traceId: "trace-1", correlationId: "correlation-1" },
+        },
+      });
+    } finally {
+      await executor.close();
+    }
+  });
 });

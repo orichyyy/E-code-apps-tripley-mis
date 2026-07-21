@@ -3,12 +3,13 @@ import type {
   FileObjectLocation,
   FileStorageAdapter,
 } from "@web-admin-base/adapters";
+import { baseScheduledJobTypes } from "@web-admin-base/contracts";
 
 import { bool, now, p } from "./db-utils";
 import { writeWorkerTaskLog } from "./task-log";
 
-export const fileCleanupTaskCode = "base.files.cleanup";
-export const importExportResultCleanupTaskCode = "base.import-export.result-cleanup";
+export const fileCleanupTaskCode = baseScheduledJobTypes.fileCleanup;
+export const importExportResultCleanupTaskCode = baseScheduledJobTypes.importExportResultCleanup;
 
 export function createFileCleanupTaskHandler(
   executor: DatabaseAdapterExecutor,

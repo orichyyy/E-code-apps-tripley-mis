@@ -24,6 +24,18 @@ _Avoid_: Display name, package name
 One Base System integration declaration owned by a Business Module, such as a permission, route, data resource, event, or task.
 _Avoid_: Plugin hook, extension setting
 
+**Capability Port**:
+A narrow Base System boundary through which a Business Module requests a declared system capability without depending on internal services.
+_Avoid_: Service locator, internal service import
+
+**Module Execution Context**:
+The current Module, actor, Organization, request, trace, correlation, and language identity that accompanies one Business Module operation.
+_Avoid_: Global context, ambient state
+
+**Module Async Message**:
+An idempotent Business Module work request that preserves its Module Execution Context across a Queue, Outbox, or scheduled execution boundary.
+_Avoid_: Raw queue payload, arbitrary message
+
 **Module Sync Plan**:
 The immutable proposed difference between a Business Module Registry and the module metadata currently accepted by an administrator.
 _Avoid_: Module installation, migration plan

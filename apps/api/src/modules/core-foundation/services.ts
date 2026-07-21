@@ -267,6 +267,11 @@ export class BackendCoreServices {
     return this.permissions.requireApiPermission(authContext, apiPermission);
   }
 
+  async hasPermission(userId: string, organizationId: string, permissionCode: string) {
+    const context = await this.permissions.getPermissionContext(userId, organizationId);
+    return context.permissionCodes.includes(permissionCode);
+  }
+
   logout(sessionId: string) {
     return this.auth.logout(sessionId);
   }

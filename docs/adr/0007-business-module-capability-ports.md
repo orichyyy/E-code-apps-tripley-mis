@@ -1,0 +1,11 @@
+# Expose Base System services to Business Modules through narrow capability ports
+
+Business Modules receive a module-scoped capability runtime through explicit constructor injection. They do not import Base System service implementations or use a global service locator. The runtime exposes only current execution context, declared permission checks, Operation Events, Managed File references, CSV task publication, Domain Events, Notification Events, background jobs, typed module errors, clock access, and ID serialization.
+
+Every capability is declaration-driven and fail-closed. Runtime schemas, authorizers, recipient resolvers, CSV handlers, and Worker handlers must match the serializable module definition bidirectionally. Asynchronous messages carry module, actor, Organization, request, trace, correlation, locale, idempotency, and execution-boundary data. Database Outbox, Queue, scheduler, File, Notification, Email Delivery, and Webhook Delivery aggregates remain authoritative instead of being bypassed by module code.
+
+Managed File access uses durable references and module authorizers; private content requires a global file permission or one active authorized reference. CSV work is asynchronous, uses explicit columns and export allowlists, prevents spreadsheet formula execution, retains full import error reports, and creates no completion Notification. Domain Events are recipient-free; Notification Events resolve Base System User IDs and use only declared channels/templates. Singleton jobs use `LockAdapter`, inactive modules do not load Worker handlers or Webhook event types, and module removal disables retained schedules.
+
+This rejects Base System internal-service imports, service locators, raw file access, arbitrary notification addresses, direct delivery drivers, private scheduling loops, unregistered job types, recipient-bearing Domain Events, and asynchronous messages without propagated context. The trade-off is additional declarations and adapters in exchange for auditable boundaries, deterministic conformance, and testable module isolation.
+
+Implementation status: Phase 4 Capability Ports is implemented. Production Business Module registries remain intentionally empty.

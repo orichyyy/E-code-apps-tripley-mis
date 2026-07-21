@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import type { QueueAdapter, QueueJob } from ".";
+import type { QueueAdapter, QueueEnqueueOptions, QueueJob } from ".";
 import type { DatabaseAdapterExecutor, DatabaseRow } from "../database/executor";
 import { jsonParam, nowIso, readJson } from "../database/executor";
 
@@ -32,12 +32,19 @@ export function createDatabaseQueueAdapter(
   const emitJobFailureEvents = options.emitJobFailureEvents ?? false;
 
   return {
-    async enqueue<TPayload>(type: string, payload: TPayload) {
+    async enqueue<TPayload>(type: string, payload: TPayload, enqueueOptions?: QueueEnqueueOptions) {
       const now = nowIso();
       await executor.run(
         `INSERT INTO queue_jobs (type, payload_json, status, attempt, max_attempts, available_at, created_at, updated_at)
          VALUES (${p(executor, 1)}, ${p(executor, 2)}, 'pending', 0, ${p(executor, 3)}, ${timestampP(executor, 4)}, ${timestampP(executor, 5)}, ${timestampP(executor, 6)})`,
-        [type, jsonParam(payload, executor.dialect), maxAttempts, now, now, now],
+        [
+          type,
+          jsonParam(payload, executor.dialect),
+          enqueueOptions?.maxAttempts ?? maxAttempts,
+          now,
+          now,
+          now,
+        ],
       );
       const rows = await executor.all(
         `SELECT id, type, payload_json FROM queue_jobs WHERE type = ${p(executor, 1)} ORDER BY id DESC LIMIT 1`,

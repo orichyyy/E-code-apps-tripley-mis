@@ -1,7 +1,13 @@
-import type { BusinessModuleDefinition } from "@web-admin-base/contracts";
+import {
+  businessModuleFileExtensionWhitelist,
+  businessModuleMaxFileSizeBytes,
+  type BusinessModuleDefinition,
+} from "@web-admin-base/contracts";
 
 import { addError } from "./conformance-diagnostics";
 import type { ConformanceDiagnostic } from "./conformance-types";
+
+const allowedFileExtensions: ReadonlySet<string> = new Set(businessModuleFileExtensionWhitelist);
 
 export function validateReferences(
   definition: BusinessModuleDefinition,
@@ -113,6 +119,69 @@ export function validateReferences(
   for (const attachment of contributions.fileAttachments) {
     if (!resources.has(attachment.resourceType)) {
       missing("fileAttachment", attachment.attachmentCode, attachment.resourceType);
+    }
+    if (
+      attachment.maxSizeBytes > businessModuleMaxFileSizeBytes ||
+      attachment.allowedExtensions.some((extension) => !allowedFileExtensions.has(extension))
+    ) {
+      addError(
+        diagnostics,
+        definition,
+        { kind: "fileAttachment", identifier: attachment.attachmentCode },
+        "MODULE_FILE_ATTACHMENT_LIMIT_INVALID",
+        "Attachment extensions and size must stay within Base File Service limits",
+      );
+    }
+  }
+  for (const resource of contributions.importExportResources) {
+    const columns = new Set(resource.columns.map(({ code }) => code));
+    if (resource.exportFields.some((field) => !columns.has(field))) {
+      addError(
+        diagnostics,
+        definition,
+        { kind: "importExportResource", identifier: resource.resourceType },
+        "MODULE_CSV_EXPORT_FIELD_INVALID",
+        "Every export field must reference a declared CSV column",
+      );
+    }
+    if (resource.capabilities.includes("export") && resource.exportFields.length === 0) {
+      addError(
+        diagnostics,
+        definition,
+        { kind: "importExportResource", identifier: resource.resourceType },
+        "MODULE_CSV_EXPORT_FIELD_INVALID",
+        "Export-capable CSV resources require an explicit export field allowlist",
+      );
+    }
+  }
+  for (const event of contributions.notificationEvents) {
+    const channels: ReadonlySet<string> = new Set(event.channels);
+    const templates: ReadonlySet<string> = new Set(Object.keys(event.templateCodes));
+    if (
+      [...channels].some((channel) => !templates.has(channel)) ||
+      [...templates].some((channel) => !channels.has(channel))
+    ) {
+      addError(
+        diagnostics,
+        definition,
+        { kind: "notificationEvent", identifier: event.eventType },
+        "MODULE_NOTIFICATION_TEMPLATE_INVALID",
+        "Notification channels and template codes must match exactly",
+      );
+    }
+  }
+  for (const job of contributions.scheduledJobs) {
+    if (
+      job.defaultTimeoutSeconds > job.maxTimeoutSeconds ||
+      job.defaultMaxAttempts > job.maxAttempts
+    ) {
+      addError(
+        diagnostics,
+        definition,
+        { kind: "scheduledJob", identifier: job.jobType },
+        "MODULE_JOB_BOUNDARY_INVALID",
+        "Scheduled Job defaults must not exceed their declared maximums",
+      );
     }
   }
 }

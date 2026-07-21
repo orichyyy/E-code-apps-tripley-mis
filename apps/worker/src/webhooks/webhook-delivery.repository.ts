@@ -5,18 +5,19 @@ import {
   type DatabaseAdapterExecutor,
   type DatabaseRow,
 } from "@web-admin-base/adapters";
+import { baseWebhookEventTypes, webhookEventTypeSchema } from "@web-admin-base/contracts";
 import {
-  webhookEventTypeSchema,
-  webhookOutboxEventSchema,
-  type WebhookOutboxEvent,
-} from "@web-admin-base/contracts";
+  parseOutboxEvent,
+  parsePersistedEvent,
+  type DeliverableWebhookEvent,
+} from "./webhook-event-parser";
 
 export type ClaimedWebhookDelivery = {
   id: string;
   eventId: string;
   subscriptionId: string;
   eventSource: string;
-  event: WebhookOutboxEvent;
+  event: DeliverableWebhookEvent;
   targetUrl: string;
   encryptedSecret: string | null;
   attempt: number;
@@ -37,7 +38,14 @@ export type WebhookAttemptResult = {
 };
 
 export class WebhookDeliveryRepository {
-  constructor(private readonly executor: DatabaseAdapterExecutor) {}
+  private readonly allowedEventTypes: readonly string[];
+
+  constructor(
+    private readonly executor: DatabaseAdapterExecutor,
+    allowedEventTypes: readonly string[] = baseWebhookEventTypes,
+  ) {
+    this.allowedEventTypes = [...new Set(allowedEventTypes)].sort();
+  }
 
   async fanOutPending(eventSource: string, maxAttempts: number, limit = 100): Promise<number> {
     if (limit <= 0) return 0;
@@ -46,7 +54,7 @@ export class WebhookDeliveryRepository {
         `SELECT id, event_type, payload_json, occurred_at FROM event_outbox
          WHERE status = 'pending' AND event_type IN (${this.eventTypePlaceholders()})
          ORDER BY id ASC LIMIT ${Math.floor(limit)}${this.forUpdateSkipLocked()}`,
-        webhookEventTypeSchema.options,
+        [...this.allowedEventTypes],
       );
       for (const row of rows) await this.fanOutEvent(row, eventSource, maxAttempts);
       return rows.length;
@@ -203,11 +211,7 @@ export class WebhookDeliveryRepository {
   ): Promise<void> {
     const type = webhookEventTypeSchema.parse(row.event_type);
     const raw = readJson<Record<string, unknown>>(row.payload_json);
-    const event = webhookOutboxEventSchema.parse({
-      ...raw,
-      type,
-      occurredAt: raw.occurredAt ?? iso(row.occurred_at),
-    });
+    const event = parseOutboxEvent(type, raw, iso(row.occurred_at));
     const subscriptions = await this.matchingSubscriptions(event);
     const now = nowIso();
     for (const subscription of subscriptions) {
@@ -240,10 +244,10 @@ export class WebhookDeliveryRepository {
     );
   }
 
-  private async matchingSubscriptions(event: WebhookOutboxEvent) {
+  private async matchingSubscriptions(event: DeliverableWebhookEvent) {
     const params: unknown[] = [];
     let target = "";
-    if (event.type === "notification.requested") {
+    if (event.type === "notification.requested" && "targetSubscriptionId" in event) {
       params.push(event.targetSubscriptionId);
       target = ` AND id = ${this.p(params.length)}`;
     }
@@ -275,7 +279,7 @@ export class WebhookDeliveryRepository {
   }
 
   private eventTypePlaceholders(): string {
-    return webhookEventTypeSchema.options.map((_, index) => this.p(index + 1)).join(", ");
+    return this.allowedEventTypes.map((_, index) => this.p(index + 1)).join(", ");
   }
   private forUpdateSkipLocked(): string {
     return this.executor.dialect === "postgresql" ? " FOR UPDATE SKIP LOCKED" : "";
@@ -297,7 +301,7 @@ function toClaimed(row: DatabaseRow): ClaimedWebhookDelivery {
     eventId: String(row.event_outbox_id),
     subscriptionId: String(row.subscription_id),
     eventSource: String(row.event_source),
-    event: webhookOutboxEventSchema.parse(readJson(row.event_payload_json)),
+    event: parsePersistedEvent(readJson(row.event_payload_json)),
     targetUrl: String(row.target_url),
     encryptedSecret: row.secret == null ? null : String(row.secret),
     attempt: Number(row.attempt) + 1,

@@ -6,12 +6,13 @@ import type {
   QueueJob,
   StoredFileObject,
 } from "@web-admin-base/adapters";
+import { baseScheduledJobTypes } from "@web-admin-base/contracts";
 
 import { bool, json, now, p } from "./db-utils";
 import { writeWorkerTaskLog } from "./task-log";
 
 export const importExportProcessJobType = "import-export.process";
-export const importExportProcessTaskCode = "base.import-export.process";
+export const importExportProcessTaskCode = baseScheduledJobTypes.importExportProcess;
 const resultRetentionDays = 30;
 const supportedLogTypes = new Set([
   "login",

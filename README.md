@@ -95,6 +95,8 @@ Notification templates and Webhook subscriptions are persisted for management. R
 
 Announcements support system or minimal multi-Organization subtree targets, draft-only lifecycle changes, immediate publication, optional UTC expiration, and dynamic visibility through the authenticated current Organization. The management Catalog and top-bar Current Announcements view are separate. Publishing does not fan out recipient rows or trigger in-app, email, SMS, or Webhook delivery.
 
+The Business Module extension foundation is complete across static registration, Admin Sync/activation, executable data/field permissions, and constructor-injected Capability Ports. Module code can use declared Operation Events, typed errors, Managed File references, asynchronous CSV tasks, Domain/Notification Events, and bounded background/scheduled jobs while preserving actor/Organization/trace context. Production registries intentionally contain no Business Modules; see `docs/business_module_extension_guide.md` and ADRs 0005-0007 before adding one.
+
 Webhook verification commands:
 
 ```powershell

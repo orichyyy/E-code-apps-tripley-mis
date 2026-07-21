@@ -56,6 +56,17 @@ export type ManagedFileRecord = FileObjectLocation & {
   updatedAt: string;
 };
 
+export type ManagedFileReferenceRecord = {
+  id: string;
+  fileObjectId: string;
+  resourceType: string;
+  resourceId: string;
+  referenceType: string;
+  status: string;
+  createdAt: string;
+  createdBy: string | null;
+};
+
 export function parseStorageDriver(value: string): FileStorageDriver {
   if (value === "local" || value === "s3") return value;
   throw new Error(`Unsupported file storage driver: ${value}.`);

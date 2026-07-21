@@ -16,15 +16,15 @@ This file records incomplete, reserved, or environment-dependent work that must 
 - i18n message management supports administrator overrides and restoring manifest defaults for existing persisted messages. New i18n key creation remains manifest/module-driven rather than an ad hoc frontend create flow.
 - File management supports coexisting local/S3 object locations, authenticated local responses, private S3 presigned redirects, upload compensation, and asynchronous physical Content Deletion. Local remains the default.
 - Reliable email delivery is implemented as an optional encrypted Email Delivery aggregate with internal idempotent requests, Worker claims/retries, terminal content purge, read-only APIs/UI, STARTTLS enforcement, key rotation tooling, and Mailpit compatibility coverage. It remains disabled by default. Production SMTP provider selection, key custody, and target-environment acceptance remain pending.
-- Worker task registration includes the confirmed base-system task catalog. Future business-module task catalogs are outside the base system.
+- Worker task registration includes the confirmed Base System catalog and active, statically registered Business Module jobs. The API rejects creation, enabling, or immediate execution of schedules whose handler is not in the Base System or active-module catalog.
 - Outbound Webhook delivery is implemented with a controlled event catalog, transactional Outbox, durable attempts, bounded retries, secret encryption, HMAC signing, SSRF controls, retention cleanup, management APIs, and frontend history. It remains disabled unless `WEBHOOK_DELIVERY_ENABLED=true` is configured for both API and Worker.
 
-## Business Module Extension Gap
+## Business Module Extension Boundary
 
 - Phase 1 is complete: serializable definitions, `packages/module-sdk`, deterministic definition/activation hashes, explicit empty production registries, Base System compatibility metadata, bidirectional conformance, generated artifacts, and checksummed SQLite/PostgreSQL module migration sources are implemented.
 - Phase 2 is complete: accepted registry persistence, dual-hash Module Sync plan/apply, stale-hash and dependency rejection, administrator confirmation, initialization/seed bootstrap, API/menu/runtime activation boundaries, i18n default/override persistence, CLI support, audit logs, and the `/system/modules` APIs/UI are implemented.
 - Phase 3 is complete: strict versioned data rules, base/custom operator compilation, fail-closed neutral predicates, parameterized Drizzle translation, effective-grant and user-override handling, scenario-aware response/write field enforcement, runtime declaration checks, frontend helpers, and SQLite/PostgreSQL execution coverage are implemented.
-- Phase 4 remains incomplete: capability ports and executable module integration for operation events, typed errors, file attachments, CSV resources, events/notifications, scheduled jobs, and asynchronous context propagation are not implemented.
+- Phase 4 is complete: constructor-injected capability ports, Operation Events and fallback logging, typed module errors, authorized Managed File references, asynchronous CSV resources, Domain/Notification Events, active-module Webhook catalog integration, registered background/scheduled jobs, and asynchronous context propagation are implemented.
 - Production Business Module registries intentionally contain zero modules. Synthetic fixtures remain under test fixture directories and must never enter production manifests, OpenAPI, menus, seeds, or mounted routes.
 
 ## Reserved Optional Integrations

@@ -3,11 +3,12 @@ import type {
   EmailDeliveryConfig,
   LockAdapter,
 } from "@web-admin-base/adapters";
+import { baseScheduledJobTypes } from "@web-admin-base/contracts";
 
 import { WorkerEmailDeliveryRepository } from "../email/email-delivery.repository";
 import { withDistributedTaskLock } from "./distributed-task";
 
-export const emailDeliveryCleanupTaskCode = "email.delivery.cleanup";
+export const emailDeliveryCleanupTaskCode = baseScheduledJobTypes.emailDeliveryCleanup;
 
 export function createEmailDeliveryCleanupTaskHandler(
   executor: DatabaseAdapterExecutor,

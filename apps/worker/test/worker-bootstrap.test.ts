@@ -156,6 +156,7 @@ describe("worker bootstrap", () => {
         recipientUserIds: ["200", "201"],
         title: "System notice",
         body: "Maintenance starts at 22:00.",
+        requestKey: null,
         metadata: { source: "worker-test" },
         createdBy: "1",
         enqueuedAt: new Date().toISOString(),

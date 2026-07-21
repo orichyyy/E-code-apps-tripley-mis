@@ -155,9 +155,16 @@ export class InfrastructureNotificationService {
     }
     const now = new Date().toISOString();
     for (const record of records) {
+      const duplicate =
+        record.requestKey !== null &&
+        this.dependencies.memory.notifications.some(
+          (item) => item.userId === record.userId && item.requestKey === record.requestKey,
+        );
+      if (duplicate) continue;
       this.dependencies.memory.notifications.unshift({
         id: this.dependencies.nextId(),
         userId: record.userId,
+        requestKey: record.requestKey,
         channel: "in_app",
         title: record.title,
         body: record.body,

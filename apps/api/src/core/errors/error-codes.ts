@@ -52,6 +52,7 @@ const errorDefinitions = {
   PERMISSION_API_DENIED: ["API permission denied", 403, "authorization"],
   PERMISSION_DENIED: ["Permission denied", 403, "authorization"],
   PERMISSION_FIELD_DENIED: ["Field permission denied", 403, "authorization"],
+  PERMISSION_MODULE_CAPABILITY_DENIED: ["Business Module capability denied", 403, "authorization"],
   PERMISSION_UNKNOWN_CODE: ["Permission code is unknown", 400, "validation"],
   MODULE_NOT_SYNCHRONIZED: ["Business Module is not synchronized for this release", 503, "system"],
   ROLE_NOT_FOUND: ["Role was not found", 404, "business"],

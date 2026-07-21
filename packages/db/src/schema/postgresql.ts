@@ -711,6 +711,7 @@ export const eventOutbox = pgTable(
   "event_outbox",
   {
     id: serial("id").primaryKey(),
+    eventKey: text("event_key"),
     eventType: text("event_type").notNull(),
     payloadJson: jsonb("payload_json").notNull(),
     status: text("status").notNull().default("pending"),
@@ -723,6 +724,7 @@ export const eventOutbox = pgTable(
     ...timestamps,
   },
   (table) => ({
+    eventKeyUnique: uniqueIndex("event_outbox_event_key_unique").on(table.eventKey),
     statusNextRunIndex: index("event_outbox_status_next_run_idx").on(table.status, table.nextRunAt),
     statusCheck: check(
       "event_outbox_status_check",
@@ -817,6 +819,7 @@ export const notifications = pgTable(
     channel: text("channel").notNull(),
     title: text("title").notNull(),
     body: text("body").notNull(),
+    requestKey: text("request_key"),
     status: text("status").notNull().default("unread"),
     metadataJson: jsonb("metadata_json").notNull(),
     readAt: timestamp("read_at", { withTimezone: true }),
@@ -826,6 +829,10 @@ export const notifications = pgTable(
   },
   (table) => ({
     userStatusIndex: index("notifications_user_status_idx").on(table.userId, table.status),
+    userRequestKeyUnique: uniqueIndex("notifications_user_request_key_unique").on(
+      table.userId,
+      table.requestKey,
+    ),
     channelCheck: check(
       "notifications_channel_check",
       sql`${table.channel} IN ('in_app', 'email', 'webhook', 'sms')`,
@@ -1124,6 +1131,7 @@ export const importExportTasks = pgTable(
   "import_export_tasks",
   {
     id: serial("id").primaryKey(),
+    idempotencyKey: text("idempotency_key"),
     taskType: text("task_type").notNull(),
     resourceType: text("resource_type").notNull(),
     status: text("status").notNull().default("pending"),
@@ -1134,11 +1142,18 @@ export const importExportTasks = pgTable(
     successRows: integer("success_rows").notNull().default(0),
     failedRows: integer("failed_rows").notNull().default(0),
     errorPreviewJson: jsonb("error_preview_json").notNull(),
+    requestJson: jsonb("request_json").notNull().default({}),
+    executionContextJson: jsonb("execution_context_json"),
     resultExpiresAt: timestamp("result_expires_at", { withTimezone: true }),
     ...timestamps,
     createdBy: integer("created_by"),
   },
   (table) => ({
+    idempotencyUnique: uniqueIndex("import_export_tasks_idempotency_unique").on(
+      table.taskType,
+      table.resourceType,
+      table.idempotencyKey,
+    ),
     statusIndex: index("import_export_tasks_status_idx").on(table.status),
     typeCheck: check(
       "import_export_tasks_type_check",

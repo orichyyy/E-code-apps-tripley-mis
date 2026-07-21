@@ -17,6 +17,7 @@ export type InfrastructureServiceOptions = {
   smtpEnabled?: boolean;
   maxFileSizeBytes?: number;
   presignedUrlTtlSeconds?: number;
+  scheduledJobTypeSource?: () => Promise<ReadonlySet<string>>;
 };
 
 export function resolveInfrastructureServiceOptions(

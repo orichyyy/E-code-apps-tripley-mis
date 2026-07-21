@@ -79,6 +79,21 @@ export function createLifecycleFixtureModule(
       dictionaryDependencies: options.dictionaryDependency
         ? [{ code: options.dictionaryDependency }]
         : [],
+      scheduledJobs: [
+        {
+          jobType: "fixture-lifecycle.reconcile",
+          title: {
+            key: "modules.fixture-lifecycle.jobs.reconcile",
+            defaultMessage: "Reconcile fixture records",
+          },
+          parameterSchemaId: "FixtureReconcileInput",
+          executionMode: "singleton",
+          defaultTimeoutSeconds: 30,
+          maxTimeoutSeconds: 60,
+          defaultMaxAttempts: 1,
+          maxAttempts: 3,
+        },
+      ],
     },
   });
 }
